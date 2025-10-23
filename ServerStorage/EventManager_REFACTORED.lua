@@ -49,6 +49,9 @@ local BaseModule = require(script.Parent.BaseModule)
 -- 🔥 NUEVO: Import VFXManager
 local VFXManager = require(script.Parent.Managers.VFXManager)
 
+-- 🔥 NUEVO: Import MeteorDamageSystem para daño a jugadores
+local MeteorDamageSystem = require(script.Parent.MeteorDamageSystem)
+
 local EventManager = {}
 
 local DebugCooldowns: {[number]: number} = {}
@@ -151,6 +154,12 @@ local function createMeteor(meteorType: string): Part
 	meteor.CanTouch = true
 	meteor.CustomPhysicalProperties = PhysicalProperties.new(3, 0.4, 0.3)
 	meteor.CollisionGroup = "Default"
+
+	-- 🔥 NUEVO: HP para que dinosaurios puedan atacar meteoritos
+	local meteorHP = typeConfig.HP or 100
+	meteor:SetAttribute("HP", meteorHP)
+	meteor:SetAttribute("MaxHP", meteorHP)
+	meteor:SetAttribute("MeteorType", meteorType)
 
 	-- 🔥 NUEVO: Usar VFX trail en lugar de Fire básico
 	-- El trail se spawneará con VFXManager (ver abajo)
@@ -259,7 +268,13 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			CameraShake:FireClient(ownerPlr, shakeIntensity, 0.5)
 		end
 
-		-- Lógica de daño (sin cambios)
+		-- 🔥 NUEVO: DAÑO A JUGADORES (mecánica de salto para evadir)
+		local basePart = getPlayerBasePart(ownerPlr)
+		if basePart then
+			MeteorDamageSystem:OnMeteorImpact(hitPos, basePart, meteorType)
+		end
+
+		-- Lógica de daño a la base (sin cambios)
 		local rawDamage = typeConfig.Damage
 		local appliedAmount = BaseModule.ApplyDamage(userId, rawDamage)
 		applied = appliedAmount > 0
