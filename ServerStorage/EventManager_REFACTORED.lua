@@ -43,14 +43,26 @@ if not CameraShake then
 	warn("[EventManager] RemoteEvent 'CameraShake' creado automáticamente")
 end
 
+-- 🔥 NUEVO: Remote para notificaciones (dodge, daño, etc.)
+local ShowNotification = RemotesFolder:FindFirstChild("ShowNotification") :: RemoteEvent?
+if not ShowNotification then
+	ShowNotification = Instance.new("RemoteEvent")
+	ShowNotification.Name = "ShowNotification"
+	ShowNotification.Parent = RemotesFolder
+	warn("[EventManager] RemoteEvent 'ShowNotification' creado automáticamente")
+end
+
 local Config     = require(game.ServerStorage.Config.Config)
-local BaseModule = require(script.Parent.BaseModule)
+local BaseModule = require(game.ServerScriptService.BaseModule)
 
 -- 🔥 NUEVO: Import VFXManager
-local VFXManager = require(script.Parent.Managers.VFXManager)
+local VFXManager = require(game.ServerStorage.Managers.VFXManager)
 
--- 🔥 NUEVO: Import MeteorDamageSystem para daño a jugadores
-local MeteorDamageSystem = require(script.Parent.MeteorDamageSystem)
+-- 🔥 NUEVO: Import MeteorDamageSystem (OPCIONAL - comentar si no existe)
+local MeteorDamageSystem = nil
+local hasMeteorDamage = pcall(function()
+	MeteorDamageSystem = require(game.ServerStorage.MeteorDamageSystem)
+end)
 
 local EventManager = {}
 
@@ -269,9 +281,11 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 		end
 
 		-- 🔥 NUEVO: DAÑO A JUGADORES (mecánica de salto para evadir)
-		local basePart = getPlayerBasePart(ownerPlr)
-		if basePart then
-			MeteorDamageSystem:OnMeteorImpact(hitPos, basePart, meteorType)
+		if hasMeteorDamage and MeteorDamageSystem then
+			local basePart = getPlayerBasePart(ownerPlr)
+			if basePart then
+				MeteorDamageSystem:OnMeteorImpact(hitPos, basePart, meteorType)
+			end
 		end
 
 		-- Lógica de daño a la base (sin cambios)
