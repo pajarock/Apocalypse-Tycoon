@@ -43,6 +43,15 @@ if not CameraShake then
 	warn("[EventManager] RemoteEvent 'CameraShake' creado automáticamente")
 end
 
+-- 🔥 NUEVO: Remote para notificaciones (dodge, daño, etc.)
+local ShowNotification = RemotesFolder:FindFirstChild("ShowNotification") :: RemoteEvent?
+if not ShowNotification then
+	ShowNotification = Instance.new("RemoteEvent")
+	ShowNotification.Name = "ShowNotification"
+	ShowNotification.Parent = RemotesFolder
+	warn("[EventManager] RemoteEvent 'ShowNotification' creado automáticamente")
+end
+
 local Config     = require(game.ServerStorage.Config.Config)
 local BaseModule = require(game.ServerScriptService.BaseModule)
 

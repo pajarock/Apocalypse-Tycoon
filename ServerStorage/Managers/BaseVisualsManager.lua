@@ -442,7 +442,9 @@ function BaseVisualsManager:CreateBase(userId: number, position: Vector3, player
 	basePart:SetAttribute("OwnerUserId", userId)
 
 	-- Crear decoraciones
-	local walls = createWalls(basePart)
+	-- DESHABILITADO: Muros por default (ahora se crean con Upgrade_7: Wall Section)
+	-- local walls = createWalls(basePart)
+	local walls = {} -- Sin muros por default
 	local towers = createTowers(basePart)
 	local billboard = createBillboard(basePart, playerName, userId)
 
