@@ -1,0 +1,315 @@
+--!strict
+--[[
+	BASE MODULE - Apocalypse Tycoon
+	Maneja HP, daño, escudos e invencibilidad
+	
+	VERSIÓN: 2.0
+	MEJORAS:
+	- Sistema de invencibilidad temporal al respawn
+	- Regeneración pasiva de HP (si está habilitada)
+	- Valores correctos del Config
+	- Sistema de muerte y respawn
+	- Visual feedback de estado
+--]]
+
+local Players       = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
+local Config        = require(ServerStorage.Config.Config)
+--═══════════════════════════════════════════════════════════════════════
+-- ESTADO GLOBAL
+--═══════════════════════════════════════════════════════════════════════
+local Base = {}
+
+local HP: {[number]: number} = {}
+local Invulnerable: {[number]: boolean} = {}  -- Tracking de invencibilidad
+local InvulnerableUntil: {[number]: number} = {}  -- Timestamp cuando termina
+local MeteorsSurvived: {[number]: number} = {}
+--═══════════════════════════════════════════════════════════════════════
+-- FUNCIONES AUXILIARES
+--═══════════════════════════════════════════════════════════════════════
+
+local function maxHP(): number
+	return Config.BASE_MAX_HP
+end
+
+-- Verificar si un jugador está invulnerable
+local function isInvulnerable(userId: number): boolean
+	if not Invulnerable[userId] then return false end
+
+	local until_time = InvulnerableUntil[userId]
+	if until_time and tick() >= until_time then
+		-- Expiró la invencibilidad
+		Invulnerable[userId] = false
+		InvulnerableUntil[userId] = nil
+
+		if Config.DEBUG_MODE then
+			print(("[BASE] Invencibilidad expirada para jugador %d"):format(userId))
+		end
+
+		return false
+	end
+
+	return true
+end
+
+-- Actualizar color de la base según HP
+local function updateBaseVisuals(userId: number)
+	local plr = Players:GetPlayerByUserId(userId)
+	if not plr then return end
+
+	local basesFolder = workspace:FindFirstChild("Bases")
+	if not basesFolder then return end
+
+	local basePart = basesFolder:FindFirstChild(plr.Name .. "_Base")
+	if not (basePart and basePart:IsA("BasePart")) then return end
+
+	local currentHP = Base.GetHP(userId)
+	local maxHp = maxHP()
+	local hpPercent = currentHP / maxHp
+
+	-- Cambiar color según HP
+	if hpPercent < 0.3 then
+		basePart.Color = Config.BASE_COLORS.Damaged
+	elseif (plr:GetAttribute("ShieldLevel") or 0) > 0 then
+		basePart.Color = Config.BASE_COLORS.Shielded
+	else
+		basePart.Color = Config.BASE_COLORS.Default
+	end
+
+	-- Efecto de invencibilidad (parpadeo)
+	if isInvulnerable(userId) then
+		basePart.Transparency = 0.3
+	else
+		basePart.Transparency = 0
+	end
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- API PÚBLICA
+--═══════════════════════════════════════════════════════════════════════
+
+-- Inicializar HP de un jugador
+function Base.InitPlayer(userId: number)
+	if HP[userId] == nil then
+		HP[userId] = maxHP()
+		Invulnerable[userId] = false
+		InvulnerableUntil[userId] = nil
+
+		if Config.DEBUG_MODE then
+			print(("[BASE] Jugador %d inicializado con HP=%d"):format(userId, maxHP()))
+		end
+	end
+end
+
+-- Obtener HP actual
+function Base.GetHP(userId: number): number
+	local v = HP[userId]
+	if typeof(v) ~= "number" then
+		Base.InitPlayer(userId)
+		v = HP[userId]
+	end
+	return v :: number
+end
+
+-- Setear HP directamente
+function Base.SetHP(userId: number, value: number)
+	local m = maxHP()
+	local n = math.clamp(math.floor((value or 0) + 0.5), 0, m)
+	HP[userId] = n
+
+	updateBaseVisuals(userId)
+
+	if Config.DEBUG_MODE then
+		print(("[BASE] HP de jugador %d seteado a %d"):format(userId, n))
+	end
+end
+
+-- Añadir/quitar HP
+function Base.AddHP(userId: number, delta: number)
+	Base.SetHP(userId, Base.GetHP(userId) + (delta or 0))
+end
+
+-- Daño directo sin aplicar reducción de escudo
+function Base.DamageRaw(userId: number, amount: number): number
+	local a = math.max(0, math.floor(amount or 0))
+	if a <= 0 then return 0 end
+
+	-- Verificar invencibilidad
+	if isInvulnerable(userId) then
+		if Config.DEBUG_MODE then
+			print(("[BASE] Daño bloqueado por invencibilidad: %d"):format(a))
+		end
+		return 0
+	end
+
+	local before = Base.GetHP(userId)
+	Base.AddHP(userId, -a)
+	local actualDamage = math.max(0, before - Base.GetHP(userId))
+
+	-- Verificar muerte
+	if Base.GetHP(userId) <= 0 then
+		Base.OnBaseDeath(userId)
+	end
+
+	return actualDamage
+end
+
+-- Aplicar daño con reducción de escudo
+function Base.ApplyDamage(userId: number, raw: number): number
+	local r = math.max(0, math.floor(raw or 0))
+	if r <= 0 then return 0 end
+
+	-- Verificar invencibilidad
+	if isInvulnerable(userId) then
+		if Config.DEBUG_MODE then
+			print(("[BASE] Daño bloqueado por invencibilidad: %d"):format(r))
+		end
+		return 0
+	end
+
+	-- Calcular reducción de escudo
+	local plr = Players:GetPlayerByUserId(userId)
+	local shieldLevel = (plr and (plr:GetAttribute("ShieldLevel") or 0)) or 0
+
+	local reductionPerLevel = Config.SHIELD_REDUCTION_PER_LEVEL
+	local maxReduction = Config.SHIELD_MAX_REDUCTION
+	local reduction = math.min(shieldLevel * reductionPerLevel, maxReduction)
+
+	local appliedDamage = math.max(0, math.floor(r * (1 - reduction) + 0.5))
+
+	if Config.DEBUG_MODE then
+		print(("[BASE] Daño: raw=%d, shield=%.0f%%, applied=%d")
+			:format(r, reduction * 100, appliedDamage))
+	end
+
+	local before = Base.GetHP(userId)
+	Base.AddHP(userId, -appliedDamage)
+	local actualDamage = math.max(0, before - Base.GetHP(userId))
+
+	-- Verificar muerte
+	if Base.GetHP(userId) <= 0 then
+		Base.OnBaseDeath(userId)
+	end
+
+	return actualDamage
+end
+
+-- Curar al respawn
+function Base.HealOnRespawn(userId: number)
+	-- Curar completamente al respawn
+	Base.SetHP(userId, maxHP())
+
+	-- Aplicar invencibilidad temporal
+	if Config.RESPAWN_INVULNERABILITY_SECS > 0 then
+		Invulnerable[userId] = true
+		InvulnerableUntil[userId] = tick() + Config.RESPAWN_INVULNERABILITY_SECS
+
+		if Config.DEBUG_MODE then
+			print(("[BASE] Jugador %d invulnerable por %ds")
+				:format(userId, Config.RESPAWN_INVULNERABILITY_SECS))
+		end
+	end
+
+	updateBaseVisuals(userId)
+end
+
+-- Cuando la base llega a 0 HP
+function Base.OnBaseDeath(userId: number)
+	local plr = Players:GetPlayerByUserId(userId)
+	if not plr then return end
+
+	warn(("[BASE] Base de %s destruida!"):format(plr.Name))
+
+	-- Penalización: perder 20% del cash
+	local Economy = require(script.Parent.EconomyModule)
+	local state = Economy.GetState(userId)
+	if state then
+		local penalty = math.floor(state.Cash * 0.2)
+		state.Cash = math.max(0, state.Cash - penalty)
+
+		-- Notificar
+		local ShowNotif = game.ReplicatedStorage.Remotes:FindFirstChild("ShowNotification")
+		if ShowNotif then
+			ShowNotif:FireClient(plr, string.format("💀 BASE DESTROYED! -$%d", penalty), 5)
+		end
+	end
+
+	-- Resetear HP
+	Base.SetHP(userId, maxHP())
+end
+
+-- Verificar si un jugador está invulnerable (para UI)
+function Base.IsInvulnerable(userId: number): boolean
+	return isInvulnerable(userId)
+end
+
+-- Obtener porcentaje de HP
+function Base.GetHPPercent(userId: number): number
+	return Base.GetHP(userId) / maxHP()
+end
+
+-- Verificar si está en rango de advertencia
+function Base.IsLowHP(userId: number): boolean
+	local percent = Base.GetHPPercent(userId) * 100
+	return percent <= Config.UI.LowHealthWarning
+end
+
+function Base.IncrementMeteorsSurvived(userId: number)
+	MeteorsSurvived[userId] = (MeteorsSurvived[userId] or 0) + 1
+end
+
+function Base.GetMeteorsSurvived(userId: number): number
+	return MeteorsSurvived[userId] or 0
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- REGENERACIÓN PASIVA (si está habilitada)
+--═══════════════════════════════════════════════════════════════════════
+if Config.BASE_REGEN_RATE > 0 then
+	task.spawn(function()
+		while true do
+			task.wait(1)  -- Tick cada segundo
+
+			for userId, hp in pairs(HP) do
+				if hp < maxHP() and not isInvulnerable(userId) then
+					Base.AddHP(userId, Config.BASE_REGEN_RATE)
+
+					if Config.DEBUG_MODE then
+						print(("[BASE] Regen: jugador %d +%d HP")
+							:format(userId, Config.BASE_REGEN_RATE))
+					end
+				end
+			end
+		end
+	end)
+
+	if Config.DEBUG_MODE then
+		print(("[BASE] Sistema de regeneración activo: +%d HP/s")
+			:format(Config.BASE_REGEN_RATE))
+	end
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- CLEANUP
+--═══════════════════════════════════════════════════════════════════════
+Players.PlayerRemoving:Connect(function(plr)
+	HP[plr.UserId] = nil
+	Invulnerable[plr.UserId] = nil
+	InvulnerableUntil[plr.UserId] = nil
+
+	if Config.DEBUG_MODE then
+		print(("[BASE] Limpieza de jugador %d"):format(plr.UserId))
+	end
+end)
+
+-- Log de inicialización
+if Config.DEBUG_MODE then
+	print("[BASE] ✓ Módulo cargado")
+	print(("[BASE] - Max HP: %d"):format(maxHP()))
+	print(("[BASE] - Shield reduction: %.0f%% por nivel (max %.0f%%)")
+		:format(Config.SHIELD_REDUCTION_PER_LEVEL * 100, Config.SHIELD_MAX_REDUCTION * 100))
+	print(("[BASE] - Invencibilidad al respawn: %ds")
+		:format(Config.RESPAWN_INVULNERABILITY_SECS))
+end
+
+return Base
