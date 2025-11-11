@@ -205,13 +205,7 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 		countdown -= 1
 	end
 
-	-- Fade out
-	local fadeOut = TweenService:Create(
-		screenGui,
-		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-		{BackgroundTransparency = 1}
-	)
-
+	-- ✅ ARREGLADO: Fade out (solo elementos visuales, NO screenGui)
 	TweenService:Create(background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(titleLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
 	TweenService:Create(moneyLostLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
