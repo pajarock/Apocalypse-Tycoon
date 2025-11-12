@@ -112,6 +112,16 @@ local ServerState = {
 	Leaderboard = {},
 }
 
+-- Crear IntValue para sincronizar el contador de waves con el cliente
+local CurrentWaveValue = Instance.new("IntValue")
+CurrentWaveValue.Name = "CurrentWave"
+CurrentWaveValue.Value = ServerState.CurrentWave
+CurrentWaveValue.Parent = ReplicatedStorage
+
+if DEBUG then
+	print("[MAIN] ✅ IntValue 'CurrentWave' creado en ReplicatedStorage")
+end
+
 local NextSlot = 1
 local SlotByUserId = {}
 local BasePartByUser = {}
@@ -418,35 +428,6 @@ local function assignBase(plr: Player, slot: number)
 	)
 
 	plate.Parent = getBasesFolder()
-	BasePartByUser[plr.UserId] = plate
-	plr:SetAttribute("BaseSlot", slot)
-
-	if DEBUG then
-		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
-	end
-		
-	local plate = Instance.new("Part")
-	plate.Name = plr.Name .. "_Base"
-	plate.Size = Config.BASE_SIZE
-	plate.Anchored = true
-	plate.Position = center
-	plate.Material = Enum.Material.Concrete
-	plate.Color = Config.BASE_COLORS.Default
-	plate:SetAttribute("OwnerUserId", plr.UserId)
-	plate.Parent = getBasesFolder()
-
-	-- Decoraciones
-	local border = Instance.new("Part")
-	border.Name = "Border"
-	border.Size = Vector3.new(Config.BASE_SIZE.X + 2, 0.5, Config.BASE_SIZE.Z + 2)
-	border.Anchored = true
-	border.Material = Enum.Material.Metal
-	border.Color = Color3.fromRGB(100, 100, 100)
-	border.CFrame = plate.CFrame * CFrame.new(0, -0.75, 0)
-	border.Parent = plate
-
-	--createBaseBillboard(plate, plr.Name, plr.UserId)
-
 	BasePartByUser[plr.UserId] = plate
 	plr:SetAttribute("BaseSlot", slot)
 
@@ -820,7 +801,11 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 	if upgradeId == "Upgrade_7" then
 		Config.BASE_MAX_HP += 5
+		Base.SetMaxHP(plr.UserId, Config.BASE_MAX_HP)
 		Base.AddHP(plr.UserId, 5)
+		if DEBUG then
+			print(("[PURCHASE] Max HP aumentado a " .. Config.BASE_MAX_HP))
+		end
 	end
 
 	-- Sync leaderstats
@@ -1181,6 +1166,7 @@ local Commands = {
 
 		local wave = tonumber(args[1]) or 1
 		ServerState.CurrentWave = wave
+		CurrentWaveValue.Value = wave
 
 		notifyPlayer(plr, string.format("✓ Wave set to %d", wave), 2)
 	end,
@@ -1399,6 +1385,7 @@ if eventsEnabled then
 				broadcastNotification("💀 BOSS METEOR!", 3)
 				task.wait(2)
 				Events:BossMeteor()
+				task.wait(15)  -- Esperar a que termine el boss meteor
 			else
 				-- Wave normal
 				Config.METEOR_COUNT = waveConfig.Meteors
@@ -1406,6 +1393,11 @@ if eventsEnabled then
 
 				task.wait(5)
 				Events:MeteorStorm()
+
+				-- Esperar a que todos los meteoritos caigan y hagan daño
+				-- Cálculo: (Meteoros / SpawnRate) + tiempo de caída extra
+				local stormDuration = (waveConfig.Meteors / Config.EVENTS.MeteorStorm.SpawnRate) + 10
+				task.wait(stormDuration)
 			end
 
 			-- Incrementar contador de meteoros sobrevividos
@@ -1429,6 +1421,7 @@ if eventsEnabled then
 			end
 
 			ServerState.CurrentWave += 1
+			CurrentWaveValue.Value = ServerState.CurrentWave
 
 			logAnalytic("WaveCompleted", {
 				wave = ServerState.CurrentWave - 1,
