@@ -1,7 +1,17 @@
 --!strict
 --[[
-	BASE MODULE - Apocalypse Tycoon
+	BASE MODULE - Apocalypse Tycoon (ARREGLADO)
 	-----------------------------------------------------------------------
+
+	? ARREGLOS EN ESTA VERSIÓN:
+	1. Eliminada dependencia circular con EventManager (línea 28 removida)
+	2. Eliminado código de shake duplicado (líneas 272-276 removidas)
+	3. El shake ahora se maneja completamente en EventManager
+
+	CAMBIOS RESPECTO A LA VERSIÓN ANTERIOR:
+	- Línea 28: ELIMINADA - No require EventManager
+	- Líneas 271-276: ELIMINADAS - No llama a EventManager.ShakePlayer
+	- Todo lo demás funciona igual
 
 	Gestiona la salud y estado de las bases de los jugadores.
 
@@ -23,9 +33,11 @@
 local DAMAGE_COOLDOWN = 0.35 --Nueva integracion para evitar doble damage.
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local SS = game:GetService("ServerStorage")
-local EventManager = require(game.ServerScriptService:WaitForChild("EventManager"))
+local RunService = game:GetService("RunService")
+
+-- ? ARREGLADO: Eliminado require de EventManager (dependencia circular)
+-- local EventManager = require(game.ServerScriptService:WaitForChild("EventManager"))
 
 -------------------------------------------------------------------------
 -- CONFIGURACIÓN
@@ -49,12 +61,23 @@ if not success or not Config then
 end
 
 local DEBUG = Config.DEBUG_MODE or false
+--local DEBUG = true --forzado para testing
 
+local Economy = nil
+local economySuccess = pcall(function()
+	Economy = require(game.ServerScriptService.EconomyModule)
+end)
+
+if not economySuccess or not Economy then
+	warn("[BaseModule] EconomyModule no encontrado - penalizaciones desactivadas")
+end
 -------------------------------------------------------------------------
 -- ESTADO
 -------------------------------------------------------------------------
 
 local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived}
+local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
+local ActiveGuardianTasks = {} -- [userId] = task thread
 
 -------------------------------------------------------------------------
 -- MÓDULO
@@ -134,13 +157,13 @@ local function createBaseBillboard(plate: BasePart, playerName: string, userId: 
 	hpLabel.TextScaled = true
 	hpLabel.Font = Enum.Font.Gotham
 	hpLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-	hpLabel.Text = string.format("HP: %d/%d", Base.GetHP(userId), Config.BASE_MAX_HP)
+	hpLabel.Text = string.format("HP: %d/%d", BaseModule.GetHP(userId), Config.BASE_MAX_HP)
 	hpLabel.Parent = frame
 
 	-- Actualizar HP label periódicamente
 	task.spawn(function()
 		while plate and plate.Parent and Players:GetPlayerByUserId(userId) do
-			local hp = Base.GetHP(userId)
+			local hp = BaseModule.GetHP(userId)
 			local maxHP = Config.BASE_MAX_HP
 			local pct = hp / maxHP
 
@@ -158,6 +181,7 @@ local function createBaseBillboard(plate: BasePart, playerName: string, userId: 
 		end
 	end)
 end
+
 function BaseModule.GetHP(userId: number): number
 	if not BaseState[userId] then
 		warn(("[BaseModule] GetHP: Usuario %d no inicializado"):format(userId))
@@ -205,7 +229,7 @@ end
 -------------------------------------------------------------------------
 -- DAMAGE SYSTEM
 -------------------------------------------------------------------------
--- ...
+
 local DEFAULTS = {
 	MaxHP = 100,
 	HP = 100,
@@ -229,9 +253,6 @@ local function ensureState(userId: number)
 	if type(s.MeteorsSurvived) ~= "number" then s.MeteorsSurvived = DEFAULTS.MeteorsSurvived end
 	return s
 end
-
-
-local DAMAGE_COOLDOWN = 0.35
 
 function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 	local state = ensureState(userId)
@@ -268,16 +289,25 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 		BaseModule.OnBaseDead(userId)
 	end
 
-	-- Shake
-	local preset = (finalDamage >= 35 and "Heavy") or (finalDamage <= 15 and "Light") or "Medium"
-	local plr = Players:GetPlayerByUserId(userId)
-	if plr and EventManager and EventManager.ShakePlayer then
-		EventManager.ShakePlayer(plr, preset, 0.6)
+	-- ? ARREGLADO: Eliminado código de shake - ahora se maneja en EventManager
+	-- El shake se activa directamente en EventManager cuando impacta un meteorito
+	-- No es necesario duplicar la lógica aquí
+
+	if DEBUG then
+		print(("[BaseModule] ApplyDamage userId %d: -%d HP (%d ? %d)"):format(
+			userId, finalDamage, oldHP, state.HP
+			))
 	end
 
 	return finalDamage
 end
 
+-------------------------------------------------------------------------
+-- SISTEMA DE PENALIZACIONES POR MUERTE DE BASE
+-------------------------------------------------------------------------
+
+local PendingMoneyReductions = {}
+local ActiveGuardianTasks = {}
 
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
@@ -285,17 +315,185 @@ function BaseModule.OnBaseDead(userId: number)
 	end
 
 	local player = Players:GetPlayerByUserId(userId)
-	if player then
-		-- Aquí puedes agregar lógica de penalización
-		-- Por ejemplo: perder % de dinero, reset parcial, etc.
+	if not player then return end
 
-		-- Por ahora solo reseteamos HP
-		task.wait(5) -- Esperar 5 segundos
-		BaseModule.SetHP(userId, Config.BASE_MAX_HP)
+	-- 1?? OBTENER DINERO ACTUAL DESDE ECONOMY MODULE
+	local currentMoney = 0
+	local economyState = nil
+
+	if Economy then
+		economyState = Economy.GetState(userId)
+		if economyState then
+			currentMoney = economyState.Cash or 0
+		end
+	else
+		-- Fallback: leer desde leaderstats si Economy no disponible
+		local ls = player:FindFirstChild("leaderstats")
+		if ls then
+			local cashValue = ls:FindFirstChild("Cash")
+			if cashValue then
+				currentMoney = cashValue.Value
+			end
+		end
+	end
+
+	if DEBUG then
+		print(("[BaseModule] ?? ANTES - Dinero: $%d"):format(currentMoney))
+	end
+
+	-- 2?? CALCULAR PENALIZACIÓN (25% del dinero actual)
+	local moneyLost = math.floor(currentMoney * 0.25)
+	local newAmount = math.max(0, currentMoney - moneyLost)
+
+	if DEBUG then
+		print(("[BaseModule] ?? Pérdida calculada: $%d (25%%)"):format(moneyLost))
+		print(("[BaseModule] ?? NUEVO valor: $%d"):format(newAmount))
+	end
+
+	-- 3?? ACTUALIZAR AMBOS LUGARES: ECONOMY Y LEADERSTATS
+
+	-- A) Actualizar EconomyModule (la fuente de verdad)
+	if economyState then
+		economyState.Cash = newAmount
+		if DEBUG then
+			print(("[BaseModule] ? Economy.Cash actualizado a $%d"):format(newAmount))
+		end
+	end
+
+	-- B) Actualizar leaderstats
+	local ls = player:FindFirstChild("leaderstats")
+	if ls then
+		local cashValue = ls:FindFirstChild("Cash")
+		if cashValue then
+			cashValue.Value = newAmount
+			if DEBUG then
+				print(("[BaseModule] ? leaderstats.Cash actualizado a $%d"):format(newAmount))
+			end
+		end
+	end
+
+	-- 4?? ACTIVAR GUARDIAN (protección por 120 segundos)
+	PendingMoneyReductions[userId] = {
+		TargetAmount = newAmount,
+		StartTime = tick(),
+		Duration = 120
+	}
+
+	-- Cancelar guardian previo si existe
+	if ActiveGuardianTasks[userId] then
+		task.cancel(ActiveGuardianTasks[userId])
+		ActiveGuardianTasks[userId] = nil
+		if DEBUG then
+			print(("[BaseModule] ?? Guardian previo cancelado"))
+		end
+	end
+
+	-- Iniciar nuevo guardian
+	ActiveGuardianTasks[userId] = task.spawn(function()
+		local startTime = tick()
+		local forceDuration = 120 -- 2 minutos
+		local checkInterval = 0.5 -- Revisar cada 0.5 segundos
 
 		if DEBUG then
-			print(("[BaseModule] Base respawneada - userId %d"):format(userId))
+			print(("[BaseModule] ??? Guardian ACTIVADO - Protegiendo $%d por %ds"):format(
+				newAmount, forceDuration
+				))
 		end
+
+		while tick() - startTime < forceDuration do
+			task.wait(checkInterval)
+
+			-- Verificar si el jugador sigue conectado
+			local plr = Players:GetPlayerByUserId(userId)
+			if not plr then
+				if DEBUG then
+					print(("[BaseModule] ?? Guardian: Jugador desconectado"):format())
+				end
+				break
+			end
+
+			local cash = plr:FindFirstChild("leaderstats") and plr:FindFirstChild("leaderstats"):FindFirstChild("Cash")
+			if not cash then
+				if DEBUG then
+					warn(("[BaseModule] ?? Guardian: Cash no encontrado"):format())
+				end
+				break
+			end
+
+			-- Si el dinero cambió, forzar de vuelta
+			if cash.Value ~= newAmount then
+				local oldValue = cash.Value
+
+				-- ?? ACTUALIZAR AMBOS LUGARES
+				cash.Value = newAmount
+
+				if Economy then
+					local state = Economy.GetState(userId)
+					if state then
+						state.Cash = newAmount
+					end
+				end
+
+				if DEBUG then
+					print(("[BaseModule] ?? DETECTIVE: Dinero cambió de $%d ? $%d"):format(
+						newAmount, oldValue
+						))
+					print(("[BaseModule] ??? Guardian FORZÓ: $%d ? $%d"):format(
+						oldValue, newAmount
+						))
+				end
+			end
+		end
+
+		ActiveGuardianTasks[userId] = nil
+		if DEBUG then
+			print(("[BaseModule] ? Guardian TERMINADO - Protección finalizada"):format())
+		end
+	end)
+
+	-- 5?? MOSTRAR PANTALLA DE MUERTE
+	local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
+	if Remotes then
+		local BaseDead = Remotes:FindFirstChild("BaseDead")
+		if BaseDead and BaseDead:IsA("RemoteEvent") then
+			BaseDead:FireClient(player, moneyLost, 10)
+			if DEBUG then
+				print(("[BaseModule] ?? Pantalla de muerte enviada"):format())
+			end
+		end
+	end
+
+	-- 6?? ESPERAR 10 SEGUNDOS Y RESPAWNEAR BASE
+	task.wait(10)
+
+	-- Respawnear con 50% HP
+	local respawnHP = math.floor(Config.BASE_MAX_HP * 0.5)
+	BaseModule.SetHP(userId, respawnHP)
+
+	if DEBUG then
+		print(("[BaseModule] ??? Base respawneada - userId %d con %d HP"):format(
+			userId, respawnHP
+			))
+	end
+
+	-- Actualizar visuales de la base
+	local BaseStateChanged = Remotes and Remotes:FindFirstChild("BaseStateChanged")
+	if BaseStateChanged and BaseStateChanged:IsA("RemoteEvent") then
+		BaseStateChanged:FireClient(player, {
+			UserId = userId,
+			BaseHP = respawnHP,
+			MaxHP = Config.BASE_MAX_HP,
+		})
+	end
+
+	-- Actualizar visuales (si BaseVisualsManager está disponible)
+	local BaseVisualsManager = nil
+	pcall(function()
+		BaseVisualsManager = require(game.ServerStorage.Managers.BaseVisualsManager)
+	end)
+
+	if BaseVisualsManager and BaseVisualsManager.UpdateBaseVisuals then
+		BaseVisualsManager.UpdateBaseVisuals(userId, respawnHP, Config.BASE_MAX_HP)
 	end
 end
 
@@ -414,26 +612,37 @@ end
 -- Loop de regeneración (iniciar en el server)
 task.spawn(function()
 	while true do
-		task.wait(1) -- Check cada segundo
+		task.wait(1)
 
 		for userId, state in pairs(BaseState) do
-			if state.RegenEnabled and state.HP < state.MaxHP then
-				-- Solo regenerar si no ha recibido daño recientemente
-				local timeSinceDamage = tick() - state.LastDamageTime
+			-- ? ARREGLADO: Validar todo
+			if state and type(state) == "table" then
+				local hp = state.HP
+				local maxHP = state.MaxHP
+				local regenEnabled = state.RegenEnabled
+				local lastDamageTime = state.LastDamageTime or 0
 
-				if timeSinceDamage >= Config.BASE_REGEN_DELAY then
-					state.HP = math.min(state.HP + Config.BASE_REGEN_RATE, state.MaxHP)
+				if hp and maxHP and regenEnabled and type(hp) == "number" and type(maxHP) == "number" then
+					if hp < maxHP then
+						local timeSinceDamage = tick() - lastDamageTime
 
-					if DEBUG and state.HP % 10 == 0 then
-						print(("[BaseModule] Regen - userId %d: %d/%d"):format(
-							userId, state.HP, state.MaxHP
-							))
+						if timeSinceDamage >= Config.BASE_REGEN_DELAY then
+							state.HP = math.min(hp + Config.BASE_REGEN_RATE, maxHP)
+
+							if DEBUG and state.HP % 10 == 0 then
+								print(("[BaseModule] Regen - userId %d: %d/%d"):format(
+									userId, state.HP, state.MaxHP
+									))
+							end
+						end
 					end
 				end
 			end
 		end
 	end
 end)
+
+local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 
 -------------------------------------------------------------------------
 -- DEBUG COMMANDS
@@ -464,15 +673,77 @@ end
 -- CLEANUP
 -------------------------------------------------------------------------
 
--- Limpiar cuando jugadores se van
 Players.PlayerRemoving:Connect(function(plr)
-	BaseModule.RemovePlayer(plr.UserId)
+	local userId = plr.UserId
+
+	BaseModule.RemovePlayer(userId)
+
+	-- ? NUEVO: Cancelar guardian activo
+	if ActiveGuardianTasks[userId] then
+		task.cancel(ActiveGuardianTasks[userId])
+		ActiveGuardianTasks[userId] = nil
+
+		if DEBUG then
+			print(("[BaseModule] Guardian cancelado para jugador que se fue: %d"):format(userId))
+		end
+	end
+
+	-- ? NUEVO: Limpiar pending reductions
+	if PendingMoneyReductions[userId] then
+		PendingMoneyReductions[userId] = nil
+	end
 end)
 
 -------------------------------------------------------------------------
 
 if DEBUG then
-	print("[BaseModule] ? Módulo cargado")
+	print("[BaseModule ARREGLADO] ? Módulo cargado (sin dependencia circular)")
 end
 
+--[[task.spawn(function()
+	while true do
+		task.wait(1) -- Check cada segundo
+
+		for userId, data in pairs(PendingMoneyReductions) do
+			-- Validar que data existe
+			if data and type(data) == "table" then
+				local player = Players:GetPlayerByUserId(userId)
+
+				if player then
+					local leaderstats = player:FindFirstChild("leaderstats")
+					local cashValue = leaderstats and leaderstats:FindFirstChild("Cash")
+
+					if cashValue and data.targetAmount then
+						-- Si el dinero está MAYOR al target, forzar reducción
+						if cashValue.Value > data.targetAmount then
+							cashValue.Value = data.targetAmount
+
+							if DEBUG then
+								print(("[BaseModule] ??? Guardian: Forzando dinero de userId %d a $%d"):format(
+									userId, data.targetAmount
+									))
+							end
+						end
+
+						-- Después de 120 segundos (2 autosaves), dejar de forzar
+						if data.timestamp and (tick() - data.timestamp > 120) then
+							PendingMoneyReductions[userId] = nil
+
+							if DEBUG then
+								print(("[BaseModule] ? Guardian: Dinero de userId %d asegurado"):format(userId))
+							end
+						end
+					end
+				else
+					-- Jugador se fue, limpiar
+					PendingMoneyReductions[userId] = nil
+				end
+			else
+				-- Data inválida, limpiar
+				PendingMoneyReductions[userId] = nil
+			end
+		end
+	end
+end)
+--]]
 return BaseModule

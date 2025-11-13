@@ -1,81 +1,81 @@
 --!strict
 --[[
 	CONFIG.LUA - Apocalypse Tycoon
-	Configuración central del juego
+	Configuraci�n central del juego
 	
-	VERSIÓN: 1.1
-	ÚLTIMA ACTUALIZACIÓN: Sistema de balance mejorado
+	VERSI�N: 1.1
+	�LTIMA ACTUALIZACI�N: Sistema de balance mejorado
 	
 	NOTAS:
-	- Todos los valores están balanceados para sesiones de 30-60 minutos
-	- Modifica con cuidado: pequeños cambios afectan toda la economía
+	- Todos los valores est�n balanceados para sesiones de 30-60 minutos
+	- Modifica con cuidado: peque�os cambios afectan toda la econom�a
 --]]
 
 local Config = {}
 
---═══════════════════════════════════════════════════════════════════════
--- 💰 ECONOMÍA
---═══════════════════════════════════════════════════════════════════════
-Config.START_CASH = 50  -- 🆕 Dar un pequeño boost inicial (era 0)
+-------------------------------------------------------------------------
+-- ?? ECONOM�A
+-------------------------------------------------------------------------
+Config.START_CASH = 99999999999999  -- ?? Dar un peque�o boost inicial (era 0)
 Config.CASH_PER_SEC_BASE = 1  -- Ingreso base sin upgrades
-Config.TICK_SECS = 1  -- Frecuencia de actualización de income
+Config.TICK_SECS = 1  -- Frecuencia de actualizaci�n de income
 
--- 🆕 Límites de economía (prevenir exploits)
-Config.MAX_CASH = 999999999  -- Límite superior de dinero
+-- ?? L�mites de econom�a (prevenir exploits)
+Config.MAX_CASH = 999999999999999999999999  -- L�mite superior de dinero
 Config.MIN_CASH = 0  -- No permitir cash negativo
 
--- 🆕 Multiplicadores de progresión
-Config.PRICE_MULTIPLIER = 1.15  -- Cada upgrade cuesta 15% más que el anterior
+-- ?? Multiplicadores de progresi�n
+Config.PRICE_MULTIPLIER = 1.15  -- Cada upgrade cuesta 15% m�s que el anterior
 Config.INCOME_DIMINISHING_RETURNS = 0.95  -- Cada upgrade da 5% menos income relativo
 
--- 🆕 Offline Earnings
-Config.OFFLINE_MAX_MINUTES = 30  -- Máximo 30 minutos de ganancias offline
+-- ?? Offline Earnings
+Config.OFFLINE_MAX_MINUTES = 30  -- M�ximo 30 minutos de ganancias offline
 Config.OFFLINE_RATE_MULTIPLIER = 0.3  -- Solo ganas 50% del income normal offline
 
---═══════════════════════════════════════════════════════════════════════
--- 🏗️ BASES Y CONSTRUCCIÓN
---═══════════════════════════════════════════════════════════════════════
-Config.BASE_SIZE = Vector3.new(120, 1, 120)  -- Tamaño de la plataforma base
-Config.SPAWN_RING_RADIUS = 250  -- Radio del círculo donde aparecen bases
+-------------------------------------------------------------------------
+-- ??? BASES Y CONSTRUCCI�N
+-------------------------------------------------------------------------
+Config.BASE_SIZE = Vector3.new(120, 1, 120)  -- Tama�o de la plataforma base
+Config.SPAWN_RING_RADIUS = 250  -- Radio del c�rculo donde aparecen bases
 Config.BASE_SPAWN_HEIGHT = 5  -- Altura sobre el terreno
 
--- 🆕 Límites de construcción
-Config.MAX_MODELS_PER_BASE = 100  -- Límite para prevenir lag
-Config.BUILD_GRID_COLUMNS = 4  -- Columnas en la grilla de construcción
+-- ?? L�mites de construcci�n
+Config.MAX_MODELS_PER_BASE = 100  -- L�mite para prevenir lag
+Config.BUILD_GRID_COLUMNS = 4  -- Columnas en la grilla de construcci�n
 Config.BUILD_CELL_SIZE = 8  -- Espacio entre modelos en studs
 
--- 🆕 Cosméticos de base
+-- ?? Cosm�ticos de base
 Config.BASE_COLORS = {
 	Default = Color3.fromRGB(60, 60, 60),
 	Damaged = Color3.fromRGB(120, 40, 40),  -- Rojo cuando HP < 30%
 	Shielded = Color3.fromRGB(80, 120, 180),  -- Azul cuando tiene escudo
 }
 
---═══════════════════════════════════════════════════════════════════════
--- 🛡️ SISTEMA DE DAÑO Y DEFENSA
---═══════════════════════════════════════════════════════════════════════
+-------------------------------------------------------------------------
+-- ??? SISTEMA DE DA�O Y DEFENSA
+-------------------------------------------------------------------------
 Config.BASE_MAX_HP = 100
 Config.BASE_REGEN_RATE = 0.5  -- HP por segundo (0 = sin regen pasiva)
 Config.REPAIR_COST_PER_HP = 100  -- $50 por punto de HP reparado
 
 -- Escudos
-Config.SHIELD_REDUCTION_PER_LEVEL = 0.2  -- 20% reducción por nivel (era duplicado)
-Config.SHIELD_MAX_REDUCTION = 0.6  -- Máximo 60% de reducción (3 niveles)
-Config.SHIELD_MAX_LEVEL = 3  -- 🆕 Nivel máximo de escudo
+Config.SHIELD_REDUCTION_PER_LEVEL = 0.2  -- 20% reducci�n por nivel (era duplicado)
+Config.SHIELD_MAX_REDUCTION = 0.6  -- M�ximo 60% de reducci�n (3 niveles)
+Config.SHIELD_MAX_LEVEL = 3  -- ?? Nivel m�ximo de escudo
 
--- 🆕 Sistema de invencibilidad temporal
+-- ?? Sistema de invencibilidad temporal
 Config.RESPAWN_INVULNERABILITY_SECS = 5  -- 5 segundos de invencibilidad al respawnear
 
---═══════════════════════════════════════════════════════════════════════
--- ☄️ METEORITOS
---═══════════════════════════════════════════════════════════════════════
-Config.METEOR_DAMAGE = 25  -- Daño base por impacto
-Config.METEOR_DAMAGE_RADIUS = 20  -- Radio de daño en studs
+-------------------------------------------------------------------------
+-- ?? METEORITOS
+-------------------------------------------------------------------------
+Config.METEOR_DAMAGE = 25  -- Da�o base por impacto
+Config.METEOR_DAMAGE_RADIUS = 20  -- Radio de da�o en studs
 Config.METEOR_MIN_Y = 120  -- Altura de spawn
-Config.METEOR_VELOCITY = 140  -- Velocidad de caída
+Config.METEOR_VELOCITY = 140  -- Velocidad de ca�da
 Config.METEOR_LIFETIME = 15  -- Segundos antes de auto-destruirse
 
--- 🆕 Variantes de meteoritos (para futuras implementaciones)
+-- ?? Variantes de meteoritos (para futuras implementaciones)
 Config.METEOR_TYPES = {
 	Small = {
 		Damage = 10,
@@ -100,104 +100,104 @@ Config.METEOR_TYPES = {
 -- Debug
 Config.METEOR_DEBUG_COOLDOWN = 5  -- Cooldown para debug spawn (anti-spam)
 
---═══════════════════════════════════════════════════════════════════════
--- 🎯 EVENTOS Y RAIDS
---═══════════════════════════════════════════════════════════════════════
-Config.EVENT_INTERVAL = 300  -- Segundos entre eventos automáticos
+-------------------------------------------------------------------------
+-- ?? EVENTOS Y RAIDS
+-------------------------------------------------------------------------
+Config.EVENT_INTERVAL = 300  -- Segundos entre eventos autom�ticos
 Config.METEOR_COUNT = 30  -- Meteoritos por evento MeteorStorm
-Config.RAIDER_HIT_DAMAGE = 5  -- Daño por golpe de raider
+Config.RAIDER_HIT_DAMAGE = 5  -- Da�o por golpe de raider
 
--- 🆕 Configuración de eventos específicos
+-- ?? Configuraci�n de eventos espec�ficos
 Config.EVENTS = {
 	MeteorStorm = {
-		Duration = 30,  -- Duración del evento en segundos
+		Duration = 30,  -- Duraci�n del evento en segundos
 		SpawnRate = 1,  -- Meteoritos por segundo
 		WarnTime = 10,  -- Avisar 5 segundos antes
 	},
 	Raiders = {
-		Count = 5,  -- Número de raiders por oleada
+		Count = 5,  -- N�mero de raiders por oleada
 		HP = 100,  -- HP por raider
 		Speed = 16,  -- Velocidad de movimiento
 		AttackCooldown = 2,  -- Segundos entre ataques
 	},
-	-- 🆕 Preparado para eventos futuros
+	-- ?? Preparado para eventos futuros
 	BloodMoon = {
 		Enabled = false,  -- Deshabilitado por ahora
 		Multiplier = 2,  -- x2 dificultad
 	},
 }
 
---═══════════════════════════════════════════════════════════════════════
--- 🔧 SISTEMA DE REPARACIONES
---═══════════════════════════════════════════════════════════════════════
-Config.REPAIR_BASE_COST = 50              -- Costo base de una reparación mínima
-Config.REPAIR_MULTIPLIER = 1.35           -- Cada reparación siguiente cuesta +35%
+-------------------------------------------------------------------------
+-- ?? SISTEMA DE REPARACIONES
+-------------------------------------------------------------------------
+Config.REPAIR_BASE_COST = 50              -- Costo base de una reparaci�n m�nima
+Config.REPAIR_MULTIPLIER = 1.35           -- Cada reparaci�n siguiente cuesta +35%
 Config.REPAIR_DECAY_SECS = 60             -- Cada 60s sin reparar, baja el streak (opcional)
-Config.REPAIR_DAMAGE_FACTOR = 1.5         -- Factor extra si el daño fue alto
+Config.REPAIR_DAMAGE_FACTOR = 1.5         -- Factor extra si el da�o fue alto
 
 
---═══════════════════════════════════════════════════════════════════════
--- 💾 DATASTORE Y GUARDADO
---═══════════════════════════════════════════════════════════════════════
-Config.DATASTORE_NAME = "ApocalypseTycoon_v1"
+-------------------------------------------------------------------------
+-- ?? DATASTORE Y GUARDADO
+-------------------------------------------------------------------------
+Config.DATASTORE_NAME = "ApocalypseTycoon_v2_fresh"
 Config.AUTOSAVE_SECS = 60  -- Auto-guardar cada minuto
-Config.SAVE_ON_PURCHASE = false  -- 🆕 Guardar después de cada compra (puede ser laggy)
-Config.MAX_SAVE_RETRIES = 3  -- 🆕 Reintentos si falla el guardado
+Config.SAVE_ON_PURCHASE = false  -- ?? Guardar despu�s de cada compra (puede ser laggy)
+Config.MAX_SAVE_RETRIES = 3  -- ?? Reintentos si falla el guardado
 
--- 🆕 Estructura de datos versionada (para migraciones futuras)
+-- ?? Estructura de datos versionada (para migraciones futuras)
 Config.DATA_VERSION = 1
 
---═══════════════════════════════════════════════════════════════════════
--- 🔒 SEGURIDAD Y RATE LIMITING
---═══════════════════════════════════════════════════════════════════════
-Config.MAX_PURCHASE_PER_SEC = 6  -- Límite de compras por segundo
-Config.MAX_REPAIR_PER_REQUEST = 1000  -- Límite de HP reparables por click
-Config.MAX_REMOTE_CALLS_PER_MIN = 120  -- 🆕 Límite global de llamadas remotas
+-------------------------------------------------------------------------
+-- ?? SEGURIDAD Y RATE LIMITING
+-------------------------------------------------------------------------
+Config.MAX_PURCHASE_PER_SEC = 6  -- L�mite de compras por segundo
+Config.MAX_REPAIR_PER_REQUEST = 1000  -- L�mite de HP reparables por click
+Config.MAX_REMOTE_CALLS_PER_MIN = 120  -- ?? L�mite global de llamadas remotas
 
--- 🆕 Anti-exploit
+-- ?? Anti-exploit
 Config.VALIDATE_PRICES = true  -- Validar precios en servidor antes de comprar
 Config.LOG_SUSPICIOUS_ACTIVITY = true  -- Loggear actividad sospechosa
 
---═══════════════════════════════════════════════════════════════════════
--- 🎨 UI Y EXPERIENCIA DE USUARIO
---═══════════════════════════════════════════════════════════════════════
--- 🆕 Configuración de interfaz
+-------------------------------------------------------------------------
+-- ?? UI Y EXPERIENCIA DE USUARIO
+-------------------------------------------------------------------------
+-- ?? Configuraci�n de interfaz
 Config.UI = {
-	ShowDamageNumbers = true,  -- Mostrar números flotantes al recibir daño
+	ShowDamageNumbers = true,  -- Mostrar n�meros flotantes al recibir da�o
 	ShowIncomePopups = true,  -- Mostrar "+$X" al generar income
-	ShakeOnDamage = true,  -- Shake de cámara al recibir daño fuerte
+	ShakeOnDamage = true,  -- Shake de c�mara al recibir da�o fuerte
 	LowHealthWarning = 30,  -- % de HP para mostrar advertencia
 	NotificationDuration = 3,  -- Segundos que duran las notificaciones
 }
 
--- 🆕 Colores de la UI
+-- ?? Colores de la UI
 Config.UI_COLORS = {
 	Income = Color3.fromRGB(100, 255, 100),  -- Verde para income
-	Damage = Color3.fromRGB(255, 80, 80),  -- Rojo para daño
-	Repair = Color3.fromRGB(100, 200, 255),  -- Azul para reparación
+	Damage = Color3.fromRGB(255, 80, 80),  -- Rojo para da�o
+	Repair = Color3.fromRGB(100, 200, 255),  -- Azul para reparaci�n
 	Warning = Color3.fromRGB(255, 200, 0),  -- Amarillo para advertencias
 }
 
---═══════════════════════════════════════════════════════════════════════
--- 🔊 SONIDOS (preparado para implementación)
---═══════════════════════════════════════════════════════════════════════
--- 🆕 IDs de sonidos de Roblox (reemplazar con tus propios assets)
+-------------------------------------------------------------------------
+-- ?? SONIDOS (preparado para implementaci�n)
+-------------------------------------------------------------------------
+-- ?? IDs de sonidos de Roblox (reemplazar con tus propios assets)
 Config.SOUNDS = {
-	Purchase = "rbxassetid://0",  -- Sonido al comprar
+	Purchase = "rbxassetid://4612383453",  -- Sonido al comprar
 	MeteorImpact = "rbxassetid://9118617342",  -- Sonido de impacto
-	BaseDamaged = "rbxassetid://0",  -- Sonido al recibir daño
+	BaseDamaged = "rbxassetid://0",  -- Sonido al recibir da�o
 	IncomeEarned = "rbxassetid://0",  -- Sonido de income
 	LevelUp = "rbxassetid://0",  -- Sonido al subir de nivel/prestige
 	Warning = "rbxassetid://0",  -- Sonido de alerta
 }
 
 Config.SOUND_VOLUME = 0.5  -- Volumen general (0-1)
-Config.MUSIC_ENABLED = false  -- Música de fondo (implementar después)
+Config.MUSIC_ENABLED = false  -- M�sica de fondo (implementar despu�s)
 
---═══════════════════════════════════════════════════════════════════════
--- 👑 VIP Y GAMEPASSES (preparado para monetización)
---═══════════════════════════════════════════════════════════════════════
--- 🆕 IDs de productos de Roblox (configurar cuando crees los gamepasses)
+-------------------------------------------------------------------------
+-- ?? VIP Y GAMEPASSES (preparado para monetizaci�n)
+-------------------------------------------------------------------------
+-- ?? IDs de productos de Roblox (configurar cuando crees los gamepasses)
 Config.GAMEPASSES = {
 	DoubleIncome = {
 		ID = 0,  -- Reemplazar con ID real
@@ -211,17 +211,17 @@ Config.GAMEPASSES = {
 	},
 	PremiumSlots = {
 		ID = 0,
-		ExtraSlots = 50,  -- 50 slots adicionales de construcción
+		ExtraSlots = 50,  -- 50 slots adicionales de construcci�n
 		Enabled = false,
 	},
 }
 
---═══════════════════════════════════════════════════════════════════════
--- 📊 ANALYTICS Y DEBUG
---═══════════════════════════════════════════════════════════════════════
--- 🆕 Sistema de telemetría (para balancear el juego)
+-------------------------------------------------------------------------
+-- ?? ANALYTICS Y DEBUG
+-------------------------------------------------------------------------
+-- ?? Sistema de telemetr�a (para balancear el juego)
 Config.ANALYTICS = {
-	Enabled = true,  -- Guardar estadísticas de juego
+	Enabled = true,  -- Guardar estad�sticas de juego
 	TrackPurchases = true,
 	TrackDeaths = true,
 	TrackSessionTime = true,
@@ -229,17 +229,17 @@ Config.ANALYTICS = {
 }
 
 -- Debug
-Config.DEBUG_MODE = true-- 🆕 Activar logs detallados (desactivar en producción)
-Config.SHOW_DEBUG_UI = false  -- 🆕 Mostrar UI de debug a todos los jugadores
+Config.DEBUG_MODE = true-- ?? Activar logs detallados (desactivar en producci�n)
+Config.SHOW_DEBUG_UI = false  -- ?? Mostrar UI de debug a todos los jugadores
 
---═══════════════════════════════════════════════════════════════════════
--- 🎮 BALANCE Y PROGRESIÓN
---═══════════════════════════════════════════════════════════════════════
--- 🆕 Curvas de progresión
+-------------------------------------------------------------------------
+-- ?? BALANCE Y PROGRESI�N
+-------------------------------------------------------------------------
+-- ?? Curvas de progresi�n
 Config.PROGRESSION = {
 	EarlyGame = {
 		MaxMinutes = 10,
-		IncomeBoost = 1.5,  -- 50% más income en primeros 10 minutos
+		IncomeBoost = 1.5,  -- 50% m�s income en primeros 10 minutos
 	},
 	MidGame = {
 		MaxMinutes = 30,
@@ -251,7 +251,7 @@ Config.PROGRESSION = {
 	},
 }
 
--- 🆕 Prestige (implementar en futuro)
+-- ?? Prestige (implementar en futuro)
 Config.PRESTIGE = {
 	Enabled = false,
 	RequiredCash = 1000000,  -- $1M para hacer prestige
@@ -259,12 +259,12 @@ Config.PRESTIGE = {
 	MaxPrestige = 10,
 }
 
---═══════════════════════════════════════════════════════════════════════
--- 🛠️ UTILIDADES DE VALIDACIÓN
---═══════════════════════════════════════════════════════════════════════
--- 🆕 Función para validar que el config sea correcto
+-------------------------------------------------------------------------
+-- ??? UTILIDADES DE VALIDACI�N
+-------------------------------------------------------------------------
+-- ?? Funci�n para validar que el config sea correcto
 function Config.Validate(): (boolean, string?)
-	-- Validar que valores críticos estén en rangos válidos
+	-- Validar que valores cr�ticos est�n en rangos v�lidos
 	if Config.BASE_MAX_HP <= 0 then
 		return false, "BASE_MAX_HP debe ser mayor a 0"
 	end
@@ -293,7 +293,7 @@ function Config.Validate(): (boolean, string?)
 	return true, nil
 end
 
--- 🆕 Función para obtener un valor con fallback
+-- ?? Funci�n para obtener un valor con fallback
 function Config.Get(key: string, default: any): any
 	local value = Config[key]
 	if value ~= nil then
@@ -304,37 +304,37 @@ function Config.Get(key: string, default: any): any
 	return default
 end
 
--- 🆕 Función para ajustar dificultad según jugadores activos
+-- ?? Funci�n para ajustar dificultad seg�n jugadores activos
 function Config.GetDynamicDifficulty(playerCount: number): number
-	-- Más jugadores = eventos más frecuentes pero repartidos
+	-- M�s jugadores = eventos m�s frecuentes pero repartidos
 	if playerCount <= 1 then
 		return 1.0  -- Dificultad normal
 	elseif playerCount <= 5 then
-		return 0.8  -- 20% más fácil (menos eventos)
+		return 0.8  -- 20% m�s f�cil (menos eventos)
 	else
-		return 0.6  -- 40% más fácil en servers llenos
+		return 0.6  -- 40% m�s f�cil en servers llenos
 	end
 end
 
---═══════════════════════════════════════════════════════════════════════
--- 🏁 INICIALIZACIÓN
---═══════════════════════════════════════════════════════════════════════
--- Validar config al cargar el módulo
+-------------------------------------------------------------------------
+-- ?? INICIALIZACI�N
+-------------------------------------------------------------------------
+-- Validar config al cargar el m�dulo
 local isValid, errorMsg = Config.Validate()
 if not isValid then
-	error(("[CONFIG] Error de validación: %s"):format(errorMsg or "desconocido"))
+	error(("[CONFIG] Error de validaci�n: %s"):format(errorMsg or "desconocido"))
 end
 
--- Log de confirmación
+-- Log de confirmaci�n
 if Config.DEBUG_MODE then
-	print("[CONFIG] ✓ Configuración cargada y validada correctamente")
-	print(("[CONFIG] Versión de datos: v%d"):format(Config.DATA_VERSION))
+	print("[CONFIG] ? Configuraci�n cargada y validada correctamente")
+	print(("[CONFIG] Versi�n de datos: v%d"):format(Config.DATA_VERSION))
 	print(("[CONFIG] DataStore: %s"):format(Config.DATASTORE_NAME))
 end
 
---═══════════════════════════════════════════════════════════════════════
--- 🌊 SISTEMA DE WAVES
---═══════════════════════════════════════════════════════════════════════
+-------------------------------------------------------------------------
+-- ?? SISTEMA DE WAVES
+-------------------------------------------------------------------------
 Config.CURRENT_WAVE = 1
 Config.METEORS_PER_WAVE_BASE = 8
 
@@ -346,16 +346,16 @@ function Config.GetWaveDifficulty(waveNum: number)
 	}
 end
 
--- Validar config al cargar el módulo
+-- Validar config al cargar el m�dulo
 local isValid, errorMsg = Config.Validate()
 if not isValid then
-	error(("[CONFIG] Error de validación: %s"):format(errorMsg or "desconocido"))
+	error(("[CONFIG] Error de validaci�n: %s"):format(errorMsg or "desconocido"))
 end
 
--- Log de confirmación
+-- Log de confirmaci�n
 if Config.DEBUG_MODE then
-	print("[CONFIG] ✓ Configuración cargada y validada correctamente")
-	print(("[CONFIG] Versión de datos: v%d"):format(Config.DATA_VERSION))
+	print("[CONFIG] ? Configuraci�n cargada y validada correctamente")
+	print(("[CONFIG] Versi�n de datos: v%d"):format(Config.DATA_VERSION))
 	print(("[CONFIG] DataStore: %s"):format(Config.DATASTORE_NAME))
 end
 
