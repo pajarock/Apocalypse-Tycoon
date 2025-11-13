@@ -348,6 +348,175 @@ local function updateWave(newWave: number)
 end
 
 --═══════════════════════════════════════════════════════════════════════
+-- ✅ ANIMACIONES ÉPICAS (VICTORIA / DERROTA)
+--═══════════════════════════════════════════════════════════════════════
+
+-- Sonido de victoria
+local function playVictorySound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://6895079853" -- Sonido épico de victoria
+	sound.Volume = 0.7
+	sound.Parent = game.SoundService
+	sound:Play()
+	game.Debris:AddItem(sound, 3)
+end
+
+-- Sonido de derrota
+local function playDefeatSound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://9114397505" -- Sonido grave de derrota
+	sound.Volume = 0.6
+	sound.Parent = game.SoundService
+	sound:Play()
+	game.Debris:AddItem(sound, 3)
+end
+
+-- ✨ ANIMACIÓN ÉPICA DE VICTORIA
+local function playVictoryAnimation(waveNum: number, survived: number)
+	if DEBUG then
+		print(("[WaveCounterUI] ✨ VICTORIA - Wave %d"):format(waveNum))
+	end
+
+	-- Sonido
+	playVictorySound()
+
+	-- Bounce épico del widget
+	local originalSize = waveFrame.Size
+	local bounceTween = TweenService:Create(
+		waveFrame,
+		TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = UDim2.fromOffset(240, 90) }
+	)
+	bounceTween:Play()
+	bounceTween.Completed:Connect(function()
+		TweenService:Create(
+			waveFrame,
+			TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+			{ Size = originalSize }
+		):Play()
+	end)
+
+	-- Flash dorado en borde
+	waveStroke.Color = Color3.fromRGB(255, 215, 0)
+	waveStroke.Thickness = 5
+	TweenService:Create(waveStroke, TweenInfo.new(0.8), {
+		Color = Color3.fromRGB(255, 170, 0),
+		Thickness = 3
+	}):Play()
+
+	-- Flash en texto "WAVE"
+	labelWave.TextColor3 = Color3.fromRGB(255, 215, 0)
+	TweenService:Create(labelWave, TweenInfo.new(0.6), {
+		TextColor3 = Color3.fromRGB(255, 170, 0)
+	}):Play()
+
+	-- "SURVIVED!" temporal
+	local tempLabel = Instance.new("TextLabel")
+	tempLabel.Size = UDim2.fromScale(1, 0.3)
+	tempLabel.Position = UDim2.fromScale(0, 0.35)
+	tempLabel.BackgroundTransparency = 1
+	tempLabel.Text = "SURVIVED!"
+	tempLabel.TextColor3 = Color3.fromRGB(85, 255, 127)
+	tempLabel.TextScaled = true
+	tempLabel.Font = Enum.Font.GothamBlack
+	tempLabel.TextStrokeTransparency = 0
+	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	tempLabel.TextTransparency = 1
+	tempLabel.ZIndex = 100
+	tempLabel.Parent = waveFrame
+
+	-- Aparecer y desaparecer
+	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	task.delay(0.8, function()
+		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
+			TextTransparency = 1
+		}):Play()
+		task.delay(0.3, function()
+			tempLabel:Destroy()
+		end)
+	end)
+end
+
+-- 💀 ANIMACIÓN ÉPICA DE DERROTA
+local function playDefeatAnimation(waveNum: number)
+	if DEBUG then
+		print(("[WaveCounterUI] 💀 DERROTA - Wave %d"):format(waveNum))
+	end
+
+	-- Sonido
+	playDefeatSound()
+
+	-- Shake violento del widget
+	local originalPos = waveFrame.Position
+	local shakeIntensity = 8
+	local shakeDuration = 0.5
+
+	task.spawn(function()
+		local startTime = tick()
+		while tick() - startTime < shakeDuration do
+			local progress = (tick() - startTime) / shakeDuration
+			local intensity = shakeIntensity * (1 - progress)
+			local offsetX = (math.random() - 0.5) * intensity
+			local offsetY = (math.random() - 0.5) * intensity
+			waveFrame.Position = UDim2.new(
+				originalPos.X.Scale,
+				originalPos.X.Offset + offsetX,
+				originalPos.Y.Scale,
+				originalPos.Y.Offset + offsetY
+			)
+			task.wait()
+		end
+		waveFrame.Position = originalPos
+	end)
+
+	-- Flash rojo en borde
+	waveStroke.Color = Color3.fromRGB(220, 30, 30)
+	waveStroke.Thickness = 5
+	TweenService:Create(waveStroke, TweenInfo.new(0.8), {
+		Color = Color3.fromRGB(255, 170, 0),
+		Thickness = 3
+	}):Play()
+
+	-- Survived parpadea rojo
+	labelSurvived.TextColor3 = Color3.fromRGB(255, 50, 50)
+	TweenService:Create(labelSurvived, TweenInfo.new(0.8), {
+		TextColor3 = Color3.fromRGB(150, 150, 150)
+	}):Play()
+
+	-- "FAILED!" temporal
+	local tempLabel = Instance.new("TextLabel")
+	tempLabel.Size = UDim2.fromScale(1, 0.3)
+	tempLabel.Position = UDim2.fromScale(0, 0.35)
+	tempLabel.BackgroundTransparency = 1
+	tempLabel.Text = "FAILED!"
+	tempLabel.TextColor3 = Color3.fromRGB(220, 30, 30)
+	tempLabel.TextScaled = true
+	tempLabel.Font = Enum.Font.GothamBlack
+	tempLabel.TextStrokeTransparency = 0
+	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	tempLabel.TextTransparency = 1
+	tempLabel.ZIndex = 100
+	tempLabel.Parent = waveFrame
+
+	-- Aparecer y desaparecer
+	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	task.delay(0.8, function()
+		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
+			TextTransparency = 1
+		}):Play()
+		task.delay(0.3, function()
+			tempLabel:Destroy()
+		end)
+	end)
+end
+
+--═══════════════════════════════════════════════════════════════════════
 -- SINCRONIZACIÓN CON SERVIDOR
 --═══════════════════════════════════════════════════════════════════════
 
@@ -427,6 +596,38 @@ if stats then
 		if DEBUG then
 			print("[WaveCounterUI] ✓ Waves survived counter conectado")
 		end
+	end
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ ESCUCHAR RESULTADOS ÉPICOS DEL SERVIDOR
+--═══════════════════════════════════════════════════════════════════════
+
+local remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+if remotes then
+	local waveResultRemote = remotes:WaitForChild("WaveResult", 10)
+	if waveResultRemote and waveResultRemote:IsA("RemoteEvent") then
+		waveResultRemote.OnClientEvent:Connect(function(data)
+			if typeof(data) ~= "table" then return end
+
+			local result = data.result
+			local waveNum = data.waveNumber
+			local survived = data.newSurvived or data.survivedCount
+
+			if result == "victory" then
+				-- ✨ VICTORIA ÉPICA
+				playVictoryAnimation(waveNum, survived)
+			elseif result == "defeat" then
+				-- 💀 DERROTA ÉPICA
+				playDefeatAnimation(waveNum)
+			end
+		end)
+
+		if DEBUG then
+			print("[WaveCounterUI] ✓ WaveResult remote conectado (mensajes épicos)")
+		end
+	else
+		warn("[WaveCounterUI] ⚠️ No se encontró WaveResult remote")
 	end
 end
 

@@ -180,6 +180,7 @@ local AdminCommand = getOrCreateRemote("AdminCommand", "Event") :: RemoteEvent
 local RequestLeaderboard = getOrCreateRemote("RequestLeaderboard", "Function") :: RemoteFunction
 local ShowNotification = getOrCreateRemote("ShowNotification", "Event") :: RemoteEvent
 local CompleteTutorial = getOrCreateRemote("CompleteTutorial", "Event") :: RemoteEvent
+local WaveResult = getOrCreateRemote("WaveResult", "Event") :: RemoteEvent -- ✅ Para mensajes épicos
 
 --═══════════════════════════════════════════════════════════════════════
 -- UTILIDADES
@@ -1425,19 +1426,19 @@ if eventsEnabled then
 				task.wait(stormDuration)
 			end
 
-			-- ✅ ARREGLADO: Wave completada
-			task.wait(1) -- Esperar que termine de caer el último meteorito
+			-- ✅ ARREGLADO: Wave completada (delay reducido para feedback inmediato)
+			task.wait(0.3) -- Esperar solo 0.3s para feedback instantáneo
 
 			if Config.DEBUG_MODE then
 				print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
 			end
 
-			-- ✅ Incrementar contador Y enviar mensaje SOLO A SOBREVIVIENTES
+			-- ✅ Incrementar contador Y enviar resultado ÉPICO personalizado
 			for _, plr in ipairs(Players:GetPlayers()) do
 				local diedDuringWave = Base.DiedDuringCurrentWave(plr.UserId)
 
 				if not diedDuringWave then
-					-- ✅ Jugador SOBREVIVIÓ (no murió durante la wave)
+					-- ✅ Jugador SOBREVIVIÓ
 					Base.IncrementMeteorsSurvived(plr.UserId)
 
 					local stats = plr:FindFirstChild("Stats")
@@ -1448,8 +1449,14 @@ if eventsEnabled then
 						end
 					end
 
-					-- ✅ MENSAJE SOLO A SOBREVIVIENTES
-					notifyPlayer(plr, string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 3)
+					-- ✅ ENVIAR RESULTADO ÉPICO DE VICTORIA
+					if WaveResult then
+						WaveResult:FireClient(plr, {
+							result = "victory",
+							waveNumber = ServerState.CurrentWave,
+							newSurvived = Base.GetMeteorsSurvived(plr.UserId)
+						})
+					end
 
 					-- Achievement: 100 meteoros
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
@@ -1460,7 +1467,16 @@ if eventsEnabled then
 						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
 					end
 				else
-					-- ❌ Jugador MURIÓ durante esta wave
+					-- ❌ Jugador MURIÓ
+					-- ✅ ENVIAR RESULTADO ÉPICO DE DERROTA
+					if WaveResult then
+						WaveResult:FireClient(plr, {
+							result = "defeat",
+							waveNumber = ServerState.CurrentWave,
+							survivedCount = Base.GetMeteorsSurvived(plr.UserId)
+						})
+					end
+
 					if Config.DEBUG_MODE then
 						print(("[WAVE] ❌ Jugador %s MURIÓ durante wave %d"):format(plr.Name, ServerState.CurrentWave))
 					end
