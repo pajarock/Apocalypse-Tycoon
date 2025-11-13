@@ -178,6 +178,7 @@ local AdminCommand = getOrCreateRemote("AdminCommand", "Event") :: RemoteEvent
 local RequestLeaderboard = getOrCreateRemote("RequestLeaderboard", "Function") :: RemoteFunction
 local ShowNotification = getOrCreateRemote("ShowNotification", "Event") :: RemoteEvent
 local CompleteTutorial = getOrCreateRemote("CompleteTutorial", "Event") :: RemoteEvent
+local WaveCompleted = getOrCreateRemote("WaveCompleted", "Event") :: RemoteEvent
 
 --═══════════════════════════════════════════════════════════════════════
 -- UTILIDADES
@@ -1421,8 +1422,8 @@ if eventsEnabled then
 			end
 
 
-		-- Mensaje de wave completada ANTES de incrementar
-		broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 5)
+		-- Enviar mensaje de wave completada con número CORRECTO
+		WaveCompleted:FireAllClients(ServerState.CurrentWave)
 
 		ServerState.CurrentWave += 1
 		CurrentWaveValue.Value = ServerState.CurrentWave
