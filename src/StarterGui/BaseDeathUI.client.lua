@@ -181,6 +181,23 @@ end
 -------------------------------------------------------------------------
 
 BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
+	
+	-- ✅ ARREGLADO: Forzar reset si el UI está activo
+	if screenGui.Enabled then
+		screenGui.Enabled = false
+		task.wait(0.1)
+	end
+
+	-- ✅ ARREGLADO: Reset completo de transparencias
+	background.BackgroundTransparency = 0.3
+	titleLabel.TextTransparency = 0
+	titleLabel.TextStrokeTransparency = 0
+	moneyLostLabel.TextTransparency = 0
+	moneyLostLabel.TextStrokeTransparency = 0.5
+	countdownLabel.TextTransparency = 0
+	countdownLabel.TextStrokeTransparency = 0.5
+	vignette.ImageTransparency = 0.5
+	
 	-- Validate parameters
 	moneyLost = moneyLost or 0
 	respawnTime = respawnTime or 10
@@ -205,7 +222,8 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 		countdown -= 1
 	end
 
-	-- ✅ ARREGLADO: Fade out (solo elementos visuales, NO screenGui)
+	-- Fade out
+
 	TweenService:Create(background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(titleLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
 	TweenService:Create(moneyLostLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
