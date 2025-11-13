@@ -1422,18 +1422,17 @@ if eventsEnabled then
 				task.wait(stormDuration)
 			end
 
-			-- 🎉 NUEVO: Celebrar wave completada
+			-- ✅ ARREGLADO: Wave completada
 			task.wait(1) -- Esperar que termine de caer el último meteorito
-
-			broadcastNotification(string.format("✨ WAVE %d COMPLETED!", ServerState.CurrentWave), 3)
 
 			if Config.DEBUG_MODE then
 				print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
 			end
 
-			-- Incrementar contador de meteoros sobrevividos
+			-- Incrementar contador de meteoros sobrevividos Y enviar mensaje SOLO A SOBREVIVIENTES
 			for _, plr in ipairs(Players:GetPlayers()) do
 				if Base.GetHP(plr.UserId) > 0 then
+					-- ✅ Jugador sobrevivió
 					Base.IncrementMeteorsSurvived(plr.UserId)
 
 					local stats = plr:FindFirstChild("Stats")
@@ -1444,16 +1443,22 @@ if eventsEnabled then
 						end
 					end
 
+					-- ✅ MENSAJE SOLO A SOBREVIVIENTES (antes de incrementar wave)
+					notifyPlayer(plr, string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 3)
+
 					-- Achievement: 100 meteoros
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
+				else
+					-- ❌ Jugador murió en esta wave
+					if Config.DEBUG_MODE then
+						print(("[WAVE] ❌ Jugador %s NO sobrevivió wave %d"):format(plr.Name, ServerState.CurrentWave))
+					end
 				end
 			end
 
-			-- Mensaje de wave completada ANTES de incrementar
-			broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 5)
-
+			-- ✅ INCREMENTAR WAVE DESPUÉS de enviar mensajes
 			ServerState.CurrentWave += 1
 			CurrentWaveValue.Value = ServerState.CurrentWave
 
