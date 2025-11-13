@@ -75,7 +75,7 @@ end
 -- ESTADO
 -------------------------------------------------------------------------
 
-local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived}
+local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived, DiedDuringWave}
 local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 local ActiveGuardianTasks = {} -- [userId] = task thread
 
@@ -104,7 +104,8 @@ function BaseModule.InitPlayer(userId: number)
 		IsInvulnerable = false,
 		ShieldLevel = 0,
 		MeteorsSurvived = 0,
-		RegenEnabled = true
+		RegenEnabled = true,
+		DiedDuringWave = false  -- ✅ Flag para detectar muerte durante wave actual
 	}
 
 	if DEBUG then
@@ -303,6 +304,7 @@ local DEFAULTS = {
 	IsInvulnerable = false,
 	LastDamageTime = -1e9,
 	MeteorsSurvived = 0,
+	DiedDuringWave = false,
 }
 
 local function ensureState(userId: number)
@@ -317,6 +319,7 @@ local function ensureState(userId: number)
 	if type(s.IsInvulnerable) ~= "boolean" then s.IsInvulnerable = DEFAULTS.IsInvulnerable end
 	if type(s.LastDamageTime) ~= "number" then s.LastDamageTime = DEFAULTS.LastDamageTime end
 	if type(s.MeteorsSurvived) ~= "number" then s.MeteorsSurvived = DEFAULTS.MeteorsSurvived end
+	if type(s.DiedDuringWave) ~= "boolean" then s.DiedDuringWave = DEFAULTS.DiedDuringWave end
 	return s
 end
 
@@ -378,6 +381,14 @@ local ActiveGuardianTasks = {}
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
 		print(("[BaseModule] 💀 BASE DESTRUIDA - userId %d"):format(userId))
+	end
+
+	-- ✅ MARCAR QUE MURIÓ DURANTE ESTA WAVE
+	if BaseState[userId] then
+		BaseState[userId].DiedDuringWave = true
+		if DEBUG then
+			print(("[BaseModule] 🚩 Flag DiedDuringWave activado para userId %d"):format(userId))
+		end
 	end
 
 	local player = Players:GetPlayerByUserId(userId)
@@ -664,6 +675,40 @@ end
 function BaseModule.GetMeteorsSurvived(userId: number): number
 	if not BaseState[userId] then return 0 end
 	return BaseState[userId].MeteorsSurvived
+end
+
+-------------------------------------------------------------------------
+-- WAVE DEATH TRACKING (para sistema de waves)
+-------------------------------------------------------------------------
+
+-- ✅ Resetear flag al inicio de cada wave
+function BaseModule.ResetWaveDeathFlag(userId: number)
+	if not BaseState[userId] then return end
+
+	BaseState[userId].DiedDuringWave = false
+
+	if DEBUG then
+		print(("[BaseModule] 🔄 Flag DiedDuringWave reseteado para userId %d"):format(userId))
+	end
+end
+
+-- ✅ Verificar si murió durante la wave actual
+function BaseModule.DiedDuringCurrentWave(userId: number): boolean
+	if not BaseState[userId] then return false end
+	return BaseState[userId].DiedDuringWave or false
+end
+
+-- ✅ Resetear flags de TODOS los jugadores (llamar al inicio de cada wave)
+function BaseModule.ResetAllWaveDeathFlags()
+	for userId, state in pairs(BaseState) do
+		if state and type(state) == "table" then
+			state.DiedDuringWave = false
+		end
+	end
+
+	if DEBUG then
+		print("[BaseModule] 🔄 Flags DiedDuringWave reseteados para todos los jugadores")
+	end
 end
 
 -------------------------------------------------------------------------

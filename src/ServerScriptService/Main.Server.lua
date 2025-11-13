@@ -1391,6 +1391,9 @@ if eventsEnabled then
 				CurrentWaveValue.Value = ServerState.CurrentWave
 			end
 
+			-- ✅ RESETEAR FLAGS DE MUERTE AL INICIO DE CADA WAVE
+			Base.ResetAllWaveDeathFlags()
+
 			print(("═══════════════════════════════════════════════════════════"):rep(1))
 			print(("[WAVE] Iniciando Wave %d"):format(ServerState.CurrentWave))
 			print(("[WAVE] Meteoritos: %d | Daño: %d | Jugadores: %d"):format(
@@ -1429,10 +1432,12 @@ if eventsEnabled then
 				print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
 			end
 
-			-- Incrementar contador de meteoros sobrevividos Y enviar mensaje SOLO A SOBREVIVIENTES
+			-- ✅ Incrementar contador Y enviar mensaje SOLO A SOBREVIVIENTES
 			for _, plr in ipairs(Players:GetPlayers()) do
-				if Base.GetHP(plr.UserId) > 0 then
-					-- ✅ Jugador sobrevivió
+				local diedDuringWave = Base.DiedDuringCurrentWave(plr.UserId)
+
+				if not diedDuringWave then
+					-- ✅ Jugador SOBREVIVIÓ (no murió durante la wave)
 					Base.IncrementMeteorsSurvived(plr.UserId)
 
 					local stats = plr:FindFirstChild("Stats")
@@ -1443,17 +1448,21 @@ if eventsEnabled then
 						end
 					end
 
-					-- ✅ MENSAJE SOLO A SOBREVIVIENTES (antes de incrementar wave)
+					-- ✅ MENSAJE SOLO A SOBREVIVIENTES
 					notifyPlayer(plr, string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 3)
 
 					-- Achievement: 100 meteoros
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
-				else
-					-- ❌ Jugador murió en esta wave
+
 					if Config.DEBUG_MODE then
-						print(("[WAVE] ❌ Jugador %s NO sobrevivió wave %d"):format(plr.Name, ServerState.CurrentWave))
+						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
+					end
+				else
+					-- ❌ Jugador MURIÓ durante esta wave
+					if Config.DEBUG_MODE then
+						print(("[WAVE] ❌ Jugador %s MURIÓ durante wave %d"):format(plr.Name, ServerState.CurrentWave))
 					end
 				end
 			end
