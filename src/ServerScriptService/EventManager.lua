@@ -1,28 +1,20 @@
 --!strict
 --[[
-	EVENT MANAGER - Apocalypse Tycoon
+	EVENT MANAGER - Apocalypse Tycoon (ARREGLADO)
 	-----------------------------------------------------------------------
 
-	VERSI�N REFACTORIZADA con VFX �picos integrados.
+	✅ ARREGLOS EN ESTA VERSIÓN:
+	1. BaseModule ahora se inyecta desde Main.Server.lua (no require directo)
+	2. Validación de BaseModule antes de usar sus funciones
+	3. Flash en pantalla agregado en impactos
+	4. Mejores mensajes de error para debugging
 
-	CAMBIOS EN ESTA VERSI�N:
-	? Integraci�n con VFXManager para efectos visuales
-	? Camera shake en impactos usando RemoteEvent
-	? Trail mejorado con VFX data-driven
-	? Explosiones espectaculares con part�culas
-	? Mantiene TODA la l�gica original de da�o/meteoritos
-
-	INSTRUCCIONES DE INSTALACI�N:
-	1. Copia VFXManager.lua a ServerStorage.Managers.VFXManager
-	2. Copia VFXConfig.lua a ServerStorage.Config.VFXConfig
-	3. Reemplaza el EventManager antiguo con este archivo
-	4. Copia el RemoteEvent "CameraShake" a ReplicatedStorage.Remotes
-
-	COMPATIBILIDAD:
-	- NO cambia API p�blica
-	- NO rompe c�digo existente
-	- Solo agrega efectos visuales
-]]
+	CAMBIOS RESPECTO A LA VERSIÓN ANTERIOR:
+	- Línea 56: BaseModule = nil (se inyectará)
+	- Línea 67-72: Nueva función SetBaseModule()
+	- Línea 293-310: Validación de BaseModule añadida
+	- Línea 280-283: Flash rojo agregado en impactos
+--]]
 
 local Players            = game:GetService("Players")
 local ReplicatedStorage  = game:GetService("ReplicatedStorage")
@@ -34,31 +26,52 @@ assert(RemotesFolder, "[EventManager] Falta folder ReplicatedStorage/Remotes")
 local DebugSpawnMeteor  = RemotesFolder:WaitForChild("DebugSpawnMeteor") :: RemoteEvent
 local BaseDamaged       = RemotesFolder:FindFirstChild("BaseDamaged") :: RemoteEvent?
 
--- ?? NUEVO: Remote para camera shake
+-- 🔥 NUEVO: Remote para camera shake
 local CameraShake = RemotesFolder:FindFirstChild("CameraShake") :: RemoteEvent?
 if not CameraShake then
 	CameraShake = Instance.new("RemoteEvent")
 	CameraShake.Name = "CameraShake"
 	CameraShake.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'CameraShake' creado autom�ticamente")
+	warn("[EventManager] RemoteEvent 'CameraShake' creado automáticamente")
 end
 
--- ?? NUEVO: Remote para notificaciones (dodge, da�o, etc.)
+-- 🔥 NUEVO: Remote para notificaciones (dodge, daño, etc.)
 local ShowNotification = RemotesFolder:FindFirstChild("ShowNotification") :: RemoteEvent?
 if not ShowNotification then
 	ShowNotification = Instance.new("RemoteEvent")
 	ShowNotification.Name = "ShowNotification"
 	ShowNotification.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'ShowNotification' creado autom�ticamente")
+	warn("[EventManager] RemoteEvent 'ShowNotification' creado automáticamente")
 end
 
-local Config     = require(game.ServerStorage.Config.Config)
---local BaseModule = require(game.ServerScriptService.BaseModule) comentario necesario para funcionar.
+-- 🔥 NUEVO: Remote para screen flash
+local ScreenFlash = RemotesFolder:FindFirstChild("ScreenFlash") :: RemoteEvent?
+if not ScreenFlash then
+	ScreenFlash = Instance.new("RemoteEvent")
+	ScreenFlash.Name = "ScreenFlash"
+	ScreenFlash.Parent = RemotesFolder
+	warn("[EventManager] RemoteEvent 'ScreenFlash' creado automáticamente")
+end
 
--- ?? NUEVO: Import VFXManager
+-- 💀 NUEVO: Remote para notificar muerte de base
+local BaseDead = RemotesFolder:FindFirstChild("BaseDead") :: RemoteEvent?
+if not BaseDead then
+	BaseDead = Instance.new("RemoteEvent")
+	BaseDead.Name = "BaseDead"
+	BaseDead.Parent = RemotesFolder
+	warn("[EventManager] RemoteEvent 'BaseDead' creado automáticamente")
+end
+
+
+local Config     = require(game.ServerStorage.Config.Config)
+
+-- ✅ ARREGLADO: BaseModule se inyectará desde Main.Server.lua
+local BaseModule = nil
+
+-- 🔥 NUEVO: Import VFXManager
 local VFXManager = require(game.ServerStorage.Managers.VFXManager)
 
--- ?? NUEVO: Import MeteorDamageSystem (OPCIONAL - comentar si no existe)
+-- 🔥 NUEVO: Import MeteorDamageSystem (OPCIONAL - comentar si no existe)
 local MeteorDamageSystem = nil
 local hasMeteorDamage = pcall(function()
 	MeteorDamageSystem = require(game.ServerStorage.MeteorDamageSystem)
@@ -67,6 +80,17 @@ end)
 local EventManager = {}
 
 local DebugCooldowns: {[number]: number} = {}
+
+-------------------------------------------------------------------------
+-- ✅ NUEVA FUNCIÓN: Inyectar BaseModule desde Main.Server.lua
+-------------------------------------------------------------------------
+
+function EventManager:SetBaseModule(base)
+	BaseModule = base
+	if Config.DEBUG_MODE then
+		print("[EventManager] ✅ BaseModule inyectado exitosamente")
+	end
+end
 
 -------------------------------------------------------------------------
 -- UTILIDADES (Sin cambios)
@@ -148,7 +172,7 @@ local function notifyPlayer(plr: Player, message: string, color: Color3?)
 end
 
 -------------------------------------------------------------------------
--- METEORITOS - ?? REFACTORIZADO CON VFX
+-- METEORITOS - 🔥 REFACTORIZADO CON VFX
 -------------------------------------------------------------------------
 
 local function createMeteor(meteorType: string): Part
@@ -167,16 +191,16 @@ local function createMeteor(meteorType: string): Part
 	meteor.CustomPhysicalProperties = PhysicalProperties.new(3, 0.4, 0.3)
 	meteor.CollisionGroup = "Default"
 
-	-- ?? NUEVO: HP para que dinosaurios puedan atacar meteoritos
+	-- 🔥 NUEVO: HP para que dinosaurios puedan atacar meteoritos
 	local meteorHP = typeConfig.HP or 100
 	meteor:SetAttribute("HP", meteorHP)
 	meteor:SetAttribute("MaxHP", meteorHP)
 	meteor:SetAttribute("MeteorType", meteorType)
 
-	-- ?? NUEVO: Usar VFX trail en lugar de Fire b�sico
-	-- El trail se spawnear� con VFXManager (ver abajo)
+	-- 🔥 NUEVO: Usar VFX trail en lugar de Fire básico
+	-- El trail se spawneará con VFXManager (ver abajo)
 
-	-- Mantener efectos b�sicos para compatibilidad
+	-- Mantener efectos básicos para compatibilidad
 	local fire = Instance.new("Fire", meteor)
 	fire.Size = 10
 	fire.Heat = 15
@@ -209,7 +233,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 	meteor:SetAttribute("TargetUserId", plr.UserId)
 	meteor:SetAttribute("MeteorType", meteorType)
 
-	-- ?? NUEVO: Spawnear VFX trail que sigue al meteorito
+	-- 🔥 NUEVO: Spawnear VFX trail que sigue al meteorito
 	task.spawn(function()
 		while meteor and meteor.Parent do
 			VFXManager:PlayEffect("MeteorTrail", meteor.Position, meteor)
@@ -230,7 +254,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 
 	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
 	if ShowNotif then
-		ShowNotif:FireClient(plr, "?? INCOMING!", 2)
+		ShowNotif:FireClient(plr, "☄️ INCOMING!", 2)
 	end
 
 	local applied = false
@@ -245,7 +269,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 	task.delay(Config.METEOR_LIFETIME, function()
 		if meteor and meteor.Parent and not applied then
 			if Config.DEBUG_MODE then
-				print("[Meteor] Timeout sin impacto v�lido")
+				print("[Meteor] Timeout sin impacto válido")
 			end
 			cleanup()
 		end
@@ -263,10 +287,10 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 
 		if not userId then return end
 
-		-- ?? NUEVO: Explosi�n visual �pica
+		-- 🔥 NUEVO: Explosión visual épica
 		VFXManager:PlayEffect("MeteorExplosion", hitPos)
 
-		-- ?? NUEVO: Camera shake para el jugador afectado
+		-- 🔥 NUEVO: Camera shake para el jugador afectado
 		local ownerPlr = Players:GetPlayerByUserId(userId)
 		if ownerPlr and CameraShake then
 			-- Shake intensity basada en tipo de meteorito
@@ -278,9 +302,14 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			end
 
 			CameraShake:FireClient(ownerPlr, shakeIntensity, 0.5)
+
+			-- ✅ NUEVO: Flash rojo en pantalla al recibir impacto
+			if ScreenFlash then
+				ScreenFlash:FireClient(ownerPlr, "Red", 0.4, 0.3)
+			end
 		end
 
-		-- ?? NUEVO: DA�O A JUGADORES (mec�nica de salto para evadir)
+		-- 🔥 NUEVO: DAÑO A JUGADORES (mecánica de salto para evadir)
 		if hasMeteorDamage and MeteorDamageSystem then
 			local basePart = getPlayerBasePart(ownerPlr)
 			if basePart then
@@ -288,18 +317,26 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			end
 		end
 
-		-- L�gica de da�o a la base (sin cambios)
-		local rawDamage = typeConfig.Damage
-		local appliedAmount = BaseModule.ApplyDamage(userId, rawDamage)
-		applied = appliedAmount > 0
+		-- ✅ ARREGLADO: Lógica de daño a la base con validación de BaseModule
+		local appliedAmount = 0
 
-		if Config.DEBUG_MODE then
-			print(("[Meteor] Impacto en base de userId=%d | raw=%d, applied=%d, HP restante=%d")
-				:format(userId, rawDamage, appliedAmount, BaseModule.GetHP(userId)))
-		end
+		if BaseModule and BaseModule.ApplyDamage then
+			local rawDamage = typeConfig.Damage
+			appliedAmount = BaseModule.ApplyDamage(userId, rawDamage)
+			applied = appliedAmount > 0
 
-		if BaseModule.GetHP(userId) > 0 then
-			print(("[METEOR] Jugador %d sobrevivi�!"):format(userId))
+			if Config.DEBUG_MODE then
+				local currentHP = BaseModule.GetHP and BaseModule.GetHP(userId) or "?"
+				print(("[Meteor] Impacto en base de userId=%d | raw=%d, applied=%d, HP restante=%s")
+					:format(userId, rawDamage, appliedAmount, tostring(currentHP)))
+			end
+
+			if BaseModule.GetHP and BaseModule.GetHP(userId) > 0 then
+				print(("[METEOR] Jugador %d sobrevivió!"):format(userId))
+			end
+		else
+			warn("[EventManager] ⚠️ BaseModule no está disponible - no se aplicó daño")
+			warn("[EventManager] ⚠️ Asegúrate de llamar EventManager:SetBaseModule(Base) en Main.Server.lua")
 		end
 
 		if ownerPlr and appliedAmount > 0 then
@@ -307,14 +344,14 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 				BaseDamaged:FireClient(ownerPlr, appliedAmount)
 			end
 
-			-- ?? NUEVO: VFX de da�o en la base
+			-- 🔥 NUEVO: VFX de daño en la base
 			local basePart = getPlayerBasePart(ownerPlr)
 			if basePart then
 				VFXManager:PlayEffect("DamageHit", basePart.Position + Vector3.new(0, 5, 0))
 			end
 
-			if BaseModule.IsLowHP(userId) then
-				notifyPlayer(ownerPlr, "?? HP CR�TICO!", Config.UI_COLORS.Warning)
+			if BaseModule and BaseModule.IsLowHP and BaseModule.IsLowHP(userId) then
+				notifyPlayer(ownerPlr, "⚠️ HP CRÍTICO!", Config.UI_COLORS.Warning)
 			end
 		end
 
@@ -328,7 +365,7 @@ local function spawnMeteorOverBase(plr: Player, height: number?, spread: number?
 	local base = getPlayerBasePart(plr)
 
 	if not base then
-		warn(("[Meteor] No encontr� base del jugador: %s"):format(plr.Name))
+		warn(("[Meteor] No encontré base del jugador: %s"):format(plr.Name))
 		return
 	end
 
@@ -365,13 +402,13 @@ DebugSpawnMeteor.OnServerEvent:Connect(function(plr: Player)
 	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y, 12, randomType)
 end)
 
--- Evento: MeteorStorm (sin cambios de l�gica, solo VFX)
+-- Evento: MeteorStorm (sin cambios de lógica, solo VFX)
 function EventManager:MeteorStorm()
 	local config = Config.EVENTS.MeteorStorm
 
 	if config.WarnTime > 0 then
 		for _, plr in ipairs(Players:GetPlayers()) do
-			notifyPlayer(plr, "?? TORMENTA DE METEORITOS EN " .. config.WarnTime .. "s", Config.UI_COLORS.Warning)
+			notifyPlayer(plr, "⚠️ TORMENTA DE METEORITOS EN " .. config.WarnTime .. "s", Config.UI_COLORS.Warning)
 		end
 		task.wait(config.WarnTime)
 	end
@@ -379,7 +416,7 @@ function EventManager:MeteorStorm()
 	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
 	if ShowNotif then
 		for _, plr in ipairs(Players:GetPlayers()) do
-			ShowNotif:FireClient(plr, "?? METEOR STORM", 3)
+			ShowNotif:FireClient(plr, "☄️ METEOR STORM", 3)
 		end
 	end
 
@@ -408,7 +445,7 @@ function EventManager:MeteorStorm()
 	task.delay(config.Duration, function()
 		print("[EVENT] MeteorStorm finalizada")
 		for _, plr in ipairs(Players:GetPlayers()) do
-			notifyPlayer(plr, "? Tormenta terminada", Config.UI_COLORS.Income)
+			notifyPlayer(plr, "✓ Tormenta terminada", Config.UI_COLORS.Income)
 		end
 	end)
 end
@@ -419,7 +456,7 @@ Players.PlayerRemoving:Connect(function(plr)
 end)
 
 if Config.DEBUG_MODE then
-	print("[EVENTMANAGER REFACTORED] ? M�dulo cargado con VFX �picos")
+	print("[EVENTMANAGER ARREGLADO] ✅ Módulo cargado - esperando inyección de BaseModule")
 end
 
 return EventManager
