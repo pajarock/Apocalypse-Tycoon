@@ -1420,13 +1420,18 @@ if eventsEnabled then
 				end
 			end
 
-			ServerState.CurrentWave += 1
-			CurrentWaveValue.Value = ServerState.CurrentWave
 
-			logAnalytic("WaveCompleted", {
-				wave = ServerState.CurrentWave - 1,
-				survivors = #Players:GetPlayers(),
-			})
+		-- Mensaje de wave completada ANTES de incrementar
+		broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 4)
+		task.wait(1)
+
+		ServerState.CurrentWave += 1
+		CurrentWaveValue.Value = ServerState.CurrentWave
+
+		logAnalytic("WaveCompleted", {
+			wave = ServerState.CurrentWave - 1,
+			survivors = #Players:GetPlayers(),
+		})
 		end
 	end)
 
