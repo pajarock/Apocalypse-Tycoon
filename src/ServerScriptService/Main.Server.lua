@@ -70,6 +70,9 @@ local Economy = require(ServerScriptService.EconomyModule)
 local Events = require(ServerScriptService.EventManager)
 local Base = require(ServerScriptService.BaseModule)
 
+-- ✅ NUEVO: Inyectar BaseModule en EventManager (arregla dependencia circular)
+Events:SetBaseModule(Base)
+
 -- Módulo de achievements (crear si no existe)
 local Achievements = ServerScriptService:FindFirstChild("AchievementModule")
 if Achievements then
@@ -111,14 +114,13 @@ local ServerState = {
 	ServerEvents = {},
 	Leaderboard = {},
 }
-
--- Crear IntValue para sincronizar el contador de waves con el cliente
+-- ✅ NUEVO: Crear IntValue para sincronizar wave counter con clientes
 local CurrentWaveValue = Instance.new("IntValue")
 CurrentWaveValue.Name = "CurrentWave"
 CurrentWaveValue.Value = ServerState.CurrentWave
 CurrentWaveValue.Parent = ReplicatedStorage
 
-if DEBUG then
+if Config.DEBUG_MODE then
 	print("[MAIN] ✅ IntValue 'CurrentWave' creado en ReplicatedStorage")
 end
 
@@ -419,7 +421,6 @@ local function assignBase(plr: Player, slot: number)
 		math.sin(angle) * Config.SPAWN_RING_RADIUS
 	)
 
-	-- 🆕 USAR BaseVisualsManager en lugar de crear base manualmente
 	local plate = BaseVisualsManager:CreateBase(
 		plr.UserId,
 		center,
@@ -434,7 +435,8 @@ local function assignBase(plr: Player, slot: number)
 	if DEBUG then
 		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
 	end
-end
+end 
+
 
 local function teleportToBase(plr: Player, char: Model)
 	task.defer(function()
@@ -806,7 +808,22 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 		if DEBUG then
 			print(("[PURCHASE] Max HP aumentado a " .. Config.BASE_MAX_HP))
 		end
+	
+	
+	--[[local baseVisuals = ServerStorage.Managers:FindFirstChild("BaseVisualsManager")
+	if baseVisuals then
+		local BaseVisualsManager = require(baseVisuals)
+		BaseVisualsManager.UpdateBaseVisuals(
+			plr.UserId,
+			Base.GetHP(plr.UserId),
+			Config.BASE_MAX_HP  -- ← MaxHP nuevo
+		)
 	end
+
+	if DEBUG then
+		print(("[PURCHASE] Max HP aumentado a %d"):format(Config.BASE_MAX_HP))
+	end]]--
+end
 
 	-- Sync leaderstats
 	local ls = plr:FindFirstChild("leaderstats")
@@ -1369,6 +1386,11 @@ if eventsEnabled then
 
 			task.wait(adjustedInterval)
 
+			-- ✅ SINCRONIZAR AL INICIO (muestra la wave que VAS A JUGAR)
+			if CurrentWaveValue then
+				CurrentWaveValue.Value = ServerState.CurrentWave
+			end
+
 			print(("═══════════════════════════════════════════════════════════"):rep(1))
 			print(("[WAVE] Iniciando Wave %d"):format(ServerState.CurrentWave))
 			print(("[WAVE] Meteoritos: %d | Daño: %d | Jugadores: %d"):format(
@@ -1400,6 +1422,15 @@ if eventsEnabled then
 				task.wait(stormDuration)
 			end
 
+			-- 🎉 NUEVO: Celebrar wave completada
+			task.wait(1) -- Esperar que termine de caer el último meteorito
+
+			broadcastNotification(string.format("✨ WAVE %d COMPLETED!", ServerState.CurrentWave), 3)
+
+			if Config.DEBUG_MODE then
+				print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
+			end
+
 			-- Incrementar contador de meteoros sobrevividos
 			for _, plr in ipairs(Players:GetPlayers()) do
 				if Base.GetHP(plr.UserId) > 0 then
@@ -1420,19 +1451,22 @@ if eventsEnabled then
 				end
 			end
 
+			-- Mensaje de wave completada ANTES de incrementar
+			broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 5)
 
-		-- Mensaje de wave completada ANTES de incrementar
-		broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 4)
-		task.wait(1)
+			ServerState.CurrentWave += 1
+			CurrentWaveValue.Value = ServerState.CurrentWave
 
-		ServerState.CurrentWave += 1
-		CurrentWaveValue.Value = ServerState.CurrentWave
-
-		logAnalytic("WaveCompleted", {
-			wave = ServerState.CurrentWave - 1,
-			survivors = #Players:GetPlayers(),
-		})
+			logAnalytic("WaveCompleted", {
+				wave = ServerState.CurrentWave - 1,
+				survivors = #Players:GetPlayers(),
+			})
+			-- Pausa de 5 segundos antes de anunciar el siguiente wave
+			task.wait(5)
 		end
+
+
+	
 	end)
 
 	if DEBUG then
@@ -1547,7 +1581,58 @@ if Config.DEBUG_MODE then
 	print("[MAIN] ✓ Ambiente apocalíptico inicializado")
 end
 
+if Config.DEBUG_MODE then
+	print("[MAIN] 🧹 Limpiando bases de sesiones anteriores...")
 
+	local basesFolder = workspace:FindFirstChild("Bases")
+	if basesFolder then
+		local count = 0
+		for _, obj in ipairs(basesFolder:GetChildren()) do
+			if obj:IsA("BasePart") or obj:IsA("Model") then
+				obj:Destroy()
+				count += 1
+			end
+		end
+		print(("[MAIN] ✅ Limpiadas %d bases viejas"):format(count))
+	end
+end
+
+local function diagnosticBillboards(userId: number)
+	task.delay(2, function() -- Esperar 2 segundos a que se creen las bases
+		local basesFolder = workspace:FindFirstChild("Bases")
+		if not basesFolder then return end
+
+		local billboardCount = 0
+		local baseCount = 0
+
+		for _, obj in ipairs(basesFolder:GetDescendants()) do
+			if obj:GetAttribute("OwnerUserId") == userId then
+				if obj:IsA("BasePart") then
+					baseCount += 1
+					print(("[DIAGNOSTIC] Base encontrada: %s"):format(obj.Name))
+				end
+			end
+
+			if obj:IsA("BillboardGui") then
+				local parent = obj.Parent
+				if parent and parent:GetAttribute("OwnerUserId") == userId then
+					billboardCount += 1
+					print(("[DIAGNOSTIC] Billboard #%d: Parent = %s"):format(
+						billboardCount, parent.Name
+						))
+				end
+			end
+		end
+
+		print(("[DIAGNOSTIC] RESUMEN userId %d: %d bases, %d billboards"):format(
+			userId, baseCount, billboardCount
+			))
+
+		if billboardCount > 1 then
+			warn(("[DIAGNOSTIC] ⚠️ PROBLEMA: Hay %d billboards (debería ser 1)"):format(billboardCount))
+		end
+	end)
+end
 --═══════════════════════════════════════════════════════════════════════
 -- PLAYER LIFECYCLE
 --═══════════════════════════════════════════════════════════════════════
@@ -1618,6 +1703,10 @@ Players.PlayerAdded:Connect(function(plr: Player)
 	end
 
 	assignBase(plr, slot)
+	-- ✅ DIAGNÓSTICO TEMPORAL
+	if Config.DEBUG_MODE then
+		diagnosticBillboards(plr.UserId)
+	end
 
 	-- Rebuild progreso
 	local basePart = BasePartByUser[plr.UserId]
