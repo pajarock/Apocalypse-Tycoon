@@ -498,11 +498,11 @@ function BaseModule.OnBaseDead(userId: number)
 				break
 			end
 
-			-- Si el dinero cambió, forzar de vuelta
-			if cash.Value ~= newAmount then
+			-- ✅ ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
+			if cash.Value < newAmount then
 				local oldValue = cash.Value
 
-				-- 🆕 ACTUALIZAR AMBOS LUGARES
+				-- Forzar al mínimo solo si bajó
 				cash.Value = newAmount
 
 				if Economy then
@@ -513,13 +513,18 @@ function BaseModule.OnBaseDead(userId: number)
 				end
 
 				if DEBUG then
-					print(("[BaseModule] 🔍 DETECTIVE: Dinero cambió de $%d → $%d"):format(
+					print(("[BaseModule] 🛡️ Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
 						newAmount, oldValue
 						))
-					print(("[BaseModule] 🛡️ Guardian FORZÓ: $%d → $%d"):format(
+					print(("[BaseModule] 🛡️ Guardian RESTAURÓ: $%d → $%d"):format(
 						oldValue, newAmount
 						))
 				end
+			elseif DEBUG and cash.Value > newAmount then
+				-- Income normal funcionando, no hacer nada
+				print(("[BaseModule] ✅ Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
+					cash.Value, newAmount
+					))
 			end
 		end
 
