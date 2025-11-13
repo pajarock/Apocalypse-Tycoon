@@ -97,6 +97,7 @@ function BaseModule.InitPlayer(userId: number)
 		return
 	end
 
+	-- ✅ Flag para detectar muerte durante wave actual
 	BaseState[userId] = {
 		HP = Config.BASE_MAX_HP,
 		MaxHP = Config.BASE_MAX_HP,
@@ -105,7 +106,7 @@ function BaseModule.InitPlayer(userId: number)
 		ShieldLevel = 0,
 		MeteorsSurvived = 0,
 		RegenEnabled = true,
-		DiedDuringWave = false  -- ✅ Flag para detectar muerte durante wave actual
+		DiedDuringWave = false
 	}
 
 	if DEBUG then
@@ -304,7 +305,7 @@ local DEFAULTS = {
 	IsInvulnerable = false,
 	LastDamageTime = -1e9,
 	MeteorsSurvived = 0,
-	DiedDuringWave = false,
+	DiedDuringWave = false
 }
 
 local function ensureState(userId: number)
