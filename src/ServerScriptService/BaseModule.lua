@@ -226,6 +226,25 @@ function BaseModule.AddHP(userId: number, amount: number)
 	end
 end
 
+function BaseModule.SetMaxHP(userId: number, newMaxHP: number)
+	if not BaseState[userId] then
+		warn(("[BaseModule] SetMaxHP: Usuario %d no inicializado"):format(userId))
+		return
+	end
+
+	local oldMaxHP = BaseState[userId].MaxHP
+	BaseState[userId].MaxHP = newMaxHP
+
+	-- Si el HP actual era el máximo, aumentarlo también
+	if BaseState[userId].HP == oldMaxHP then
+		BaseState[userId].HP = newMaxHP
+	end
+
+	if DEBUG then
+		print(("[BaseModule] SetMaxHP userId %d: %d → %d"):format(userId, oldMaxHP, newMaxHP))
+	end
+end
+
 -------------------------------------------------------------------------
 -- DAMAGE SYSTEM
 -------------------------------------------------------------------------

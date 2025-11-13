@@ -3,21 +3,21 @@
 	-----------------------------------------------------------------------
 	APOCALYPSE TYCOON - MAIN SERVER
 	-----------------------------------------------------------------------
-	VERSIÓN: 5.0 PRODUCTION READY
+	VERSIï¿½N: 5.0 PRODUCTION READY
 	AUTOR: Tu Equipo
-	ÚLTIMA ACTUALIZACIÓN: 2025
+	ï¿½LTIMA ACTUALIZACIï¿½N: 2025
 	
-	CARACTERÍSTICAS:
-	? Sistema completo de economía con anti-exploit
-	? Sistema de waves dinámicas con boss fights
+	CARACTERï¿½STICAS:
+	? Sistema completo de economï¿½a con anti-exploit
+	? Sistema de waves dinï¿½micas con boss fights
 	? Sistema de achievements y badges
-	? Sistema de prestige y progresión
+	? Sistema de prestige y progresiï¿½n
 	? Sistema VIP y gamepasses
 	? Sistema de daily rewards
 	? Sistema de leaderboards global
 	? Sistema de commands (admin y debug)
-	? Sistema de analytics y telemetría
-	? Sistema de backup automático
+	? Sistema de analytics y telemetrï¿½a
+	? Sistema de backup automï¿½tico
 	? Sistema de rate limiting
 	? Sistema de tutorial para nuevos jugadores
 	? Sistema de quests/missions
@@ -26,8 +26,8 @@
 	? Optimizaciones de rendimiento
 	? Manejo robusto de errores
 	
-	NOTAS DE PRODUCCIÓN:
-	- Testear en servidor privado antes de público
+	NOTAS DE PRODUCCIï¿½N:
+	- Testear en servidor privado antes de pï¿½blico
 	- Configurar gamepasses IDs en Config
 	- Configurar badge IDs en AchievementModule
 	- Activar analytics si es necesario
@@ -61,7 +61,7 @@ local ProceduralModels = require(ServerStorage.Managers.ProceduralModels)
 local BuildEffectsManager = require(ServerStorage.Managers.BuildEffectsManager)
 
 -------------------------------------------------------------------------
--- MÓDULOS
+-- Mï¿½DULOS
 -------------------------------------------------------------------------
 local Config = require(ServerStorage.Config.Config)
 local UpgDefs = require(ServerStorage.Config.Upgrades)
@@ -73,26 +73,26 @@ local Base = require(ServerScriptService.BaseModule)
 -- ? NUEVO: Inyectar BaseModule en EventManager (arregla dependencia circular)
 Events:SetBaseModule(Base)
 
--- Módulo de achievements (crear si no existe)
+-- Mï¿½dulo de achievements (crear si no existe)
 local Achievements = ServerScriptService:FindFirstChild("AchievementModule")
 if Achievements then
 	Achievements = require(Achievements)
 end
 
 -------------------------------------------------------------------------
--- CONSTANTES Y CONFIGURACIÓN
+-- CONSTANTES Y CONFIGURACIï¿½N
 -------------------------------------------------------------------------
 local IS_STUDIO = RunService:IsStudio()
 local DEBUG = Config.DEBUG_MODE and IS_STUDIO
 
--- IDs de gamepasses (CONFIGURAR EN PRODUCCIÓN)
+-- IDs de gamepasses (CONFIGURAR EN PRODUCCIï¿½N)
 local GAMEPASS_DOUBLE_INCOME = Config.GAMEPASSES.DoubleIncome.ID
 local GAMEPASS_INSTANT_REPAIR = Config.GAMEPASSES.InstantRepair.ID
 local GAMEPASS_PREMIUM_SLOTS = Config.GAMEPASSES.PremiumSlots.ID
 
 -- Admin list (userId)
 local ADMINS = {
-	-- Agregar tus IDs aquí
+	-- Agregar tus IDs aquï¿½
 }
 
 -- Limits de rate limiting
@@ -114,6 +114,16 @@ local ServerState = {
 	ServerEvents = {},
 	Leaderboard = {},
 }
+
+-- Crear IntValue para sincronizar el contador de waves con el cliente
+local CurrentWaveValue = Instance.new("IntValue")
+CurrentWaveValue.Name = "CurrentWave"
+CurrentWaveValue.Value = ServerState.CurrentWave
+CurrentWaveValue.Parent = ReplicatedStorage
+
+if DEBUG then
+	print("[MAIN] âœ… IntValue 'CurrentWave' creado en ReplicatedStorage")
+end
 
 local NextSlot = 1
 local SlotByUserId = {}
@@ -225,15 +235,15 @@ local function checkRateLimit(userId: number, action: string): boolean
 	data.times = newTimes
 	data.count = #newTimes
 
-	-- Verificar límite
+	-- Verificar lï¿½mite
 	if data.count >= limit.max then
 		if DEBUG then
-			warn(("[RATE_LIMIT] Usuario %d excedió límite de %s"):format(userId, action))
+			warn(("[RATE_LIMIT] Usuario %d excediï¿½ lï¿½mite de %s"):format(userId, action))
 		end
 		return false
 	end
 
-	-- Registrar acción
+	-- Registrar acciï¿½n
 	table.insert(data.times, now)
 	data.count += 1
 	return true
@@ -259,8 +269,8 @@ end
 local function logAnalytic(eventName: string, data: any?)
 	if not Config.ANALYTICS.Enabled then return end
 
-	-- Aquí puedes integrar con servicios externos como Google Analytics
-	-- o simplemente guardar en DataStore para análisis posterior
+	-- Aquï¿½ puedes integrar con servicios externos como Google Analytics
+	-- o simplemente guardar en DataStore para anï¿½lisis posterior
 
 	if DEBUG then
 		print(("[ANALYTICS] %s: %s"):format(eventName, HttpService:JSONEncode(data or {})))
@@ -308,7 +318,7 @@ local function createLeaderstats(plr: Player)
 	ips.Value = 0
 	ips.Parent = ls
 
-	-- Stats adicionales (ocultas para UI pero útiles)
+	-- Stats adicionales (ocultas para UI pero ï¿½tiles)
 	local stats = Instance.new("Folder")
 	stats.Name = "Stats"
 	stats.Parent = plr
@@ -381,7 +391,7 @@ local function createBaseBillboard(plate: BasePart, playerName: string, userId: 
 	hpLabel.Text = string.format("HP: %d/%d", Base.GetHP(userId), Config.BASE_MAX_HP)
 	hpLabel.Parent = frame
 
-	-- Actualizar HP label periódicamente
+	-- Actualizar HP label periï¿½dicamente
 	task.spawn(function()
 		while plate and plate.Parent and Players:GetPlayerByUserId(userId) do
 			local hp = Base.GetHP(userId)
@@ -427,35 +437,6 @@ local function assignBase(plr: Player, slot: number)
 	if DEBUG then
 		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
 	end
-		
-	local plate = Instance.new("Part")
-	plate.Name = plr.Name .. "_Base"
-	plate.Size = Config.BASE_SIZE
-	plate.Anchored = true
-	plate.Position = center
-	plate.Material = Enum.Material.Concrete
-	plate.Color = Config.BASE_COLORS.Default
-	plate:SetAttribute("OwnerUserId", plr.UserId)
-	plate.Parent = getBasesFolder()
-
-	-- Decoraciones
-	local border = Instance.new("Part")
-	border.Name = "Border"
-	border.Size = Vector3.new(Config.BASE_SIZE.X + 2, 0.5, Config.BASE_SIZE.Z + 2)
-	border.Anchored = true
-	border.Material = Enum.Material.Metal
-	border.Color = Color3.fromRGB(100, 100, 100)
-	border.CFrame = plate.CFrame * CFrame.new(0, -0.75, 0)
-	border.Parent = plate
-
-	--createBaseBillboard(plate, plr.Name, plr.UserId)
-
-	BasePartByUser[plr.UserId] = plate
-	plr:SetAttribute("BaseSlot", slot)
-
-	if DEBUG then
-		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
-	end
 end
 
 local function teleportToBase(plr: Player, char: Model)
@@ -477,7 +458,7 @@ local function teleportToBase(plr: Player, char: Model)
 end
 
 -------------------------------------------------------------------------
--- SISTEMA DE CATEGORÍAS Y PLACEMENT
+-- SISTEMA DE CATEGORï¿½AS Y PLACEMENT
 -------------------------------------------------------------------------
 local CategoryColors = {
 	Income = {
@@ -553,7 +534,7 @@ local function getNextBuildCFrame(basePart: BasePart, index: number, category: s
 	local MAX_PER_CATEGORY = 12
 
 	if index > MAX_PER_CATEGORY then
-		warn(("[PLACEMENT] Límite alcanzado para categoría %s"):format(cat))
+		warn(("[PLACEMENT] Lï¿½mite alcanzado para categorï¿½a %s"):format(cat))
 		return nil
 	end
 
@@ -629,7 +610,7 @@ local function createUpgradeButton(upgId: string, def: any, userId: number, base
 	local button = Instance.new("Model")
 	button.Name = "Button_" .. upgId
 
-	-- Base del botón
+	-- Base del botï¿½n
 	local base = Instance.new("Part")
 	base.Name = "Base"
 	base.Size = Vector3.new(8, 1.5, 8)
@@ -734,7 +715,7 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 	-- Validar upgrade existe
 	local def = UpgDefs[upgradeId]
 	if not def then
-		warn(("[PURCHASE] Upgrade inválido: %s"):format(upgradeId))
+		warn(("[PURCHASE] Upgrade invï¿½lido: %s"):format(upgradeId))
 		return
 	end
 
@@ -767,7 +748,7 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 	local category = def.Category or "Income"
 
-	-- Primera compra: crear botón
+	-- Primera compra: crear botï¿½n
 	if count == 1 and def.ModelName then
 		local buttonName = "Button_" .. upgradeId
 		local existing = getBasesFolder():FindFirstChild(buttonName)
@@ -823,7 +804,11 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 	if upgradeId == "Upgrade_7" then
 		Config.BASE_MAX_HP += 5
+		Base.SetMaxHP(plr.UserId, Config.BASE_MAX_HP)
 		Base.AddHP(plr.UserId, 5)
+		if DEBUG then
+			print(("[PURCHASE] Max HP aumentado a " .. Config.BASE_MAX_HP))
+		end
 	end
 
 	-- Sync leaderstats
@@ -881,7 +866,7 @@ RequestSell.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 end)
 
 -------------------------------------------------------------------------
--- SISTEMA DE REPARACIÓN
+-- SISTEMA DE REPARACIï¿½N
 -------------------------------------------------------------------------
 RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	amount = tonumber(amount) or 10
@@ -964,7 +949,7 @@ RequestPrestige.OnServerEvent:Connect(function(plr: Player)
 		return
 	end
 
-	-- Confirmar (esto debería hacerse con un diálogo en cliente)
+	-- Confirmar (esto deberï¿½a hacerse con un diï¿½logo en cliente)
 	-- Por ahora lo hacemos directo
 
 	-- Reset progreso
@@ -981,7 +966,7 @@ RequestPrestige.OnServerEvent:Connect(function(plr: Player)
 		end
 	end
 
-	-- Reset índices
+	-- Reset ï¿½ndices
 	BuildIndexByCategory[plr.UserId] = {
 		Income = 1,
 		Defense = 1,
@@ -1038,7 +1023,7 @@ RequestDailyReward.OnServerEvent:Connect(function(plr: Player)
 		return
 	end
 
-	-- Determinar día actual (reset si pasó más de 1 día)
+	-- Determinar dï¿½a actual (reset si pasï¿½ mï¿½s de 1 dï¿½a)
 	local currentDay = (DailyRewards[userId] or 0) + 1
 	if daysPassed > 1 then
 		currentDay = 1 -- Reset streak
@@ -1116,7 +1101,7 @@ RequestBaseState.OnServerInvoke = function(plr: Player)
 end
 
 RequestLeaderboard.OnServerInvoke = function(plr: Player, leaderboardType: string?)
-	-- Aquí puedes implementar diferentes tipos de leaderboards
+	-- Aquï¿½ puedes implementar diferentes tipos de leaderboards
 	-- Por ahora retornamos top players por cash
 
 	local leaders = {}
@@ -1184,6 +1169,7 @@ local Commands = {
 
 		local wave = tonumber(args[1]) or 1
 		ServerState.CurrentWave = wave
+		CurrentWaveValue.Value = wave
 
 		notifyPlayer(plr, string.format("? Wave set to %d", wave), 2)
 	end,
@@ -1280,7 +1266,7 @@ AdminCommand.OnServerEvent:Connect(function(plr: Player, commandString: string)
 end)
 
 -------------------------------------------------------------------------
--- SISTEMA DE ECONOMÍA (LOOP PRINCIPAL)
+-- SISTEMA DE ECONOMï¿½A (LOOP PRINCIPAL)
 -------------------------------------------------------------------------
 task.spawn(function()
 	while true do
@@ -1379,7 +1365,7 @@ if eventsEnabled then
 		while true do
 			local waveConfig = Config.GetWaveDifficulty(ServerState.CurrentWave)
 
-			-- Ajustar por número de jugadores
+			-- Ajustar por nï¿½mero de jugadores
 			local playerCount = #Players:GetPlayers()
 			local difficulty = Config.GetDynamicDifficulty(playerCount)
 			local adjustedInterval = waveConfig.Interval * difficulty
@@ -1388,7 +1374,7 @@ if eventsEnabled then
 
 			print(("-----------------------------------------------------------"):rep(1))
 			print(("[WAVE] Iniciando Wave %d"):format(ServerState.CurrentWave))
-			print(("[WAVE] Meteoritos: %d | Daño: %d | Jugadores: %d"):format(
+			print(("[WAVE] Meteoritos: %d | Daï¿½o: %d | Jugadores: %d"):format(
 				waveConfig.Meteors, waveConfig.Damage, playerCount
 				))
 			print(("-----------------------------------------------------------"):rep(1))
@@ -1402,6 +1388,7 @@ if eventsEnabled then
 				broadcastNotification("?? BOSS METEOR!", 3)
 				task.wait(2)
 				--Events:BossMeteor()
+				task.wait(15)  -- Esperar a que termine el boss meteor
 			else
 				-- Wave normal
 				Config.METEOR_COUNT = waveConfig.Meteors
@@ -1409,6 +1396,11 @@ if eventsEnabled then
 
 				task.wait(5)
 				Events:MeteorStorm()
+
+				-- Esperar a que todos los meteoritos caigan y hagan daÃ±o
+				-- CÃ¡lculo: (Meteoros / SpawnRate) + tiempo de caÃ­da extra
+				local stormDuration = (waveConfig.Meteors / Config.EVENTS.MeteorStorm.SpawnRate) + 10
+				task.wait(stormDuration)
 			end
 
 			-- Incrementar contador de meteoros sobrevividos
@@ -1431,12 +1423,18 @@ if eventsEnabled then
 				end
 			end
 
-			ServerState.CurrentWave += 1
 
-			logAnalytic("WaveCompleted", {
-				wave = ServerState.CurrentWave - 1,
-				survivors = #Players:GetPlayers(),
-			})
+		-- Mensaje de wave completada ANTES de incrementar
+		broadcastNotification(string.format("âœ… WAVE %d COMPLETADA!", ServerState.CurrentWave), 4)
+		task.wait(1)
+
+		ServerState.CurrentWave += 1
+		CurrentWaveValue.Value = ServerState.CurrentWave
+
+		logAnalytic("WaveCompleted", {
+			wave = ServerState.CurrentWave - 1,
+			survivors = #Players:GetPlayers(),
+		})
 		end
 	end)
 
@@ -1454,7 +1452,7 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 	local s = Economy.GetState(plr.UserId)
 	if not (s and s.OwnedUpgrades) then return end
 
-	-- Reset índices
+	-- Reset ï¿½ndices
 	BuildIndexByCategory[plr.UserId] = {
 		Income = 1,
 		Defense = 1,
@@ -1508,7 +1506,7 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 
 				for i = 1, owned do
 					if totalRebuilt >= Config.MAX_MODELS_PER_BASE then
-						warn(("[REBUILD] Límite alcanzado para %s"):format(plr.Name))
+						warn(("[REBUILD] Lï¿½mite alcanzado para %s"):format(plr.Name))
 						return
 					end
 
@@ -1544,12 +1542,12 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 end
 
 -------------------------------------------------------------------------
--- ?? INICIALIZAR AMBIENTE APOCALÍPTICO
+-- ?? INICIALIZAR AMBIENTE APOCALï¿½PTICO
 -------------------------------------------------------------------------
 EnvironmentManager:Initialize()
 
 if Config.DEBUG_MODE then
-	print("[MAIN] ? Ambiente apocalíptico inicializado")
+	print("[MAIN] ? Ambiente apocalï¿½ptico inicializado")
 end
 
 
@@ -1562,7 +1560,7 @@ Players.PlayerAdded:Connect(function(plr: Player)
 	-- Crear leaderstats
 	local ls, cashVal, ipsVal = createLeaderstats(plr)
 
-	-- Inicializar módulos
+	-- Inicializar mï¿½dulos
 	Base.InitPlayer(plr.UserId)
 
 	-- Cargar datos
@@ -1589,7 +1587,7 @@ Players.PlayerAdded:Connect(function(plr: Player)
 			end
 
 			if DEBUG then
-				print(("[OFFLINE] %s ganó $%d en %ds"):format(plr.Name, earned, elapsed))
+				print(("[OFFLINE] %s ganï¿½ $%d en %ds"):format(plr.Name, earned, elapsed))
 			end
 		end
 	end
@@ -1735,12 +1733,12 @@ game:BindToClose(function()
 end)
 
 -------------------------------------------------------------------------
--- INICIALIZACIÓN FINAL
+-- INICIALIZACIï¿½N FINAL
 -------------------------------------------------------------------------
 print("-----------------------------------------------------------------------")
 print("  ?? APOCALYPSE TYCOON - SERVER INICIADO")
 print("-----------------------------------------------------------------------")
-print(("[CONFIG] Versión: 5.0 PRODUCTION"):format())
+print(("[CONFIG] Versiï¿½n: 5.0 PRODUCTION"):format())
 print(("[CONFIG] DataStore: %s (v%d)"):format(Config.DATASTORE_NAME, Config.DATA_VERSION))
 print(("[CONFIG] Start Cash: $%d | Max Cash: $%d"):format(Config.START_CASH, Config.MAX_CASH))
 print(("[CONFIG] Base HP: %d | Regen: %d/s"):format(Config.BASE_MAX_HP, Config.BASE_REGEN_RATE))
@@ -1765,10 +1763,10 @@ if DEBUG then
 	print("-----------------------------------------------------------------------\n")
 end
 
--- Validar configuración crítica
+-- Validar configuraciï¿½n crï¿½tica
 local isValid, errorMsg = Config.Validate()
 if not isValid then
-	error(("[CONFIG] ? Configuración inválida: %s"):format(errorMsg or "unknown"))
+	error(("[CONFIG] ? Configuraciï¿½n invï¿½lida: %s"):format(errorMsg or "unknown"))
 end
 
 print("? Servidor listo para jugadores\n")
