@@ -1,18 +1,18 @@
 --!strict
 --[[
 	BASE VISUALS MANAGER - Apocalypse Tycoon
-	-----------------------------------------------------------------------
+	═══════════════════════════════════════════════════════════════════════
 
-	Maneja efectos visuales din�micos de las bases seg�n su HP.
+	Maneja efectos visuales dinámicos de las bases según su HP.
 
 	FEATURES:
-	? Efectos progresivos seg�n HP (100% ? 0%)
-	? Humo cuando HP < 50%
-	? Fuego cuando HP < 25%
-	? Grietas y da�o visual
-	? Pulsating glow cuando invulnerable
-	? Decoraciones (muros, torres, billboards)
-	? Performance-optimized
+	✅ Efectos progresivos según HP (100% → 0%)
+	✅ Humo cuando HP < 50%
+	✅ Fuego cuando HP < 25%
+	✅ Grietas y daño visual
+	✅ Pulsating glow cuando invulnerable
+	✅ Decoraciones (muros, torres, billboards)
+	✅ Performance-optimized
 
 	USAGE:
 		local BaseVisualsManager = require(game.ServerStorage.Managers.BaseVisualsManager)
@@ -20,11 +20,11 @@
 		-- Crear base con visuals
 		local base = BaseVisualsManager:CreateBase(userId, position, playerName)
 
-		-- Actualizar efectos seg�n HP
+		-- Actualizar efectos según HP
 		BaseVisualsManager:UpdateBaseVisuals(userId, currentHP, maxHP)
 
 	API:
-		:CreateBase(userId, position, playerName) ? BasePart
+		:CreateBase(userId, position, playerName) → BasePart
 		:UpdateBaseVisuals(userId, currentHP, maxHP)
 		:SetInvulnerable(userId, enabled)
 		:CleanupBase(userId)
@@ -33,30 +33,30 @@
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- CONSTANTS
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local DEBUG_MODE = false
 
 -- Umbrales de HP para efectos
 local HP_THRESHOLDS = {
-	PRISTINE = 0.70, -- 70-100%: Sin da�o visible
+	PRISTINE = 0.70, -- 70-100%: Sin daño visible
 	DAMAGED = 0.40,  -- 40-69%: Grietas y decals
 	CRITICAL = 0.20, -- 20-39%: Humo saliendo
 	BURNING = 0.01,  -- 1-19%: Fuego activo
 }
 
--- Colores seg�n estado
+-- Colores según estado
 local BASE_COLORS = {
 	Pristine = Color3.fromRGB(60, 60, 60),   -- Gris normal
-	Damaged = Color3.fromRGB(80, 60, 50),    -- Gris con tinte marr�n
-	Critical = Color3.fromRGB(100, 70, 60),  -- M�s marr�n
+	Damaged = Color3.fromRGB(80, 60, 50),    -- Gris con tinte marrón
+	Critical = Color3.fromRGB(100, 70, 60),  -- Más marrón
 	Burning = Color3.fromRGB(120, 80, 70),   -- Casi rojo
 	Invulnerable = Color3.fromRGB(100, 150, 255), -- Azul brillante
 }
 
--- Configuraci�n de decoraciones
+-- Configuración de decoraciones
 local DECORATION_CONFIG = {
 	-- Muros perimetrales
 	Walls = {
@@ -77,9 +77,9 @@ local DECORATION_CONFIG = {
 	},
 }
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- MODULE
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local BaseVisualsManager = {}
 BaseVisualsManager.__index = BaseVisualsManager
@@ -87,9 +87,9 @@ BaseVisualsManager.__index = BaseVisualsManager
 -- Estado: {[userId] = {base: BasePart, effects: {...}, decorations: {...}}}
 local BaseData = {}
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- UTILITIES
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local function getHPState(hpPercent: number): string
 	if hpPercent >= HP_THRESHOLDS.PRISTINE then
@@ -103,9 +103,9 @@ local function getHPState(hpPercent: number): string
 	end
 end
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- DECORATIONS
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local function createWalls(basePart: BasePart): {Part}
 	if not DECORATION_CONFIG.Walls.Enabled then
@@ -273,9 +273,9 @@ local function createBillboard(basePart: BasePart, playerName: string, userId: n
 	return bb
 end
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- EFFECTS
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local function createSmokeEffect(basePart: BasePart): Part
 	local smokePart = Instance.new("Part")
@@ -380,9 +380,9 @@ local function createCrackDecals(basePart: BasePart): {Decal}
 	return decals
 end
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- INVULNERABILITY EFFECT
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 local function startInvulnerabilityEffect(basePart: BasePart)
 	-- Pulsating glow
@@ -415,17 +415,17 @@ local function startInvulnerabilityEffect(basePart: BasePart)
 	end)
 end
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- PUBLIC API
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
 --[[
 	Crea una base con todas las decoraciones visuales.
 
 	@param userId number - ID del jugador
-	@param position Vector3 - Posici�n donde spawnear
+	@param position Vector3 - Posición donde spawnear
 	@param playerName string - Nombre del jugador
-	@param baseSize Vector3? - Tama�o de la base (opcional)
+	@param baseSize Vector3? - Tamaño de la base (opcional)
 	@return BasePart - La base creada
 ]]
 function BaseVisualsManager:CreateBase(userId: number, position: Vector3, playerName: string, baseSize: Vector3?): BasePart
@@ -446,7 +446,7 @@ function BaseVisualsManager:CreateBase(userId: number, position: Vector3, player
 	-- local walls = createWalls(basePart)
 	local walls = {} -- Sin muros por default
 	local towers = createTowers(basePart)
-	local billboard = createBillboard(basePart, playerName, userId)
+
 
 	-- Guardar referencias
 	BaseData[userId] = {
@@ -467,11 +467,11 @@ function BaseVisualsManager:CreateBase(userId: number, position: Vector3, player
 end
 
 --[[
-	Actualiza los efectos visuales seg�n el HP actual.
+	Actualiza los efectos visuales según el HP actual.
 
 	@param userId number - ID del jugador
 	@param currentHP number - HP actual
-	@param maxHP number - HP m�ximo
+	@param maxHP number - HP máximo
 ]]
 function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number, maxHP: number)
 	local data = BaseData[userId]
@@ -493,19 +493,25 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 	end
 
 	-- Actualizar HP bar en billboard
-	local billboard = data.decorations.billboard
-	if billboard then
-		local hpBar = billboard:FindFirstChild("HPBar", true)
-		local hpLabel = billboard:FindFirstChild("HPLabel", true)
+	local billboard = data.base:FindFirstChild("BaseBillboard")
+	if billboard and billboard:IsA("BillboardGui") then
+		local frame = billboard:FindFirstChild("Frame")
+		if not frame then return end
+
+		-- HP Bar
+		local hpBarBg = frame:FindFirstChild("HPBarBg")
+		local hpBar = hpBarBg and hpBarBg:FindFirstChild("HPBar")
+		local hpLabel = frame:FindFirstChild("HPLabel")
 
 		if hpBar then
+			-- ✅ Animar barra con porcentaje correcto
 			TweenService:Create(
 				hpBar,
 				TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 				{Size = UDim2.fromScale(hpPercent, 1)}
 			):Play()
 
-			-- Color bar seg�n HP
+			-- Color según HP
 			if hpPercent > 0.7 then
 				hpBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 			elseif hpPercent > 0.3 then
@@ -516,11 +522,12 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 		end
 
 		if hpLabel then
+			-- ✅ IMPORTANTE: Mostrar HP actual vs MaxHP real
 			hpLabel.Text = string.format("HP: %d/%d", currentHP, maxHP)
 		end
 	end
 
-	-- Efectos seg�n estado
+	-- Efectos según estado
 	-- Limpiar efectos previos
 	for effectName, effect in pairs(data.effects) do
 		if effect and effect.Parent then
@@ -529,7 +536,7 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 		data.effects[effectName] = nil
 	end
 
-	-- Agregar efectos seg�n HP
+	-- Agregar efectos según HP
 	if hpPercent < HP_THRESHOLDS.CRITICAL and not data.effects.Smoke then
 		data.effects.Smoke = createSmokeEffect(basePart)
 
@@ -598,7 +605,7 @@ function BaseVisualsManager:CleanupBase(userId: number)
 		data.decorations.billboard:Destroy()
 	end
 
-	-- Base se limpia autom�ticamente al remover jugador
+	-- Base se limpia automáticamente al remover jugador
 	BaseData[userId] = nil
 
 	if DEBUG_MODE then
@@ -629,10 +636,10 @@ function BaseVisualsManager:GetDebugInfo(userId: number): {EffectCount: number, 
 	}
 end
 
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 -- INITIALIZATION MESSAGE
--------------------------------------------------------------------------
+--═══════════════════════════════════════════════════════════════════════
 
-print("[BaseVisualsManager] ? Module loaded")
+print("[BaseVisualsManager] ✓ Module loaded")
 
 return BaseVisualsManager
