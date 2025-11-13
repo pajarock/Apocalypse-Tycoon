@@ -83,8 +83,8 @@ labelWave.Parent = waveFrame
 -- Label número
 local labelNumber = Instance.new("TextLabel")
 labelNumber.Name = "LabelNumber"
-labelNumber.Size = UDim2.fromScale(1, 0.5)
-labelNumber.Position = UDim2.fromScale(0, 0.4)
+labelNumber.Size = UDim2.fromScale(1, 0.4)
+labelNumber.Position = UDim2.fromScale(0, 0.3)
 labelNumber.BackgroundTransparency = 1
 labelNumber.Text = "1"
 labelNumber.TextColor3 = Color3.new(1, 1, 1)
@@ -92,6 +92,19 @@ labelNumber.TextScaled = true
 labelNumber.Font = Enum.Font.GothamBlack
 labelNumber.TextStrokeTransparency = 0.5
 labelNumber.Parent = waveFrame
+
+-- ✅ Label "Survived" (rondas sobrevividas)
+local labelSurvived = Instance.new("TextLabel")
+labelSurvived.Name = "LabelSurvived"
+labelSurvived.Size = UDim2.fromScale(1, 0.22)
+labelSurvived.Position = UDim2.fromScale(0, 0.73)
+labelSurvived.BackgroundTransparency = 1
+labelSurvived.Text = "Survived: 0"
+labelSurvived.TextColor3 = Color3.fromRGB(150, 150, 150)
+labelSurvived.TextScaled = true
+labelSurvived.Font = Enum.Font.Gotham
+labelSurvived.TextStrokeTransparency = 0.8
+labelSurvived.Parent = waveFrame
 
 local wavePadding = Instance.new("UIPadding")
 wavePadding.PaddingLeft = UDim.new(0, 8)
@@ -389,6 +402,31 @@ if cashValue then
 
 	if DEBUG then
 		print("[WaveCounterUI] ✓ Money counter conectado")
+	end
+end
+
+-- ✅ Waves Survived Counter
+local stats = player:WaitForChild("Stats", 10)
+if stats then
+	local meteorsSurvived = stats:WaitForChild("MeteorsSurvived", 10)
+	if meteorsSurvived then
+		-- Actualizar inicial
+		labelSurvived.Text = string.format("Survived: %d", meteorsSurvived.Value)
+
+		-- Actualizar cuando cambie
+		meteorsSurvived:GetPropertyChangedSignal("Value"):Connect(function()
+			labelSurvived.Text = string.format("Survived: %d", meteorsSurvived.Value)
+
+			-- Flash cuando aumenta
+			labelSurvived.TextColor3 = Color3.fromRGB(85, 255, 127)
+			TweenService:Create(labelSurvived, TweenInfo.new(0.5), {
+				TextColor3 = Color3.fromRGB(150, 150, 150)
+			}):Play()
+		end)
+
+		if DEBUG then
+			print("[WaveCounterUI] ✓ Waves survived counter conectado")
+		end
 	end
 end
 

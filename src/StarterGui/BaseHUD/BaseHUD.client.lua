@@ -51,7 +51,30 @@ statsLabel.BackgroundColor3 = Color3.fromRGB(20,20,20)
 statsLabel.TextColor3 = Color3.new(1,1,1)
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
-statsLabel.Text = "Meteors survived: 0"
+statsLabel.Text = "Waves survived: 0"
+
+-- ✅ Actualizar contador de waves sobrevividas
+local function updateWavesSurvived()
+	local stats = player:FindFirstChild("Stats")
+	if stats then
+		local meteorsSurvived = stats:FindFirstChild("MeteorsSurvived")
+		if meteorsSurvived then
+			statsLabel.Text = string.format("Waves survived: %d", meteorsSurvived.Value)
+		end
+	end
+end
+
+-- Actualizar cuando cambie el valor
+task.spawn(function()
+	local stats = player:WaitForChild("Stats", 10)
+	if stats then
+		local meteorsSurvived = stats:WaitForChild("MeteorsSurvived", 10)
+		if meteorsSurvived then
+			meteorsSurvived:GetPropertyChangedSignal("Value"):Connect(updateWavesSurvived)
+			updateWavesSurvived() -- Actualizar inicial
+		end
+	end
+end)
 
 local function updateRepairButton()
 	local state = RequestBaseState:InvokeServer()
