@@ -103,7 +103,16 @@ end
 
 
 function DataStoreModule:LoadAsync(userId:number): SaveBlob
+		-- 🔴 TEMPORAL: Forzar datos fresh para testing
+		if Config.DEBUG_MODE then
+			print(("[DATASTORE] 🆕 FORZANDO datos fresh para testing"))
+			local freshBlob = self:DefaultBlob()
+			freshBlob.__fresh = true
+			return freshBlob
+		end
+		-- El resto del código normal continúa...
 	local key = "u_" .. tostring(userId)
+	
 
 	for attempt = 1, MAX_RETRIES do
 		local ok, result = pcall(function()
