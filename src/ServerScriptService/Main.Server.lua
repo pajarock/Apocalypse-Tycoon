@@ -1422,8 +1422,7 @@ if eventsEnabled then
 
 
 		-- Mensaje de wave completada ANTES de incrementar
-		broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 4)
-		task.wait(1)
+		broadcastNotification(string.format("✅ WAVE %d COMPLETADA!", ServerState.CurrentWave), 5)
 
 		ServerState.CurrentWave += 1
 		CurrentWaveValue.Value = ServerState.CurrentWave
@@ -1432,6 +1431,9 @@ if eventsEnabled then
 			wave = ServerState.CurrentWave - 1,
 			survivors = #Players:GetPlayers(),
 		})
+
+		-- Pausa de 5 segundos antes de anunciar el siguiente wave
+		task.wait(5)
 		end
 	end)
 
