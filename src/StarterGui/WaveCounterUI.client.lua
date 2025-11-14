@@ -607,19 +607,44 @@ local remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
 if remotes then
 	local waveResultRemote = remotes:WaitForChild("WaveResult", 10)
 	if waveResultRemote and waveResultRemote:IsA("RemoteEvent") then
+		print("[WaveCounterUI] ✅ WaveResult remote ENCONTRADO y CONECTADO")
+
 		waveResultRemote.OnClientEvent:Connect(function(data)
-			if typeof(data) ~= "table" then return end
+			print("[WaveCounterUI] 📥 RECIBIDO evento WaveResult:", data)
+
+			if typeof(data) ~= "table" then
+				warn("[WaveCounterUI] ⚠️ Data no es tabla:", typeof(data))
+				return
+			end
 
 			local result = data.result
 			local waveNum = data.waveNumber
 			local survived = data.newSurvived or data.survivedCount
 
+			print(("[WaveCounterUI] 📊 Result: %s, Wave: %d, Survived: %s"):format(
+				tostring(result), tostring(waveNum), tostring(survived)
+			))
+
 			if result == "victory" then
 				-- ✨ VICTORIA ÉPICA
-				playVictoryAnimation(waveNum, survived)
+				print("[WaveCounterUI] 🎉 Reproduciendo animación de VICTORIA")
+				local success, err = pcall(function()
+					playVictoryAnimation(waveNum, survived)
+				end)
+				if not success then
+					warn("[WaveCounterUI] ❌ Error en victoria animation:", err)
+				end
 			elseif result == "defeat" then
 				-- 💀 DERROTA ÉPICA
-				playDefeatAnimation(waveNum)
+				print("[WaveCounterUI] 💀 Reproduciendo animación de DERROTA")
+				local success, err = pcall(function()
+					playDefeatAnimation(waveNum)
+				end)
+				if not success then
+					warn("[WaveCounterUI] ❌ Error en defeat animation:", err)
+				end
+			else
+				warn("[WaveCounterUI] ⚠️ Result desconocido:", result)
 			end
 		end)
 
