@@ -523,20 +523,12 @@ function BaseModule.OnBaseDead(userId: number)
 					end
 				end
 
-				if DEBUG then
-					print(("[BaseModule] 🛡️ Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
-						targetAmount, oldValue
-						))
-					print(("[BaseModule] 🛡️ Guardian RESTAURÓ: $%d → $%d"):format(
-						oldValue, targetAmount
-						))
-				end
-			elseif DEBUG and cash.Value > targetAmount then
-				-- Income normal funcionando, no hacer nada
-				print(("[BaseModule] ✅ Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
-					cash.Value, targetAmount
-					))
+				-- Log siempre (no solo DEBUG) para detectar problemas
+				print(("[BaseModule] 🛡️ Guardian ACTIVO: Restauró $%d → $%d (mínimo protegido)"):format(
+					oldValue, targetAmount
+				))
 			end
+			-- NO logging cuando está funcionando bien (demasiado spam)
 		end
 
 		ActiveGuardianTasks[userId] = nil
@@ -817,64 +809,28 @@ Players.PlayerRemoving:Connect(function(plr)
 		end
 	end
 
-	-- ✅ NUEVO: Limpiar pending reductions
+	-- ✅ NUEVO: Limpiar pending reductions y Guardian activo
 	if PendingMoneyReductions[userId] then
 		PendingMoneyReductions[userId] = nil
+		if DEBUG then
+			print(("[BaseModule] 🧹 Limpiando pending reductions para userId %d"):format(userId))
+		end
+	end
+
+	if ActiveGuardianTasks[userId] then
+		task.cancel(ActiveGuardianTasks[userId])
+		ActiveGuardianTasks[userId] = nil
+		if DEBUG then
+			print(("[BaseModule] 🧹 Cancelando Guardian task para userId %d"):format(userId))
+		end
 	end
 end)
 
 -------------------------------------------------------------------------
 
 if DEBUG then
-	print("[BaseModule ARREGLADO] ✅ Módulo cargado (sin dependencia circular)")
+	print("[BaseModule] ✅ Módulo cargado correctamente")
 end
-
---[[task.spawn(function()
-	while true do
-		task.wait(1) -- Check cada segundo
-
-		for userId, data in pairs(PendingMoneyReductions) do
-			-- Validar que data existe
-			if data and type(data) == "table" then
-				local player = Players:GetPlayerByUserId(userId)
-
-				if player then
-					local leaderstats = player:FindFirstChild("leaderstats")
-					local cashValue = leaderstats and leaderstats:FindFirstChild("Cash")
-
-					if cashValue and data.targetAmount then
-						-- Si el dinero está MAYOR al target, forzar reducción
-						if cashValue.Value > data.targetAmount then
-							cashValue.Value = data.targetAmount
-
-							if DEBUG then
-								print(("[BaseModule] 🛡️ Guardian: Forzando dinero de userId %d a $%d"):format(
-									userId, data.targetAmount
-									))
-							end
-						end
-
-						-- Después de 120 segundos (2 autosaves), dejar de forzar
-						if data.timestamp and (tick() - data.timestamp > 120) then
-							PendingMoneyReductions[userId] = nil
-
-							if DEBUG then
-								print(("[BaseModule] ✓ Guardian: Dinero de userId %d asegurado"):format(userId))
-							end
-						end
-					end
-				else
-					-- Jugador se fue, limpiar
-					PendingMoneyReductions[userId] = nil
-				end
-			else
-				-- Data inválida, limpiar
-				PendingMoneyReductions[userId] = nil
-			end
-		end
-	end
-end)
---]]
 
 --═══════════════════════════════════════════════════════════════════════
 -- ✅ ACTUALIZAR GUARDIAN DESPUÉS DE COMPRAS LEGÍTIMAS
@@ -883,19 +839,22 @@ end)
 function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	local protection = PendingMoneyReductions[userId]
 	if not protection then
+		-- ✅ No hay Guardian activo - esto es NORMAL si el jugador no ha muerto
 		if DEBUG then
-			print(("[BaseModule] ⚠️ No hay Guardian activo para userId %d"):format(userId))
+			print(("[BaseModule] ℹ️ UpdateGuardianTarget: No hay Guardian activo (jugador no ha muerto recientemente)"):format())
 		end
-		return
+		return false
 	end
 
 	-- Actualizar el target amount
 	local oldTarget = protection.TargetAmount
 	protection.TargetAmount = newTarget
 
-	print(("[BaseModule] 🛡️ Guardian: Target actualizado $%d → $%d para userId %d (compra legítima)"):format(
-		oldTarget, newTarget, userId
+	print(("[BaseModule] ✅ Guardian: Target actualizado $%d → $%d (compra legítima permitida)"):format(
+		oldTarget, newTarget
 	))
+
+	return true
 end
 
 return BaseModule
