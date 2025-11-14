@@ -43,15 +43,7 @@ repairBtn.TextColor3 = Color3.new(1,1,1)
 repairBtn.Font = Enum.Font.GothamBold
 repairBtn.TextSize = 14
 
-local statsLabel = Instance.new("TextLabel", sg)
-statsLabel.Size = UDim2.new(0, 200, 0, 30)
-statsLabel.Position = UDim2.new(1, -220, 1, -110)
-statsLabel.BackgroundTransparency = 0.5
-statsLabel.BackgroundColor3 = Color3.fromRGB(20,20,20)
-statsLabel.TextColor3 = Color3.new(1,1,1)
-statsLabel.Font = Enum.Font.Gotham
-statsLabel.TextSize = 14
-statsLabel.Text = "Meteors survived: 0"
+-- ✅ Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
 local function updateRepairButton()
 	local state = RequestBaseState:InvokeServer()

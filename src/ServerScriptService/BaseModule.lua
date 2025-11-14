@@ -75,7 +75,7 @@ end
 -- ESTADO
 -------------------------------------------------------------------------
 
-local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived}
+local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived, DiedDuringWave}
 local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 local ActiveGuardianTasks = {} -- [userId] = task thread
 
@@ -97,6 +97,7 @@ function BaseModule.InitPlayer(userId: number)
 		return
 	end
 
+	-- ✅ Flag para detectar muerte durante wave actual
 	BaseState[userId] = {
 		HP = Config.BASE_MAX_HP,
 		MaxHP = Config.BASE_MAX_HP,
@@ -104,7 +105,8 @@ function BaseModule.InitPlayer(userId: number)
 		IsInvulnerable = false,
 		ShieldLevel = 0,
 		MeteorsSurvived = 0,
-		RegenEnabled = true
+		RegenEnabled = true,
+		DiedDuringWave = false
 	}
 
 	if DEBUG then
@@ -303,6 +305,7 @@ local DEFAULTS = {
 	IsInvulnerable = false,
 	LastDamageTime = -1e9,
 	MeteorsSurvived = 0,
+	DiedDuringWave = false
 }
 
 local function ensureState(userId: number)
@@ -317,6 +320,7 @@ local function ensureState(userId: number)
 	if type(s.IsInvulnerable) ~= "boolean" then s.IsInvulnerable = DEFAULTS.IsInvulnerable end
 	if type(s.LastDamageTime) ~= "number" then s.LastDamageTime = DEFAULTS.LastDamageTime end
 	if type(s.MeteorsSurvived) ~= "number" then s.MeteorsSurvived = DEFAULTS.MeteorsSurvived end
+	if type(s.DiedDuringWave) ~= "boolean" then s.DiedDuringWave = DEFAULTS.DiedDuringWave end
 	return s
 end
 
@@ -378,6 +382,14 @@ local ActiveGuardianTasks = {}
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
 		print(("[BaseModule] 💀 BASE DESTRUIDA - userId %d"):format(userId))
+	end
+
+	-- ✅ MARCAR QUE MURIÓ DURANTE ESTA WAVE
+	if BaseState[userId] then
+		BaseState[userId].DiedDuringWave = true
+		if DEBUG then
+			print(("[BaseModule] 🚩 Flag DiedDuringWave activado para userId %d"):format(userId))
+		end
 	end
 
 	local player = Players:GetPlayerByUserId(userId)
@@ -486,11 +498,11 @@ function BaseModule.OnBaseDead(userId: number)
 				break
 			end
 
-			-- Si el dinero cambió, forzar de vuelta
-			if cash.Value ~= newAmount then
+			-- ✅ ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
+			if cash.Value < newAmount then
 				local oldValue = cash.Value
 
-				-- 🆕 ACTUALIZAR AMBOS LUGARES
+				-- Forzar al mínimo solo si bajó
 				cash.Value = newAmount
 
 				if Economy then
@@ -501,13 +513,18 @@ function BaseModule.OnBaseDead(userId: number)
 				end
 
 				if DEBUG then
-					print(("[BaseModule] 🔍 DETECTIVE: Dinero cambió de $%d → $%d"):format(
+					print(("[BaseModule] 🛡️ Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
 						newAmount, oldValue
 						))
-					print(("[BaseModule] 🛡️ Guardian FORZÓ: $%d → $%d"):format(
+					print(("[BaseModule] 🛡️ Guardian RESTAURÓ: $%d → $%d"):format(
 						oldValue, newAmount
 						))
 				end
+			elseif DEBUG and cash.Value > newAmount then
+				-- Income normal funcionando, no hacer nada
+				print(("[BaseModule] ✅ Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
+					cash.Value, newAmount
+					))
 			end
 		end
 
@@ -664,6 +681,40 @@ end
 function BaseModule.GetMeteorsSurvived(userId: number): number
 	if not BaseState[userId] then return 0 end
 	return BaseState[userId].MeteorsSurvived
+end
+
+-------------------------------------------------------------------------
+-- WAVE DEATH TRACKING (para sistema de waves)
+-------------------------------------------------------------------------
+
+-- ✅ Resetear flag al inicio de cada wave
+function BaseModule.ResetWaveDeathFlag(userId: number)
+	if not BaseState[userId] then return end
+
+	BaseState[userId].DiedDuringWave = false
+
+	if DEBUG then
+		print(("[BaseModule] 🔄 Flag DiedDuringWave reseteado para userId %d"):format(userId))
+	end
+end
+
+-- ✅ Verificar si murió durante la wave actual
+function BaseModule.DiedDuringCurrentWave(userId: number): boolean
+	if not BaseState[userId] then return false end
+	return BaseState[userId].DiedDuringWave or false
+end
+
+-- ✅ Resetear flags de TODOS los jugadores (llamar al inicio de cada wave)
+function BaseModule.ResetAllWaveDeathFlags()
+	for userId, state in pairs(BaseState) do
+		if state and type(state) == "table" then
+			state.DiedDuringWave = false
+		end
+	end
+
+	if DEBUG then
+		print("[BaseModule] 🔄 Flags DiedDuringWave reseteados para todos los jugadores")
+	end
 end
 
 -------------------------------------------------------------------------
