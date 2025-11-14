@@ -1451,11 +1451,15 @@ if eventsEnabled then
 
 					-- ✅ ENVIAR RESULTADO ÉPICO DE VICTORIA
 					if WaveResult then
-						WaveResult:FireClient(plr, {
+						local waveData = {
 							result = "victory",
 							waveNumber = ServerState.CurrentWave,
 							newSurvived = Base.GetMeteorsSurvived(plr.UserId)
-						})
+						}
+						print(("[WAVE] 🎉 Enviando VICTORIA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+						WaveResult:FireClient(plr, waveData)
+					else
+						warn("[WAVE] ⚠️ WaveResult remote no existe!")
 					end
 
 					-- Achievement: 100 meteoros
@@ -1470,11 +1474,15 @@ if eventsEnabled then
 					-- ❌ Jugador MURIÓ
 					-- ✅ ENVIAR RESULTADO ÉPICO DE DERROTA
 					if WaveResult then
-						WaveResult:FireClient(plr, {
+						local waveData = {
 							result = "defeat",
 							waveNumber = ServerState.CurrentWave,
 							survivedCount = Base.GetMeteorsSurvived(plr.UserId)
-						})
+						}
+						print(("[WAVE] 💀 Enviando DERROTA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+						WaveResult:FireClient(plr, waveData)
+					else
+						warn("[WAVE] ⚠️ WaveResult remote no existe!")
 					end
 
 					if Config.DEBUG_MODE then
