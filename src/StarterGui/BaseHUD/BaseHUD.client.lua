@@ -45,6 +45,9 @@ repairBtn.TextSize = 14
 
 -- ✅ Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
+-- Forward declarations
+local update
+
 local function updateRepairButton()
 	local state = RequestBaseState:InvokeServer()
 	if not state then return end
@@ -103,7 +106,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	end
 end)
 
-local function update()
+update = function()
 	local state = RequestBaseState:InvokeServer()
 	if not state then return end
 

@@ -481,6 +481,17 @@ function BaseModule.OnBaseDead(userId: number)
 		while tick() - startTime < forceDuration do
 			task.wait(checkInterval)
 
+			-- ✅ Leer el target actual desde PendingMoneyReductions (puede cambiar con compras)
+			local protection = PendingMoneyReductions[userId]
+			if not protection then
+				if DEBUG then
+					print(("[BaseModule] ⚠️ Guardian: Protección eliminada externamente"):format())
+				end
+				break
+			end
+
+			local targetAmount = protection.TargetAmount
+
 			-- Verificar si el jugador sigue conectado
 			local plr = Players:GetPlayerByUserId(userId)
 			if not plr then
@@ -499,31 +510,31 @@ function BaseModule.OnBaseDead(userId: number)
 			end
 
 			-- ✅ ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
-			if cash.Value < newAmount then
+			if cash.Value < targetAmount then
 				local oldValue = cash.Value
 
 				-- Forzar al mínimo solo si bajó
-				cash.Value = newAmount
+				cash.Value = targetAmount
 
 				if Economy then
 					local state = Economy.GetState(userId)
 					if state then
-						state.Cash = newAmount
+						state.Cash = targetAmount
 					end
 				end
 
 				if DEBUG then
 					print(("[BaseModule] 🛡️ Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
-						newAmount, oldValue
+						targetAmount, oldValue
 						))
 					print(("[BaseModule] 🛡️ Guardian RESTAURÓ: $%d → $%d"):format(
-						oldValue, newAmount
+						oldValue, targetAmount
 						))
 				end
-			elseif DEBUG and cash.Value > newAmount then
+			elseif DEBUG and cash.Value > targetAmount then
 				-- Income normal funcionando, no hacer nada
 				print(("[BaseModule] ✅ Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
-					cash.Value, newAmount
+					cash.Value, targetAmount
 					))
 			end
 		end
@@ -739,7 +750,8 @@ task.spawn(function()
 				local regenEnabled = state.RegenEnabled
 				local lastDamageTime = state.LastDamageTime or 0
 
-				if hp and maxHP and regenEnabled and type(hp) == "number" and type(maxHP) == "number" then
+				-- Validar que todos los valores existen y son del tipo correcto
+				if type(hp) == "number" and type(maxHP) == "number" and regenEnabled ~= false then
 					if hp < maxHP then
 						local timeSinceDamage = tick() - lastDamageTime
 
@@ -863,4 +875,27 @@ end
 	end
 end)
 --]]
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ ACTUALIZAR GUARDIAN DESPUÉS DE COMPRAS LEGÍTIMAS
+--═══════════════════════════════════════════════════════════════════════
+
+function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
+	local protection = PendingMoneyReductions[userId]
+	if not protection then
+		if DEBUG then
+			print(("[BaseModule] ⚠️ No hay Guardian activo para userId %d"):format(userId))
+		end
+		return
+	end
+
+	-- Actualizar el target amount
+	local oldTarget = protection.TargetAmount
+	protection.TargetAmount = newTarget
+
+	print(("[BaseModule] 🛡️ Guardian: Target actualizado $%d → $%d para userId %d (compra legítima)"):format(
+		oldTarget, newTarget, userId
+	))
+end
+
 return BaseModule

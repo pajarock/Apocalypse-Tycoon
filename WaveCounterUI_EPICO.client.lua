@@ -371,7 +371,7 @@ local function playDefeatSound()
 	game.Debris:AddItem(sound, 3)
 end
 
--- ✨ ANIMACIÓN ÉPICA DE VICTORIA
+-- ✨ ANIMACIÓN ÉPICA DE VICTORIA EN CENTRO DE PANTALLA
 local function playVictoryAnimation(waveNum: number, survived: number)
 	if DEBUG then
 		print(("[WaveCounterUI] ✨ VICTORIA - Wave %d"):format(waveNum))
@@ -380,21 +380,123 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 	-- Sonido
 	playVictorySound()
 
-	-- Bounce épico del widget
-	local originalSize = waveFrame.Size
-	local bounceTween = TweenService:Create(
-		waveFrame,
-		TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Size = UDim2.fromOffset(240, 90) }
+	-- ═══════════════════════════════════════════════════════
+	-- CREAR PANTALLA COMPLETA TEMPORAL EN CENTRO
+	-- ═══════════════════════════════════════════════════════
+
+	local epicGui = Instance.new("ScreenGui")
+	epicGui.Name = "EpicVictory"
+	epicGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	epicGui.ResetOnSpawn = false
+	epicGui.DisplayOrder = 999 -- Por encima de todo
+	epicGui.Parent = player.PlayerGui
+
+	-- Fondo oscuro semitransparente
+	local overlay = Instance.new("Frame")
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	overlay.BackgroundTransparency = 1
+	overlay.BorderSizePixel = 0
+	overlay.Parent = epicGui
+
+	-- Animar fade in del overlay
+	TweenService:Create(overlay, TweenInfo.new(0.3), {
+		BackgroundTransparency = 0.5
+	}):Play()
+
+	-- Container central para el texto
+	local container = Instance.new("Frame")
+	container.Size = UDim2.fromScale(0.8, 0.4)
+	container.Position = UDim2.fromScale(0.5, 0.5)
+	container.AnchorPoint = Vector2.new(0.5, 0.5)
+	container.BackgroundTransparency = 1
+	container.Parent = overlay
+
+	-- Texto principal "SURVIVED!"
+	local mainText = Instance.new("TextLabel")
+	mainText.Size = UDim2.fromScale(1, 0.5)
+	mainText.Position = UDim2.fromScale(0.5, 0.35)
+	mainText.AnchorPoint = Vector2.new(0.5, 0.5)
+	mainText.BackgroundTransparency = 1
+	mainText.Text = "🎉 SURVIVED! 🎉"
+	mainText.TextColor3 = Color3.fromRGB(85, 255, 127)
+	mainText.TextSize = 120
+	mainText.Font = Enum.Font.GothamBlack
+	mainText.TextStrokeTransparency = 0
+	mainText.TextStrokeColor3 = Color3.fromRGB(0, 50, 0)
+	mainText.TextTransparency = 1
+	mainText.Parent = container
+
+	-- Texto secundario "Wave X Complete"
+	local subText = Instance.new("TextLabel")
+	subText.Size = UDim2.fromScale(1, 0.3)
+	subText.Position = UDim2.fromScale(0.5, 0.65)
+	subText.AnchorPoint = Vector2.new(0.5, 0.5)
+	subText.BackgroundTransparency = 1
+	subText.Text = string.format("Wave %d Complete | Survived: %d", waveNum, survived)
+	subText.TextColor3 = Color3.fromRGB(200, 255, 200)
+	subText.TextSize = 40
+	subText.Font = Enum.Font.GothamBold
+	subText.TextStrokeTransparency = 0.5
+	subText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	subText.TextTransparency = 1
+	subText.Parent = container
+
+	-- Animación: Aparecer con bounce
+	container.Size = UDim2.fromScale(0.5, 0.25)
+
+	local appearTween = TweenService:Create(
+		container,
+		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = UDim2.fromScale(0.8, 0.4) }
 	)
-	bounceTween:Play()
-	bounceTween.Completed:Connect(function()
-		TweenService:Create(
-			waveFrame,
-			TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-			{ Size = originalSize }
-		):Play()
+	appearTween:Play()
+
+	-- Fade in textos
+	TweenService:Create(mainText, TweenInfo.new(0.3), {
+		TextTransparency = 0
+	}):Play()
+
+	TweenService:Create(subText, TweenInfo.new(0.4, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	-- Animación de color pulsante en texto principal
+	task.spawn(function()
+		for i = 1, 3 do
+			TweenService:Create(mainText, TweenInfo.new(0.3), {
+				TextColor3 = Color3.fromRGB(255, 255, 127)
+			}):Play()
+			task.wait(0.3)
+			TweenService:Create(mainText, TweenInfo.new(0.3), {
+				TextColor3 = Color3.fromRGB(85, 255, 127)
+			}):Play()
+			task.wait(0.3)
+		end
 	end)
+
+	-- Desaparecer después de 2.5 segundos
+	task.delay(2.5, function()
+		TweenService:Create(overlay, TweenInfo.new(0.4), {
+			BackgroundTransparency = 1
+		}):Play()
+
+		TweenService:Create(mainText, TweenInfo.new(0.4), {
+			TextTransparency = 1
+		}):Play()
+
+		TweenService:Create(subText, TweenInfo.new(0.4), {
+			TextTransparency = 1
+		}):Play()
+
+		task.delay(0.4, function()
+			epicGui:Destroy()
+		end)
+	end)
+
+	-- ═══════════════════════════════════════════════════════
+	-- ANIMACIÓN SUTIL EN EL WIDGET DE LA ESQUINA
+	-- ═══════════════════════════════════════════════════════
 
 	-- Flash dorado en borde
 	waveStroke.Color = Color3.fromRGB(255, 215, 0)
@@ -403,44 +505,9 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 		Color = Color3.fromRGB(255, 170, 0),
 		Thickness = 3
 	}):Play()
-
-	-- Flash en texto "WAVE"
-	labelWave.TextColor3 = Color3.fromRGB(255, 215, 0)
-	TweenService:Create(labelWave, TweenInfo.new(0.6), {
-		TextColor3 = Color3.fromRGB(255, 170, 0)
-	}):Play()
-
-	-- "SURVIVED!" temporal
-	local tempLabel = Instance.new("TextLabel")
-	tempLabel.Size = UDim2.fromScale(1, 0.3)
-	tempLabel.Position = UDim2.fromScale(0, 0.35)
-	tempLabel.BackgroundTransparency = 1
-	tempLabel.Text = "SURVIVED!"
-	tempLabel.TextColor3 = Color3.fromRGB(85, 255, 127)
-	tempLabel.TextScaled = true
-	tempLabel.Font = Enum.Font.GothamBlack
-	tempLabel.TextStrokeTransparency = 0
-	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-	tempLabel.TextTransparency = 1
-	tempLabel.ZIndex = 100
-	tempLabel.Parent = waveFrame
-
-	-- Aparecer y desaparecer
-	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
-		TextTransparency = 0
-	}):Play()
-
-	task.delay(0.8, function()
-		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
-			TextTransparency = 1
-		}):Play()
-		task.delay(0.3, function()
-			tempLabel:Destroy()
-		end)
-	end)
 end
 
--- 💀 ANIMACIÓN ÉPICA DE DERROTA
+-- 💀 ANIMACIÓN ÉPICA DE DERROTA EN CENTRO DE PANTALLA
 local function playDefeatAnimation(waveNum: number)
 	if DEBUG then
 		print(("[WaveCounterUI] 💀 DERROTA - Wave %d"):format(waveNum))
@@ -449,28 +516,137 @@ local function playDefeatAnimation(waveNum: number)
 	-- Sonido
 	playDefeatSound()
 
-	-- Shake violento del widget
-	local originalPos = waveFrame.Position
-	local shakeIntensity = 8
-	local shakeDuration = 0.5
+	-- ═══════════════════════════════════════════════════════
+	-- CREAR PANTALLA COMPLETA TEMPORAL EN CENTRO
+	-- ═══════════════════════════════════════════════════════
 
+	local epicGui = Instance.new("ScreenGui")
+	epicGui.Name = "EpicDefeat"
+	epicGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	epicGui.ResetOnSpawn = false
+	epicGui.DisplayOrder = 999 -- Por encima de todo
+	epicGui.Parent = player.PlayerGui
+
+	-- Fondo oscuro semitransparente (rojo)
+	local overlay = Instance.new("Frame")
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+	overlay.BackgroundTransparency = 1
+	overlay.BorderSizePixel = 0
+	overlay.Parent = epicGui
+
+	-- Animar fade in del overlay
+	TweenService:Create(overlay, TweenInfo.new(0.3), {
+		BackgroundTransparency = 0.6
+	}):Play()
+
+	-- Container central para el texto
+	local container = Instance.new("Frame")
+	container.Size = UDim2.fromScale(0.8, 0.4)
+	container.Position = UDim2.fromScale(0.5, 0.5)
+	container.AnchorPoint = Vector2.new(0.5, 0.5)
+	container.BackgroundTransparency = 1
+	container.Parent = overlay
+
+	-- Texto principal "FAILED!"
+	local mainText = Instance.new("TextLabel")
+	mainText.Size = UDim2.fromScale(1, 0.5)
+	mainText.Position = UDim2.fromScale(0.5, 0.35)
+	mainText.AnchorPoint = Vector2.new(0.5, 0.5)
+	mainText.BackgroundTransparency = 1
+	mainText.Text = "💀 FAILED! 💀"
+	mainText.TextColor3 = Color3.fromRGB(255, 50, 50)
+	mainText.TextSize = 120
+	mainText.Font = Enum.Font.GothamBlack
+	mainText.TextStrokeTransparency = 0
+	mainText.TextStrokeColor3 = Color3.fromRGB(50, 0, 0)
+	mainText.TextTransparency = 1
+	mainText.Parent = container
+
+	-- Texto secundario "Wave X Failed"
+	local subText = Instance.new("TextLabel")
+	subText.Size = UDim2.fromScale(1, 0.3)
+	subText.Position = UDim2.fromScale(0.5, 0.65)
+	subText.AnchorPoint = Vector2.new(0.5, 0.5)
+	subText.BackgroundTransparency = 1
+	subText.Text = string.format("Wave %d Failed | Try Again!", waveNum)
+	subText.TextColor3 = Color3.fromRGB(255, 150, 150)
+	subText.TextSize = 40
+	subText.Font = Enum.Font.GothamBold
+	subText.TextStrokeTransparency = 0.5
+	subText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	subText.TextTransparency = 1
+	subText.Parent = container
+
+	-- Animación: Shake violento
 	task.spawn(function()
+		local shakeIntensity = 20
+		local shakeDuration = 0.6
 		local startTime = tick()
+
 		while tick() - startTime < shakeDuration do
 			local progress = (tick() - startTime) / shakeDuration
 			local intensity = shakeIntensity * (1 - progress)
 			local offsetX = (math.random() - 0.5) * intensity
 			local offsetY = (math.random() - 0.5) * intensity
-			waveFrame.Position = UDim2.new(
-				originalPos.X.Scale,
-				originalPos.X.Offset + offsetX,
-				originalPos.Y.Scale,
-				originalPos.Y.Offset + offsetY
+
+			container.Position = UDim2.new(
+				0.5,
+				offsetX,
+				0.5,
+				offsetY
 			)
 			task.wait()
 		end
-		waveFrame.Position = originalPos
+
+		container.Position = UDim2.fromScale(0.5, 0.5)
 	end)
+
+	-- Fade in textos
+	TweenService:Create(mainText, TweenInfo.new(0.3), {
+		TextTransparency = 0
+	}):Play()
+
+	TweenService:Create(subText, TweenInfo.new(0.4, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	-- Animación de color pulsante en texto principal (rojo oscilante)
+	task.spawn(function()
+		for i = 1, 3 do
+			TweenService:Create(mainText, TweenInfo.new(0.25), {
+				TextColor3 = Color3.fromRGB(150, 20, 20)
+			}):Play()
+			task.wait(0.25)
+			TweenService:Create(mainText, TweenInfo.new(0.25), {
+				TextColor3 = Color3.fromRGB(255, 50, 50)
+			}):Play()
+			task.wait(0.25)
+		end
+	end)
+
+	-- Desaparecer después de 2.5 segundos
+	task.delay(2.5, function()
+		TweenService:Create(overlay, TweenInfo.new(0.4), {
+			BackgroundTransparency = 1
+		}):Play()
+
+		TweenService:Create(mainText, TweenInfo.new(0.4), {
+			TextTransparency = 1
+		}):Play()
+
+		TweenService:Create(subText, TweenInfo.new(0.4), {
+			TextTransparency = 1
+		}):Play()
+
+		task.delay(0.4, function()
+			epicGui:Destroy()
+		end)
+	end)
+
+	-- ═══════════════════════════════════════════════════════
+	-- ANIMACIÓN SUTIL EN EL WIDGET DE LA ESQUINA
+	-- ═══════════════════════════════════════════════════════
 
 	-- Flash rojo en borde
 	waveStroke.Color = Color3.fromRGB(220, 30, 30)
@@ -485,35 +661,6 @@ local function playDefeatAnimation(waveNum: number)
 	TweenService:Create(labelSurvived, TweenInfo.new(0.8), {
 		TextColor3 = Color3.fromRGB(150, 150, 150)
 	}):Play()
-
-	-- "FAILED!" temporal
-	local tempLabel = Instance.new("TextLabel")
-	tempLabel.Size = UDim2.fromScale(1, 0.3)
-	tempLabel.Position = UDim2.fromScale(0, 0.35)
-	tempLabel.BackgroundTransparency = 1
-	tempLabel.Text = "FAILED!"
-	tempLabel.TextColor3 = Color3.fromRGB(220, 30, 30)
-	tempLabel.TextScaled = true
-	tempLabel.Font = Enum.Font.GothamBlack
-	tempLabel.TextStrokeTransparency = 0
-	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-	tempLabel.TextTransparency = 1
-	tempLabel.ZIndex = 100
-	tempLabel.Parent = waveFrame
-
-	-- Aparecer y desaparecer
-	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
-		TextTransparency = 0
-	}):Play()
-
-	task.delay(0.8, function()
-		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
-			TextTransparency = 1
-		}):Play()
-		task.delay(0.3, function()
-			tempLabel:Destroy()
-		end)
-	end)
 end
 
 --═══════════════════════════════════════════════════════════════════════

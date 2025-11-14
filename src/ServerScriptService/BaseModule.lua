@@ -750,7 +750,8 @@ task.spawn(function()
 				local regenEnabled = state.RegenEnabled
 				local lastDamageTime = state.LastDamageTime or 0
 
-				if hp and maxHP and regenEnabled and type(hp) == "number" and type(maxHP) == "number" then
+				-- Validar que todos los valores existen y son del tipo correcto
+				if type(hp) == "number" and type(maxHP) == "number" and regenEnabled ~= false then
 					if hp < maxHP then
 						local timeSinceDamage = tick() - lastDamageTime
 
