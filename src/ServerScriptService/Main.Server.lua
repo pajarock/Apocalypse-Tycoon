@@ -730,6 +730,26 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 		return
 	end
 
+	-- ✅ Actualizar Guardian para permitir compra legítima
+	local s = Economy.GetState(plr.UserId)
+	if s then
+		-- Actualizar target del Guardian PRIMERO
+		Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
+		-- Actualizar leaderstats inmediatamente para evitar race condition
+		local ls = plr:FindFirstChild("leaderstats")
+		if ls then
+			local cash = ls:FindFirstChild("Cash") :: IntValue?
+			if cash then
+				cash.Value = s.Cash
+			end
+		end
+
+		if Config.DEBUG_MODE then
+			print(("[PURCHASE] ✅ Guardian actualizado: nuevo target = $%d"):format(s.Cash))
+		end
+	end
+
 	-- Log analytics
 	logAnalytic("Purchase", {
 		userId = plr.UserId,
