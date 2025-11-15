@@ -763,11 +763,12 @@ task.spawn(function()
 						local timeSinceDamage = tick() - lastDamageTime
 
 						if timeSinceDamage >= Config.BASE_REGEN_DELAY then
-							state.HP = math.min(hp + Config.BASE_REGEN_RATE, maxHP)
+							local newHP = math.min(hp + Config.BASE_REGEN_RATE, maxHP)
+							state.HP = newHP
 
-							if DEBUG and state.HP % 10 == 0 then
+							if DEBUG and type(newHP) == "number" and newHP % 10 == 0 then
 								print(("[BaseModule] Regen - userId %d: %d/%d"):format(
-									userId, state.HP, state.MaxHP
+									userId, newHP, maxHP
 									))
 							end
 						end
@@ -853,11 +854,22 @@ end
 
 function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	local protection = PendingMoneyReductions[userId]
+	local hasTask = ActiveGuardianTasks[userId] ~= nil
+
+	-- Debug exhaustivo
+	print(("[BaseModule] 🔍 UpdateGuardianTarget DEBUG:"):format())
+	print(("  - userId: %d"):format(userId))
+	print(("  - newTarget: $%d"):format(newTarget))
+	print(("  - PendingMoneyReductions[userId] existe: %s"):format(tostring(protection ~= nil)))
+	print(("  - ActiveGuardianTasks[userId] existe: %s"):format(tostring(hasTask)))
+
+	if protection then
+		print(("  - TargetAmount actual: $%d"):format(protection.TargetAmount))
+	end
+
 	if not protection then
 		-- ✅ No hay Guardian activo - esto es NORMAL si el jugador no ha muerto
-		if DEBUG then
-			print(("[BaseModule] ℹ️ UpdateGuardianTarget: No hay Guardian activo (jugador no ha muerto recientemente)"):format())
-		end
+		print(("[BaseModule] ⚠️ No hay PendingMoneyReductions pero hasTask=%s"):format(tostring(hasTask)))
 		return false
 	end
 
