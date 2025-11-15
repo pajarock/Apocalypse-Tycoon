@@ -501,21 +501,30 @@ function BaseModule.OnBaseDead(userId: number)
 				break
 			end
 
-			local cash = plr:FindFirstChild("leaderstats") and plr:FindFirstChild("leaderstats"):FindFirstChild("Cash")
-			if not cash then
-				if DEBUG then
-					warn(("[BaseModule] ⚠️ Guardian: Cash no encontrado"):format())
+			-- ✅ IMPORTANTE: Leer cash de ECONOMY, no de leaderstats (evita race conditions)
+			local currentCash
+			if Economy then
+				local state = Economy.GetState(userId)
+				if state then
+					currentCash = state.Cash
 				end
-				break
+			end
+
+			-- Fallback a leaderstats si Economy no disponible
+			if not currentCash then
+				local cash = plr:FindFirstChild("leaderstats") and plr:FindFirstChild("leaderstats"):FindFirstChild("Cash")
+				if not cash then
+					if DEBUG then
+						warn(("[BaseModule] ⚠️ Guardian: Cash no encontrado"):format())
+					end
+					break
+				end
+				currentCash = cash.Value
 			end
 
 			-- ✅ ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
-			if cash.Value < targetAmount then
-				local oldValue = cash.Value
-
-				-- Forzar al mínimo solo si bajó
-				cash.Value = targetAmount
-
+			if currentCash < targetAmount then
+				-- Restaurar en Economy primero
 				if Economy then
 					local state = Economy.GetState(userId)
 					if state then
@@ -523,9 +532,15 @@ function BaseModule.OnBaseDead(userId: number)
 					end
 				end
 
+				-- Luego actualizar leaderstats
+				local cash = plr:FindFirstChild("leaderstats") and plr:FindFirstChild("leaderstats"):FindFirstChild("Cash")
+				if cash then
+					cash.Value = targetAmount
+				end
+
 				-- Log siempre (no solo DEBUG) para detectar problemas
 				print(("[BaseModule] 🛡️ Guardian ACTIVO: Restauró $%d → $%d (mínimo protegido)"):format(
-					oldValue, targetAmount
+					currentCash, targetAmount
 				))
 			end
 			-- NO logging cuando está funcionando bien (demasiado spam)
