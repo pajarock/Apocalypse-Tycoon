@@ -595,7 +595,7 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 					local height = Config.METEOR_MIN_Y + (meteorData.FallTime and 50 or 20)
 					local spread = 15
 
-					-- Calcular posición según patrón
+					-- ✅ ARREGLADO: Calcular posición según patrón
 					local offset = Vector3.new(0, 0, 0)
 					if meteorData.Position then
 						offset = getPositionOffset(meteorData.Position, spread)
@@ -603,8 +603,17 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 						offset = getAngleOffset(meteorData.Angle, spread)
 					end
 
+					-- ✅ ARREGLADO: Los meteoritos caen EXACTAMENTE en el offset, no hacia el centro
 					local startPos = base.Position + Vector3.new(0, height, 0) + offset
-					local targetPos = base.Position + offset * 0.5
+					local targetPos = base.Position + offset  -- Caer directamente en el patrón
+
+					if Config.DEBUG_MODE then
+						print(("[BOSS] Meteorito tipo %s | Offset: %s | Target: %s"):format(
+							meteorData.Type,
+							tostring(offset),
+							tostring(targetPos)
+						))
+					end
 
 					spawnMeteorTowards(plr, startPos, targetPos, meteorData.Type)
 				end)

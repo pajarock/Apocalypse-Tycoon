@@ -75,6 +75,7 @@ local function updateRepairButton()
 	end
 end
 
+-- ✅ ARREGLADO: Botón de repair actualizado
 repairBtn.MouseButton1Click:Connect(function()
 	ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
 	task.wait(0.1)
@@ -82,7 +83,7 @@ repairBtn.MouseButton1Click:Connect(function()
 	update()
 end)
 
--- Tecla R
+-- ✅ ARREGLADO: Tecla R (código duplicado eliminado)
 local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gp)
 	if gp then return end
@@ -91,17 +92,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		task.wait(0.1)
 		updateRepairButton()
 		update()
-	end
-end)
-
--- Llamar updateRepairButton en el loop
-
--- Tecla R
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.R then
-		ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
 	end
 end)
 
@@ -124,10 +114,14 @@ local function update()
 	end
 
 	label.Text = string.format("HP: %d/%d", hp, max)
+
+	-- ✅ ARREGLADO: Actualizar botón de repair también
+	updateRepairButton()
 end
 
 BaseStateChanged.OnClientEvent:Connect(update)
 
+-- ✅ ARREGLADO: Loop actualiza tanto HP como repair button
 task.spawn(function()
 	while true do
 		update()
@@ -135,4 +129,6 @@ task.spawn(function()
 	end
 end)
 
+-- ✅ Inicializar ambos
 update()
+updateRepairButton()

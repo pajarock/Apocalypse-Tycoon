@@ -122,22 +122,23 @@ local function getCameraRelativeDirection(): Vector3
 	-- Obtener input de movimiento
 	local moveVector = Vector3.new(0, 0, 0)
 
+	-- ✅ ARREGLADO: Valores correctos para dirección de cámara
 	if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-		moveVector += Vector3.new(0, 0, -1)
+		moveVector += Vector3.new(0, 0, 1)  -- Forward (positivo)
 	end
 	if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-		moveVector += Vector3.new(0, 0, 1)
+		moveVector += Vector3.new(0, 0, -1)  -- Backward (negativo)
 	end
 	if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-		moveVector += Vector3.new(-1, 0, 0)
+		moveVector += Vector3.new(-1, 0, 0)  -- Left
 	end
 	if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-		moveVector += Vector3.new(1, 0, 0)
+		moveVector += Vector3.new(1, 0, 0)  -- Right
 	end
 
 	-- Si no hay input, dash hacia adelante
 	if moveVector.Magnitude == 0 then
-		moveVector = Vector3.new(0, 0, -1)
+		moveVector = Vector3.new(0, 0, 1)  -- Forward
 	end
 
 	-- Convertir a dirección relativa a la cámara
@@ -160,47 +161,85 @@ local function canDash(): boolean
 end
 
 local function playDashVFX()
-	-- Trail de partículas
-	local attachment = humanoidRootPart:FindFirstChild("DashAttachment")
-	if not attachment then
-		attachment = Instance.new("Attachment")
-		attachment.Name = "DashAttachment"
-		attachment.Parent = humanoidRootPart
-	end
+	-- ✅ Trail azul brillante detrás del personaje
+	local attachment0 = Instance.new("Attachment")
+	attachment0.Name = "DashTrailStart"
+	attachment0.Parent = humanoidRootPart
+
+	local attachment1 = Instance.new("Attachment")
+	attachment1.Name = "DashTrailEnd"
+	attachment1.Position = Vector3.new(0, 1, 0)
+	attachment1.Parent = humanoidRootPart
 
 	local trail = Instance.new("Trail")
-	trail.Attachment0 = attachment
-	trail.Attachment1 = attachment
-	trail.Lifetime = 0.5
-	trail.MinLength = 0.1
-	trail.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+	trail.Attachment0 = attachment0
+	trail.Attachment1 = attachment1
+	trail.Lifetime = 0.8
+	trail.MinLength = 0
+	trail.FaceCamera = true
+	trail.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 150, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 200))
+	})
 	trail.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.5, 0.3),
 		NumberSequenceKeypoint.new(1, 1)
 	})
 	trail.WidthScale = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 1),
-		NumberSequenceKeypoint.new(1, 0)
+		NumberSequenceKeypoint.new(1, 0.2)
 	})
-	trail.Parent = attachment
+	trail.LightEmission = 1
+	trail.Parent = humanoidRootPart
 
-	game.Debris:AddItem(trail, 1)
+	-- Limpiar después
+	task.delay(1, function()
+		trail:Destroy()
+		attachment0:Destroy()
+		attachment1:Destroy()
+	end)
 
-	-- Flash de velocidad en la UI
+	-- ✅ Flash azul brillante en pantalla
 	local flash = Instance.new("Frame")
 	flash.Size = UDim2.fromScale(1, 1)
 	flash.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
-	flash.BackgroundTransparency = 0.7
+	flash.BackgroundTransparency = 0.5
 	flash.BorderSizePixel = 0
-	flash.ZIndex = 100
+	flash.ZIndex = 1000
 	flash.Parent = playerGui
 
-	TweenService:Create(flash, TweenInfo.new(DASH_INVULN_DURATION), {
+	TweenService:Create(flash, TweenInfo.new(DASH_INVULN_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 1
 	}):Play()
 
-	task.delay(DASH_INVULN_DURATION, function()
+	task.delay(DASH_INVULN_DURATION + 0.1, function()
 		flash:Destroy()
+	end)
+
+	-- ✅ Partículas de velocidad
+	local particles = Instance.new("ParticleEmitter")
+	particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+	particles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	particles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	particles.Lifetime = NumberRange.new(0.3, 0.5)
+	particles.Rate = 50
+	particles.Speed = NumberRange.new(2, 5)
+	particles.SpreadAngle = Vector2.new(20, 20)
+	particles.LightEmission = 1
+	particles.Parent = humanoidRootPart
+
+	task.delay(0.2, function()
+		particles.Enabled = false
+		game.Debris:AddItem(particles, 1)
 	end)
 end
 

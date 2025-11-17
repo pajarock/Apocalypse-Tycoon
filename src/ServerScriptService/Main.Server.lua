@@ -945,6 +945,13 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	s.Cash -= cost
 	Base.AddHP(plr.UserId, will)
 
+	-- ✅ ARREGLADO: Actualizar Guardian para permitir reparación legítima
+	Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
+	if Config.DEBUG_MODE then
+		print(("[REPAIR] ✅ Guardian actualizado: nuevo target = $%d (después de repair)"):format(s.Cash))
+	end
+
 	-- Sync
 	local ls = plr:FindFirstChild("leaderstats")
 	if ls then

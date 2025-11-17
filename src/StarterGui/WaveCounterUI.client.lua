@@ -175,6 +175,69 @@ moneyPadding.PaddingRight = UDim.new(0, 10)
 moneyPadding.Parent = moneyFrame
 
 --═══════════════════════════════════════════════════════════════════════
+-- 🎁 NOTIFICACIONES ÉPICAS DE RECOMPENSAS (Grande y visible)
+--═══════════════════════════════════════════════════════════════════════
+
+local rewardFrame = Instance.new("Frame")
+rewardFrame.Name = "EpicRewardFrame"
+rewardFrame.Size = UDim2.fromOffset(600, 200)
+rewardFrame.Position = UDim2.fromScale(0.5, 0.3)
+rewardFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+rewardFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+rewardFrame.BackgroundTransparency = 0.2
+rewardFrame.BorderSizePixel = 0
+rewardFrame.Visible = false
+rewardFrame.ZIndex = 200
+rewardFrame.Parent = screenGui
+
+local rewardCorner = Instance.new("UICorner")
+rewardCorner.CornerRadius = UDim.new(0, 20)
+rewardCorner.Parent = rewardFrame
+
+local rewardStroke = Instance.new("UIStroke")
+rewardStroke.Color = Color3.fromRGB(255, 215, 0)
+rewardStroke.Thickness = 6
+rewardStroke.Parent = rewardFrame
+
+local rewardGlow = Instance.new("UIGradient")
+rewardGlow.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 100)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 0))
+}
+rewardGlow.Rotation = 90
+rewardGlow.Parent = rewardStroke
+
+-- Texto principal de recompensa
+local rewardText = Instance.new("TextLabel")
+rewardText.Name = "RewardText"
+rewardText.Size = UDim2.fromScale(1, 0.5)
+rewardText.Position = UDim2.fromScale(0, 0.1)
+rewardText.BackgroundTransparency = 1
+rewardText.Text = "💰 REWARD!"
+rewardText.TextColor3 = Color3.fromRGB(255, 215, 0)
+rewardText.TextScaled = true
+rewardText.Font = Enum.Font.GothamBlack
+rewardText.TextStrokeTransparency = 0
+rewardText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+rewardText.ZIndex = 201
+rewardText.Parent = rewardFrame
+
+-- Subtexto de detalles
+local rewardDetails = Instance.new("TextLabel")
+rewardDetails.Name = "Details"
+rewardDetails.Size = UDim2.fromScale(1, 0.3)
+rewardDetails.Position = UDim2.fromScale(0, 0.65)
+rewardDetails.BackgroundTransparency = 1
+rewardDetails.Text = "+$500 | +100 HP"
+rewardDetails.TextColor3 = Color3.fromRGB(100, 255, 100)
+rewardDetails.TextScaled = true
+rewardDetails.Font = Enum.Font.GothamBold
+rewardDetails.TextStrokeTransparency = 0.5
+rewardDetails.ZIndex = 201
+rewardDetails.Parent = rewardFrame
+
+--═══════════════════════════════════════════════════════════════════════
 -- MENSAJE "WAVE COMPLETED" (Centro Pantalla)
 --═══════════════════════════════════════════════════════════════════════
 
@@ -223,6 +286,107 @@ completedSubtext.TextColor3 = Color3.fromRGB(200, 200, 200)
 completedSubtext.TextScaled = true
 completedSubtext.Font = Enum.Font.Gotham
 completedSubtext.Parent = completedFrame
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✨ FUNCIÓN PARA MOSTRAR RECOMPENSA ÉPICA
+--═══════════════════════════════════════════════════════════════════════
+
+local function showEpicReward(title: string, money: number?, hp: number?)
+	if DEBUG then
+		print(("[WaveCounterUI] 🎁 Mostrando recompensa épica: %s | $%s | HP:%s"):format(
+			title, tostring(money), tostring(hp)
+		))
+	end
+
+	-- Configurar textos
+	rewardText.Text = title
+
+	local details = {}
+	if money and money > 0 then
+		table.insert(details, string.format("+$%d", money))
+	end
+	if hp and hp > 0 then
+		table.insert(details, string.format("+%d HP", hp))
+	end
+	rewardDetails.Text = table.concat(details, " | ")
+
+	-- Mostrar con animación
+	rewardFrame.Visible = true
+	rewardFrame.Size = UDim2.fromOffset(0, 0)
+	rewardFrame.BackgroundTransparency = 1
+	rewardText.TextTransparency = 1
+	rewardDetails.TextTransparency = 1
+	rewardStroke.Transparency = 1
+
+	-- Animación de entrada (rebote épico)
+	local tweenIn = TweenService:Create(rewardFrame, TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(600, 200),
+		BackgroundTransparency = 0.2
+	})
+
+	local tweenStroke = TweenService:Create(rewardStroke, TweenInfo.new(0.4), {
+		Transparency = 0
+	})
+
+	local tweenText = TweenService:Create(rewardText, TweenInfo.new(0.5), {
+		TextTransparency = 0
+	})
+
+	local tweenDetails = TweenService:Create(rewardDetails, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.2), {
+		TextTransparency = 0
+	})
+
+	tweenIn:Play()
+	tweenStroke:Play()
+	tweenText:Play()
+	tweenDetails:Play()
+
+	-- Animación de pulso del borde
+	task.spawn(function()
+		for i = 1, 3 do
+			task.wait(0.3)
+			local pulse = TweenService:Create(rewardStroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				Thickness = 8
+			})
+			pulse:Play()
+			pulse.Completed:Wait()
+
+			local pulseBack = TweenService:Create(rewardStroke, TweenInfo.new(0.3), {
+				Thickness = 6
+			})
+			pulseBack:Play()
+			pulseBack.Completed:Wait()
+		end
+	end)
+
+	-- Ocultar después de 4 segundos
+	task.delay(4, function()
+		local tweenOut = TweenService:Create(rewardFrame, TweenInfo.new(0.5), {
+			BackgroundTransparency = 1
+		})
+
+		local tweenTextOut = TweenService:Create(rewardText, TweenInfo.new(0.5), {
+			TextTransparency = 1
+		})
+
+		local tweenDetailsOut = TweenService:Create(rewardDetails, TweenInfo.new(0.5), {
+			TextTransparency = 1
+		})
+
+		local tweenStrokeOut = TweenService:Create(rewardStroke, TweenInfo.new(0.5), {
+			Transparency = 1
+		})
+
+		tweenOut:Play()
+		tweenTextOut:Play()
+		tweenDetailsOut:Play()
+		tweenStrokeOut:Play()
+
+		tweenOut.Completed:Connect(function()
+			rewardFrame.Visible = false
+		end)
+	end)
+end
 
 --═══════════════════════════════════════════════════════════════════════
 -- FUNCIONES DE ANIMACIÓN
@@ -653,6 +817,41 @@ if remotes then
 		end
 	else
 		warn("[WaveCounterUI] ⚠️ No se encontró WaveResult remote")
+	end
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- 🎁 ESCUCHAR NOTIFICACIONES DE RECOMPENSAS
+--═══════════════════════════════════════════════════════════════════════
+
+local showNotificationRemote = remotes:FindFirstChild("ShowNotification")
+if showNotificationRemote and showNotificationRemote:IsA("RemoteEvent") then
+	showNotificationRemote.OnClientEvent:Connect(function(message: string, duration: number?)
+		if DEBUG then
+			print(("[WaveCounterUI] 📢 Notificación recibida: %s"):format(message))
+		end
+
+		-- Detectar si es una notificación de recompensa
+		if message:match("BOSS DEFEATED") or message:match("MINI%-BOSS DEFEATED") or message:match("Wave %d+ Survived") then
+			-- Extraer información de la notificación
+			local money = tonumber(message:match("%+%$(%d+)")) or 0
+			local hp = message:match("Full HP") and 100 or 0
+
+			-- Determinar título
+			local title = "🎉 WAVE SURVIVED!"
+			if message:match("BOSS DEFEATED") then
+				title = "💀 BOSS DEFEATED!"
+			elseif message:match("MINI%-BOSS DEFEATED") then
+				title = "💀 MINI-BOSS DEFEATED!"
+			end
+
+			-- Mostrar recompensa épica
+			showEpicReward(title, money, hp)
+		end
+	end)
+
+	if DEBUG then
+		print("[WaveCounterUI] ✓ Listener de recompensas conectado")
 	end
 end
 
