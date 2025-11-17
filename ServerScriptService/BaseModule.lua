@@ -376,8 +376,7 @@ end
 -- SISTEMA DE PENALIZACIONES POR MUERTE DE BASE
 --═══════════════════════════════════════════════════════════════════════
 
-local PendingMoneyReductions = {}
-local ActiveGuardianTasks = {}
+-- ✅ ARREGLADO: Removidas declaraciones duplicadas - usar las de línea 79-80
 
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
@@ -481,6 +480,17 @@ function BaseModule.OnBaseDead(userId: number)
 		while tick() - startTime < forceDuration do
 			task.wait(checkInterval)
 
+			-- ✅ Leer el target actual desde PendingMoneyReductions (puede cambiar con compras)
+			local protection = PendingMoneyReductions[userId]
+			if not protection then
+				if DEBUG then
+					print(("[BaseModule] ⚠️ Guardian: Protección eliminada externamente"):format())
+				end
+				break
+			end
+
+			local targetAmount = protection.TargetAmount
+
 			-- Verificar si el jugador sigue conectado
 			local plr = Players:GetPlayerByUserId(userId)
 			if not plr then
@@ -499,31 +509,31 @@ function BaseModule.OnBaseDead(userId: number)
 			end
 
 			-- ✅ ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
-			if cash.Value < newAmount then
+			if cash.Value < targetAmount then
 				local oldValue = cash.Value
 
 				-- Forzar al mínimo solo si bajó
-				cash.Value = newAmount
+				cash.Value = targetAmount
 
 				if Economy then
 					local state = Economy.GetState(userId)
 					if state then
-						state.Cash = newAmount
+						state.Cash = targetAmount
 					end
 				end
 
 				if DEBUG then
 					print(("[BaseModule] 🛡️ Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
-						newAmount, oldValue
+						targetAmount, oldValue
 						))
 					print(("[BaseModule] 🛡️ Guardian RESTAURÓ: $%d → $%d"):format(
-						oldValue, newAmount
+						oldValue, targetAmount
 						))
 				end
-			elseif DEBUG and cash.Value > newAmount then
+			elseif DEBUG and cash.Value > targetAmount then
 				-- Income normal funcionando, no hacer nada
 				print(("[BaseModule] ✅ Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
-					cash.Value, newAmount
+					cash.Value, targetAmount
 					))
 			end
 		end
@@ -759,8 +769,6 @@ task.spawn(function()
 	end
 end)
 
-local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
-
 -------------------------------------------------------------------------
 -- DEBUG COMMANDS
 -------------------------------------------------------------------------
@@ -863,4 +871,44 @@ end
 	end
 end)
 --]]
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ ACTUALIZAR GUARDIAN DESPUÉS DE COMPRAS LEGÍTIMAS
+--═══════════════════════════════════════════════════════════════════════
+
+function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
+	local protection = PendingMoneyReductions[userId]
+
+	-- ✅ Si no existe pero hay guardian task activo, crear la entrada
+	if not protection then
+		if ActiveGuardianTasks[userId] then
+			-- Guardian activo pero sin PendingMoneyReductions - crearlo
+			PendingMoneyReductions[userId] = {
+				TargetAmount = newTarget,
+				StartTime = tick(),
+				Duration = 120
+			}
+
+			if DEBUG then
+				print(("[BaseModule] 🛡️ Guardian: Creada protección para compra legítima - Target: $%d"):format(newTarget))
+			end
+		else
+			if DEBUG then
+				print(("[BaseModule] ⚠️ No hay Guardian activo para userId %d"):format(userId))
+			end
+		end
+		return
+	end
+
+	-- Actualizar el target amount
+	local oldTarget = protection.TargetAmount
+	protection.TargetAmount = newTarget
+
+	if DEBUG then
+		print(("[BaseModule] 🛡️ Guardian: Target actualizado $%d → $%d para userId %d (compra legítima)"):format(
+			oldTarget, newTarget, userId
+		))
+	end
+end
+
 return BaseModule
