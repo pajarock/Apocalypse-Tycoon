@@ -12,6 +12,7 @@
 	- C: Añadir $10,000
 	- Shift+C: Añadir $100,000
 	- Y: Reset a Wave 1
+	- I: Toggle Invencibilidad
 	- 1-9: Saltar a wave específico (10, 20, 30, etc.)
 
 	═══════════════════════════════════════════════════════════════════════
@@ -42,6 +43,7 @@ local Events = require(ServerScriptService.EventManager)
 task.wait(2)
 local Economy = require(ServerScriptService.EconomyModule)
 local DataStore = require(ServerScriptService.DataStoreModule)
+local Base = require(ServerScriptService.BaseModule)
 
 -- Remotes de debug
 local DebugSkipWave = Remotes:WaitForChild("DebugSkipWave")
@@ -50,6 +52,8 @@ local DebugSpawnBoss = Remotes:WaitForChild("DebugSpawnBoss")
 local DebugSpawnMiniBoss = Remotes:WaitForChild("DebugSpawnMiniBoss")
 local DebugAddCash = Remotes:WaitForChild("DebugAddCash")
 local DebugResetWave = Remotes:WaitForChild("DebugResetWave")
+local DebugToggleInvincibility = Remotes:WaitForChild("DebugToggleInvincibility")
+local DebugInvincibilityChanged = Remotes:WaitForChild("DebugInvincibilityChanged")
 
 -- Remotes existentes para notificaciones
 local ShowNotification = Remotes:FindFirstChild("ShowNotification")
@@ -195,6 +199,31 @@ DebugResetWave.OnServerEvent:Connect(function(player: Player)
 	notify(player, "🔄 Wave reseteado a 1")
 
 	print(string.format("[DEBUG] %s reseteó el wave a 1", player.Name))
+end)
+
+-- TOGGLE INVINCIBILITY: Activa/desactiva invencibilidad
+DebugToggleInvincibility.OnServerEvent:Connect(function(player: Player)
+	if not checkCooldown(player.UserId) then return end
+
+	-- Toggle invencibilidad
+	local currentInvincible = Base.IsInvulnerable(player.UserId)
+	local newInvincible = not currentInvincible
+
+	Base.SetInvulnerable(player.UserId, newInvincible)
+
+	-- Notificar al jugador
+	if newInvincible then
+		notify(player, "🛡️ INVENCIBILIDAD ACTIVADA")
+	else
+		notify(player, "⚔️ INVENCIBILIDAD DESACTIVADA")
+	end
+
+	-- Notificar al cliente para el feedback visual
+	DebugInvincibilityChanged:FireClient(player, newInvincible)
+
+	print(string.format("[DEBUG] %s %s la invencibilidad",
+		player.Name,
+		newInvincible and "activó" or "desactivó"))
 end)
 
 print("[DEBUG MANAGER] ✅ Sistema de debug cargado")

@@ -21,6 +21,9 @@
 	- C: Añadir $10,000
 	- Shift+C: Añadir $100,000
 
+	SUPERVIVENCIA:
+	- I: Toggle Invencibilidad (no recibes daño)
+
 	OTROS:
 	- M: Spawn meteorito aleatorio
 	- K: Test camera shake
@@ -52,6 +55,8 @@ local DebugSpawnBoss = Remotes:WaitForChild("DebugSpawnBoss")
 local DebugSpawnMiniBoss = Remotes:WaitForChild("DebugSpawnMiniBoss")
 local DebugAddCash = Remotes:WaitForChild("DebugAddCash")
 local DebugResetWave = Remotes:WaitForChild("DebugResetWave")
+local DebugToggleInvincibility = Remotes:WaitForChild("DebugToggleInvincibility")
+local DebugInvincibilityChanged = Remotes:WaitForChild("DebugInvincibilityChanged")
 
 print("[DEBUG CONTROLS] 🛠️ Controles de debug cargados")
 print("[DEBUG CONTROLS] Presiona H para ver la ayuda")
@@ -130,6 +135,9 @@ local function createHelpUI()
 		{section = "ECONOMÍA", color = Color3.fromRGB(100, 255, 100)},
 		{key = "C", desc = "Añadir $10,000"},
 		{key = "Shift+C", desc = "Añadir $100,000"},
+
+		{section = "SUPERVIVENCIA", color = Color3.fromRGB(255, 215, 0)},
+		{key = "I", desc = "Toggle Invencibilidad"},
 
 		{section = "OTROS", color = Color3.fromRGB(255, 200, 100)},
 		{key = "M", desc = "Spawn meteorito aleatorio"},
@@ -341,6 +349,124 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	elseif input.KeyCode == Enum.KeyCode.Zero then
 		DebugJumpToWave:FireServer(100)
 		showFeedback("🎯 Jumping to Wave 100", Color3.fromRGB(100, 200, 255))
+
+	-- TOGGLE INVINCIBILITY
+	elseif input.KeyCode == Enum.KeyCode.I then
+		DebugToggleInvincibility:FireServer()
+		-- El feedback se mostrará cuando el servidor confirme el cambio
+	end
+end)
+
+--═══════════════════════════════════════════════════════════════════════
+-- INVINCIBILITY VISUAL FEEDBACK
+--═══════════════════════════════════════════════════════════════════════
+
+local invincibilityOverlay = nil
+
+local function createInvincibilityOverlay()
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "InvincibilityOverlay"
+	screenGui.ResetOnSpawn = false
+	screenGui.Enabled = false
+	screenGui.Parent = playerGui
+
+	-- Borde dorado brillante
+	local frame = Instance.new("Frame")
+	frame.Name = "Border"
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.Position = UDim2.new(0, 0, 0, 0)
+	frame.BackgroundTransparency = 1
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
+
+	-- Borde superior
+	local topBorder = Instance.new("Frame")
+	topBorder.Name = "Top"
+	topBorder.Size = UDim2.new(1, 0, 0, 4)
+	topBorder.Position = UDim2.new(0, 0, 0, 0)
+	topBorder.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	topBorder.BorderSizePixel = 0
+	topBorder.Parent = frame
+
+	-- Borde inferior
+	local bottomBorder = Instance.new("Frame")
+	bottomBorder.Name = "Bottom"
+	bottomBorder.Size = UDim2.new(1, 0, 0, 4)
+	bottomBorder.Position = UDim2.new(0, 0, 1, -4)
+	bottomBorder.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	bottomBorder.BorderSizePixel = 0
+	bottomBorder.Parent = frame
+
+	-- Borde izquierdo
+	local leftBorder = Instance.new("Frame")
+	leftBorder.Name = "Left"
+	leftBorder.Size = UDim2.new(0, 4, 1, 0)
+	leftBorder.Position = UDim2.new(0, 0, 0, 0)
+	leftBorder.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	leftBorder.BorderSizePixel = 0
+	leftBorder.Parent = frame
+
+	-- Borde derecho
+	local rightBorder = Instance.new("Frame")
+	rightBorder.Name = "Right"
+	rightBorder.Size = UDim2.new(0, 4, 1, 0)
+	rightBorder.Position = UDim2.new(1, -4, 0, 0)
+	rightBorder.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	rightBorder.BorderSizePixel = 0
+	rightBorder.Parent = frame
+
+	-- Indicador de texto
+	local label = Instance.new("TextLabel")
+	label.Name = "Label"
+	label.Size = UDim2.new(0, 300, 0, 40)
+	label.Position = UDim2.new(0.5, -150, 0, 20)
+	label.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+	label.BackgroundTransparency = 0.3
+	label.Text = "🛡️ INVENCIBLE"
+	label.TextColor3 = Color3.fromRGB(255, 215, 0)
+	label.TextSize = 20
+	label.Font = Enum.Font.GothamBold
+	label.TextStrokeTransparency = 0.5
+	label.Parent = frame
+
+	local labelCorner = Instance.new("UICorner")
+	labelCorner.CornerRadius = UDim.new(0, 10)
+	labelCorner.Parent = label
+
+	local labelStroke = Instance.new("UIStroke")
+	labelStroke.Color = Color3.fromRGB(255, 215, 0)
+	labelStroke.Thickness = 2
+	labelStroke.Parent = label
+
+	-- Animación de pulso
+	task.spawn(function()
+		while screenGui.Enabled do
+			for i = 0, 1, 0.05 do
+				if not screenGui.Enabled then break end
+				local transparency = 0.3 + (math.sin(i * math.pi * 2) * 0.3)
+				topBorder.BackgroundTransparency = transparency
+				bottomBorder.BackgroundTransparency = transparency
+				leftBorder.BackgroundTransparency = transparency
+				rightBorder.BackgroundTransparency = transparency
+				labelStroke.Transparency = transparency
+				task.wait(0.03)
+			end
+		end
+	end)
+
+	return screenGui
+end
+
+invincibilityOverlay = createInvincibilityOverlay()
+
+-- Listener para cambios de invencibilidad desde el servidor
+DebugInvincibilityChanged.OnClientEvent:Connect(function(isInvincible: boolean)
+	invincibilityOverlay.Enabled = isInvincible
+
+	if isInvincible then
+		showFeedback("🛡️ INVENCIBILIDAD ACTIVADA", Color3.fromRGB(255, 215, 0))
+	else
+		showFeedback("⚔️ INVENCIBILIDAD DESACTIVADA", Color3.fromRGB(200, 200, 200))
 	end
 end)
 
