@@ -76,8 +76,9 @@ end
 -------------------------------------------------------------------------
 
 local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived, DiedDuringWave}
-local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
-local ActiveGuardianTasks = {} -- [userId] = task thread
+local PendingMoneyReductions = {} -- [userId] = {TargetAmount, StartTime, Duration, GuardianID}
+local ActiveGuardianTasks = {} -- [userId] = {task, id}
+local GuardianIDCounter = 0 -- Contador global para IDs únicos
 
 -------------------------------------------------------------------------
 -- MÓDULO
@@ -451,42 +452,54 @@ function BaseModule.OnBaseDead(userId: number)
 	end
 
 	-- 4️⃣ ACTIVAR GUARDIAN (protección por 120 segundos)
+	-- Generar ID único para este Guardian
+	GuardianIDCounter += 1
+	local guardianID = GuardianIDCounter
+
 	PendingMoneyReductions[userId] = {
 		TargetAmount = newAmount,
 		StartTime = tick(),
-		Duration = 120
+		Duration = 120,
+		GuardianID = guardianID
 	}
 
 	-- Cancelar guardian previo si existe
 	if ActiveGuardianTasks[userId] then
-		task.cancel(ActiveGuardianTasks[userId])
+		local oldTask = ActiveGuardianTasks[userId]
+		if oldTask and oldTask.task then
+			task.cancel(oldTask.task)
+		end
 		ActiveGuardianTasks[userId] = nil
 		if DEBUG then
-			print(("[BaseModule] 🔄 Guardian previo cancelado"))
+			print(("[BaseModule] 🔄 Guardian previo cancelado (ID: %d)"):format(oldTask.id or 0))
 		end
 	end
 
 	-- Iniciar nuevo guardian
-	ActiveGuardianTasks[userId] = task.spawn(function()
+	local guardianTask = task.spawn(function()
 		local startTime = tick()
 		local forceDuration = 120 -- 2 minutos
 		local checkInterval = 0.5 -- Revisar cada 0.5 segundos
 
-		if DEBUG then
-			print(("[BaseModule] 🛡️ Guardian ACTIVADO - Protegiendo $%d por %ds"):format(
-				newAmount, forceDuration
-				))
-		end
+		print(("[BaseModule] 🛡️ Guardian #%d ACTIVADO - Protegiendo $%d por %ds"):format(
+			guardianID, newAmount, forceDuration
+		))
 
 		while tick() - startTime < forceDuration do
 			task.wait(checkInterval)
 
-			-- ✅ Leer el target actual desde PendingMoneyReductions (puede cambiar con compras)
+			-- ✅ Verificar que este Guardian sigue siendo válido
 			local protection = PendingMoneyReductions[userId]
 			if not protection then
-				if DEBUG then
-					print(("[BaseModule] ⚠️ Guardian: Protección eliminada externamente"):format())
-				end
+				print(("[BaseModule] 🛑 Guardian #%d: Protección eliminada"):format(guardianID))
+				break
+			end
+
+			-- ✅ Verificar que este es el Guardian activo (no uno viejo)
+			if protection.GuardianID ~= guardianID then
+				print(("[BaseModule] 🛑 Guardian #%d: Reemplazado por Guardian #%d"):format(
+					guardianID, protection.GuardianID
+				))
 				break
 			end
 
@@ -539,18 +552,22 @@ function BaseModule.OnBaseDead(userId: number)
 				end
 
 				-- Log siempre (no solo DEBUG) para detectar problemas
-				print(("[BaseModule] 🛡️ Guardian ACTIVO: Restauró $%d → $%d (mínimo protegido)"):format(
-					currentCash, targetAmount
+				print(("[BaseModule] 🛡️ Guardian #%d ACTIVO: Restauró $%d → $%d"):format(
+					guardianID, currentCash, targetAmount
 				))
 			end
 			-- NO logging cuando está funcionando bien (demasiado spam)
 		end
 
 		ActiveGuardianTasks[userId] = nil
-		if DEBUG then
-			print(("[BaseModule] ✅ Guardian TERMINADO - Protección finalizada"):format())
-		end
+		print(("[BaseModule] ✅ Guardian #%d TERMINADO - Protección finalizada"):format(guardianID))
 	end)
+
+	-- Guardar task con su ID
+	ActiveGuardianTasks[userId] = {
+		task = guardianTask,
+		id = guardianID
+	}
 
 	-- 5️⃣ MOSTRAR PANTALLA DE MUERTE
 	local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
@@ -817,7 +834,10 @@ Players.PlayerRemoving:Connect(function(plr)
 
 	-- ✅ NUEVO: Cancelar guardian activo
 	if ActiveGuardianTasks[userId] then
-		task.cancel(ActiveGuardianTasks[userId])
+		local guardianData = ActiveGuardianTasks[userId]
+		if guardianData and guardianData.task then
+			task.cancel(guardianData.task)
+		end
 		ActiveGuardianTasks[userId] = nil
 
 		if DEBUG then
@@ -834,7 +854,10 @@ Players.PlayerRemoving:Connect(function(plr)
 	end
 
 	if ActiveGuardianTasks[userId] then
-		task.cancel(ActiveGuardianTasks[userId])
+		local guardianData = ActiveGuardianTasks[userId]
+		if guardianData and guardianData.task then
+			task.cancel(guardianData.task)
+		end
 		ActiveGuardianTasks[userId] = nil
 		if DEBUG then
 			print(("[BaseModule] 🧹 Cancelando Guardian task para userId %d"):format(userId))
@@ -877,8 +900,8 @@ function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	local oldTarget = protection.TargetAmount
 	protection.TargetAmount = newTarget
 
-	print(("[BaseModule] ✅ Guardian: Target actualizado $%d → $%d (compra legítima permitida)"):format(
-		oldTarget, newTarget
+	print(("[BaseModule] ✅ Guardian #%d: Target actualizado $%d → $%d (compra permitida)"):format(
+		protection.GuardianID, oldTarget, newTarget
 	))
 
 	return true
