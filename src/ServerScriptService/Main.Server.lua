@@ -1589,82 +1589,82 @@ if eventsEnabled then
 			end
 		end
 
-			-- ✅ ARREGLADO: Wave completada (delay reducido para feedback inmediato)
-			task.wait(0.3) -- Esperar solo 0.3s para feedback instantáneo
+		-- ✅ ARREGLADO: Wave completada (delay reducido para feedback inmediato)
+		task.wait(0.3) -- Esperar solo 0.3s para feedback instantáneo
 
-			if Config.DEBUG_MODE then
-				print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
-			end
+		if Config.DEBUG_MODE then
+			print(("[WAVE] ✅ Wave %d completada"):format(ServerState.CurrentWave))
+		end
 
-			-- ✅ Incrementar contador Y enviar resultado ÉPICO personalizado
-			for _, plr in ipairs(Players:GetPlayers()) do
-				local diedDuringWave = Base.DiedDuringCurrentWave(plr.UserId)
+		-- ✅ Incrementar contador Y enviar resultado ÉPICO personalizado
+		for _, plr in ipairs(Players:GetPlayers()) do
+			local diedDuringWave = Base.DiedDuringCurrentWave(plr.UserId)
 
-				if not diedDuringWave then
-					-- ✅ Jugador SOBREVIVIÓ
-					Base.IncrementMeteorsSurvived(plr.UserId)
+			if not diedDuringWave then
+				-- ✅ Jugador SOBREVIVIÓ
+				Base.IncrementMeteorsSurvived(plr.UserId)
 
-					local stats = plr:FindFirstChild("Stats")
-					if stats then
-						local meteors = stats:FindFirstChild("MeteorsSurvived") :: IntValue?
-						if meteors then
-							meteors.Value = Base.GetMeteorsSurvived(plr.UserId)
-						end
-					end
-
-					-- ✅ ENVIAR RESULTADO ÉPICO DE VICTORIA
-					if WaveResult then
-						local waveData = {
-							result = "victory",
-							waveNumber = ServerState.CurrentWave,
-							newSurvived = Base.GetMeteorsSurvived(plr.UserId)
-						}
-						print(("[WAVE] 🎉 Enviando VICTORIA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
-						WaveResult:FireClient(plr, waveData)
-					else
-						warn("[WAVE] ⚠️ WaveResult remote no existe!")
-					end
-
-					-- Achievement: 100 meteoros
-					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
-						Achievements.Award(plr.UserId, "Survivor100")
-					end
-
-					if Config.DEBUG_MODE then
-						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
-					end
-				else
-					-- ❌ Jugador MURIÓ
-					-- ✅ ENVIAR RESULTADO ÉPICO DE DERROTA
-					if WaveResult then
-						local waveData = {
-							result = "defeat",
-							waveNumber = ServerState.CurrentWave,
-							survivedCount = Base.GetMeteorsSurvived(plr.UserId)
-						}
-						print(("[WAVE] 💀 Enviando DERROTA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
-						WaveResult:FireClient(plr, waveData)
-					else
-						warn("[WAVE] ⚠️ WaveResult remote no existe!")
-					end
-
-					if Config.DEBUG_MODE then
-						print(("[WAVE] ❌ Jugador %s MURIÓ durante wave %d"):format(plr.Name, ServerState.CurrentWave))
+				local stats = plr:FindFirstChild("Stats")
+				if stats then
+					local meteors = stats:FindFirstChild("MeteorsSurvived") :: IntValue?
+					if meteors then
+						meteors.Value = Base.GetMeteorsSurvived(plr.UserId)
 					end
 				end
+
+				-- ✅ ENVIAR RESULTADO ÉPICO DE VICTORIA
+				if WaveResult then
+					local waveData = {
+						result = "victory",
+						waveNumber = ServerState.CurrentWave,
+						newSurvived = Base.GetMeteorsSurvived(plr.UserId)
+					}
+					print(("[WAVE] 🎉 Enviando VICTORIA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+					WaveResult:FireClient(plr, waveData)
+				else
+					warn("[WAVE] ⚠️ WaveResult remote no existe!")
+				end
+
+				-- Achievement: 100 meteoros
+				if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
+					Achievements.Award(plr.UserId, "Survivor100")
+				end
+
+				if Config.DEBUG_MODE then
+					print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
+				end
+			else
+				-- ❌ Jugador MURIÓ
+				-- ✅ ENVIAR RESULTADO ÉPICO DE DERROTA
+				if WaveResult then
+					local waveData = {
+						result = "defeat",
+						waveNumber = ServerState.CurrentWave,
+						survivedCount = Base.GetMeteorsSurvived(plr.UserId)
+					}
+					print(("[WAVE] 💀 Enviando DERROTA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+					WaveResult:FireClient(plr, waveData)
+				else
+					warn("[WAVE] ⚠️ WaveResult remote no existe!")
+				end
+
+				if Config.DEBUG_MODE then
+					print(("[WAVE] ❌ Jugador %s MURIÓ durante wave %d"):format(plr.Name, ServerState.CurrentWave))
+				end
 			end
-
-			-- ✅ INCREMENTAR WAVE DESPUÉS de enviar mensajes
-			ServerState.CurrentWave += 1
-			CurrentWaveValue.Value = ServerState.CurrentWave
-
-			logAnalytic("WaveCompleted", {
-				wave = ServerState.CurrentWave - 1,
-				survivors = #Players:GetPlayers(),
-			})
-			-- Pausa de 5 segundos antes de anunciar el siguiente wave
-			task.wait(5)
 		end
+
+		-- ✅ INCREMENTAR WAVE DESPUÉS de enviar mensajes
+		ServerState.CurrentWave += 1
+		CurrentWaveValue.Value = ServerState.CurrentWave
+
+		logAnalytic("WaveCompleted", {
+			wave = ServerState.CurrentWave - 1,
+			survivors = #Players:GetPlayers(),
+		})
+		-- Pausa de 5 segundos antes de anunciar el siguiente wave
+		task.wait(5)
+	end
 
 
 	
