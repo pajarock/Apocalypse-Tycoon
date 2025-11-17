@@ -958,7 +958,12 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		MaxHP = max,
 	})
 
-	notifyPlayer(plr, string.format("✓ Repaired +%d HP!", will), 2)
+	-- ✅ Mostrar popup visual de gasto (-$XXX)
+	if CashTick then
+		CashTick:FireClient(plr, -cost)  -- Enviar valor negativo
+	end
+
+	notifyPlayer(plr, string.format("✓ Repaired +%d HP! -$%d", will, cost), 2)
 end)
 
 --═══════════════════════════════════════════════════════════════════════
@@ -1343,8 +1348,8 @@ DashRequest.OnServerEvent:Connect(function(plr: Player)
 		end
 
 		-- Notificación opcional
-		if ShowNotif then
-			ShowNotif:FireClient(plr, "💨 DASH!", 0.5)
+		if ShowNotification then
+			ShowNotification:FireClient(plr, "💨 DASH!", 0.5)
 		end
 	else
 		warn("[DASH] ⚠️ BaseModule no disponible - no se aplicó invulnerabilidad")
@@ -1535,9 +1540,14 @@ if eventsEnabled then
 							local cash = ls:FindFirstChild("Cash") :: IntValue?
 							if cash then cash.Value = s.Cash end
 						end
+
+						-- ✅ Mostrar popup visual de recompensa
+						if CashTick then
+							CashTick:FireClient(plr, cashBonus)
+						end
 					end
 
-					broadcastNotification(string.format("✓ %s survived Mini-Boss! +$%d", plr.Name, cashBonus), 4)
+					broadcastNotification(string.format("✓ %s survived Mini-Boss! +$%d | +HP", plr.Name, cashBonus), 4)
 				end
 			end
 
@@ -1565,8 +1575,14 @@ if eventsEnabled then
 							if cash then cash.Value = s.Cash end
 						end
 
-						if ShowNotif then
-							ShowNotif:FireClient(plr, string.format("✓ Wave %d! +$%d", ServerState.CurrentWave, waveBonus), 3)
+						-- ✅ Mostrar popup visual de recompensa
+						if CashTick then
+							CashTick:FireClient(plr, waveBonus)
+						end
+
+						-- ✅ Mostrar notificación de texto
+						if ShowNotification then
+							ShowNotification:FireClient(plr, string.format("✓ Wave %d! +$%d", ServerState.CurrentWave, waveBonus), 3)
 						end
 					end
 				end
