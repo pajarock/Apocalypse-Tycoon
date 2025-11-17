@@ -24,6 +24,16 @@ local remotesList = {
 	{Name = "CashTick", Type = "RemoteEvent"},
 	{Name = "DebugSpawnMeteor", Type = "RemoteEvent"},
 	{Name = "BaseDamaged", Type = "RemoteEvent"},
+
+	-- Debug Mode Remotes
+	{Name = "DebugSkipWave", Type = "RemoteEvent"},
+	{Name = "DebugJumpToWave", Type = "RemoteEvent"},
+	{Name = "DebugSpawnBoss", Type = "RemoteEvent"},
+	{Name = "DebugSpawnMiniBoss", Type = "RemoteEvent"},
+	{Name = "DebugAddCash", Type = "RemoteEvent"},
+	{Name = "DebugResetWave", Type = "RemoteEvent"},
+	{Name = "DebugToggleInvincibility", Type = "RemoteEvent"},
+	{Name = "DebugInvincibilityChanged", Type = "RemoteEvent"},
 }
 
 -- Crear cada remote
