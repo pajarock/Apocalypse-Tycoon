@@ -87,6 +87,28 @@ end
 -- DEBUG COMMANDS
 --═══════════════════════════════════════════════════════════════════════
 
+-- Helper: Auto-spawnea boss/mini-boss si la wave lo requiere
+local function checkAndSpawnBoss(waveNum: number)
+	local isBossWave = waveNum % 10 == 0
+	local isMiniBossWave = (waveNum % 5 == 0) and not isBossWave
+
+	if isBossWave then
+		-- Spawn Boss completo
+		task.delay(1, function()
+			Events:BossMeteor(waveNum, true)
+		end)
+		return "BOSS"
+	elseif isMiniBossWave then
+		-- Spawn Mini-Boss
+		task.delay(1, function()
+			Events:BossMeteor(waveNum, false)
+		end)
+		return "MINI-BOSS"
+	end
+
+	return nil
+end
+
 -- SKIP WAVE: Salta al siguiente wave
 DebugSkipWave.OnServerEvent:Connect(function(player: Player, skipAmount: number?)
 	if not checkCooldown(player.UserId) then return end
@@ -95,9 +117,16 @@ DebugSkipWave.OnServerEvent:Connect(function(player: Player, skipAmount: number?
 	local newWave = CurrentWaveValue.Value + skip
 
 	CurrentWaveValue.Value = newWave
-	notify(player, string.format("⏩ Saltando a Wave %d", newWave))
 
-	print(string.format("[DEBUG] %s saltó al wave %d", player.Name, newWave))
+	-- Auto-detectar y spawnear boss/mini-boss
+	local bossType = checkAndSpawnBoss(newWave)
+	if bossType then
+		notify(player, string.format("⏩ Wave %d - %s INCOMING!", newWave, bossType))
+	else
+		notify(player, string.format("⏩ Saltando a Wave %d", newWave))
+	end
+
+	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, newWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
 -- JUMP TO WAVE: Salta a un wave específico
@@ -110,9 +139,16 @@ DebugJumpToWave.OnServerEvent:Connect(function(player: Player, targetWave: numbe
 	end
 
 	CurrentWaveValue.Value = targetWave
-	notify(player, string.format("🎯 Saltando a Wave %d", targetWave))
 
-	print(string.format("[DEBUG] %s saltó al wave %d", player.Name, targetWave))
+	-- Auto-detectar y spawnear boss/mini-boss
+	local bossType = checkAndSpawnBoss(targetWave)
+	if bossType then
+		notify(player, string.format("🎯 Wave %d - %s INCOMING!", targetWave, bossType))
+	else
+		notify(player, string.format("🎯 Saltando a Wave %d", targetWave))
+	end
+
+	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, targetWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
 -- SPAWN BOSS: Spawnea un boss completo (4 fases)
