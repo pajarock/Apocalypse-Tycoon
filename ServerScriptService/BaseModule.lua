@@ -644,6 +644,25 @@ function BaseModule.IsInvulnerable(userId: number): boolean
 end
 
 -------------------------------------------------------------------------
+-- GUARDIAN SYSTEM
+-------------------------------------------------------------------------
+
+-- ✅ NUEVA FUNCIÓN: Actualizar Guardian cuando se hace compra/reparación legítima
+function BaseModule.UpdateGuardianTarget(userId: number, newAmount: number)
+	-- Solo actualizar si hay un Guardian activo
+	if not PendingMoneyReductions[userId] then
+		return
+	end
+
+	-- Actualizar el target amount para que el Guardian no devuelva dinero en compras legítimas
+	PendingMoneyReductions[userId].TargetAmount = newAmount
+
+	if DEBUG then
+		print(("[BaseModule] 🛡️ Guardian actualizado - nuevo target: $%d"):format(newAmount))
+	end
+end
+
+-------------------------------------------------------------------------
 -- UTILITY FUNCTIONS
 -------------------------------------------------------------------------
 

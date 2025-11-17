@@ -181,6 +181,7 @@ local RequestLeaderboard = getOrCreateRemote("RequestLeaderboard", "Function") :
 local ShowNotification = getOrCreateRemote("ShowNotification", "Event") :: RemoteEvent
 local CompleteTutorial = getOrCreateRemote("CompleteTutorial", "Event") :: RemoteEvent
 local WaveResult = getOrCreateRemote("WaveResult", "Event") :: RemoteEvent -- ✅ Para mensajes épicos
+local ShowRewardNotification = getOrCreateRemote("ShowRewardNotification", "Event") :: RemoteEvent -- ✅ Para recompensas épicas
 
 --═══════════════════════════════════════════════════════════════════════
 -- UTILIDADES
@@ -952,6 +953,9 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		if c then c.Value = s.Cash end
 	end
 
+	-- ✅ ARREGLADO: Actualizar Guardian si está activo (para que no devuelva dinero)
+	Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
 	BaseStateChanged:FireClient(plr, {
 		UserId = plr.UserId,
 		BaseHP = Base.GetHP(plr.UserId),
@@ -1507,7 +1511,13 @@ if eventsEnabled then
 						end
 					end
 
-					broadcastNotification(string.format("🏆 %s DEFEATED THE BOSS! +$%d!", plr.Name, cashBonus), 5)
+					-- ✅ NOTIFICACIÓN ÉPICA DE BOSS COMPLETADO
+					ShowRewardNotification:FireClient(
+						plr,
+						"boss", -- tipo
+						"💀 BOSS DEFEATED!", -- título
+						string.format("+$%d + FULL HP RESTORE", cashBonus) -- recompensa
+					)
 
 					if ServerState.CurrentWave == 10 and Achievements then
 						Achievements.Award(plr.UserId, "ColossusSlayer")
@@ -1537,7 +1547,13 @@ if eventsEnabled then
 						end
 					end
 
-					broadcastNotification(string.format("✓ %s survived Mini-Boss! +$%d", plr.Name, cashBonus), 4)
+					-- ✅ NOTIFICACIÓN ÉPICA DE MINI-BOSS COMPLETADO
+					ShowRewardNotification:FireClient(
+						plr,
+						"miniboss", -- tipo
+						"💀 MINI-BOSS DEFEATED!", -- título
+						string.format("+$%d + FULL HP RESTORE", cashBonus) -- recompensa
+					)
 				end
 			end
 
@@ -1565,9 +1581,13 @@ if eventsEnabled then
 							if cash then cash.Value = s.Cash end
 						end
 
-						if ShowNotif then
-							ShowNotif:FireClient(plr, string.format("✓ Wave %d! +$%d", ServerState.CurrentWave, waveBonus), 3)
-						end
+						-- ✅ NOTIFICACIÓN ÉPICA DE WAVE COMPLETADA
+						ShowRewardNotification:FireClient(
+							plr,
+							"victory", -- tipo
+							string.format("WAVE %d SURVIVED!", ServerState.CurrentWave), -- título
+							string.format("+$%d BONUS", waveBonus) -- recompensa
+						)
 					end
 				end
 			end

@@ -454,6 +454,121 @@ end
 -- 💀 BOSS METEOR - Sistema de Fases
 -------------------------------------------------------------------------
 
+-- 💀 FUNCIÓN HELPER: Spawn meteor con posiciones exactas (para Boss)
+local function spawnBossMeteor(plr: Player, startPos: Vector3, targetPos: Vector3, meteorType: string)
+	local typeConfig = Config.METEOR_TYPES[meteorType] or Config.METEOR_TYPES.Normal
+
+	local meteor = createMeteor(meteorType)
+	meteor.Position = startPos
+	meteor.Parent = workspace
+
+	meteor:SetAttribute("TargetUserId", plr.UserId)
+	meteor:SetAttribute("MeteorType", meteorType)
+
+	-- VFX trail
+	task.spawn(function()
+		while meteor and meteor.Parent do
+			VFXManager:PlayEffect("MeteorTrail", meteor.Position, meteor)
+			task.wait(0.15)
+		end
+	end)
+
+	-- Calcular velocidad hacia target EXACTO
+	local dir = (targetPos - startPos).Unit
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+	bv.Velocity = dir * typeConfig.Speed + Vector3.new(0, -10, 0)
+	bv.Parent = meteor
+	Debris:AddItem(bv, 0.6)
+
+	if Config.DEBUG_MODE then
+		print(("[BossMeteor] Meteorito %s lanzado hacia posición exacta"):format(meteorType))
+	end
+
+	-- Sistema de impacto (igual que spawnMeteorTowards)
+	local applied = false
+	local conn: RBXScriptConnection? = nil
+
+	local function cleanup()
+		if conn then conn:Disconnect() end
+		meteor.Anchored = true
+		Debris:AddItem(meteor, 0.1)
+	end
+
+	task.delay(Config.METEOR_LIFETIME, function()
+		if meteor and meteor.Parent and not applied then
+			cleanup()
+		end
+	end)
+
+	conn = meteor.Touched:Connect(function(hit: BasePart)
+		if not meteor or not meteor.Parent then return end
+		if applied then return end
+		if not hit or not hit:IsA("BasePart") then return end
+		if hit.Name:match("^Meteor_") then return end
+
+		local hitPos = meteor.Position
+		local userId = resolveOwnerForHit(meteor, hit, hitPos)
+		if not userId then return end
+
+		-- VFX explosión
+		VFXManager:PlayEffect("MeteorExplosion", hitPos)
+
+		local ownerPlr = Players:GetPlayerByUserId(userId)
+		if ownerPlr and CameraShake then
+			local shakeIntensity = "Medium"
+			if meteorType == "Large" then
+				shakeIntensity = "Heavy"
+			elseif meteorType == "Small" then
+				shakeIntensity = "Light"
+			end
+
+			CameraShake:FireClient(ownerPlr, shakeIntensity, 0.5)
+
+			if ScreenFlash then
+				ScreenFlash:FireClient(ownerPlr, "Red", 0.4, 0.3)
+			end
+		end
+
+		-- Daño a jugadores
+		if hasMeteorDamage and MeteorDamageSystem then
+			local basePart = getPlayerBasePart(ownerPlr)
+			if basePart then
+				MeteorDamageSystem:OnMeteorImpact(hitPos, basePart, meteorType)
+			end
+		end
+
+		-- Daño a base
+		local appliedAmount = 0
+
+		if BaseModule and BaseModule.ApplyDamage then
+			local rawDamage = typeConfig.Damage
+			appliedAmount = BaseModule.ApplyDamage(userId, rawDamage)
+			applied = appliedAmount > 0
+
+			if Config.DEBUG_MODE then
+				local currentHP = BaseModule.GetHP and BaseModule.GetHP(userId) or "?"
+				print(("[BossMeteor] Impacto - userId=%d, daño=%d, HP=%s"):format(userId, rawDamage, tostring(currentHP)))
+			end
+		end
+
+		if ownerPlr and appliedAmount > 0 then
+			if BaseDamaged then
+				BaseDamaged:FireClient(ownerPlr, appliedAmount)
+			end
+
+			local basePart = getPlayerBasePart(ownerPlr)
+			if basePart then
+				VFXManager:PlayEffect("DamageHit", basePart.Position + Vector3.new(0, 5, 0))
+			end
+		end
+
+		cleanup()
+	end)
+
+	Debris:AddItem(meteor, Config.METEOR_LIFETIME)
+end
+
 -- Fase 1: "Esquinas del Caos" - 4 meteoritos Small en esquinas NW→NE→SE→SW
 local function BossPhase_Corners(plr: Player)
 	local base = getPlayerBasePart(plr)
@@ -473,8 +588,8 @@ local function BossPhase_Corners(plr: Player)
 	for i, cornerOffset in ipairs(corners) do
 		task.delay((i - 1) * 0.8, function() -- 0.8s entre cada meteorito
 			local startPos = basePos + cornerOffset + Vector3.new(0, 120, 0)
-			local targetPos = basePos + cornerOffset * 0.5
-			spawnMeteorTowards(plr, startPos, targetPos, "Small")
+			local targetPos = basePos + cornerOffset * 0.5 -- Caen hacia el interior
+			spawnBossMeteor(plr, startPos, targetPos, "Small") -- ✅ Usar nueva función
 		end)
 	end
 
@@ -502,8 +617,8 @@ local function BossPhase_Circle(plr: Player)
 			)
 
 			local startPos = basePos + offset + Vector3.new(0, 100, 0)
-			local targetPos = basePos + offset * 0.3
-			spawnMeteorTowards(plr, startPos, targetPos, "Normal")
+			local targetPos = basePos + offset * 0.3 -- Caen hacia el centro
+			spawnBossMeteor(plr, startPos, targetPos, "Normal") -- ✅ Usar nueva función
 		end)
 	end
 
@@ -640,8 +755,8 @@ local function BossPhase_Triangle(plr: Player)
 			)
 
 			local startPos = basePos + offset + Vector3.new(0, 130, 0)
-			local targetPos = basePos + offset * 0.4
-			spawnMeteorTowards(plr, startPos, targetPos, "Large")
+			local targetPos = basePos + offset * 0.4 -- Caen hacia el interior
+			spawnBossMeteor(plr, startPos, targetPos, "Large") -- ✅ Usar nueva función
 		end)
 	end
 

@@ -54,15 +54,16 @@ local function updateRepairButton()
 	local missing = max - hp
 	local repairAmount = math.min(10, missing)
 
-	-- Calcular costo escalado (igual que en server)
+	-- Calcular costo escalado (EXACTAMENTE igual que en server)
 	local plr = game.Players.LocalPlayer
 	local leaderstats = plr:FindFirstChild("leaderstats")
 	local ips = leaderstats and leaderstats:FindFirstChild("IncomePerSec")
 	local incomePerSec = ips and ips.Value or 0
 
-	local baseCost = 50  -- Debe coincidir con Config
-	local scaledCost = baseCost * (1 + (incomePerSec / 10))
-	local cost = repairAmount * math.floor(scaledCost)
+	local baseCost = 50  -- Debe coincidir con Config.REPAIR_COST_PER_HP
+	local incomeScale = 1 + (incomePerSec / 10)
+	local hpScale = max / 100 -- ✅ ARREGLADO: Agregar factor de escala de HP
+	local cost = repairAmount * math.floor(baseCost * incomeScale * hpScale)
 
 	if missing <= 0 then
 		repairBtn.Text = "✓ Full HP"

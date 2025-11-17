@@ -115,12 +115,22 @@ end
 -- 💨 VFX: Dash Trail
 -------------------------------------------------------------------------
 local function createDashTrail()
-	-- Trail de partículas siguiendo al jugador
-	local attachment = rootPart:FindFirstChild("DashAttachment")
-	if not attachment then
-		attachment = Instance.new("Attachment")
-		attachment.Name = "DashAttachment"
-		attachment.Parent = rootPart
+	-- Crear attachments para el trail
+	local attachment0 = rootPart:FindFirstChild("DashAttachment0")
+	local attachment1 = rootPart:FindFirstChild("DashAttachment1")
+
+	if not attachment0 then
+		attachment0 = Instance.new("Attachment")
+		attachment0.Name = "DashAttachment0"
+		attachment0.Position = Vector3.new(0, -2, 0) -- Abajo del rootpart
+		attachment0.Parent = rootPart
+	end
+
+	if not attachment1 then
+		attachment1 = Instance.new("Attachment")
+		attachment1.Name = "DashAttachment1"
+		attachment1.Position = Vector3.new(0, 2, 0) -- Arriba del rootpart
+		attachment1.Parent = rootPart
 	end
 
 	-- Eliminar trail viejo si existe
@@ -130,19 +140,21 @@ local function createDashTrail()
 	-- Crear nuevo trail
 	local trail = Instance.new("Trail")
 	trail.Name = "DashTrail"
-	trail.Lifetime = 0.5
+	trail.Lifetime = 0.8
 	trail.MinLength = 0.1
-	trail.Attachment0 = attachment
-	trail.Attachment1 = attachment
-	trail.Color = ColorSequence.new(Color3.fromRGB(0, 255, 200))
+	trail.Attachment0 = attachment0
+	trail.Attachment1 = attachment1
+	trail.Color = ColorSequence.new(Color3.fromRGB(0, 200, 255)) -- Azul cian brillante
 	trail.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(0, 0.2),
 		NumberSequenceKeypoint.new(1, 1)
 	})
 	trail.WidthScale = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0, 1.5),
 		NumberSequenceKeypoint.new(1, 0)
 	})
+	trail.LightEmission = 1 -- Hacer que brille
+	trail.Enabled = true
 	trail.Parent = rootPart
 
 	-- Auto-eliminar después de 1s
@@ -195,9 +207,53 @@ local function performDash()
 
 	if isDashing then return end
 
+	-- 🎯 OBTENER DIRECCIÓN DEL MOVIMIENTO (relativo a cámara)
+	local camera = workspace.CurrentCamera
+	local moveDir = Vector3.new(0, 0, 0)
+
+	-- Leer input de WASD
+	if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+		moveDir = moveDir - camera.CFrame.LookVector -- Adelante (hacia donde mira la cámara)
+	end
+	if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+		moveDir = moveDir + camera.CFrame.LookVector -- Atrás
+	end
+	if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+		moveDir = moveDir - camera.CFrame.RightVector -- Izquierda
+	end
+	if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+		moveDir = moveDir + camera.CFrame.RightVector -- Derecha
+	end
+
+	-- Si no hay input, usar dirección del HumanoidRootPart
+	if moveDir.Magnitude == 0 then
+		moveDir = rootPart.CFrame.LookVector
+	else
+		moveDir = moveDir.Unit
+	end
+
+	-- Proyectar al plano horizontal (ignorar Y)
+	moveDir = Vector3.new(moveDir.X, 0, moveDir.Z).Unit
+
 	-- Iniciar dash
 	isDashing = true
 	lastDashTime = now
+
+	-- 🚀 APLICAR MOVIMIENTO DE DASH
+	local DASH_DISTANCE = 25 -- studs
+	local DASH_SPEED = 0.15 -- duración del dash
+
+	local targetPos = rootPart.Position + (moveDir * DASH_DISTANCE)
+
+	-- Usar BodyVelocity para movimiento suave
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e6, 0, 1e6) -- Solo horizontal
+	bv.Velocity = moveDir * (DASH_DISTANCE / DASH_SPEED)
+	bv.Parent = rootPart
+
+	task.delay(DASH_SPEED, function()
+		bv:Destroy()
+	end)
 
 	-- VFX
 	createDashTrail()
@@ -218,13 +274,17 @@ local function performDash()
 		DashRemote:FireServer()
 	end
 
-	-- Feedback auditivo (opcional)
-	-- local sound = Instance.new("Sound")
-	-- sound.SoundId = "rbxassetid://XXXXX"
-	-- sound.Volume = 0.5
-	-- sound.Parent = rootPart
-	-- sound:Play()
-	-- sound.Ended:Connect(function() sound:Destroy() end)
+	-- Feedback auditivo
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://3932738947" -- Whoosh sound
+	sound.Volume = 0.5
+	sound.Parent = rootPart
+	sound:Play()
+	task.delay(2, function()
+		if sound and sound.Parent then
+			sound:Destroy()
+		end
+	end)
 
 	-- Terminar dash
 	task.delay(DASH_DURATION, function()
