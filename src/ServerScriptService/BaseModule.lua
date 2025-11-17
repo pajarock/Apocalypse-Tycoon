@@ -376,8 +376,7 @@ end
 -- SISTEMA DE PENALIZACIONES POR MUERTE DE BASE
 --═══════════════════════════════════════════════════════════════════════
 
-local PendingMoneyReductions = {}
-local ActiveGuardianTasks = {}
+-- ✅ ARREGLADO: Removidas declaraciones duplicadas - usar las de línea 79-80
 
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
@@ -770,8 +769,6 @@ task.spawn(function()
 	end
 end)
 
-local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
-
 -------------------------------------------------------------------------
 -- DEBUG COMMANDS
 -------------------------------------------------------------------------
@@ -881,9 +878,24 @@ end)
 
 function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	local protection = PendingMoneyReductions[userId]
+
+	-- ✅ Si no existe pero hay guardian task activo, crear la entrada
 	if not protection then
-		if DEBUG then
-			print(("[BaseModule] ⚠️ No hay Guardian activo para userId %d"):format(userId))
+		if ActiveGuardianTasks[userId] then
+			-- Guardian activo pero sin PendingMoneyReductions - crearlo
+			PendingMoneyReductions[userId] = {
+				TargetAmount = newTarget,
+				StartTime = tick(),
+				Duration = 120
+			}
+
+			if DEBUG then
+				print(("[BaseModule] 🛡️ Guardian: Creada protección para compra legítima - Target: $%d"):format(newTarget))
+			end
+		else
+			if DEBUG then
+				print(("[BaseModule] ⚠️ No hay Guardian activo para userId %d"):format(userId))
+			end
 		end
 		return
 	end
@@ -892,9 +904,11 @@ function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	local oldTarget = protection.TargetAmount
 	protection.TargetAmount = newTarget
 
-	print(("[BaseModule] 🛡️ Guardian: Target actualizado $%d → $%d para userId %d (compra legítima)"):format(
-		oldTarget, newTarget, userId
-	))
+	if DEBUG then
+		print(("[BaseModule] 🛡️ Guardian: Target actualizado $%d → $%d para userId %d (compra legítima)"):format(
+			oldTarget, newTarget, userId
+		))
+	end
 end
 
 return BaseModule
