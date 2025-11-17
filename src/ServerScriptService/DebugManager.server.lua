@@ -79,9 +79,7 @@ local function checkCooldown(userId: number): boolean
 end
 
 local function notify(player: Player, message: string)
-	if ShowNotification then
-		ShowNotification:FireClient(player, message, 3)
-	end
+	-- Solo logging - el cliente maneja el feedback visual
 	print(string.format("[DEBUG] %s: %s", player.Name, message))
 end
 
