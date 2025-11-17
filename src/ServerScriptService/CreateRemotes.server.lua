@@ -32,6 +32,8 @@ local remotesList = {
 	{Name = "DebugSpawnMiniBoss", Type = "RemoteEvent"},
 	{Name = "DebugAddCash", Type = "RemoteEvent"},
 	{Name = "DebugResetWave", Type = "RemoteEvent"},
+	{Name = "DebugToggleInvincibility", Type = "RemoteEvent"},
+	{Name = "DebugInvincibilityChanged", Type = "RemoteEvent"},
 }
 
 -- Crear cada remote

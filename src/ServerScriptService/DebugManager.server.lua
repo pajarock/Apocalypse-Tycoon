@@ -11,7 +11,8 @@
 	- V: Spawn Mini-Boss instantáneo
 	- C: Añadir $10,000
 	- Shift+C: Añadir $100,000
-	- R: Reset a Wave 1
+	- Y: Reset a Wave 1
+	- J: Toggle Invencibilidad (God Mode)
 	- 1-9: Saltar a wave específico (10, 20, 30, etc.)
 
 	═══════════════════════════════════════════════════════════════════════
@@ -42,6 +43,7 @@ local Events = require(ServerScriptService.EventManager)
 task.wait(2)
 local Economy = require(ServerScriptService.EconomyModule)
 local DataStore = require(ServerScriptService.DataStoreModule)
+local Base = require(ServerScriptService.BaseModule)
 
 -- Remotes de debug
 local DebugSkipWave = Remotes:WaitForChild("DebugSkipWave")
@@ -50,6 +52,8 @@ local DebugSpawnBoss = Remotes:WaitForChild("DebugSpawnBoss")
 local DebugSpawnMiniBoss = Remotes:WaitForChild("DebugSpawnMiniBoss")
 local DebugAddCash = Remotes:WaitForChild("DebugAddCash")
 local DebugResetWave = Remotes:WaitForChild("DebugResetWave")
+local DebugToggleInvincibility = Remotes:WaitForChild("DebugToggleInvincibility")
+local DebugInvincibilityChanged = Remotes:WaitForChild("DebugInvincibilityChanged")
 
 -- Remotes existentes para notificaciones
 local ShowNotification = Remotes:FindFirstChild("ShowNotification")
@@ -75,15 +79,35 @@ local function checkCooldown(userId: number): boolean
 end
 
 local function notify(player: Player, message: string)
-	if ShowNotification then
-		ShowNotification:FireClient(player, message, 3)
-	end
+	-- Solo logging - el cliente maneja el feedback visual
 	print(string.format("[DEBUG] %s: %s", player.Name, message))
 end
 
 --═══════════════════════════════════════════════════════════════════════
 -- DEBUG COMMANDS
 --═══════════════════════════════════════════════════════════════════════
+
+-- Helper: Auto-spawnea boss/mini-boss si la wave lo requiere
+local function checkAndSpawnBoss(waveNum: number)
+	local isBossWave = waveNum % 10 == 0
+	local isMiniBossWave = (waveNum % 5 == 0) and not isBossWave
+
+	if isBossWave then
+		-- Spawn Boss completo
+		task.delay(1, function()
+			Events:BossMeteor(waveNum, true)
+		end)
+		return "BOSS"
+	elseif isMiniBossWave then
+		-- Spawn Mini-Boss
+		task.delay(1, function()
+			Events:BossMeteor(waveNum, false)
+		end)
+		return "MINI-BOSS"
+	end
+
+	return nil
+end
 
 -- SKIP WAVE: Salta al siguiente wave
 DebugSkipWave.OnServerEvent:Connect(function(player: Player, skipAmount: number?)
@@ -93,9 +117,16 @@ DebugSkipWave.OnServerEvent:Connect(function(player: Player, skipAmount: number?
 	local newWave = CurrentWaveValue.Value + skip
 
 	CurrentWaveValue.Value = newWave
-	notify(player, string.format("⏩ Saltando a Wave %d", newWave))
 
-	print(string.format("[DEBUG] %s saltó al wave %d", player.Name, newWave))
+	-- Auto-detectar y spawnear boss/mini-boss
+	local bossType = checkAndSpawnBoss(newWave)
+	if bossType then
+		notify(player, string.format("⏩ Wave %d - %s INCOMING!", newWave, bossType))
+	else
+		notify(player, string.format("⏩ Saltando a Wave %d", newWave))
+	end
+
+	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, newWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
 -- JUMP TO WAVE: Salta a un wave específico
@@ -108,9 +139,16 @@ DebugJumpToWave.OnServerEvent:Connect(function(player: Player, targetWave: numbe
 	end
 
 	CurrentWaveValue.Value = targetWave
-	notify(player, string.format("🎯 Saltando a Wave %d", targetWave))
 
-	print(string.format("[DEBUG] %s saltó al wave %d", player.Name, targetWave))
+	-- Auto-detectar y spawnear boss/mini-boss
+	local bossType = checkAndSpawnBoss(targetWave)
+	if bossType then
+		notify(player, string.format("🎯 Wave %d - %s INCOMING!", targetWave, bossType))
+	else
+		notify(player, string.format("🎯 Saltando a Wave %d", targetWave))
+	end
+
+	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, targetWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
 -- SPAWN BOSS: Spawnea un boss completo (4 fases)
@@ -195,6 +233,31 @@ DebugResetWave.OnServerEvent:Connect(function(player: Player)
 	notify(player, "🔄 Wave reseteado a 1")
 
 	print(string.format("[DEBUG] %s reseteó el wave a 1", player.Name))
+end)
+
+-- TOGGLE INVINCIBILITY: Activa/desactiva invencibilidad
+DebugToggleInvincibility.OnServerEvent:Connect(function(player: Player)
+	if not checkCooldown(player.UserId) then return end
+
+	-- Toggle invencibilidad
+	local currentInvincible = Base.IsInvulnerable(player.UserId)
+	local newInvincible = not currentInvincible
+
+	Base.SetInvulnerable(player.UserId, newInvincible)
+
+	-- Notificar al jugador
+	if newInvincible then
+		notify(player, "🛡️ INVENCIBILIDAD ACTIVADA")
+	else
+		notify(player, "⚔️ INVENCIBILIDAD DESACTIVADA")
+	end
+
+	-- Notificar al cliente para el feedback visual
+	DebugInvincibilityChanged:FireClient(player, newInvincible)
+
+	print(string.format("[DEBUG] %s %s la invencibilidad",
+		player.Name,
+		newInvincible and "activó" or "desactivó"))
 end)
 
 print("[DEBUG MANAGER] ✅ Sistema de debug cargado")
