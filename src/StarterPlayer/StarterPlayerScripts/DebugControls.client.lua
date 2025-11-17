@@ -22,7 +22,7 @@
 	- Shift+C: Añadir $100,000
 
 	SUPERVIVENCIA:
-	- G: Toggle Invencibilidad (God Mode - no recibes daño)
+	- J: Toggle Invencibilidad (God Mode - no recibes daño)
 
 	OTROS:
 	- M: Spawn meteorito aleatorio
@@ -137,7 +137,7 @@ local function createHelpUI()
 		{key = "Shift+C", desc = "Añadir $100,000"},
 
 		{section = "SUPERVIVENCIA", color = Color3.fromRGB(255, 215, 0)},
-		{key = "G", desc = "Toggle Invencibilidad (God Mode)"},
+		{key = "J", desc = "Toggle Invencibilidad (God Mode)"},
 
 		{section = "OTROS", color = Color3.fromRGB(255, 200, 100)},
 		{key = "M", desc = "Spawn meteorito aleatorio"},
@@ -351,7 +351,7 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 		showFeedback("🎯 Jumping to Wave 100", Color3.fromRGB(100, 200, 255))
 
 	-- TOGGLE INVINCIBILITY (God Mode)
-	elseif input.KeyCode == Enum.KeyCode.G then
+	elseif input.KeyCode == Enum.KeyCode.J then
 		DebugToggleInvincibility:FireServer()
 		-- El feedback se mostrará cuando el servidor confirme el cambio
 	end
