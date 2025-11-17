@@ -12,7 +12,7 @@
 	- C: Añadir $10,000
 	- Shift+C: Añadir $100,000
 	- Y: Reset a Wave 1
-	- I: Toggle Invencibilidad
+	- G: Toggle Invencibilidad (God Mode)
 	- 1-9: Saltar a wave específico (10, 20, 30, etc.)
 
 	═══════════════════════════════════════════════════════════════════════
