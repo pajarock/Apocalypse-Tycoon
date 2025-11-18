@@ -958,7 +958,12 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		MaxHP = max,
 	})
 
-	notifyPlayer(plr, string.format("✓ Repaired +%d HP!", will), 2)
+	-- ✅ Mostrar popup visual de gasto (-$XXX)
+	if CashTick then
+		CashTick:FireClient(plr, -cost)  -- Enviar valor negativo
+	end
+
+	notifyPlayer(plr, string.format("✓ Repaired +%d HP! -$%d", will, cost), 2)
 end)
 
 --═══════════════════════════════════════════════════════════════════════

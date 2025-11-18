@@ -166,16 +166,16 @@ local function createScreenFlash()
 		flash = Instance.new("Frame")
 		flash.Name = "DashFlash"
 		flash.Size = UDim2.new(1, 0, 1, 0)
-		flash.BackgroundColor3 = Color3.fromRGB(0, 255, 200)
+		flash.BackgroundColor3 = Color3.fromRGB(0, 200, 255)  -- ✅ Azul más brillante
 		flash.BackgroundTransparency = 1
 		flash.BorderSizePixel = 0
 		flash.ZIndex = 10
 		flash.Parent = screenGui
 	end
 
-	-- Fade in/out
-	flash.BackgroundTransparency = 0.7
-	TweenService:Create(flash, TweenInfo.new(DASH_DURATION, Enum.EasingStyle.Quad), {
+	-- ✅ Flash más visible: empieza en 0.3 (70% visible) en lugar de 0.7 (30% visible)
+	flash.BackgroundTransparency = 0.3
+	TweenService:Create(flash, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 1
 	}):Play()
 end
