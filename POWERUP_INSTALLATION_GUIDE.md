@@ -23,24 +23,70 @@ ServerStorage/
 │   └── PowerUpManager.lua ............... ✅ NUEVO - Sistema servidor
 └── EventManager_REFACTORED.lua .......... 🔧 MODIFICADO - Spawns power-ups
 
+src/ServerScriptService/
+├── BaseModule.lua ....................... 🔧 MODIFICADO - Shield + Heal
+└── EconomyModule.lua .................... 🔧 MODIFICADO - Coin multiplier
+
 StarterPlayerScripts/
 └── Controllers/
-    └── PowerUpController.client.lua ..... ✅ NUEVO - VFX cliente
+    ├── PowerUpController.client.lua ..... ✅ NUEVO - VFX cliente
+    └── PowerUpNotifications.client.lua .. ✅ NUEVO - Banners épicos
 
 StarterGui/
 └── PowerUpUI/
     └── PowerUpDisplay.client.lua ........ ✅ NUEVO - UI con timers
+
+HERRAMIENTAS:
+└── VERIFY_POWERUPS.lua .................. 🔍 Script de verificación
 ```
 
 ---
 
 ## 🚀 INSTALACIÓN PASO A PASO
 
-### FASE 1: Copiar Archivos del Servidor (3 minutos)
+### ⚠️ PASO 0: VERIFICACIÓN (OPCIONAL PERO RECOMENDADO)
+
+Antes de empezar, puedes usar el script de verificación para ver qué archivos ya tienes:
+
+1. Abre Studio y presiona **F9** (consola)
+2. Abre el archivo `VERIFY_POWERUPS.lua` del repositorio
+3. Copia TODO el contenido
+4. Pégalo en la pestaña "Server" de la consola
+5. Lee los resultados - te dirá exactamente qué falta
+
+---
+
+### FASE 1: Copiar Archivos del Servidor (5 minutos)
 
 1. **Abrir Roblox Studio** y tu proyecto Apocalypse Tycoon
 
-2. **Copiar archivos nuevos a ServerStorage:**
+2. **🔴 CRÍTICO: Actualizar archivos MODIFICADOS en src/ServerScriptService/**
+
+   **a) BaseModule.lua** (DEBE ser actualizado para Shield Bubble y Auto-Repair)
+   ```
+   Archivo: src/ServerScriptService/BaseModule.lua
+   Ubicación en Studio: ServerScriptService → BaseModule
+   ```
+   - Abre el archivo BaseModule.lua del repositorio (branch: claude/power-ups-system-...)
+   - Copia TODO el contenido (930 líneas)
+   - En Studio: Abre ServerScriptService → BaseModule
+   - REEMPLAZA todo el código con el nuevo
+   - **IMPORTANTE:** Este archivo tiene el check de ShieldActive (línea 336) y la función Heal() (línea 695)
+
+   **b) EconomyModule.lua** (DEBE ser actualizado para Coin Rain)
+   ```
+   Archivo: src/ServerScriptService/EconomyModule.lua
+   Ubicación en Studio: ServerScriptService → EconomyModule
+   ```
+   - Abre el archivo EconomyModule.lua del repositorio
+   - Copia TODO el contenido (995 líneas)
+   - En Studio: Abre ServerScriptService → EconomyModule
+   - REEMPLAZA todo el código con el nuevo
+   - **IMPORTANTE:** Este archivo tiene el multiplicador de CoinMultiplier (línea 848-866)
+
+   ⚠️ **SIN ESTOS 2 ARCHIVOS, LOS POWER-UPS NO FUNCIONARÁN**
+
+3. **Copiar archivos nuevos a ServerStorage:**
 
    a) **PowerUpConfig.lua**
    ```
@@ -85,6 +131,16 @@ StarterGui/
    - Insert Object → LocalScript
    - Renombra a `PowerUpController`
    - Pega el código
+
+5b. **PowerUpNotifications.client.lua** ⭐ NUEVO - Notificaciones épicas
+   ```
+   Archivo: StarterPlayerScripts/Controllers/PowerUpNotifications.client.lua
+   Ubicación: StarterPlayerScripts → Controllers → PowerUpNotifications
+   ```
+   - Insert Object → LocalScript
+   - Renombra a `PowerUpNotifications`
+   - Pega el código
+   - **Este archivo muestra los banners grandes cuando colectas power-ups!**
 
 6. **Crear carpeta PowerUpUI:**
    ```
