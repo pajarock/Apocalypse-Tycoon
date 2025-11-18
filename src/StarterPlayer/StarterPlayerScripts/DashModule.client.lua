@@ -22,9 +22,18 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart") :: BasePart
-local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+
+-- ✅ FIX: Esperar character de forma segura
+local character = player.Character
+if not character then
+	character = player.CharacterAdded:Wait()
+end
+
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart", 10) :: BasePart
+local humanoid = character:WaitForChild("Humanoid", 10) :: Humanoid
+
+assert(humanoidRootPart, "[DashModule] HumanoidRootPart no encontrado")
+assert(humanoid, "[DashModule] Humanoid no encontrado")
 
 -- Remotes
 local Remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -59,7 +68,7 @@ dashUI.Parent = playerGui
 local cooldownFrame = Instance.new("Frame")
 cooldownFrame.Name = "CooldownFrame"
 cooldownFrame.Size = UDim2.fromOffset(80, 80)
-cooldownFrame.Position = UDim2.new(1, -100, 1, -100) -- Esquina inferior derecha
+cooldownFrame.Position = UDim2.new(0, 100, 1, -100) -- ✅ FIX: Bottom-left (antes bottom-right)
 cooldownFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 cooldownFrame.BackgroundTransparency = 0.2
 cooldownFrame.BorderSizePixel = 0
