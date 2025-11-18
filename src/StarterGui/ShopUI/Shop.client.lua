@@ -81,16 +81,32 @@ info.Font = Enum.Font.GothamBold
 info.TextScaled = true
 info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextColor3 = Color3.fromRGB(100, 255, 140)
-info.Text = "Cash: $0 | IPS: 0"
+info.Text = "Cash: $0" -- ✅ FIX: Solo mostrar Cash, Income movido a widget separado
 info.TextStrokeTransparency = 0.6
 info.ZIndex = 2
 info.Parent = frame
 
+-- ✅ TABS DE CATEGORÍAS
+local tabsContainer = Instance.new("Frame")
+tabsContainer.Name = "TabsContainer"
+tabsContainer.Size = UDim2.new(1, -20, 0, 30)
+tabsContainer.Position = UDim2.fromOffset(10, 68)
+tabsContainer.BackgroundTransparency = 1
+tabsContainer.ZIndex = 2
+tabsContainer.Parent = frame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+tabLayout.Padding = UDim.new(0, 4)
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Parent = tabsContainer
+
 local list = Instance.new("Frame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 70)
-list.Size = UDim2.new(1, -20, 1, -80)
+list.Position = UDim2.fromOffset(10, 105) -- ✅ FIX: Ajustado para tabs
+list.Size = UDim2.new(1, -20, 1, -115) -- ✅ FIX: Ajustado para tabs
 list.ZIndex = 2
 list.Parent = frame
 
@@ -196,26 +212,72 @@ local function makeRow(upgId: string): TextButton
 	return btn
 end
 
--- Orden de upgrades
-local ORDER = {
-	"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5",
-	"Upgrade_6", "Upgrade_7", "Upgrade_8", "Upgrade_9", "Upgrade_10"
+-- ✅ Categorías de upgrades
+local CATEGORIES = {
+	{Name = "INCOME", Icon = "💰", Upgrades = {"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5", "Upgrade_9"}},
+	{Name = "DEFENSE", Icon = "🛡️", Upgrades = {"Upgrade_6", "Upgrade_7", "Upgrade_8"}},
+	{Name = "UTILITY", Icon = "⚙️", Upgrades = {"Upgrade_10", "Upgrade_11"}},
+	{Name = "PETS", Icon = "🥚", Upgrades = {"Upgrade_12"}},
 }
 
+local currentCategory = 1 -- Categoría actual seleccionada
+local tabButtons: {[number]: TextButton} = {}
+
+-- ✅ Forward declarations
+local refreshAll
+local updateTabStyles
+
+-- ✅ Actualizar estilo de tabs según categoría activa
+updateTabStyles = function()
+	for i, tab in ipairs(tabButtons) do
+		if i == currentCategory then
+			-- Tab activa: brillante y naranja
+			tab.BackgroundColor3 = Color3.fromRGB(255, 140, 30)
+			tab.TextColor3 = Color3.fromRGB(255, 255, 255)
+			local stroke = tab:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				stroke.Color = Color3.fromRGB(255, 200, 100)
+				stroke.Transparency = 0
+			end
+		else
+			-- Tab inactiva: oscura
+			tab.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+			tab.TextColor3 = Color3.fromRGB(150, 150, 150)
+			local stroke = tab:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				stroke.Color = Color3.fromRGB(100, 100, 100)
+				stroke.Transparency = 0.5
+			end
+		end
+	end
+end
+
 -- Refrescar UI
-local function refreshAll()
+refreshAll = function()
 	local st = fetchState()
 	local cash = tonumber(st.Cash) or 0
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	title.Text = string.format("SHOP | SHIELD L%d", shieldLevel)
-	info.Text = string.format("💰 %s | ⚡ %d/s", fmtMoney(cash), ips)
+	-- Actualizar título y tabs
+	local categoryName = CATEGORIES[currentCategory] and CATEGORIES[currentCategory].Name or "SHOP"
+	title.Text = string.format("%s | SHIELD L%d", categoryName, shieldLevel)
+	info.Text = string.format("💰 %s", fmtMoney(cash))
+	updateTabStyles()
 
-	for _, upgId in ipairs(ORDER) do
+	-- ✅ FIX: Ocultar TODOS los botones primero
+	for _, btn in pairs(buttons) do
+		btn.Visible = false
+	end
+
+	-- ✅ FIX: Solo mostrar upgrades de la categoría actual
+	local categoryUpgrades = CATEGORIES[currentCategory] and CATEGORIES[currentCategory].Upgrades or {}
+
+	for _, upgId in ipairs(categoryUpgrades) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
 		if infoU then
 			local btn = buttons[upgId] or makeRow(upgId)
+			btn.Visible = true
 			local label = string.format("%s | %s | x%d",
 				tostring(infoU.Title or upgId),
 				fmtMoney(infoU.Price or 0),
@@ -229,11 +291,54 @@ local function refreshAll()
 	end
 end
 
+-- ✅ Crear tabs de categorías (definida DESPUÉS de refreshAll)
+local function createCategoryTabs()
+	for i, category in ipairs(CATEGORIES) do
+		local tab = Instance.new("TextButton")
+		tab.Name = "Tab_" .. category.Name
+		tab.Size = UDim2.fromOffset(60, 28)
+		tab.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+		tab.BorderSizePixel = 0
+		tab.Font = Enum.Font.GothamBold
+		tab.TextScaled = true
+		tab.TextColor3 = Color3.fromRGB(150, 150, 150)
+		tab.Text = category.Icon
+		tab.ZIndex = 3
+		tab.LayoutOrder = i
+		tab.Parent = tabsContainer
+
+		Instance.new("UICorner", tab).CornerRadius = UDim.new(0, 6)
+
+		-- Borde del tab
+		local tabStroke = Instance.new("UIStroke")
+		tabStroke.Color = Color3.fromRGB(100, 100, 100)
+		tabStroke.Thickness = 2
+		tabStroke.Transparency = 0.5
+		tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		tabStroke.Parent = tab
+
+		-- Padding
+		local tabPadding = Instance.new("UIPadding")
+		tabPadding.PaddingLeft = UDim.new(0, 4)
+		tabPadding.PaddingRight = UDim.new(0, 4)
+		tabPadding.Parent = tab
+
+		-- Click event
+		tab.MouseButton1Click:Connect(function()
+			currentCategory = i
+			refreshAll() -- Ahora refreshAll ya está definida
+		end)
+
+		tabButtons[i] = tab
+	end
+end
+
 -- Toggle con G
 local open = true
 local function setOpen(v: boolean)
 	open = v
 	frame.Visible = open
+	shopShadow.Visible = open -- ✅ FIX: También ocultar la sombra
 end
 setOpen(true)
 
@@ -244,6 +349,10 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	end
 end)
 
+-- ✅ Inicializar tabs y UI
+createCategoryTabs()
+refreshAll()
+
 -- Loop de refresco
 task.spawn(function()
 	while true do
@@ -251,5 +360,3 @@ task.spawn(function()
 		task.wait(1)
 	end
 end)
-
-refreshAll()
