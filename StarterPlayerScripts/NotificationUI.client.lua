@@ -41,7 +41,7 @@ local player = Players.LocalPlayer
 -- CONSTANTS
 --═══════════════════════════════════════════════════════════════════════
 
-local NOTIFICATION_START_POSITION = UDim2.new(0.5, 0, 0.3, 0) -- Centro-superior
+local NOTIFICATION_START_POSITION = UDim2.new(0.5, 0, 0.75, 0) -- ✅ FIX: Centro-inferior (75% desde arriba)
 local NOTIFICATION_SPACING = 60 -- Píxeles entre notificaciones
 local MAX_NOTIFICATIONS = 5 -- Máximo de notificaciones visibles simultáneamente
 

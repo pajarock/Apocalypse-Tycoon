@@ -129,7 +129,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 	--═══════════════════════════════════════════════════════════════════════
 	-- ⚙️ UTILIDADES (Mid-Late Game)
 	--═══════════════════════════════════════════════════════════════════════
-	Upgrade_8 = {
+	Upgrade_11 = { -- ✅ FIX: Cambiado de Upgrade_8 duplicado a Upgrade_11
 		Title = "Auto-Repair System",
 		Description = "Repara base automáticamente. +2 HP/s",
 		BasePrice = 2000000,
@@ -163,6 +163,21 @@ local Upgrades: {[string]: UpgradeDef} = {
 		Repeatable = false,
 		MaxCount = 1,
 		Category = "Utility",
+	},
+
+	--═══════════════════════════════════════════════════════════════════════
+	-- 🥚 PETS / COMPAÑEROS (Preparado para futuro)
+	--═══════════════════════════════════════════════════════════════════════
+	Upgrade_12 = {
+		Title = "Pet Egg (Basic)",
+		Description = "Huevo de mascota básica - ¡PRÓXIMAMENTE!",
+		BasePrice = 100000,
+		PriceGrowth = 1.25,
+		IncomePerSec = 0,
+		ModelName = nil,
+		Repeatable = true,
+		MaxCount = 5,
+		Category = "Pets",
 	},
 }
 

@@ -59,7 +59,7 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 	label.TextScaled = false
 	label.TextStrokeTransparency = isCrit and 0.1 or 0.3
 
-	local targetSize = isCrit and 100 : 80
+	local targetSize = isCrit and 100 or 80 -- ✅ FIX: Operador ternario correcto (and/or, no :)
 	local bounceStyle = isCrit and Enum.EasingStyle.Elastic or Enum.EasingStyle.Back
 
 	local tweenIn = TweenService:Create(label, TweenInfo.new(0.15, bounceStyle, Enum.EasingDirection.Out), {

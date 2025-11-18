@@ -66,12 +66,12 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 5 -- Debajo del HUD permanente
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Contenedor principal
+-- Contenedor principal - ✅ FIX: Movido a parte inferior centro
 local mainContainer = Instance.new("Frame")
 mainContainer.Name = "MainContainer"
-mainContainer.AnchorPoint = Vector2.new(0.5, 0)
-mainContainer.Position = UDim2.new(0.5, 0, 0.08, 0)
-mainContainer.Size = UDim2.fromOffset(800, 110) -- Más grande
+mainContainer.AnchorPoint = Vector2.new(0.5, 1) -- ✅ Ancla desde abajo
+mainContainer.Position = UDim2.new(0.5, 0, 0.85, 0) -- ✅ Centro-inferior (85% desde arriba)
+mainContainer.Size = UDim2.fromOffset(800, 110)
 mainContainer.BackgroundTransparency = 1
 mainContainer.Visible = false
 mainContainer.Rotation = -2 -- Inclinación grafiti
