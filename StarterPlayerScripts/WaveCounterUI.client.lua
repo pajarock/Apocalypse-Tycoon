@@ -1,216 +1,780 @@
 --!strict
 --[[
-	WAVE COUNTER UI - Apocalypse Tycoon
+	WAVE COUNTER UI - VERSIÓN ÉPICA
 	═══════════════════════════════════════════════════════════════════════
 
-	Muestra el número de waves sobrevividas en la esquina superior derecha.
+	FEATURES:
+	- Wave counter en esquina superior IZQUIERDA (no tapado)
+	- Contador de dinero épico con animación
+	- Mensaje "WAVE X COMPLETED!" en centro
+	- Diseño moderno y llamativo
 
 	INSTALACIÓN:
-	1. Copia este archivo a StarterPlayer.StarterPlayerScripts
-	2. En main.server.lua, agrega sincronización (ver abajo)
-
-	SINCRONIZACIÓN DESDE SERVIDOR:
-	Opción A - Usar IntValue (MÁS SIMPLE):
-		local CurrentWaveValue = Instance.new("IntValue")
-		CurrentWaveValue.Name = "CurrentWave"
-		CurrentWaveValue.Value = 1
-		CurrentWaveValue.Parent = game.ReplicatedStorage
-
-		-- Cuando avanza wave:
-		ServerState.CurrentWave += 1
-		CurrentWaveValue.Value = ServerState.CurrentWave
-
-	Opción B - Usar RemoteEvent:
-		local WaveUpdate = Instance.new("RemoteEvent")
-		WaveUpdate.Name = "WaveUpdate"
-		WaveUpdate.Parent = game.ReplicatedStorage.Remotes
-
-		-- Cuando avanza wave:
-		ServerState.CurrentWave += 1
-		WaveUpdate:FireAllClients(ServerState.CurrentWave)
+	1. Reemplazar WaveCounterUI.client.lua existente en StarterGui
+	2. O crear nuevo LocalScript con este código
 --]]
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
 --═══════════════════════════════════════════════════════════════════════
--- CREAR UI
+-- CONFIG
+--═══════════════════════════════════════════════════════════════════════
+local DEBUG = true
+
+--═══════════════════════════════════════════════════════════════════════
+-- CREAR SCREENGUI PRINCIPAL
 --═══════════════════════════════════════════════════════════════════════
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "WaveCounterUI"
+screenGui.Name = "GameHUD"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
--- Frame contenedor (esquina superior derecha)
-local container = Instance.new("Frame")
-container.Name = "WaveCounter"
-container.Size = UDim2.new(0, 200, 0, 60)
-container.Position = UDim2.new(1, -220, 0, 20) -- Top-right
-container.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-container.BackgroundTransparency = 0.2
-container.BorderSizePixel = 0
-container.Parent = screenGui
-
--- Esquinas redondeadas
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = container
-
--- Borde brillante
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 150, 0) -- Naranja apocalíptico
-stroke.Thickness = 2
-stroke.Parent = container
-
--- Icono/Emoji
-local icon = Instance.new("TextLabel")
-icon.Name = "Icon"
-icon.Size = UDim2.fromScale(0.3, 1)
-icon.Position = UDim2.fromScale(0, 0)
-icon.BackgroundTransparency = 1
-icon.Text = "☄️" -- Meteorito
-icon.Font = Enum.Font.GothamBold
-icon.TextSize = 28
-icon.TextColor3 = Color3.fromRGB(255, 150, 0)
-icon.Parent = container
-
--- Texto de wave number
-local waveText = Instance.new("TextLabel")
-waveText.Name = "WaveText"
-waveText.Size = UDim2.fromScale(0.7, 0.5)
-waveText.Position = UDim2.fromScale(0.3, 0)
-waveText.BackgroundTransparency = 1
-waveText.Text = "WAVE 1"
-waveText.TextColor3 = Color3.new(1, 1, 1)
-waveText.Font = Enum.Font.GothamBold
-waveText.TextSize = 20
-waveText.TextXAlignment = Enum.TextXAlignment.Left
-waveText.TextStrokeTransparency = 0.5
-waveText.Parent = container
-
--- Subtítulo
-local subtitle = Instance.new("TextLabel")
-subtitle.Name = "Subtitle"
-subtitle.Size = UDim2.fromScale(0.7, 0.4)
-subtitle.Position = UDim2.fromScale(0.3, 0.55)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "Survived"
-subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
-subtitle.Font = Enum.Font.Gotham
-subtitle.TextSize = 14
-subtitle.TextXAlignment = Enum.TextXAlignment.Left
-subtitle.Parent = container
+screenGui.DisplayOrder = 10 -- Por encima del leaderboard
+screenGui.Parent = playerGui
 
 --═══════════════════════════════════════════════════════════════════════
--- ANIMACIONES
+-- WAVE COUNTER (Superior Izquierda)
 --═══════════════════════════════════════════════════════════════════════
 
-local function pulseAnimation()
-	-- Expandir
-	local expandTween = TweenService:Create(
-		container,
-		TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Size = UDim2.new(0, 210, 0, 65)}
-	)
-	expandTween:Play()
+local waveFrame = Instance.new("Frame")
+waveFrame.Name = "WaveFrame"
+waveFrame.Size = UDim2.fromOffset(220, 80) -- Más grande
+waveFrame.Position = UDim2.new(0, 10, 0, 10) -- ✅ Superior IZQUIERDA
+waveFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+waveFrame.BackgroundTransparency = 0.05
+waveFrame.BorderSizePixel = 0
+waveFrame.Rotation = -1.5 -- Rotación sutil estilo urbano
+waveFrame.Parent = screenGui
 
-	task.wait(0.15)
+local waveCorner = Instance.new("UICorner")
+waveCorner.CornerRadius = UDim.new(0, 10)
+waveCorner.Parent = waveFrame
 
-	-- Contraer
-	local shrinkTween = TweenService:Create(
-		container,
-		TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-		{Size = UDim2.new(0, 200, 0, 60)}
-	)
-	shrinkTween:Play()
-end
+local waveStroke = Instance.new("UIStroke")
+waveStroke.Color = Color3.fromRGB(255, 170, 0)
+waveStroke.Thickness = 4 -- Más grueso
+waveStroke.Transparency = 0
+waveStroke.Parent = waveFrame
 
-local function flashBorder()
-	-- Flash amarillo brillante
-	stroke.Color = Color3.fromRGB(255, 255, 100)
+local waveGradient = Instance.new("UIGradient")
+waveGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 0))
+}
+waveGradient.Rotation = 45
+waveGradient.Parent = waveStroke
 
-	TweenService:Create(
-		stroke,
-		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Color = Color3.fromRGB(255, 150, 0)}
-	):Play()
-end
+-- Label "WAVE"
+local labelWave = Instance.new("TextLabel")
+labelWave.Name = "LabelWave"
+labelWave.Size = UDim2.fromScale(1, 0.3)
+labelWave.Position = UDim2.fromScale(0, 0.08)
+labelWave.BackgroundTransparency = 1
+labelWave.Text = "WAVE"
+labelWave.TextColor3 = Color3.fromRGB(255, 180, 20)
+labelWave.TextScaled = true
+labelWave.Font = Enum.Font.GothamBlack
+labelWave.TextStrokeTransparency = 0.5
+labelWave.Parent = waveFrame
+
+-- Label número en LuckiestGuy (ESTILO GRAFITI)
+local labelNumber = Instance.new("TextLabel")
+labelNumber.Name = "LabelNumber"
+labelNumber.Size = UDim2.fromScale(1, 0.42)
+labelNumber.Position = UDim2.fromScale(0, 0.28)
+labelNumber.BackgroundTransparency = 1
+labelNumber.Text = "1"
+labelNumber.TextColor3 = Color3.new(1, 1, 1)
+labelNumber.TextScaled = true
+labelNumber.Font = Enum.Font.LuckiestGuy -- GRAFITI
+labelNumber.TextStrokeTransparency = 0.3
+labelNumber.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+labelNumber.Rotation = -2 -- Inclinación grafiti
+labelNumber.Parent = waveFrame
+
+-- ✅ Label "Survived" (rondas sobrevividas)
+local labelSurvived = Instance.new("TextLabel")
+labelSurvived.Name = "LabelSurvived"
+labelSurvived.Size = UDim2.fromScale(1, 0.22)
+labelSurvived.Position = UDim2.fromScale(0, 0.73)
+labelSurvived.BackgroundTransparency = 1
+labelSurvived.Text = "Survived: 0"
+labelSurvived.TextColor3 = Color3.fromRGB(150, 150, 150)
+labelSurvived.TextScaled = true
+labelSurvived.Font = Enum.Font.Gotham
+labelSurvived.TextStrokeTransparency = 0.8
+labelSurvived.Parent = waveFrame
+
+local wavePadding = Instance.new("UIPadding")
+wavePadding.PaddingLeft = UDim.new(0, 8)
+wavePadding.PaddingRight = UDim.new(0, 8)
+wavePadding.PaddingTop = UDim.new(0, 5)
+wavePadding.PaddingBottom = UDim.new(0, 5)
+wavePadding.Parent = waveFrame
 
 --═══════════════════════════════════════════════════════════════════════
--- ACTUALIZACIÓN
+-- CONTADOR DE DINERO ÉPICO (Superior Centro-Derecha)
 --═══════════════════════════════════════════════════════════════════════
 
-local function updateWaveCounter(waveNumber: number)
-	waveText.Text = "WAVE " .. waveNumber
+local moneyFrame = Instance.new("Frame")
+moneyFrame.Name = "MoneyFrame"
+moneyFrame.Size = UDim2.fromOffset(300, 80) -- Más grande
+moneyFrame.Position = UDim2.new(0.5, -150, 0, 10) -- Centro superior
+moneyFrame.BackgroundColor3 = Color3.fromRGB(10, 18, 12)
+moneyFrame.BackgroundTransparency = 0.05
+moneyFrame.BorderSizePixel = 0
+moneyFrame.Rotation = -1 -- Rotación sutil
+moneyFrame.Parent = screenGui
 
-	-- Animaciones de celebración
-	pulseAnimation()
-	flashBorder()
+local moneyCorner = Instance.new("UICorner")
+moneyCorner.CornerRadius = UDim.new(0, 10)
+moneyCorner.Parent = moneyFrame
 
-	if waveNumber > 1 then
-		print(("[WaveCounterUI] 🎉 Wave %d alcanzada!"):format(waveNumber))
+local moneyStroke = Instance.new("UIStroke")
+moneyStroke.Color = Color3.fromRGB(85, 255, 127)
+moneyStroke.Thickness = 4 -- Más grueso
+moneyStroke.Transparency = 0
+moneyStroke.Parent = moneyFrame
+
+local moneyGradient = Instance.new("UIGradient")
+moneyGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(85, 255, 127)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 100))
+}
+moneyGradient.Rotation = 90
+moneyGradient.Parent = moneyStroke
+
+-- Ícono de dinero
+local moneyIcon = Instance.new("TextLabel")
+moneyIcon.Name = "Icon"
+moneyIcon.Size = UDim2.fromScale(0.2, 0.7)
+moneyIcon.Position = UDim2.fromScale(0.05, 0.15)
+moneyIcon.BackgroundTransparency = 1
+moneyIcon.Text = "💰"
+moneyIcon.TextScaled = true
+moneyIcon.Font = Enum.Font.GothamBold
+moneyIcon.Parent = moneyFrame
+
+-- Label de dinero en LuckiestGuy
+local moneyLabel = Instance.new("TextLabel")
+moneyLabel.Name = "MoneyLabel"
+moneyLabel.Size = UDim2.fromScale(0.7, 0.8)
+moneyLabel.Position = UDim2.fromScale(0.28, 0.1)
+moneyLabel.BackgroundTransparency = 1
+moneyLabel.Text = "$0"
+moneyLabel.TextColor3 = Color3.fromRGB(100, 255, 140)
+moneyLabel.TextScaled = true
+moneyLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
+moneyLabel.TextStrokeTransparency = 0.4
+moneyLabel.TextStrokeColor3 = Color3.fromRGB(0, 50, 20)
+moneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+moneyLabel.Rotation = -2 -- Inclinación grafiti
+moneyLabel.Parent = moneyFrame
+
+local moneyPadding = Instance.new("UIPadding")
+moneyPadding.PaddingLeft = UDim.new(0, 10)
+moneyPadding.PaddingRight = UDim.new(0, 10)
+moneyPadding.Parent = moneyFrame
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ INCOME WIDGET (Debajo del dinero - NOTORIO)
+--═══════════════════════════════════════════════════════════════════════
+
+local incomeFrame = Instance.new("Frame")
+incomeFrame.Name = "IncomeFrame"
+incomeFrame.Size = UDim2.fromOffset(280, 70) -- Grande y notorio
+incomeFrame.Position = UDim2.new(0.5, -140, 0, 100) -- Debajo del dinero
+incomeFrame.BackgroundColor3 = Color3.fromRGB(12, 15, 10)
+incomeFrame.BackgroundTransparency = 0.05
+incomeFrame.BorderSizePixel = 0
+incomeFrame.Rotation = -1.2 -- Rotación sutil
+incomeFrame.Parent = screenGui
+
+local incomeCorner = Instance.new("UICorner")
+incomeCorner.CornerRadius = UDim.new(0, 10)
+incomeCorner.Parent = incomeFrame
+
+local incomeStroke = Instance.new("UIStroke")
+incomeStroke.Color = Color3.fromRGB(255, 200, 0) -- Amarillo dorado para income
+incomeStroke.Thickness = 4
+incomeStroke.Transparency = 0
+incomeStroke.Parent = incomeFrame
+
+local incomeGradient = Instance.new("UIGradient")
+incomeGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 0))
+}
+incomeGradient.Rotation = 90
+incomeGradient.Parent = incomeStroke
+
+-- Ícono de rayo
+local incomeIcon = Instance.new("TextLabel")
+incomeIcon.Name = "Icon"
+incomeIcon.Size = UDim2.fromScale(0.25, 0.7)
+incomeIcon.Position = UDim2.fromScale(0.05, 0.15)
+incomeIcon.BackgroundTransparency = 1
+incomeIcon.Text = "⚡"
+incomeIcon.TextScaled = true
+incomeIcon.Font = Enum.Font.GothamBold
+incomeIcon.Parent = incomeFrame
+
+-- Label de income en LuckiestGuy (GRANDE Y NOTORIO)
+local incomeLabel = Instance.new("TextLabel")
+incomeLabel.Name = "IncomeLabel"
+incomeLabel.Size = UDim2.fromScale(0.7, 0.8)
+incomeLabel.Position = UDim2.fromScale(0.32, 0.1)
+incomeLabel.BackgroundTransparency = 1
+incomeLabel.Text = "+$0/s"
+incomeLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
+incomeLabel.TextScaled = true
+incomeLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI - NOTORIO
+incomeLabel.TextStrokeTransparency = 0.4
+incomeLabel.TextStrokeColor3 = Color3.fromRGB(50, 40, 0)
+incomeLabel.TextXAlignment = Enum.TextXAlignment.Left
+incomeLabel.Rotation = -2 -- Inclinación grafiti
+incomeLabel.Parent = incomeFrame
+
+local incomePadding = Instance.new("UIPadding")
+incomePadding.PaddingLeft = UDim.new(0, 10)
+incomePadding.PaddingRight = UDim.new(0, 10)
+incomePadding.Parent = incomeFrame
+
+--═══════════════════════════════════════════════════════════════════════
+-- MENSAJE "WAVE COMPLETED" (Centro Pantalla)
+--═══════════════════════════════════════════════════════════════════════
+
+local completedFrame = Instance.new("Frame")
+completedFrame.Name = "WaveCompletedFrame"
+completedFrame.Size = UDim2.fromOffset(500, 150)
+completedFrame.Position = UDim2.fromScale(0.5, 0.4)
+completedFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+completedFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+completedFrame.BackgroundTransparency = 0.3
+completedFrame.BorderSizePixel = 0
+completedFrame.Visible = false -- Oculto por defecto
+completedFrame.Parent = screenGui
+
+local completedCorner = Instance.new("UICorner")
+completedCorner.CornerRadius = UDim.new(0, 20)
+completedCorner.Parent = completedFrame
+
+local completedStroke = Instance.new("UIStroke")
+completedStroke.Color = Color3.fromRGB(255, 215, 0)
+completedStroke.Thickness = 5
+completedStroke.Transparency = 0
+completedStroke.Parent = completedFrame
+
+-- Texto principal en LuckiestGuy
+local completedText = Instance.new("TextLabel")
+completedText.Name = "Text"
+completedText.Size = UDim2.fromScale(1, 0.6)
+completedText.Position = UDim2.fromScale(0, 0.15)
+completedText.BackgroundTransparency = 1
+completedText.Text = "WAVE 1 COMPLETED!"
+completedText.TextColor3 = Color3.fromRGB(255, 220, 50)
+completedText.TextScaled = true
+completedText.Font = Enum.Font.LuckiestGuy -- GRAFITI
+completedText.TextStrokeTransparency = 0
+completedText.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
+completedText.Rotation = -3 -- Inclinación grafiti
+completedText.Parent = completedFrame
+
+-- Subtexto
+local completedSubtext = Instance.new("TextLabel")
+completedSubtext.Name = "Subtext"
+completedSubtext.Size = UDim2.fromScale(1, 0.2)
+completedSubtext.Position = UDim2.fromScale(0, 0.75)
+completedSubtext.BackgroundTransparency = 1
+completedSubtext.Text = "Preparing next wave..."
+completedSubtext.TextColor3 = Color3.fromRGB(200, 200, 200)
+completedSubtext.TextScaled = true
+completedSubtext.Font = Enum.Font.Gotham
+completedSubtext.Parent = completedFrame
+
+--═══════════════════════════════════════════════════════════════════════
+-- FUNCIONES DE ANIMACIÓN
+--═══════════════════════════════════════════════════════════════════════
+
+local function formatMoney(amount: number): string
+	if amount >= 1000000 then
+		return string.format("$%.1fM", amount / 1000000)
+	elseif amount >= 1000 then
+		return string.format("$%.1fK", amount / 1000)
+	else
+		return string.format("$%d", amount)
 	end
+end
+
+local function animateMoneyChange(oldValue: number, newValue: number)
+	-- Interpolación suave
+	local duration = 0.5
+	local startTime = tick()
+
+	task.spawn(function()
+		while tick() - startTime < duration do
+			local alpha = (tick() - startTime) / duration
+			local current = oldValue + (newValue - oldValue) * alpha
+			moneyLabel.Text = formatMoney(math.floor(current))
+			task.wait()
+		end
+		moneyLabel.Text = formatMoney(newValue)
+	end)
+
+	-- Flash verde si ganas dinero, rojo si pierdes
+	if newValue > oldValue then
+		moneyStroke.Color = Color3.fromRGB(0, 255, 0)
+	else
+		moneyStroke.Color = Color3.fromRGB(255, 0, 0)
+	end
+
+	TweenService:Create(moneyStroke, TweenInfo.new(0.5), {
+		Color = Color3.fromRGB(85, 255, 127)
+	}):Play()
+end
+
+local function playWavePulse()
+	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, true)
+	TweenService:Create(waveFrame, tweenInfo, {
+		Size = UDim2.fromOffset(240, 90) -- Más grande el pulse
+	}):Play()
+end
+
+local function playWaveFlash()
+	local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	waveStroke.Color = Color3.new(1, 1, 1)
+	TweenService:Create(waveStroke, tweenInfo, {
+		Color = Color3.fromRGB(255, 170, 0)
+	}):Play()
+
+	labelWave.TextColor3 = Color3.new(1, 1, 1)
+	TweenService:Create(labelWave, tweenInfo, {
+		TextColor3 = Color3.fromRGB(255, 170, 0)
+	}):Play()
+end
+
+local function showWaveCompleted(waveNum: number)
+	completedText.Text = string.format("✨ WAVE %d COMPLETED! ✨", waveNum)
+	completedFrame.Visible = true
+	completedFrame.Size = UDim2.fromOffset(0, 0)
+	completedFrame.BackgroundTransparency = 1
+	completedText.TextTransparency = 1
+	completedSubtext.TextTransparency = 1
+
+	-- Animación de entrada
+	local tweenIn = TweenService:Create(completedFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic), {
+		Size = UDim2.fromOffset(500, 150),
+		BackgroundTransparency = 0.3
+	})
+
+	local tweenText = TweenService:Create(completedText, TweenInfo.new(0.5), {
+		TextTransparency = 0
+	})
+
+	local tweenSubtext = TweenService:Create(completedSubtext, TweenInfo.new(0.5), {
+		TextTransparency = 0
+	})
+
+	tweenIn:Play()
+	tweenText:Play()
+	tweenSubtext:Play()
+
+	-- Esperar 3 segundos y ocultar
+	task.delay(3, function()
+		local tweenOut = TweenService:Create(completedFrame, TweenInfo.new(0.5), {
+			BackgroundTransparency = 1
+		})
+
+		local tweenTextOut = TweenService:Create(completedText, TweenInfo.new(0.5), {
+			TextTransparency = 1
+		})
+
+		local tweenSubtextOut = TweenService:Create(completedSubtext, TweenInfo.new(0.5), {
+			TextTransparency = 1
+		})
+
+		tweenOut:Play()
+		tweenTextOut:Play()
+		tweenSubtextOut:Play()
+
+		tweenOut.Completed:Connect(function()
+			completedFrame.Visible = false
+		end)
+	end)
+end
+
+local function updateWave(newWave: number)
+	labelNumber.Text = tostring(newWave)
+
+	playWavePulse()
+	playWaveFlash()
+
+	if DEBUG then
+		print(("[WaveCounterUI] 🎉 Wave %d!"):format(newWave))
+	end
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ ANIMACIONES ÉPICAS (VICTORIA / DERROTA)
+--═══════════════════════════════════════════════════════════════════════
+
+-- Sonido de victoria
+local function playVictorySound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://6895079853" -- Sonido épico de victoria
+	sound.Volume = 0.7
+	sound.Parent = game.SoundService
+	sound:Play()
+	game.Debris:AddItem(sound, 3)
+end
+
+-- Sonido de derrota
+local function playDefeatSound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://9114397505" -- Sonido grave de derrota
+	sound.Volume = 0.6
+	sound.Parent = game.SoundService
+	sound:Play()
+	game.Debris:AddItem(sound, 3)
+end
+
+-- ✨ ANIMACIÓN ÉPICA DE VICTORIA
+local function playVictoryAnimation(waveNum: number, survived: number)
+	if DEBUG then
+		print(("[WaveCounterUI] ✨ VICTORIA - Wave %d"):format(waveNum))
+	end
+
+	-- Sonido
+	playVictorySound()
+
+	-- Bounce épico del widget
+	local originalSize = waveFrame.Size
+	local bounceTween = TweenService:Create(
+		waveFrame,
+		TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = UDim2.fromOffset(240, 90) }
+	)
+	bounceTween:Play()
+	bounceTween.Completed:Connect(function()
+		TweenService:Create(
+			waveFrame,
+			TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+			{ Size = originalSize }
+		):Play()
+	end)
+
+	-- ✅ Flash dorado en borde (3 pulsos)
+	waveStroke.Color = Color3.fromRGB(255, 215, 0)
+	waveStroke.Thickness = 5
+
+	-- TweenInfo(tiempo, estilo, dirección, repeticiones, reversa)
+	local pulseInfo = TweenInfo.new(
+		0.25,  -- Duración por pulso
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.InOut,
+		2,  -- Repetir 2 veces (ida y vuelta = 1 pulso, así que 2 repeticiones = 3 pulsos totales)
+		true  -- Reversa (ida y vuelta)
+	)
+
+	TweenService:Create(waveStroke, pulseInfo, {
+		Color = Color3.fromRGB(255, 170, 0),
+		Thickness = 3
+	}):Play()
+
+	-- ✅ Flash en texto "WAVE" (3 pulsos)
+	labelWave.TextColor3 = Color3.fromRGB(255, 215, 0)
+	TweenService:Create(labelWave, pulseInfo, {
+		TextColor3 = Color3.fromRGB(255, 170, 0)
+	}):Play()
+
+	-- "SURVIVED!" temporal
+	local tempLabel = Instance.new("TextLabel")
+	tempLabel.Size = UDim2.fromScale(1, 0.3)
+	tempLabel.Position = UDim2.fromScale(0, 0.35)
+	tempLabel.BackgroundTransparency = 1
+	tempLabel.Text = "SURVIVED!"
+	tempLabel.TextColor3 = Color3.fromRGB(85, 255, 127)
+	tempLabel.TextScaled = true
+	tempLabel.Font = Enum.Font.GothamBlack
+	tempLabel.TextStrokeTransparency = 0
+	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	tempLabel.TextTransparency = 1
+	tempLabel.ZIndex = 100
+	tempLabel.Parent = waveFrame
+
+	-- Aparecer y desaparecer
+	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	task.delay(0.8, function()
+		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
+			TextTransparency = 1
+		}):Play()
+		task.delay(0.3, function()
+			tempLabel:Destroy()
+		end)
+	end)
+end
+
+-- 💀 ANIMACIÓN ÉPICA DE DERROTA
+local function playDefeatAnimation(waveNum: number)
+	if DEBUG then
+		print(("[WaveCounterUI] 💀 DERROTA - Wave %d"):format(waveNum))
+	end
+
+	-- Sonido
+	playDefeatSound()
+
+	-- Shake violento del widget
+	local originalPos = waveFrame.Position
+	local shakeIntensity = 8
+	local shakeDuration = 0.5
+
+	task.spawn(function()
+		local startTime = tick()
+		while tick() - startTime < shakeDuration do
+			local progress = (tick() - startTime) / shakeDuration
+			local intensity = shakeIntensity * (1 - progress)
+			local offsetX = (math.random() - 0.5) * intensity
+			local offsetY = (math.random() - 0.5) * intensity
+			waveFrame.Position = UDim2.new(
+				originalPos.X.Scale,
+				originalPos.X.Offset + offsetX,
+				originalPos.Y.Scale,
+				originalPos.Y.Offset + offsetY
+			)
+			task.wait()
+		end
+		waveFrame.Position = originalPos
+	end)
+
+	-- Flash rojo en borde
+	waveStroke.Color = Color3.fromRGB(220, 30, 30)
+	waveStroke.Thickness = 5
+	TweenService:Create(waveStroke, TweenInfo.new(0.8), {
+		Color = Color3.fromRGB(255, 170, 0),
+		Thickness = 3
+	}):Play()
+
+	-- Survived parpadea rojo
+	labelSurvived.TextColor3 = Color3.fromRGB(255, 50, 50)
+	TweenService:Create(labelSurvived, TweenInfo.new(0.8), {
+		TextColor3 = Color3.fromRGB(150, 150, 150)
+	}):Play()
+
+	-- "FAILED!" temporal
+	local tempLabel = Instance.new("TextLabel")
+	tempLabel.Size = UDim2.fromScale(1, 0.3)
+	tempLabel.Position = UDim2.fromScale(0, 0.35)
+	tempLabel.BackgroundTransparency = 1
+	tempLabel.Text = "FAILED!"
+	tempLabel.TextColor3 = Color3.fromRGB(220, 30, 30)
+	tempLabel.TextScaled = true
+	tempLabel.Font = Enum.Font.GothamBlack
+	tempLabel.TextStrokeTransparency = 0
+	tempLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	tempLabel.TextTransparency = 1
+	tempLabel.ZIndex = 100
+	tempLabel.Parent = waveFrame
+
+	-- Aparecer y desaparecer
+	TweenService:Create(tempLabel, TweenInfo.new(0.2), {
+		TextTransparency = 0
+	}):Play()
+
+	task.delay(0.8, function()
+		TweenService:Create(tempLabel, TweenInfo.new(0.3), {
+			TextTransparency = 1
+		}):Play()
+		task.delay(0.3, function()
+			tempLabel:Destroy()
+		end)
+	end)
 end
 
 --═══════════════════════════════════════════════════════════════════════
 -- SINCRONIZACIÓN CON SERVIDOR
 --═══════════════════════════════════════════════════════════════════════
 
--- OPCIÓN 1: Escuchar IntValue en ReplicatedStorage (MÁS COMÚN)
-local function connectToIntValue()
-	local waveValue = ReplicatedStorage:WaitForChild("CurrentWave", 5)
+-- Wave Counter
+local currentWaveValue = ReplicatedStorage:WaitForChild("CurrentWave", 10)
 
-	if waveValue and waveValue:IsA("IntValue") then
-		-- Actualizar inmediatamente
-		updateWaveCounter(waveValue.Value)
+if currentWaveValue and currentWaveValue:IsA("IntValue") then
+	labelNumber.Text = tostring(currentWaveValue.Value)
 
-		-- Escuchar cambios
-		waveValue:GetPropertyChangedSignal("Value"):Connect(function()
-			updateWaveCounter(waveValue.Value)
+	local previousWave = currentWaveValue.Value
+
+	currentWaveValue:GetPropertyChangedSignal("Value"):Connect(function()
+		local newWave = currentWaveValue.Value
+
+		-- ✅ ARREGLADO: NO mostrar mensaje automático aquí
+		-- El servidor ya envía el mensaje a través de EventNotifier
+		-- Si mostramos aquí también, sale duplicado
+
+		--[[
+		-- CÓDIGO ANTIGUO (CAUSABA DUPLICADOS):
+		if newWave > previousWave then
+			task.delay(0.5, function()
+				showWaveCompleted(previousWave)
+			end)
+		end
+		]]--
+
+		updateWave(newWave)
+		previousWave = newWave
+	end)
+
+	if DEBUG then
+		print("[WaveCounterUI] ✓ Wave counter conectado")
+	end
+else
+	warn("[WaveCounterUI] ⚠️ No se encontró CurrentWave")
+end
+
+-- Money Counter
+local leaderstats = player:WaitForChild("leaderstats")
+local cashValue = leaderstats:WaitForChild("Cash")
+
+if cashValue then
+	moneyLabel.Text = formatMoney(cashValue.Value)
+
+	local previousCash = cashValue.Value
+
+	cashValue:GetPropertyChangedSignal("Value"):Connect(function()
+		animateMoneyChange(previousCash, cashValue.Value)
+		previousCash = cashValue.Value
+	end)
+
+	if DEBUG then
+		print("[WaveCounterUI] ✓ Money counter conectado")
+	end
+end
+
+-- ✅ INCOME COUNTER (sincronización con IncomePerSec)
+local incomePerSecValue = leaderstats:WaitForChild("IncomePerSec")
+
+if incomePerSecValue then
+	-- Actualizar inicial
+	local function updateIncome()
+		local ips = incomePerSecValue.Value
+		if ips >= 1000000 then
+			incomeLabel.Text = string.format("+$%.1fM/s", ips / 1000000)
+		elseif ips >= 1000 then
+			incomeLabel.Text = string.format("+$%.1fK/s", ips / 1000)
+		else
+			incomeLabel.Text = string.format("+$%d/s", ips)
+		end
+
+		-- Flash dorado cuando aumenta
+		if ips > 0 then
+			incomeStroke.Color = Color3.fromRGB(255, 255, 100)
+			TweenService:Create(incomeStroke, TweenInfo.new(0.5), {
+				Color = Color3.fromRGB(255, 200, 0)
+			}):Play()
+		end
+	end
+
+	updateIncome()
+
+	-- Actualizar cuando cambie
+	incomePerSecValue:GetPropertyChangedSignal("Value"):Connect(updateIncome)
+
+	if DEBUG then
+		print("[WaveCounterUI] ✓ Income counter conectado")
+	end
+end
+
+-- ✅ Waves Survived Counter
+local stats = player:WaitForChild("Stats", 10)
+if stats then
+	local meteorsSurvived = stats:WaitForChild("MeteorsSurvived", 10)
+	if meteorsSurvived then
+		-- Actualizar inicial
+		labelSurvived.Text = string.format("Survived: %d", meteorsSurvived.Value)
+
+		-- Actualizar cuando cambie
+		meteorsSurvived:GetPropertyChangedSignal("Value"):Connect(function()
+			labelSurvived.Text = string.format("Survived: %d", meteorsSurvived.Value)
+
+			-- Flash cuando aumenta
+			labelSurvived.TextColor3 = Color3.fromRGB(85, 255, 127)
+			TweenService:Create(labelSurvived, TweenInfo.new(0.5), {
+				TextColor3 = Color3.fromRGB(150, 150, 150)
+			}):Play()
 		end)
 
-		print("[WaveCounterUI] ✓ Conectado a CurrentWave IntValue")
-		return true
+		if DEBUG then
+			print("[WaveCounterUI] ✓ Waves survived counter conectado")
+		end
 	end
-
-	return false
 end
 
--- OPCIÓN 2: Escuchar RemoteEvent
-local function connectToRemoteEvent()
-	local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-	if not remotes then return false end
+--═══════════════════════════════════════════════════════════════════════
+-- ✅ ESCUCHAR RESULTADOS ÉPICOS DEL SERVIDOR
+--═══════════════════════════════════════════════════════════════════════
 
-	local waveUpdate = remotes:WaitForChild("WaveUpdate", 5)
+local remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
+if remotes then
+	local waveResultRemote = remotes:WaitForChild("WaveResult", 10)
+	if waveResultRemote and waveResultRemote:IsA("RemoteEvent") then
+		print("[WaveCounterUI] ✅ WaveResult remote ENCONTRADO y CONECTADO")
 
-	if waveUpdate and waveUpdate:IsA("RemoteEvent") then
-		waveUpdate.OnClientEvent:Connect(updateWaveCounter)
-		print("[WaveCounterUI] ✓ Conectado a WaveUpdate RemoteEvent")
-		return true
+		waveResultRemote.OnClientEvent:Connect(function(data)
+			print("[WaveCounterUI] 📥 RECIBIDO evento WaveResult:", data)
+
+			if typeof(data) ~= "table" then
+				warn("[WaveCounterUI] ⚠️ Data no es tabla:", typeof(data))
+				return
+			end
+
+			local result = data.result
+			local waveNum = data.waveNumber
+			local survived = data.newSurvived or data.survivedCount
+
+			print(("[WaveCounterUI] 📊 Result: %s, Wave: %d, Survived: %s"):format(
+				tostring(result), tostring(waveNum), tostring(survived)
+			))
+
+			if result == "victory" then
+				-- ✨ VICTORIA ÉPICA
+				print("[WaveCounterUI] 🎉 Reproduciendo animación de VICTORIA")
+				local success, err = pcall(function()
+					playVictoryAnimation(waveNum, survived)
+				end)
+				if not success then
+					warn("[WaveCounterUI] ❌ Error en victoria animation:", err)
+				end
+			elseif result == "defeat" then
+				-- 💀 DERROTA ÉPICA
+				print("[WaveCounterUI] 💀 Reproduciendo animación de DERROTA")
+				local success, err = pcall(function()
+					playDefeatAnimation(waveNum)
+				end)
+				if not success then
+					warn("[WaveCounterUI] ❌ Error en defeat animation:", err)
+				end
+			else
+				warn("[WaveCounterUI] ⚠️ Result desconocido:", result)
+			end
+		end)
+
+		if DEBUG then
+			print("[WaveCounterUI] ✓ WaveResult remote conectado (mensajes épicos)")
+		end
+	else
+		warn("[WaveCounterUI] ⚠️ No se encontró WaveResult remote")
 	end
-
-	return false
 end
 
--- Intentar conectar (prioriza IntValue)
-local connected = connectToIntValue()
+--═══════════════════════════════════════════════════════════════════════
 
-if not connected then
-	connected = connectToRemoteEvent()
+if DEBUG then
+	print("[WaveCounterUI] ✓ HUD Épico inicializado")
 end
-
-if not connected then
-	warn("[WaveCounterUI] ⚠️ No se encontró CurrentWave (IntValue) ni WaveUpdate (RemoteEvent)")
-	warn("[WaveCounterUI] El contador no se actualizará automáticamente")
-	warn("[WaveCounterUI] Ver instrucciones en el header de este script")
-
-	-- Mostrar wave 1 por default
-	updateWaveCounter(1)
-end
-
-print("[WaveCounterUI] ✓ UI de wave counter creada")

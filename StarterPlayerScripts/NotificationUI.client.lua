@@ -252,7 +252,21 @@ end
 local success, remote = pcall(getOrCreateRemote)
 
 if success and remote then
-	remote.OnClientEvent:Connect(showNotification)
+	-- ✅ FIX: Filtrar notificaciones para evitar duplicación con EventNotifier
+	-- EventNotifier maneja: (message, type, duration) donde type = "EPIC", "CRITICAL", etc.
+	-- NotificationUI maneja: (message, duration, color) donde duration es número
+	remote.OnClientEvent:Connect(function(message: any, param2: any, param3: any)
+		-- Si el segundo parámetro es un string, es una notificación tipada para EventNotifier
+		if typeof(param2) == "string" then
+			-- Ignorar - EventNotifier la manejará
+			return
+		end
+
+		-- Es una notificación simple para nosotros
+		local duration = param2
+		local color = param3
+		showNotification(message, duration, color)
+	end)
 	print("[NotificationUI] ✓ Conectado a ShowNotification RemoteEvent")
 else
 	warn("[NotificationUI] ⚠️ No se pudo conectar al RemoteEvent:", remote)

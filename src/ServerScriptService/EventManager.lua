@@ -550,9 +550,9 @@ local function BossPhase_Colossus(plr: Player)
 	bv.Velocity = dir * 15 + Vector3.new(0, -15, 0) -- Muy lento
 	bv.Parent = meteor
 
-	-- Notificación épica - ✅ FIX: Usar tipo EPIC para coloso
+	-- Notificación épica - ✅ FIX: Más descriptivo y urgente
 	if ShowNotification then
-		ShowNotification:FireClient(plr, "💀 THE COLOSSUS DESCENDS!", "EPIC", 4)
+		ShowNotification:FireClient(plr, "⚠️ INCOMING: COLOSSUS METEOR!", "EPIC", 4)
 	end
 
 	-- Sistema de impacto (igual que spawnMeteorTowards pero con más drama)
@@ -678,10 +678,10 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 		-- Boss completo: las 4 fases en orden
 		phasesToExecute = {1, 2, 3, 4}
 
-		-- ✅ FIX: Usar tipo EPIC para notificación grande y épica
+		-- ✅ FIX: Notificación más descriptiva y urgente
 		if ShowNotification then
 			for _, plr in ipairs(Players:GetPlayers()) do
-				ShowNotification:FireClient(plr, "💀 BOSS WAVE: The Crimson Colossus", "EPIC", 5)
+				ShowNotification:FireClient(plr, "🚨 BOSS WAVE INCOMING!", "EPIC", 5)
 			end
 		end
 	else
@@ -689,10 +689,10 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 		local randomPhase = math.random(1, 4)
 		phasesToExecute = {randomPhase}
 
-		-- ✅ FIX: Usar tipo CRITICAL para mini-boss
+		-- ✅ FIX: Notificación más descriptiva y urgente
 		if ShowNotification then
 			for _, plr in ipairs(Players:GetPlayers()) do
-				ShowNotification:FireClient(plr, string.format("💀 MINI-BOSS: %s", phaseNames[randomPhase]), "CRITICAL", 4)
+				ShowNotification:FireClient(plr, "⚠️ MINI BOSS APPROACHING!", "CRITICAL", 4)
 			end
 		end
 	end
