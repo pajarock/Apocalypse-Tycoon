@@ -72,25 +72,38 @@ title.Rotation = -2 -- Inclinación grafiti
 title.ZIndex = 2
 title.Parent = frame
 
+-- ✅ FIX: Hacer el income widget más prominente y claro
 local info = Instance.new("TextLabel")
 info.Name = "Info"
-info.Size = UDim2.new(1, -20, 0, 22)
+info.Size = UDim2.new(1, -20, 0, 32) -- ✅ Más alto (22→32)
 info.Position = UDim2.fromOffset(10, 42)
-info.BackgroundTransparency = 1
+info.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- ✅ Fondo semi-transparente
+info.BackgroundTransparency = 0.3
 info.Font = Enum.Font.GothamBold
 info.TextScaled = true
 info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextColor3 = Color3.fromRGB(100, 255, 140)
-info.Text = "Cash: $0 | IPS: 0"
-info.TextStrokeTransparency = 0.6
+info.Text = "💰 $0\n⚡ 0/s"
+info.TextStrokeTransparency = 0.5
 info.ZIndex = 2
 info.Parent = frame
+
+-- ✅ Agregar borde al widget de income
+local infoStroke = Instance.new("UIStroke")
+infoStroke.Color = Color3.fromRGB(100, 255, 140)
+infoStroke.Thickness = 2
+infoStroke.Transparency = 0.5
+infoStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+infoStroke.Parent = info
+
+-- ✅ Agregar esquinas redondeadas
+Instance.new("UICorner", info).CornerRadius = UDim.new(0, 6)
 
 local list = Instance.new("Frame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 70)
-list.Size = UDim2.new(1, -20, 1, -80)
+list.Position = UDim2.fromOffset(10, 80) -- ✅ FIX: Ajustado de 70 a 80 para dar espacio al info widget más grande
+list.Size = UDim2.new(1, -20, 1, -90) -- ✅ FIX: Ajustado de -80 a -90
 list.ZIndex = 2
 list.Parent = frame
 
@@ -209,21 +222,42 @@ local function refreshAll()
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	title.Text = string.format("SHOP | SHIELD L%d", shieldLevel)
-	info.Text = string.format("💰 %s | ⚡ %d/s", fmtMoney(cash), ips)
+	-- ✅ FIX: Mostrar reducción de daño del shield actual
+	local shieldReduction = shieldLevel * 15 -- 15% por nivel
+	if shieldLevel > 0 then
+		title.Text = string.format("SHOP | 🛡️ L%d (-%d%%)", shieldLevel, shieldReduction)
+	else
+		title.Text = "SHOP | 🛡️ NO SHIELD"
+	end
+
+	-- ✅ FIX: Formato mejorado para el widget de income (dos líneas, más legible)
+	info.Text = string.format("💰 %s\n⚡ %d/s", fmtMoney(cash), ips)
 
 	for _, upgId in ipairs(ORDER) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
 		if infoU then
 			local btn = buttons[upgId] or makeRow(upgId)
+			local count = tonumber(infoU.Count) or 0
+			local maxCount = infoU.MaxCount
+
+			-- ✅ FIX: Mostrar más claramente el estado del upgrade
 			local label = string.format("%s | %s | x%d",
 				tostring(infoU.Title or upgId),
 				fmtMoney(infoU.Price or 0),
-				tonumber(infoU.Count) or 0
+				count
 			)
+
+			-- Agregar info especial para shields
 			if upgId == "Upgrade_6" then
-				label = label .. string.format(" (L%d)", shieldLevel)
+				local nextReduction = (shieldLevel + 1) * 15
+				label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
 			end
+
+			-- Mostrar si alcanzó el máximo
+			if maxCount and count >= maxCount then
+				label = label .. " [MAX]"
+			end
+
 			btn.Text = label
 		end
 	end

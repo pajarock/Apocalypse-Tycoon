@@ -1135,7 +1135,7 @@ RequestBaseState.OnServerInvoke = function(plr: Player)
 	return {
 		UserId = plr.UserId,
 		BaseHP = Base.GetHP(plr.UserId),
-		MaxHP = Config.BASE_MAX_HP,
+		MaxHP = Base.GetMaxHP(plr.UserId), -- ✅ FIX: Usar MaxHP individual del jugador
 		IsInvulnerable = Base.IsInvulnerable(plr.UserId),
 	}
 end

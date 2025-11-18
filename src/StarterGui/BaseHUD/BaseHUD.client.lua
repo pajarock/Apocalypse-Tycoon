@@ -145,15 +145,16 @@ local function updateRepairButton()
 	local missing = max - hp
 	local repairAmount = math.min(10, missing)
 
-	-- Calcular costo escalado (igual que en server)
+	-- ✅ FIX: Calcular costo exactamente igual que en server (Main.Server línea 930-933)
 	local plr = game.Players.LocalPlayer
 	local leaderstats = plr:FindFirstChild("leaderstats")
 	local ips = leaderstats and leaderstats:FindFirstChild("IncomePerSec")
 	local incomePerSec = ips and ips.Value or 0
 
-	local baseCost = 50  -- Debe coincidir con Config
-	local scaledCost = baseCost * (1 + (incomePerSec / 10))
-	local cost = repairAmount * math.floor(scaledCost)
+	local baseCost = 100  -- ✅ FIX: Cambio de 50 a 100 (Config.REPAIR_COST_PER_HP)
+	local incomeScale = 1 + (incomePerSec / 10)
+	local hpScale = max / 100  -- ✅ FIX: Agregado el factor hpScale que faltaba
+	local cost = repairAmount * math.floor(baseCost * incomeScale * hpScale)
 
 	if missing <= 0 then
 		repairBtn.Text = "✓ FULL!"
@@ -250,8 +251,10 @@ BaseStateChanged.OnClientEvent:Connect(update)
 task.spawn(function()
 	while true do
 		update()
+		updateRepairButton() -- ✅ FIX: Actualizar botón de reparación cada 2 segundos
 		task.wait(2)
 	end
 end)
 
 update()
+updateRepairButton() -- ✅ FIX: Actualizar botón al inicio
