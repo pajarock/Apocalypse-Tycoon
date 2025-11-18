@@ -178,8 +178,8 @@ Edita `ServerStorage/Config/VFXConfig.lua` para cambiar colores, intensidad y du
 ## 📈 ROADMAP
 
 ### 🚧 En Desarrollo
-- 🔄 **Power-Ups System:** Power-ups temporales que dropean de enemigos
-- 🔄 **Pet Gacha System:** Huevos con pets que te siguen y dan bonuses
+- ✅ **Power-Ups System:** Power-ups temporales que dropean de meteoritos *(COMPLETADO)*
+- 🔄 **Pet Gacha System:** Huevos con pets que te siguen y dan bonuses *(PRÓXIMO)*
 
 ### 💡 Futuras Features
 - ⏳ Sistema de Logros/Achievements

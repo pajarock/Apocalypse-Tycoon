@@ -58,6 +58,9 @@ local BaseModule = require(game.ServerScriptService.BaseModule)
 -- 🔥 NUEVO: Import VFXManager
 local VFXManager = require(game.ServerStorage.Managers.VFXManager)
 
+-- 🔥 NUEVO: Import PowerUpManager
+local PowerUpManager = require(game.ServerStorage.Managers.PowerUpManager)
+
 -- 🔥 NUEVO: Import MeteorDamageSystem (OPCIONAL - comentar si no existe)
 local MeteorDamageSystem = nil
 local hasMeteorDamage = pcall(function()
@@ -301,6 +304,10 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 		if BaseModule.GetHP(userId) > 0 then
 			print(("[METEOR] Jugador %d sobrevivió!"):format(userId))
 		end
+
+		-- 🔥 NUEVO: Chance de spawnear power-up al destruir meteorito
+		local meteorSource = "Meteor" .. meteorType -- "MeteorNormal", "MeteorLarge", etc
+		PowerUpManager:SpawnRandomPowerUp(hitPos, meteorSource)
 
 		if ownerPlr and appliedAmount > 0 then
 			if BaseDamaged then
