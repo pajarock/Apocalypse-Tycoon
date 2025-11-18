@@ -1780,7 +1780,8 @@ if eventsEnabled then
 
 					-- Spawnear powerup solo si cumple la condición
 					if shouldSpawnPowerUp then
-						PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType)
+						-- ✅ Pasar el número de wave para el sistema híbrido
+						PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType, ServerState.CurrentWave)
 
 						if Config.DEBUG_MODE then
 							print(("[POWERUP] ✅ Spawneando powerup para %s - Wave %d (%s)"):format(

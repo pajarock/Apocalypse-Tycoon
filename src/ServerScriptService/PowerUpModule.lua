@@ -793,7 +793,7 @@ end
 -- ═══════════════════════════════════════════════════════════════════════
 
 -- Spawnear powerup para un jugador que completó una wave
-function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string)
+function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, waveNumber: number?)
 	-- ✅ VALIDACIÓN: Verificar que userId sea un número
 	if type(userId) ~= "number" then
 		warn(("[PowerUpModule] ❌ SpawnPowerUpForPlayer recibió userId inválido: %s (tipo: %s)"):format(
@@ -812,12 +812,43 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string)
 	local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
 	if not humanoidRootPart then return end
 
-	-- Determinar rarity según wave type
-	local rarity = PowerUpConfig.GetRandomRarity(waveType)
-	local powerUpId = PowerUpConfig.GetRandomPowerUpByRarity(rarity)
+	-- ✅ SISTEMA HÍBRIDO: Determinístico + Probabilístico
+	local powerUpId: string? = nil
+	local wave = waveNumber or 0
+
+	-- WAVE 3: Siempre FullHeal (introducción amigable)
+	if wave == 3 then
+		powerUpId = "FullHeal"
+		if DEBUG then
+			print(("[PowerUpModule] 🎁 Wave 3 - Spawneando FullHeal garantizado"):format())
+		end
+
+	-- WAVE 10, 20, 30... (Boss): Siempre GodShield o UltraCharge
+	elseif waveType == "Boss" then
+		local epicPowerups = {"GodShield", "UltraCharge"}
+		powerUpId = epicPowerups[math.random(1, #epicPowerups)]
+		if DEBUG then
+			print(("[PowerUpModule] 🏆 Boss Wave %d - Spawneando %s épico"):format(wave, powerUpId))
+		end
+
+	-- WAVE 5, 15, 25... (MiniBoss): Random Uncommon
+	elseif waveType == "MiniBoss" then
+		powerUpId = PowerUpConfig.GetRandomPowerUpByRarity("Uncommon")
+		if DEBUG then
+			print(("[PowerUpModule] ⚔️ MiniBoss Wave %d - Spawneando Uncommon: %s"):format(wave, powerUpId or "nil"))
+		end
+
+	-- OTRAS WAVES: Random según probabilidad de waveType
+	else
+		local rarity = PowerUpConfig.GetRandomRarity(waveType)
+		powerUpId = PowerUpConfig.GetRandomPowerUpByRarity(rarity)
+		if DEBUG then
+			print(("[PowerUpModule] 🎲 Wave %d - Spawneando random %s: %s"):format(wave, rarity, powerUpId or "nil"))
+		end
+	end
 
 	if not powerUpId then
-		warn(("[PowerUpModule] No se pudo obtener powerup para rarity: %s"):format(rarity))
+		warn(("[PowerUpModule] No se pudo obtener powerup para wave %d (%s)"):format(wave, waveType))
 		return
 	end
 
@@ -833,8 +864,8 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string)
 	PowerUpModule.SpawnPowerUpInWorld(powerUpId, spawnPosition)
 
 	if DEBUG then
-		print(("[PowerUpModule] PowerUp spawneado para userId %d: %s (%s)"):format(
-			userId, powerUpId, rarity
+		print(("[PowerUpModule] ✅ PowerUp spawneado para userId %d: %s (Wave %d, %s)"):format(
+			userId, powerUpId, wave, waveType
 		))
 	end
 end
