@@ -33,9 +33,12 @@ assert(Remotes, "[DashModule] Falta carpeta Remotes")
 local DashRequest = Remotes:WaitForChild("DashRequest", 10) :: RemoteEvent
 assert(DashRequest, "[DashModule] Falta DashRequest remote")
 
+local DashEvaded = Remotes:WaitForChild("DashEvaded", 10) :: RemoteEvent
+assert(DashEvaded, "[DashModule] Falta DashEvaded remote")
+
 -- Config
 local DEBUG = true
-local DASH_COOLDOWN = 4 -- segundos
+local DASH_COOLDOWN = 2.5 -- ✅ Reducido de 4s para acción más rápida
 local DASH_INVULN_DURATION = 0.3
 
 -- Estado
@@ -327,6 +330,127 @@ end)
 -- Actualizar UI cada frame
 RunService.RenderStepped:Connect(function()
 	updateCooldownUI()
+end)
+
+-------------------------------------------------------------------------
+-- EVASION FEEDBACK
+-------------------------------------------------------------------------
+
+local function showEvasionFeedback(damageEvaded: number)
+	-- ✅ Flash dorado brillante en pantalla
+	local flash = Instance.new("Frame")
+	flash.Size = UDim2.fromScale(1, 1)
+	flash.BackgroundColor3 = Color3.fromRGB(255, 220, 100) -- Dorado
+	flash.BackgroundTransparency = 0.5
+	flash.BorderSizePixel = 0
+	flash.ZIndex = 10
+	flash.Parent = playerGui
+
+	-- Pulsar 3 veces
+	local pulseCount = 0
+	local function pulse()
+		pulseCount = pulseCount + 1
+		if pulseCount > 3 then
+			flash:Destroy()
+			return
+		end
+
+		TweenService:Create(flash, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 0.3
+		}):Play()
+
+		task.wait(0.15)
+
+		local fadeOut = TweenService:Create(flash, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			BackgroundTransparency = 1
+		})
+		fadeOut:Play()
+
+		task.wait(0.15)
+
+		if pulseCount < 3 then
+			task.spawn(pulse)
+		else
+			task.delay(0.2, function()
+				flash:Destroy()
+			end)
+		end
+	end
+
+	task.spawn(pulse)
+
+	-- ✅ Texto "EVADED!" flotante en el centro de la pantalla
+	local evadedLabel = Instance.new("TextLabel")
+	evadedLabel.Size = UDim2.fromOffset(400, 100)
+	evadedLabel.Position = UDim2.fromScale(0.5, 0.4)
+	evadedLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	evadedLabel.BackgroundTransparency = 1
+	evadedLabel.Text = "⚡ EVADED! ⚡"
+	evadedLabel.Font = Enum.Font.GothamBold
+	evadedLabel.TextSize = 60
+	evadedLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+	evadedLabel.TextStrokeTransparency = 0
+	evadedLabel.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
+	evadedLabel.TextTransparency = 0
+	evadedLabel.ZIndex = 11
+	evadedLabel.Parent = playerGui
+
+	-- Animación de escala y fade
+	evadedLabel.Size = UDim2.fromOffset(0, 0)
+	TweenService:Create(evadedLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(400, 100)
+	}):Play()
+
+	task.delay(0.8, function()
+		local fadeOut = TweenService:Create(evadedLabel, TweenInfo.new(0.3), {
+			TextTransparency = 1,
+			TextStrokeTransparency = 1,
+			Position = UDim2.fromScale(0.5, 0.3)
+		})
+		fadeOut:Play()
+		fadeOut.Completed:Connect(function()
+			evadedLabel:Destroy()
+		end)
+	end)
+
+	-- ✅ Sonido de éxito
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://6026984224" -- Epic shield/block sound
+	sound.Volume = 0.6
+	sound.PlaybackSpeed = 1.1
+	sound.Parent = humanoidRootPart
+	sound:Play()
+	game.Debris:AddItem(sound, 3)
+
+	-- ✅ Efecto de anillo dorado expandiéndose
+	local ring = Instance.new("Part")
+	ring.Size = Vector3.new(1, 0.5, 1)
+	ring.Position = humanoidRootPart.Position
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.Transparency = 0.5
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(255, 220, 100)
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Orientation = Vector3.new(0, 0, 90)
+	ring.Parent = workspace
+
+	-- Expandir y desvanecer
+	TweenService:Create(ring, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.new(12, 0.5, 12),
+		Transparency = 1
+	}):Play()
+
+	game.Debris:AddItem(ring, 1)
+
+	if DEBUG then
+		print(("[DASH] ⚡ EVADED %d damage!"):format(damageEvaded))
+	end
+end
+
+-- Escuchar eventos de evasión
+DashEvaded.OnClientEvent:Connect(function(damageEvaded: number)
+	showEvasionFeedback(damageEvaded)
 end)
 
 -- Re-conectar cuando cambie el personaje

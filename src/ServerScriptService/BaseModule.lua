@@ -336,6 +336,22 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 	-- Invulnerable
 	if state.IsInvulnerable then
 		state.LastDamageTime = now
+
+		-- ✅ NUEVO: Notificar al cliente que evadió daño exitosamente
+		local player = Players:GetPlayerByUserId(userId)
+		if player then
+			local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
+			if Remotes then
+				local DashEvaded = Remotes:FindFirstChild("DashEvaded")
+				if DashEvaded and DashEvaded:IsA("RemoteEvent") then
+					DashEvaded:FireClient(player, rawDamage)
+					if DEBUG then
+						print(("[BaseModule] 🛡️ EVADIDO! userId %d evadió %d de daño"):format(userId, rawDamage))
+					end
+				end
+			end
+		end
+
 		return 0
 	end
 
