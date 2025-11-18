@@ -20,6 +20,7 @@ local sg = Instance.new("ScreenGui")
 sg.Name = "CashIncomeWidget"
 sg.ResetOnSpawn = false
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+sg.DisplayOrder = 10 -- ✅ FIX: Evitar superposición con otros widgets
 sg.Parent = player:WaitForChild("PlayerGui")
 
 -- Frame principal (centro-superior)

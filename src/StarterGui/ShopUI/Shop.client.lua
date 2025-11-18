@@ -13,12 +13,12 @@ local RequestPurchase = Remotes:WaitForChild("RequestPurchase") :: RemoteEvent
 -- UI ROOT
 local gui = script.Parent :: ScreenGui
 
--- Panel principal con estilo urbano
+-- Panel principal con estilo urbano (✅ Más alto para categorías)
 local frame = Instance.new("Frame")
 frame.Name = "ShopFrame"
 frame.AnchorPoint = Vector2.new(0, 0)
 frame.Position = UDim2.new(0, 20, 0, 100)
-frame.Size = UDim2.fromOffset(280, 320)
+frame.Size = UDim2.fromOffset(280, 420) -- ✅ AUMENTADO: 320→420 para categorías
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
@@ -28,7 +28,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
 -- Sombra pronunciada
 local shopShadow = Instance.new("Frame")
-shopShadow.Size = UDim2.fromOffset(286, 326)
+shopShadow.Size = UDim2.fromOffset(286, 426) -- ✅ Ajustado a nuevo tamaño
 shopShadow.Position = UDim2.new(0, 17, 0, 103)
 shopShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 shopShadow.BackgroundTransparency = 0.6
@@ -97,6 +97,7 @@ local function fmtMoney(n: any): string
 end
 
 local buttons: {[string]: TextButton} = {}
+local categoryHeaders: {[string]: TextLabel} = {}
 local shieldLevel = 0
 
 -- Función para obtener estado del servidor
@@ -108,6 +109,32 @@ local function fetchState()
 		return { Cash = 0, IncomePerSec = 0, UpgradesInfo = {}, ShieldLevel = 0 }
 	end
 	return st
+end
+
+-- ✅ NUEVO: Crear header de categoría
+local function makeCategoryHeader(categoryName: string, emoji: string): TextLabel
+	local header = Instance.new("TextLabel")
+	header.Name = "Header_" .. categoryName
+	header.Size = UDim2.new(1, 0, 0, 24)
+	header.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	header.BackgroundTransparency = 0.3
+	header.BorderSizePixel = 0
+	header.Font = Enum.Font.GothamBold
+	header.TextSize = 14
+	header.TextColor3 = Color3.fromRGB(255, 200, 80)
+	header.Text = string.format("%s %s", emoji, categoryName:upper())
+	header.TextXAlignment = Enum.TextXAlignment.Left
+	header.TextStrokeTransparency = 0.5
+	header.ZIndex = 3
+	header.Parent = list
+	Instance.new("UICorner", header).CornerRadius = UDim.new(0, 6)
+
+	-- Padding interno
+	local headerPadding = Instance.new("UIPadding")
+	headerPadding.PaddingLeft = UDim.new(0, 8)
+	headerPadding.Parent = header
+
+	return header
 end
 
 -- Crear fila de upgrade con estilo urbano
@@ -184,10 +211,11 @@ local function makeRow(upgId: string): TextButton
 	return btn
 end
 
--- Orden de upgrades
-local ORDER = {
-	"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5",
-	"Upgrade_6", "Upgrade_7", "Upgrade_8", "Upgrade_9", "Upgrade_10"
+-- ✅ NUEVO: Upgrades organizados por categoría
+local CATEGORIES = {
+	{ name = "Income", emoji = "💰", upgrades = {"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5", "Upgrade_9"} },
+	{ name = "Defense", emoji = "🛡️", upgrades = {"Upgrade_6", "Upgrade_7", "Upgrade_8"} },
+	{ name = "Utility", emoji = "⚙️", upgrades = {"Upgrade_11", "Upgrade_10"} },
 }
 
 -- Refrescar UI
@@ -205,34 +233,49 @@ local function refreshAll()
 		title.Text = "SHOP | 🛡️ NO SHIELD"
 	end
 
-	-- ✅ ELIMINADO: info widget (ahora en CashIncomeWidget centralizado)
+	-- ✅ NUEVO: Organizar por categorías
+	local layoutOrder = 0
+	for _, category in ipairs(CATEGORIES) do
+		-- Crear/actualizar header de categoría
+		local header = categoryHeaders[category.name]
+		if not header then
+			header = makeCategoryHeader(category.name, category.emoji)
+			categoryHeaders[category.name] = header
+		end
+		header.LayoutOrder = layoutOrder
+		layoutOrder = layoutOrder + 1
 
-	for _, upgId in ipairs(ORDER) do
-		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
-		if infoU then
-			local btn = buttons[upgId] or makeRow(upgId)
-			local count = tonumber(infoU.Count) or 0
-			local maxCount = infoU.MaxCount
+		-- Crear/actualizar botones de upgrades en esta categoría
+		for _, upgId in ipairs(category.upgrades) do
+			local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
+			if infoU then
+				local btn = buttons[upgId] or makeRow(upgId)
+				btn.LayoutOrder = layoutOrder
+				layoutOrder = layoutOrder + 1
 
-			-- ✅ FIX: Mostrar más claramente el estado del upgrade
-			local label = string.format("%s | %s | x%d",
-				tostring(infoU.Title or upgId),
-				fmtMoney(infoU.Price or 0),
-				count
-			)
+				local count = tonumber(infoU.Count) or 0
+				local maxCount = infoU.MaxCount
 
-			-- Agregar info especial para shields (18% por nivel - BALANCEADO)
-			if upgId == "Upgrade_6" then
-				local nextReduction = (shieldLevel + 1) * 18  -- ✅ BALANCEADO: 18% por nivel
-				label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
+				-- ✅ FIX: Mostrar más claramente el estado del upgrade
+				local label = string.format("%s | %s | x%d",
+					tostring(infoU.Title or upgId),
+					fmtMoney(infoU.Price or 0),
+					count
+				)
+
+				-- Agregar info especial para shields (18% por nivel - BALANCEADO)
+				if upgId == "Upgrade_6" then
+					local nextReduction = (shieldLevel + 1) * 18  -- ✅ BALANCEADO: 18% por nivel
+					label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
+				end
+
+				-- Mostrar si alcanzó el máximo
+				if maxCount and count >= maxCount then
+					label = label .. " [MAX]"
+				end
+
+				btn.Text = label
 			end
-
-			-- Mostrar si alcanzó el máximo
-			if maxCount and count >= maxCount then
-				label = label .. " [MAX]"
-			end
-
-			btn.Text = label
 		end
 	end
 end
