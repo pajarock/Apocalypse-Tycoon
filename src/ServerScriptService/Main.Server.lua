@@ -798,7 +798,12 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 		local cf
 		if upgradeId == "Upgrade_7" then
+			-- Wall Sections: alrededor del perímetro
 			cf = getWallPlacementCFrame(basePart, count)
+		elseif upgradeId == "Upgrade_8" then
+			-- ✅ Reinforced Walls: Debajo de la base (discreto, placeholder temporal)
+			local offset = Vector3.new((count - 3) * 6, -8, 0) -- Línea horizontal debajo
+			cf = basePart.CFrame * CFrame.new(offset)
 		else
 			local catIndex = getOrInitCategoryIndex(plr.UserId, category)
 			cf = getNextBuildCFrame(basePart, catIndex, category)
