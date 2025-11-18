@@ -1,374 +1,245 @@
-# 🔥 APOCALYPSE TYCOON - PACKAGE 1: VISUAL IMPACT
+# 🔥 APOCALYPSE TYCOON
 
-## 🎯 RESUMEN EJECUTIVO
+**Sobrevive al Apocalipsis. Construye tu Imperio. Derrota a los Dinosaurios.**
 
-**Package 1** transforma tu tycoon con efectos visuales **ÉPICOS** sin romper código existente.
-
-### ✨ LO QUE OBTIENES
-
-| Feature | Antes | Después | Impacto |
-|---------|-------|---------|---------|
-| **Meteoritos** | Fire básico | Trail épico + Explosión espectacular | 🔥🔥🔥🔥🔥 |
-| **Shop UI** | Estático | Slide animations + Hover effects | 🔥🔥🔥🔥 |
-| **Impactos** | Sin feedback | Camera shake + Screen flash | 🔥🔥🔥🔥 |
-| **Compras** | Click simple | Bounce + Particles + Sound | 🔥🔥🔥🔥 |
-
-**Resultado:** "WOW" en los primeros **30 segundos** ✅
+Un juego de tycoon para Roblox donde defiendes tu base de oleadas interminables de meteoritos y dinosaurios, mientras construyes un imperio económico y desbloqueas upgrades épicos.
 
 ---
 
-## 📦 ESTRUCTURA DE ARCHIVOS
+## 🎮 GAMEPLAY
+
+- **Defiende tu Base:** Sobrevive oleadas de meteoritos que caen del cielo
+- **Sistema de Waves:** Enfréntate a Boss y Mini-Boss cada cierto número de oleadas
+- **Economía Progresiva:** Gana dinero pasivamente y con cada meteorito destruido
+- **Upgrades Estratégicos:** Mejora daño, velocidad de ataque, regeneración, shields y más
+- **Dash & Evasion:** Esquiva meteoritos con un sistema de dash direccional + invulnerabilidad temporal
+- **Efectos Visuales Épicos:** VFX procedurales, números de daño flotantes, UI con estilo urbano/grafiti
+- **Procedural Generation:** Modelos de bases y enemigos generados proceduralmente
+
+---
+
+## ✨ FEATURES PRINCIPALES
+
+### 🎯 Gameplay Core
+- ✅ Sistema de Bases con HP, regeneración y shields
+- ✅ Sistema de Meteoritos con diferentes tipos (Small, Normal, Large)
+- ✅ Sistema de Oleadas (Waves) con dificultad progresiva
+- ✅ Boss Fights y Mini-Boss cada X oleadas
+- ✅ Economía con ingresos pasivos y rewards por kills
+- ✅ Shop con 10+ upgrades estratégicos
+
+### ⚡ Combat & Movement
+- ✅ **Dash System:** Shift + WASD para dash direccional con cooldown visual
+- ✅ **Evasion Mechanics:** Invulnerabilidad temporal (0.3s) durante dash
+- ✅ **Efecto Fantasmal:** Player semi-transparente durante evasión
+- ✅ **Feedback Visual:** Screen flash y particles al evadir exitosamente
+
+### 🎨 Visual Effects
+- ✅ **VFX Manager:** Sistema centralizado de efectos con object pooling
+- ✅ **Meteor Trails:** Trails épicos con explosiones espectaculares
+- ✅ **Damage Numbers:** Números flotantes con estilo grafiti urbano
+- ✅ **UI Animations:** Slide-in, hover effects, bounce feedback
+- ✅ **Camera Shake:** Shake dinámico en impactos y eventos importantes
+- ✅ **Procedural Models:** Bases y enemigos con variación visual
+
+### 🎨 UI/UX
+- ✅ **Shop UI:** Diseño urbano/grafiti con animaciones suaves
+- ✅ **Wave Counter:** UI épica con progreso de oleadas
+- ✅ **Health Bar:** Barra de vida con indicadores visuales
+- ✅ **Death Screen:** UI de muerte con stats y opciones
+- ✅ **Notifications:** Sistema de notificaciones para eventos importantes
+
+### 🛠️ Systems
+- ✅ DataStore para persistencia de datos
+- ✅ Tutorial Manager para nuevos jugadores
+- ✅ Environment Manager para efectos ambientales
+- ✅ Debug Controls para testing (Solo en Studio)
+
+---
+
+## 📁 ESTRUCTURA DEL PROYECTO
 
 ```
 Apocalypse-Tycoon/
 ├── ServerStorage/
-│   ├── Managers/
-│   │   └── VFXManager.lua ...................... 🔥 NUEVO - Sistema de efectos visuales
 │   ├── Config/
-│   │   └── VFXConfig.lua ....................... 🔥 NUEVO - Data-driven VFX templates
-│   └── EventManager_REFACTORED.lua ............. 🔧 REFACTOR - Agrega VFX a meteoritos
+│   │   ├── Config.lua ........................ Configuración global del juego
+│   │   └── VFXConfig.lua ..................... Templates de efectos visuales
+│   ├── Managers/
+│   │   ├── VFXManager.lua .................... Sistema de partículas con pooling
+│   │   ├── BaseVisualsManager.lua ............ Visuales de bases
+│   │   ├── BuildEffectsManager.lua ........... Efectos de construcción
+│   │   ├── EnvironmentManager.lua ............ Ambiente y clima
+│   │   └── ProceduralModels.lua .............. Generación procedural
+│   ├── EventManager_REFACTORED.lua ........... Sistema de meteoritos y eventos
+│   ├── MeteorDamageSystem.lua ................ Sistema de daño
+│   └── TutorialManager.lua ................... Tutorial para nuevos jugadores
 │
 ├── StarterPlayerScripts/
-│   ├── Controllers/
-│   │   ├── CameraController.lua ................ 🔥 NUEVO - Shake & flash effects
-│   │   └── UIController.lua .................... 🔥 NUEVO - UI animations
-│   ├── CameraShake_Client.lua .................. 🔥 NUEVO - Cliente para shakes
-│   └── Shop_client_REFACTORED.lua .............. 🔧 REFACTOR - UI animada
+│   ├── DashModule.client.lua ................. Sistema de dash del jugador
+│   ├── WaveCounterUI.client.lua .............. UI de contador de oleadas
+│   ├── PlayerHealthUI.client.lua ............. UI de salud
+│   └── NotificationUI.client.lua ............. Sistema de notificaciones
 │
-└── README.md ................................... 📖 Esta documentación
-```
-
-### 🎨 MÓDULOS NUEVOS (100% standalone)
-
-| Módulo | Ubicación | Descripción |
-|--------|-----------|-------------|
-| **VFXManager** | ServerStorage/Managers | Sistema centralizado de partículas con object pooling |
-| **VFXConfig** | ServerStorage/Config | Templates de efectos (data-driven) |
-| **CameraController** | StarterPlayerScripts/Controllers | Camera shake y screen flash |
-| **UIController** | StarterPlayerScripts/Controllers | Animaciones UI (tweens, hover, feedback) |
-| **CameraShake_Client** | StarterPlayerScripts | Bridge servidor→cliente para shakes |
-
-### 🔧 MÓDULOS REFACTORIZADOS (mantienen funcionalidad)
-
-| Módulo | Cambios | Compatibilidad |
-|--------|---------|----------------|
-| **EventManager** | Agrega VFXManager calls en meteoritos | ✅ 100% compatible |
-| **Shop_client** | Agrega UIController animations | ✅ 100% compatible |
-
----
-
-## 🚀 INSTALACIÓN PASO A PASO
-
-### FASE 1: Copiar Módulos Nuevos (5 minutos)
-
-1. **Abrir Roblox Studio** y tu proyecto Apocalypse Tycoon
-
-2. **Crear estructura de carpetas:**
-   ```
-   ServerStorage/
-   ├── Managers/ (crear si no existe)
-   └── Config/ (ya existe)
-
-   StarterPlayer/
-   └── StarterPlayerScripts/
-       └── Controllers/ (crear si no existe)
-   ```
-
-3. **Copiar archivos SERVER-SIDE:**
-   - `VFXManager.lua` → ServerStorage.Managers.VFXManager
-   - `VFXConfig.lua` → ServerStorage.Config.VFXConfig
-
-4. **Copiar archivos CLIENT-SIDE:**
-   - `CameraController.lua` → StarterPlayerScripts.Controllers.CameraController
-   - `UIController.lua` → StarterPlayerScripts.Controllers.UIController
-   - `CameraShake_Client.lua` → StarterPlayerScripts.CameraShake_Client
-
-5. **Crear RemoteEvent:**
-   - En `ReplicatedStorage.Remotes`, crear un **RemoteEvent** llamado `CameraShake`
-   - (O dejar que EventManager_REFACTORED lo cree automáticamente)
-
-### FASE 2: Integrar Refactors (3 minutos)
-
-6. **Reemplazar EventManager:**
-   - Renombrar tu `EventManager` actual a `EventManager_OLD` (backup)
-   - Copiar `EventManager_REFACTORED.lua` → ServerStorage.EventManager
-   - Verificar que `main_server.lua` lo requiera correctamente
-
-7. **Reemplazar Shop_client:**
-   - Renombrar tu `Shop_client` actual a `Shop_client_OLD` (backup)
-   - Copiar `Shop_client_REFACTORED.lua` → StarterGui.ShopUI.Shop_client
-
-### FASE 3: Testing (2 minutos)
-
-8. **Play en Roblox Studio:**
-   - Presiona **M** para spawnear meteorito → Debería verse trail épico + explosión
-   - Presiona **B** para abrir shop → Debería deslizarse suavemente
-   - Hover sobre botones → Deberían crecer + brillar
-   - Compra upgrade → Debería hacer bounce + partículas
-
-9. **Verificar consola:**
-   ```
-   [VFXManager] ✓ Módulo cargado con object pooling
-   [CameraController] ✓ Módulo cargado
-   [UIController] ✓ Módulo cargado
-   [EVENTMANAGER REFACTORED] ✓ Módulo cargado con VFX épicos
-   [QuickBuy REFACTORED] ✓ UI inicializada con animaciones
-   ```
-
----
-
-## 🎮 USAGE & EXAMPLES
-
-### 1. VFXManager (Server-side)
-
-```lua
-local VFXManager = require(game.ServerStorage.Managers.VFXManager)
-
--- Spawnear explosión
-VFXManager:PlayEffect("MeteorExplosion", Vector3.new(0, 10, 0))
-
--- Con parent custom
-VFXManager:PlayEffect("DamageHit", base.Position, workspace.Effects)
-
--- Efectos disponibles:
--- "MeteorTrail", "MeteorExplosion", "PurchaseSuccess",
--- "DamageHit", "IncomePopup", "ConstructionBuild"
-```
-
-### 2. CameraController (Client-side)
-
-```lua
-local CameraController = require(script.Parent.Controllers.CameraController)
-
--- Shake
-CameraController:Shake("Heavy", 0.8) -- Heavy shake por 0.8s
-CameraController:Shake("Medium", 0.5)
-CameraController:Shake("Light", 0.3)
-
--- Custom intensity
-CameraController:ShakeCustom(0.4, 0.6) -- intensity 0-1, duration
-
--- Flash de pantalla
-CameraController:Flash(Color3.fromRGB(255, 0, 0), 0.5, 0.3) -- color, intensity, duration
-```
-
-### 3. UIController (Client-side)
-
-```lua
-local UIController = require(script.Parent.Controllers.UIController)
-
--- Slide animations
-UIController:SlideIn(frame, "Left", 0.4) -- direction: Left/Right/Up/Down
-UIController:SlideOut(frame, "Right", 0.3)
-
--- Fade animations
-UIController:FadeIn(frame, 0.3)
-UIController:FadeOut(frame, 0.5)
-
--- Hover effects
-UIController:AddHoverEffect(button, "scale+glow")
--- Types: "scale", "glow", "color", "scale+glow"
-
--- Purchase feedback
-UIController:PlayPurchaseEffect(button)
-
--- Bounce
-UIController:Bounce(guiObject, 1.15) -- intensity multiplier
-```
-
-### 4. Camera Shake desde Server
-
-```lua
--- En servidor, triggear shake en cliente
-local CameraShake = ReplicatedStorage.Remotes.CameraShake
-CameraShake:FireClient(player, "Heavy", 0.5) -- intensity, duration
+├── src/
+│   ├── StarterGui/
+│   │   ├── ShopUI/Shop.client.lua ............ Cliente del shop con animaciones
+│   │   ├── DamageNumbers.client.lua .......... Números de daño flotantes
+│   │   ├── EventNotifier.client.lua .......... Notificador de eventos
+│   │   ├── BaseDeathUI.client.lua ............ UI de muerte
+│   │   └── BaseHUD/BaseHUD.client.lua ........ HUD principal
+│   └── StarterPlayer/StarterPlayerScripts/
+│       ├── ProximityUpgrades.client.lua ...... Sistema de compra por proximidad
+│       └── DebugControls.client.lua .......... Controles de debug (M/N keys)
+│
+├── docs/
+│   └── archive/ ............................. Documentación histórica
+│
+├── snippets/ ................................ Scripts de arreglos/testing
+│
+├── README.md ................................ Este archivo
+├── FEATURES.md .............................. Lista detallada de features
+└── CHANGELOG.md ............................. Historial de cambios
 ```
 
 ---
 
-## ⚙️ CONFIGURACIÓN AVANZADA
+## 🚀 CÓMO EMPEZAR
 
-### Ajustar efectos sin tocar código
+### Para Desarrolladores
 
-Edita `VFXConfig.lua` para cambiar:
-- Colores de partículas
-- Duración de efectos
-- Intensidad de explosiones
-- Sonidos
+1. **Abre el proyecto en Roblox Studio**
+2. **Estructura de carpetas:**
+   - `ServerStorage/` → Scripts del servidor
+   - `StarterPlayerScripts/` → Scripts del cliente
+   - `ReplicatedStorage/` → Scripts compartidos y Remotes
 
-**Ejemplo:** Cambiar color de explosión de meteorito:
+3. **Testing en Studio:**
+   - Presiona **Play** para iniciar el juego
+   - Presiona **M** para spawnear meteorito manual (debug)
+   - Presiona **N** para skip a la siguiente wave (debug)
+   - Presiona **B** para abrir/cerrar el shop
+
+4. **Debug Mode:**
+   - Automáticamente activado en Studio
+   - Ver logs en Output para troubleshooting
+
+### Para Jugadores
+
+1. **Spawneo Inicial:**
+   - Al entrar al juego, se te asigna una base automáticamente
+   - Tu base aparece en un círculo alrededor del centro del mapa
+
+2. **Controles:**
+   - **WASD** → Movimiento
+   - **Shift + WASD** → Dash direccional (evade meteoritos)
+   - **B** → Abrir/Cerrar Shop
+   - **Click** en botones del shop para comprar upgrades
+
+3. **Objetivo:**
+   - Sobrevive el mayor número de oleadas posible
+   - Gana dinero para comprar upgrades
+   - Derrota Bosses y Mini-Bosses para grandes recompensas
+
+---
+
+## 🔧 CONFIGURACIÓN
+
+### Ajustar Dificultad
+
+Edita `ServerStorage/Config/Config.lua`:
 
 ```lua
--- En VFXConfig.lua, línea ~50
-VFXConfig.MeteorExplosion = {
-    Particles = {
-        {
-            -- Cambiar este color:
-            Color = ColorSequence.new(Color3.fromRGB(255, 100, 0)), -- Naranja
-            -- A:
-            Color = ColorSequence.new(Color3.fromRGB(0, 255, 255)), -- Cyan
-        }
-    }
-}
+-- Vida de la base
+Config.BASE_MAX_HP = 100 -- Sube para hacer el juego más fácil
+
+-- Daño de meteoritos
+Config.METEOR_TYPES.Normal.Damage = 25 -- Baja para reducir dificultad
+
+-- Cooldown del dash
+-- En DashModule.client.lua línea 42
+local DASH_COOLDOWN = 2.5 -- Baja para más dashes
 ```
 
-### Desactivar efectos en mobile
-
-Los efectos automáticamente se reducen 50% en mobile para performance.
-
-Para desactivar completamente:
+### Ajustar Economía
 
 ```lua
--- En CameraController.lua
-CameraController:SetEnabled(false)
+-- En Config.lua
+Config.START_CASH = 100 -- Cash inicial
+Config.INCOME_TICK_INTERVAL = 1 -- Frecuencia de ingresos pasivos
 ```
+
+### Cambiar Efectos Visuales
+
+Edita `ServerStorage/Config/VFXConfig.lua` para cambiar colores, intensidad y duración de efectos visuales.
+
+---
+
+## 📈 ROADMAP
+
+### 🚧 En Desarrollo
+- 🔄 **Power-Ups System:** Power-ups temporales que dropean de enemigos
+- 🔄 **Pet Gacha System:** Huevos con pets que te siguen y dan bonuses
+
+### 💡 Futuras Features
+- ⏳ Sistema de Logros/Achievements
+- ⏳ Misiones Diarias/Semanales
+- ⏳ Sistema de Clima Dinámico
+- ⏳ Modo PvP (competición de bases)
+- ⏳ Leaderboards globales
 
 ---
 
 ## 🐛 TROUBLESHOOTING
 
-### ❌ Error: "VFXManager not found"
+### El juego no inicia
+- Verifica que todos los módulos estén en las carpetas correctas
+- Checa la consola (F9) para errores
+- Asegúrate de tener `ReplicatedStorage/Remotes/` con los RemoteEvents necesarios
 
-**Solución:** Verifica que `VFXManager.lua` esté en `ServerStorage.Managers.VFXManager`
+### Dash no funciona
+- Verifica que `DashModule.client.lua` esté en `StarterPlayerScripts/`
+- Checa que exista `ReplicatedStorage/Remotes/DashRequest` (RemoteEvent)
+- Cooldown default es 2.5s, espera entre dashes
 
-```lua
--- En EventManager_REFACTORED, línea ~25
-local VFXManager = require(script.Parent.Managers.VFXManager)
--- Debe funcionar si la estructura es correcta
-```
+### Shop no abre con B
+- Verifica que `Shop.client.lua` esté en `StarterGui/ShopUI/`
+- Asegúrate que el Frame principal del Shop se llame `ShopFrame`
 
-### ❌ Meteoritos no tienen explosión
-
-**Causa:** EventManager antiguo aún activo
-
-**Solución:**
-1. Deshabilita `EventManager` antiguo (disabled = true)
-2. Asegúrate que `main_server.lua` requiera `EventManager_REFACTORED`
-
-### ❌ Shop no desliza, aparece instantáneo
-
-**Causa:** UIController no encontrado
-
-**Solución:**
-1. Verifica que `UIController.lua` esté en `StarterPlayerScripts.Controllers.UIController`
-2. Verifica la línea 29 de `Shop_client_REFACTORED`:
-   ```lua
-   local UIController = require(script.Parent.Controllers.UIController)
-   ```
-
-### ❌ Camera shake no funciona
-
-**Causa:** RemoteEvent "CameraShake" no existe
-
-**Solución:**
-1. Crea manualmente `RemoteEvent` en `ReplicatedStorage.Remotes.CameraShake`
-2. O deja que `EventManager_REFACTORED` lo cree (checa la consola)
-
----
-
-## 📊 PERFORMANCE
-
-### Benchmarks (20 jugadores, PC medio)
-
-| Escenario | FPS (antes) | FPS (después) | Notas |
-|-----------|-------------|---------------|-------|
-| Idle (sin meteoritos) | 60 | 60 | ✅ Sin overhead |
-| 10 meteoritos activos | 55 | 58 | ✅ Pooling reduce lag |
-| 30 meteoritos (storm) | 45 | 50 | ✅ Mejor que antes |
-| Shop abierto | 60 | 60 | ✅ Tweens son lightweight |
-
-### Object Pooling Stats
-
-```lua
--- Ver stats del pool en runtime
-local stats = VFXManager:GetPoolStats()
-print(stats)
--- Output: {MeteorExplosion = {Active: 5, Pooled: 10}}
-```
-
-### Mobile Performance
-
-- Shake intensity reducido automáticamente (50%)
-- Partículas optimizadas (menos emisiones en mobile)
-- Target: 30 FPS en dispositivos medios ✅
-
----
-
-## 🎯 PRÓXIMOS PASOS (Fase 2)
-
-Una vez instalado Package 1, continuaremos con:
-
-### **Package 2: Profundidad de Gameplay** (Week 2)
-- ✅ Sistema de sinergias (combos entre upgrades)
-- ✅ Tech tree visual interactivo
-- ✅ Boss fights con mecánicas únicas
-- ✅ Achievements con recompensas
-
-### **Package 3: Polish Final** (Week 3)
-- ✅ Iluminación dinámica (día/noche)
-- ✅ Weather system (tormentas, niebla)
-- ✅ Settings menu completo
-- ✅ Tutorial interactivo
+### Meteoritos no causan daño
+- Verifica que `MeteorDamageSystem.lua` esté en `ServerStorage/`
+- Checa que `EventManager_REFACTORED.lua` esté activo
 
 ---
 
 ## 📞 SOPORTE
 
-Si encuentras bugs o tienes preguntas:
-
-1. **Revisa Troubleshooting** arriba
-2. **Verifica consola** para errores
-3. **Compara con código original** (backups _OLD)
-4. **Contacta al desarrollador** con:
+Para reportar bugs o sugerir features:
+1. Abre un **Issue** en GitHub
+2. Incluye:
    - Descripción del problema
-   - Screenshot de la consola
    - Pasos para reproducir
+   - Screenshots/Videos si es posible
+   - Logs de la consola (F9 en Roblox)
 
 ---
 
-## 📝 CHANGELOG
+## 📝 LICENCIA
 
-### v1.0 (Package 1 - Initial Release)
-
-**Added:**
-- ✅ VFXManager con object pooling
-- ✅ VFXConfig data-driven
-- ✅ CameraController (shake & flash)
-- ✅ UIController (animations & tweens)
-- ✅ EventManager refactor con VFX
-- ✅ Shop_client refactor con animaciones
-
-**Performance:**
-- ✅ Object pooling reduce instancing lag 40%
-- ✅ Mobile-safe (auto-reduce intensity)
-- ✅ 60 FPS target en PC medio
-
-**Compatibility:**
-- ✅ 100% compatible con código existente
-- ✅ No rompe BaseModule, EconomyModule, DataStoreModule
-- ✅ Drop-in replacement (solo copiar y reemplazar)
+Este proyecto es privado y propiedad de **pajarock**.
 
 ---
 
-## 🔥 ENJOY THE VISUAL IMPACT!
+## 🎉 CRÉDITOS
 
-**Tu tycoon ahora tiene la calidad visual de un juego AAA.**
+**Desarrollado con 💥 para crear la experiencia de tycoon apocalíptico definitiva**
 
-Presiona **M** en-game y observa la magia 🎆
-
----
-
-## 🛠️ TECH STACK
-
-- **Lenguaje:** Luau (--!strict mode)
-- **Engine:** Roblox
-- **Arquitectura:** Modular service-based
-- **Patterns:** Object pooling, Promise-based, Data-driven
-- **Performance:** 60 FPS target, mobile-optimized
-- **Compatibility:** Roblox 2024+
+*"Sobrevive. Construye. Domina."*
 
 ---
 
-**Desarrollado con 💥 para Apocalypse Tycoon**
+## 🔗 LINKS ÚTILES
 
-*"De tycoon básico a experiencia épica en 10 minutos"*
+- [FEATURES.md](FEATURES.md) - Lista completa de features implementadas
+- [CHANGELOG.md](CHANGELOG.md) - Historial de cambios
+- [docs/archive/](docs/archive/) - Documentación histórica
