@@ -72,38 +72,13 @@ title.Rotation = -2 -- Inclinación grafiti
 title.ZIndex = 2
 title.Parent = frame
 
--- ✅ FIX: Hacer el income widget más prominente y claro
-local info = Instance.new("TextLabel")
-info.Name = "Info"
-info.Size = UDim2.new(1, -20, 0, 32) -- ✅ Más alto (22→32)
-info.Position = UDim2.fromOffset(10, 42)
-info.BackgroundColor3 = Color3.fromRGB(20, 20, 25) -- ✅ Fondo semi-transparente
-info.BackgroundTransparency = 0.3
-info.Font = Enum.Font.GothamBold
-info.TextScaled = true
-info.TextXAlignment = Enum.TextXAlignment.Left
-info.TextColor3 = Color3.fromRGB(100, 255, 140)
-info.Text = "💰 $0\n⚡ 0/s"
-info.TextStrokeTransparency = 0.5
-info.ZIndex = 2
-info.Parent = frame
-
--- ✅ Agregar borde al widget de income
-local infoStroke = Instance.new("UIStroke")
-infoStroke.Color = Color3.fromRGB(100, 255, 140)
-infoStroke.Thickness = 2
-infoStroke.Transparency = 0.5
-infoStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-infoStroke.Parent = info
-
--- ✅ Agregar esquinas redondeadas
-Instance.new("UICorner", info).CornerRadius = UDim.new(0, 6)
+-- ✅ ELIMINADO: Widget de income movido a CashIncomeWidget centralizado
 
 local list = Instance.new("Frame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 80) -- ✅ FIX: Ajustado de 70 a 80 para dar espacio al info widget más grande
-list.Size = UDim2.new(1, -20, 1, -90) -- ✅ FIX: Ajustado de -80 a -90
+list.Position = UDim2.fromOffset(10, 50) -- Ajustado: más arriba sin el info widget
+list.Size = UDim2.new(1, -20, 1, -60) -- Más espacio para la lista
 list.ZIndex = 2
 list.Parent = frame
 
@@ -230,8 +205,7 @@ local function refreshAll()
 		title.Text = "SHOP | 🛡️ NO SHIELD"
 	end
 
-	-- ✅ FIX: Formato mejorado para el widget de income (dos líneas, más legible)
-	info.Text = string.format("💰 %s\n⚡ %d/s", fmtMoney(cash), ips)
+	-- ✅ ELIMINADO: info widget (ahora en CashIncomeWidget centralizado)
 
 	for _, upgId in ipairs(ORDER) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]

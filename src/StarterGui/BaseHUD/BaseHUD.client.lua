@@ -137,31 +137,36 @@ repairPadding.PaddingBottom = UDim.new(0, 4)
 -- ✅ Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
 local function updateRepairButton()
-	local state = RequestBaseState:InvokeServer()
-	if not state then return end
+	-- ✅ FIX: Usar RequestRepairPreview del servidor (incluye streak escalable)
+	local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+	local RequestRepairPreview = Remotes:FindFirstChild("RequestRepairPreview")
 
-	local hp = state.BaseHP
-	local max = state.MaxHP
-	local missing = max - hp
-	local repairAmount = math.min(10, missing)
+	if not RequestRepairPreview then
+		warn("[BaseHUD] RequestRepairPreview remote no encontrado")
+		return
+	end
 
-	-- ✅ FIX: Calcular costo exactamente igual que en server (Main.Server línea 930-933)
-	local plr = game.Players.LocalPlayer
-	local leaderstats = plr:FindFirstChild("leaderstats")
-	local ips = leaderstats and leaderstats:FindFirstChild("IncomePerSec")
-	local incomePerSec = ips and ips.Value or 0
+	local ok, preview = pcall(function()
+		return RequestRepairPreview:InvokeServer()
+	end)
 
-	local baseCost = 100  -- ✅ FIX: Cambio de 50 a 100 (Config.REPAIR_COST_PER_HP)
-	local incomeScale = 1 + (incomePerSec / 10)
-	local hpScale = max / 100  -- ✅ FIX: Agregado el factor hpScale que faltaba
-	local cost = repairAmount * math.floor(baseCost * incomeScale * hpScale)
+	if not ok or not preview then
+		warn("[BaseHUD] Error obteniendo preview de repair")
+		return
+	end
 
-	if missing <= 0 then
+	if not preview.canRepair or preview.willHeal <= 0 then
 		repairBtn.Text = "✓ FULL!"
 		repairBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 		repairStroke.Color = Color3.fromRGB(150, 150, 150)
 	else
-		repairBtn.Text = string.format("REPAIR\n$%d", cost)
+		-- ✅ Mostrar streak si es > 0 (sistema escalable activo)
+		local streakText = ""
+		if preview.streak > 0 then
+			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque será el próximo
+		end
+
+		repairBtn.Text = string.format("REPAIR%s\n$%d", streakText, preview.cost)
 		repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
 		repairStroke.Color = Color3.fromRGB(0, 255, 100)
 	end

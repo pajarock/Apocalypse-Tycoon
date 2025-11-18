@@ -901,8 +901,52 @@ RequestSell.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 end)
 
 --═══════════════════════════════════════════════════════════════════════
--- SISTEMA DE REPARACIÓN
+-- SISTEMA DE REPARACIÓN (con streak escalable de EconomyModule)
 --═══════════════════════════════════════════════════════════════════════
+
+-- Remote para obtener preview del repair (no gasta dinero)
+local RequestRepairPreview = getOrCreateRemote("RequestRepairPreview", "Function") :: RemoteFunction
+
+RequestRepairPreview.OnServerInvoke = function(plr: Player)
+	local cur = Base.GetHP(plr.UserId)
+	local max = Base.GetMaxHP(plr.UserId)
+	local missing = math.max(0, max - cur)
+
+	if missing <= 0 then
+		return {
+			canRepair = false,
+			cost = 0,
+			streak = 0,
+			willHeal = 0,
+			message = "Already at full HP!"
+		}
+	end
+
+	local willHeal = math.min(10, missing) -- Reparar 10 HP por vez
+	local damageRatio = missing / max -- % de daño (0.0 - 1.0)
+
+	-- Obtener preview del EconomyModule (incluye streak)
+	local preview = Economy.GetRepairPreview(plr.UserId, damageRatio)
+
+	-- Ajustar costo por cantidad de HP a reparar
+	local costPerHP = preview.price / 10 -- El preview es para ~10 HP
+	local totalCost = math.floor(costPerHP * willHeal)
+
+	-- Gamepass: Instant repair (50% descuento)
+	if hasGamepass(plr.UserId, GAMEPASS_INSTANT_REPAIR) then
+		totalCost = math.floor(totalCost * 0.5)
+	end
+
+	return {
+		canRepair = preview.canAfford,
+		cost = totalCost,
+		streak = preview.streak,
+		willHeal = willHeal,
+		currentHP = cur,
+		maxHP = max
+	}
+end
+
 RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	amount = tonumber(amount) or 10
 	if amount <= 0 or amount > Config.MAX_REPAIR_PER_REQUEST then return end
@@ -914,7 +958,7 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	end
 
 	local cur = Base.GetHP(plr.UserId)
-	local max = Config.BASE_MAX_HP
+	local max = Base.GetMaxHP(plr.UserId)
 	local missing = math.max(0, max - cur)
 
 	if missing <= 0 then
@@ -922,48 +966,62 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		return
 	end
 
-	local will = math.min(missing, amount)
-	local s = Economy.GetState(plr.UserId)
-	if not s then return end
+	local willHeal = math.min(missing, amount)
+	local damageRatio = missing / max
 
-	-- Calcular costo con escala
-	local baseCost = Config.REPAIR_COST_PER_HP
-	local incomeScale = 1 + ((s.IncomePerSec or 0) / 10)
-	local hpScale = max / 100
-	local cost = will * math.floor(baseCost * incomeScale * hpScale)
+	-- ✅ USAR EconomyModule.TryRepair() con streak escalable
+	local ok, pricePaid, reason = Economy.TryRepair(plr.UserId, damageRatio)
 
-	-- Gamepass: Instant repair
-	if hasGamepass(plr.UserId, GAMEPASS_INSTANT_REPAIR) then
-		cost = math.floor(cost * 0.5) -- 50% de descuento
-	end
-
-	if s.Cash < cost then
-		notifyPlayer(plr, string.format("❌ Need $%d to repair!", cost), 2)
+	if not ok then
+		if reason == "NOT_ENOUGH_CASH" then
+			notifyPlayer(plr, string.format("❌ Need $%d to repair!", pricePaid), 2)
+		else
+			notifyPlayer(plr, "❌ Cannot repair!", 2)
+		end
 		return
 	end
 
-	s.Cash -= cost
-	Base.AddHP(plr.UserId, will)
+	-- Aplicar curación
+	Base.AddHP(plr.UserId, willHeal)
 
-	-- Sync
-	local ls = plr:FindFirstChild("leaderstats")
-	if ls then
-		local c = ls:FindFirstChild("Cash") :: IntValue?
-		if c then c.Value = s.Cash end
+	-- ✅ Reset streak si llegó a HP máximo
+	if Base.GetHP(plr.UserId) >= max then
+		Economy.ResetRepairStreak(plr.UserId)
+		if DEBUG then
+			print(("[REPAIR] Streak reseteado - HP máximo alcanzado"):format())
+		end
 	end
 
+	-- Sync leaderstats
+	local s = Economy.GetState(plr.UserId)
+	if s then
+		local ls = plr:FindFirstChild("leaderstats")
+		if ls then
+			local c = ls:FindFirstChild("Cash") :: IntValue?
+			if c then c.Value = s.Cash end
+		end
+	end
+
+	-- Sync base state
 	BaseStateChanged:FireClient(plr, {
 		UserId = plr.UserId,
 		BaseHP = Base.GetHP(plr.UserId),
 		MaxHP = max,
 	})
 
-	-- ✅ Mostrar popup visual de gasto (-$XXX)
+	-- Mostrar popup visual de gasto (-$XXX)
 	if CashTick then
-		CashTick:FireClient(plr, -cost)  -- Enviar valor negativo
+		CashTick:FireClient(plr, -pricePaid)
 	end
 
-	notifyPlayer(plr, string.format("✓ Repaired +%d HP! -$%d", will, cost), 2)
+	notifyPlayer(plr, string.format("✓ Repaired +%d HP! -$%d", willHeal, pricePaid), 2)
+
+	if DEBUG then
+		local preview = Economy.GetRepairPreview(plr.UserId, 0)
+		print(("[REPAIR] userId=%d heal=%d cost=$%d streak=%d"):format(
+			plr.UserId, willHeal, pricePaid, preview.streak
+		))
+	end
 end)
 
 --═══════════════════════════════════════════════════════════════════════
