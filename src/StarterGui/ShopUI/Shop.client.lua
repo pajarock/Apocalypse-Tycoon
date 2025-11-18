@@ -130,7 +130,7 @@ local function makeRow(upgId: string): TextButton
 	btn.BackgroundColor3 = Color3.fromRGB(25, 80, 45)
 	btn.TextColor3 = Color3.new(1, 1, 1)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14
+	btn.TextScaled = true -- FIX: Auto-escalar para evitar overflow
 	btn.TextXAlignment = Enum.TextXAlignment.Left
 	btn.AutoButtonColor = true
 	btn.TextStrokeTransparency = 0.5
