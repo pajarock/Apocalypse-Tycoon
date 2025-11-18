@@ -278,6 +278,18 @@ function PowerUpModule.ActivatePowerUp(userId: number, powerUpId: string)
 	local def = PowerUpConfig.PowerUps[powerUpId]
 	if not def then return end
 
+	-- ✅ PREVENIR STACKING: Si ya tiene este powerup activo, expirar el viejo primero
+	local state = PlayerPowerUps[userId]
+	for i = #state.ActivePowerUps, 1, -1 do
+		if state.ActivePowerUps[i].PowerUpId == powerUpId then
+			if DEBUG then
+				print(("[PowerUpModule] ⚠️ Reemplazando powerup existente: %s para userId %d"):format(powerUpId, userId))
+			end
+			PowerUpModule.ExpirePowerUp(userId, powerUpId)
+			break
+		end
+	end
+
 	local duration = PowerUpConfig.GetRandomDuration(powerUpId)
 
 	-- Crear entrada de powerup activo
@@ -324,11 +336,25 @@ function PowerUpModule.ExpirePowerUp(userId: number, powerUpId: string)
 	local state = PlayerPowerUps[userId]
 
 	-- Buscar y remover powerup activo
-	for i, powerUp in ipairs(state.ActivePowerUps) do
-		if powerUp.PowerUpId == powerUpId then
+	local found = false
+	for i = #state.ActivePowerUps, 1, -1 do
+		if state.ActivePowerUps[i].PowerUpId == powerUpId then
+			-- Limpiar drones si es MiniDrone
+			if powerUpId == "MiniDrone" then
+				local droneData = state.ActivePowerUps[i].Data
+				if droneData and droneData.Drone and droneData.Drone.Parent then
+					droneData.Drone:Destroy()
+				end
+			end
+
 			table.remove(state.ActivePowerUps, i)
+			found = true
 			break
 		end
+	end
+
+	if not found and DEBUG then
+		warn(("[PowerUpModule] ⚠️ Intentó expirar powerup inexistente: %s para userId %d"):format(powerUpId, userId))
 	end
 
 	-- Llamar función de limpieza específica
@@ -340,13 +366,36 @@ function PowerUpModule.ExpirePowerUp(userId: number, powerUpId: string)
 		end
 	end
 
-	-- Cleanup específico por powerup
+	-- Cleanup específico por powerup (asegurar limpieza completa)
 	if powerUpId == "SuperDash" then
 		DashCooldownOverride[userId] = nil
 	elseif powerUpId == "IncomeBoost" then
 		IncomeBoostMultipliers[userId] = nil
 	elseif powerUpId == "MeteorJammer" then
 		MeteorJammerActive[userId] = nil
+	elseif powerUpId == "BaseShield" then
+		BaseShieldActive[userId] = nil
+	elseif powerUpId == "CriticalParry" then
+		CriticalParryActive[userId] = nil
+	elseif powerUpId == "MiniDrone" then
+		-- Limpiar todos los drones del jugador
+		if ActiveDrones[userId] then
+			for _, drone in ipairs(ActiveDrones[userId]) do
+				if drone and drone.Parent then
+					drone:Destroy()
+				end
+			end
+			ActiveDrones[userId] = {}
+		end
+	elseif powerUpId == "SpeedBoost" then
+		-- Restaurar velocidad original
+		local player = getPlayer(userId)
+		if player and player.Character then
+			local humanoid = player.Character:FindFirstChild("Humanoid") :: Humanoid?
+			if humanoid then
+				humanoid.WalkSpeed = 16 -- Velocidad default de Roblox
+			end
+		end
 	end
 
 	-- Notificar cliente

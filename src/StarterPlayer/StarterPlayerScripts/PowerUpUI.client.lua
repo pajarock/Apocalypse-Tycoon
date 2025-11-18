@@ -444,6 +444,30 @@ local PowerUpIcons = {
 
 -- Activar powerup
 PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: number)
+	print(("[PowerUpUI] 🎁 Activando powerup: %s (duración: %.1fs)"):format(powerUpId, duration or 0))
+
+	-- ✅ LIMPIAR powerup existente si ya está activo
+	if ActivePowerUpFrames[powerUpId] then
+		print(("[PowerUpUI] ⚠️ Ya existe powerup activo: %s - Limpiando..."):format(powerUpId))
+
+		-- Remover frame viejo
+		if ActivePowerUpFrames[powerUpId].Frame and ActivePowerUpFrames[powerUpId].Frame.Parent then
+			ActivePowerUpFrames[powerUpId].Frame:Destroy()
+		end
+
+		-- Remover efectos viejos
+		if ActiveEffects[powerUpId] then
+			for _, effect in ipairs(ActiveEffects[powerUpId]) do
+				if effect and effect.Parent then
+					effect:Destroy()
+				end
+			end
+			ActiveEffects[powerUpId] = nil
+		end
+
+		ActivePowerUpFrames[powerUpId] = nil
+	end
+
 	local color = PowerUpColors[powerUpId] or Color3.new(1, 1, 1)
 	local icon = PowerUpIcons[powerUpId] or "✨"
 
@@ -459,6 +483,7 @@ PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: num
 	if PowerUpVFXMap[powerUpId] then
 		local effects = PowerUpVFXMap[powerUpId]()
 		ActiveEffects[powerUpId] = effects
+		print(("[PowerUpUI] ✅ Efectos visuales creados para: %s"):format(powerUpId))
 	end
 
 	-- Notificación flotante
@@ -524,6 +549,8 @@ end)
 
 -- Expirar powerup
 PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
+	print(("[PowerUpUI] 🔄 Expirando powerup: %s"):format(powerUpId))
+
 	-- Remover frame de UI
 	if ActivePowerUpFrames[powerUpId] then
 		local data = ActivePowerUpFrames[powerUpId]
@@ -537,6 +564,9 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 			data.Frame:Destroy()
 		end
 		ActivePowerUpFrames[powerUpId] = nil
+		print(("[PowerUpUI] ✅ Frame de UI removido: %s"):format(powerUpId))
+	else
+		print(("[PowerUpUI] ⚠️ No se encontró frame activo para: %s"):format(powerUpId))
 	end
 
 	-- Remover efectos visuales
@@ -547,6 +577,7 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 			end
 		end
 		ActiveEffects[powerUpId] = nil
+		print(("[PowerUpUI] ✅ Efectos visuales removidos: %s"):format(powerUpId))
 	end
 end)
 

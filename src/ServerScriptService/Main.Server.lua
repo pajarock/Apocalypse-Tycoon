@@ -1762,16 +1762,32 @@ if eventsEnabled then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
 
-					-- ✅ POWERUP: Spawnear powerup al completar wave
+					-- ✅ POWERUP: Spawnear powerup al completar wave (solo cada 3 waves normales, o boss/miniboss)
+					local shouldSpawnPowerUp = false
 					local waveType = "Normal"
+
 					if ServerState.CurrentWave % 10 == 0 then
 						waveType = "Boss"
+						shouldSpawnPowerUp = true
 					elseif ServerState.CurrentWave % 5 == 0 then
 						waveType = "MiniBoss"
+						shouldSpawnPowerUp = true
+					elseif ServerState.CurrentWave % 3 == 0 then
+						-- Solo cada 3 waves normales (3, 6, 9, 12, etc)
+						waveType = "Normal"
+						shouldSpawnPowerUp = true
 					end
 
-					-- Spawnear powerup para el jugador
-					PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType)
+					-- Spawnear powerup solo si cumple la condición
+					if shouldSpawnPowerUp then
+						PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType)
+
+						if Config.DEBUG_MODE then
+							print(("[POWERUP] ✅ Spawneando powerup para %s - Wave %d (%s)"):format(
+								plr.Name, ServerState.CurrentWave, waveType
+							))
+						end
+					end
 
 					if Config.DEBUG_MODE then
 						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
