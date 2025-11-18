@@ -333,12 +333,32 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 		return 0
 	end
 
-	-- Invulnerable
+	-- 🔥 NUEVO: Chequear Shield Bubble power-up ANTES de invulnerabilidad
+	local player = Players:GetPlayerByUserId(userId)
+	if player and player:GetAttribute("ShieldActive") then
+		state.LastDamageTime = now
+
+		if DEBUG then
+			print(("[BaseModule] 🛡️ SHIELD BUBBLE! userId %d bloqueó %d de daño"):format(userId, rawDamage))
+		end
+
+		-- Notificar al cliente (opcional, para feedback visual)
+		local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
+		if Remotes then
+			local DashEvaded = Remotes:FindFirstChild("DashEvaded")
+			if DashEvaded and DashEvaded:IsA("RemoteEvent") then
+				DashEvaded:FireClient(player, rawDamage)
+			end
+		end
+
+		return 0 -- Invulnerable gracias al power-up
+	end
+
+	-- Invulnerable (dash system)
 	if state.IsInvulnerable then
 		state.LastDamageTime = now
 
 		-- ✅ NUEVO: Notificar al cliente que evadió daño exitosamente
-		local player = Players:GetPlayerByUserId(userId)
 		if player then
 			local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
 			if Remotes then
@@ -686,6 +706,51 @@ function BaseModule.HealOnRespawn(userId: number)
 	if DEBUG then
 		print(("[BaseModule] Heal on respawn - userId %d: +%d HP"):format(userId, healAmount))
 	end
+end
+
+-------------------------------------------------------------------------
+-- 🔥 NUEVO: HEAL FUNCTION (Para Auto-Repair Power-Up)
+-------------------------------------------------------------------------
+
+function BaseModule.Heal(userId: number, amount: number): number
+	if not BaseState[userId] then
+		if DEBUG then
+			warn(("[BaseModule] Heal: Usuario %d no inicializado"):format(userId))
+		end
+		return 0
+	end
+
+	local state = BaseState[userId]
+	local currentHP = state.HP or 0
+	local maxHP = state.MaxHP or Config.BASE_MAX_HP
+
+	-- Calcular cuánto se puede curar (no exceder maxHP)
+	local actualHeal = math.min(amount, maxHP - currentHP)
+
+	if actualHeal <= 0 then
+		return 0 -- Ya está a full HP
+	end
+
+	-- Aplicar curación
+	state.HP = math.min(currentHP + actualHeal, maxHP)
+
+	if DEBUG then
+		print(("[BaseModule] 🔧 HEAL userId %d: +%d HP (%d → %d)"):format(
+			userId, actualHeal, currentHP, state.HP
+		))
+	end
+
+	-- Actualizar visuales si BaseVisualsManager está disponible
+	local BaseVisualsManager = nil
+	pcall(function()
+		BaseVisualsManager = require(game.ServerStorage.Managers.BaseVisualsManager)
+	end)
+
+	if BaseVisualsManager and BaseVisualsManager.UpdateBaseVisuals then
+		BaseVisualsManager.UpdateBaseVisuals(userId, state.HP, maxHP)
+	end
+
+	return actualHeal
 end
 
 -------------------------------------------------------------------------

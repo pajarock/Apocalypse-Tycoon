@@ -298,11 +298,29 @@ end
 
 -- Pago periódico
 function EconomyModule.TickAll()
-	for _, s in pairs(_stateByUser) do
+	local Players = game:GetService("Players")
+
+	for uid, s in pairs(_stateByUser) do
 		local incPerTick = (s.IncomePerSec or 0) * (TICK_SECS > 0 and TICK_SECS or 1)
 		if incPerTick > 0 then
-			s.Cash = clampCash(s.Cash + incPerTick)
-			s.TotalEarned += incPerTick
+			-- 🔥 NUEVO: Aplicar multiplicador de Coin Rain power-up
+			local multiplier = 1
+			local player = Players:GetPlayerByUserId(uid)
+			if player then
+				multiplier = player:GetAttribute("CoinMultiplier") or 1
+			end
+
+			local finalIncome = incPerTick * multiplier
+
+			s.Cash = clampCash(s.Cash + finalIncome)
+			s.TotalEarned += finalIncome
+
+			-- Debug solo si hay multiplicador activo
+			if DEBUG and multiplier > 1 then
+				print(("[ECONOMY] 💰 Coin Rain! uid=%d income=%.1f (x%.1f)"):format(
+					uid, finalIncome, multiplier
+				))
+			end
 		end
 	end
 end
