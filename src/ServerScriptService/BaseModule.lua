@@ -75,7 +75,7 @@ end
 -- ESTADO
 -------------------------------------------------------------------------
 
-local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived}
+local BaseState = {} -- [userId] = {HP, MaxHP, LastDamageTime, IsInvulnerable, ShieldLevel, MeteorsSurvived, DiedDuringWave}
 local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 local ActiveGuardianTasks = {} -- [userId] = task thread
 
@@ -97,6 +97,7 @@ function BaseModule.InitPlayer(userId: number)
 		return
 	end
 
+	-- ? Flag para detectar muerte durante wave actual
 	BaseState[userId] = {
 		HP = Config.BASE_MAX_HP,
 		MaxHP = Config.BASE_MAX_HP,
@@ -104,7 +105,8 @@ function BaseModule.InitPlayer(userId: number)
 		IsInvulnerable = false,
 		ShieldLevel = 0,
 		MeteorsSurvived = 0,
-		RegenEnabled = true
+		RegenEnabled = true,
+		DiedDuringWave = false
 	}
 
 	if DEBUG then
@@ -120,6 +122,53 @@ function BaseModule.RemovePlayer(userId: number)
 	end
 end
 
+function BaseModule.IncreaseMaxHP(userId: number, amount: number)
+	if not BaseState[userId] then return end
+
+	BaseState[userId].MaxHP += amount
+	BaseState[userId].HP = math.min(
+		BaseState[userId].HP + amount,
+		BaseState[userId].MaxHP
+	)
+
+	if DEBUG then
+		print(("[BaseModule] Max HP aumentado - userId %d: %d"):format(
+			userId, BaseState[userId].MaxHP
+			))
+	end
+
+	-- Actualizar visuales
+	local BaseVisualsManager = require(game.ServerStorage.Managers.BaseVisualsManager)
+	BaseVisualsManager.UpdateBaseVisuals(
+		userId,
+		BaseState[userId].HP,
+		BaseState[userId].MaxHP
+	)
+end
+
+-- Getter para MaxHP
+function BaseModule.GetMaxHP(userId: number): number
+	if not BaseState[userId] then
+		return Config.BASE_MAX_HP
+	end
+
+	return BaseState[userId].MaxHP
+end
+
+--[[
+Luego en Main.Server, cuando compren Upgrade_7:
+]]
+
+if upgradeId == "Upgrade_7" then
+	-- ? Aumentar MaxHP individual del jugador
+	Base.IncreaseMaxHP(plr.UserId, 5)
+
+	if DEBUG then
+		print(("[PURCHASE] Max HP de %s aumentado a %d"):format(
+			plr.Name, Base.GetMaxHP(plr.UserId)
+			))
+	end
+end
 -------------------------------------------------------------------------
 -- HP MANAGEMENT
 -------------------------------------------------------------------------
@@ -256,6 +305,7 @@ local DEFAULTS = {
 	IsInvulnerable = false,
 	LastDamageTime = -1e9,
 	MeteorsSurvived = 0,
+	DiedDuringWave = false
 }
 
 local function ensureState(userId: number)
@@ -270,6 +320,7 @@ local function ensureState(userId: number)
 	if type(s.IsInvulnerable) ~= "boolean" then s.IsInvulnerable = DEFAULTS.IsInvulnerable end
 	if type(s.LastDamageTime) ~= "number" then s.LastDamageTime = DEFAULTS.LastDamageTime end
 	if type(s.MeteorsSurvived) ~= "number" then s.MeteorsSurvived = DEFAULTS.MeteorsSurvived end
+	if type(s.DiedDuringWave) ~= "boolean" then s.DiedDuringWave = DEFAULTS.DiedDuringWave end
 	return s
 end
 
@@ -325,12 +376,19 @@ end
 -- SISTEMA DE PENALIZACIONES POR MUERTE DE BASE
 -------------------------------------------------------------------------
 
-local PendingMoneyReductions = {}
-local ActiveGuardianTasks = {}
+-- ? ARREGLADO: Removidas declaraciones duplicadas - usar las de línea 79-80
 
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
 		print(("[BaseModule] ?? BASE DESTRUIDA - userId %d"):format(userId))
+	end
+
+	-- ? MARCAR QUE MURIÓ DURANTE ESTA WAVE
+	if BaseState[userId] then
+		BaseState[userId].DiedDuringWave = true
+		if DEBUG then
+			print(("[BaseModule] ?? Flag DiedDuringWave activado para userId %d"):format(userId))
+		end
 	end
 
 	local player = Players:GetPlayerByUserId(userId)
@@ -422,6 +480,17 @@ function BaseModule.OnBaseDead(userId: number)
 		while tick() - startTime < forceDuration do
 			task.wait(checkInterval)
 
+			-- ? Leer el target actual desde PendingMoneyReductions (puede cambiar con compras)
+			local protection = PendingMoneyReductions[userId]
+			if not protection then
+				if DEBUG then
+					print(("[BaseModule] ?? Guardian: Protección eliminada externamente"):format())
+				end
+				break
+			end
+
+			local targetAmount = protection.TargetAmount
+
 			-- Verificar si el jugador sigue conectado
 			local plr = Players:GetPlayerByUserId(userId)
 			if not plr then
@@ -439,28 +508,33 @@ function BaseModule.OnBaseDead(userId: number)
 				break
 			end
 
-			-- Si el dinero cambió, forzar de vuelta
-			if cash.Value ~= newAmount then
+			-- ? ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
+			if cash.Value < targetAmount then
 				local oldValue = cash.Value
 
-				-- ?? ACTUALIZAR AMBOS LUGARES
-				cash.Value = newAmount
+				-- Forzar al mínimo solo si bajó
+				cash.Value = targetAmount
 
 				if Economy then
 					local state = Economy.GetState(userId)
 					if state then
-						state.Cash = newAmount
+						state.Cash = targetAmount
 					end
 				end
 
 				if DEBUG then
-					print(("[BaseModule] ?? DETECTIVE: Dinero cambió de $%d ? $%d"):format(
-						newAmount, oldValue
+					print(("[BaseModule] ??? Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
+						targetAmount, oldValue
 						))
-					print(("[BaseModule] ??? Guardian FORZÓ: $%d ? $%d"):format(
-						oldValue, newAmount
+					print(("[BaseModule] ??? Guardian RESTAURÓ: $%d ? $%d"):format(
+						oldValue, targetAmount
 						))
 				end
+			elseif DEBUG and cash.Value > targetAmount then
+				-- Income normal funcionando, no hacer nada
+				print(("[BaseModule] ? Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
+					cash.Value, targetAmount
+					))
 			end
 		end
 
@@ -620,6 +694,40 @@ function BaseModule.GetMeteorsSurvived(userId: number): number
 end
 
 -------------------------------------------------------------------------
+-- WAVE DEATH TRACKING (para sistema de waves)
+-------------------------------------------------------------------------
+
+-- ? Resetear flag al inicio de cada wave
+function BaseModule.ResetWaveDeathFlag(userId: number)
+	if not BaseState[userId] then return end
+
+	BaseState[userId].DiedDuringWave = false
+
+	if DEBUG then
+		print(("[BaseModule] ?? Flag DiedDuringWave reseteado para userId %d"):format(userId))
+	end
+end
+
+-- ? Verificar si murió durante la wave actual
+function BaseModule.DiedDuringCurrentWave(userId: number): boolean
+	if not BaseState[userId] then return false end
+	return BaseState[userId].DiedDuringWave or false
+end
+
+-- ? Resetear flags de TODOS los jugadores (llamar al inicio de cada wave)
+function BaseModule.ResetAllWaveDeathFlags()
+	for userId, state in pairs(BaseState) do
+		if state and type(state) == "table" then
+			state.DiedDuringWave = false
+		end
+	end
+
+	if DEBUG then
+		print("[BaseModule] ?? Flags DiedDuringWave reseteados para todos los jugadores")
+	end
+end
+
+-------------------------------------------------------------------------
 -- REGENERATION SYSTEM
 -------------------------------------------------------------------------
 
@@ -660,8 +768,6 @@ task.spawn(function()
 		end
 	end
 end)
-
-local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 
 -------------------------------------------------------------------------
 -- DEBUG COMMANDS
@@ -765,4 +871,44 @@ end
 	end
 end)
 --]]
+
+-------------------------------------------------------------------------
+-- ? ACTUALIZAR GUARDIAN DESPUÉS DE COMPRAS LEGÍTIMAS
+-------------------------------------------------------------------------
+
+function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
+	local protection = PendingMoneyReductions[userId]
+
+	-- ? Si no existe pero hay guardian task activo, crear la entrada
+	if not protection then
+		if ActiveGuardianTasks[userId] then
+			-- Guardian activo pero sin PendingMoneyReductions - crearlo
+			PendingMoneyReductions[userId] = {
+				TargetAmount = newTarget,
+				StartTime = tick(),
+				Duration = 120
+			}
+
+			if DEBUG then
+				print(("[BaseModule] ??? Guardian: Creada protección para compra legítima - Target: $%d"):format(newTarget))
+			end
+		else
+			if DEBUG then
+				print(("[BaseModule] ?? No hay Guardian activo para userId %d"):format(userId))
+			end
+		end
+		return
+	end
+
+	-- Actualizar el target amount
+	local oldTarget = protection.TargetAmount
+	protection.TargetAmount = newTarget
+
+	if DEBUG then
+		print(("[BaseModule] ??? Guardian: Target actualizado $%d ? $%d para userId %d (compra legítima)"):format(
+			oldTarget, newTarget, userId
+			))
+	end
+end
+
 return BaseModule

@@ -1,0 +1,114 @@
+{
+  "name": "Apocalypse Tycoon",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$path": "src/ReplicatedFirst"
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$path": "src/ReplicatedStorage",
+      "Remotes": {
+        "$className": "Folder",
+        "$path": "src/ReplicatedStorage/Remotes"
+      },
+      "EnvTogle": {
+        "$className": "Folder",
+        "$path": "src/ReplicatedStorage/EnvTogle"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "src/ServerScriptService",
+      "CreateRemotes": {
+        "$path": "src/ServerScriptService/CreateRemotes.server.lua"
+      },
+      "DamageTest": {
+        "$path": "src/ServerScriptService/DamageTest.lua"
+      },
+      "LightingPreset.server": {
+        "$path": "src/ServerScriptService/LightingPreset.server.lua"
+      },
+      "Main.server": {
+        "$path": "src/ServerScriptService/Main.server.lua"
+      },
+      "Main.server.lua_OLD": {
+        "$path": "src/ServerScriptService/Main.server.lua_OLD.lua"
+      },
+      "AchievementModule": {
+        "$path": "src/ServerScriptService/AchievementModule.lua"
+      },
+      "BaseModule": {
+        "$path": "src/ServerScriptService/BaseModule.lua"
+      },
+      "DataStoreModule": {
+        "$path": "src/ServerScriptService/DataStoreModule.lua"
+      },
+      "EconomyModule": {
+        "$path": "src/ServerScriptService/EconomyModule.lua"
+      },
+      "EventManager": {
+        "$path": "src/ServerScriptService/EventManager.lua"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "$path": "src/ServerStorage",
+      "Config": {
+        "$className": "Folder",
+        "$path": "src/ServerStorage/Config"
+      },
+      "Managers": {
+        "$className": "Folder",
+        "$path": "src/ServerStorage/Managers"
+      },
+      "Models": {
+        "$className": "Folder",
+        "$path": "src/ServerStorage/Models"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$path": "src/StarterGui",
+      "DamageNumbers": {
+        "$className": "Folder",
+        "$path": "src/StarterGui/DamageNumbers"
+      },
+      "EventNotifier": {
+        "$className": "Folder",
+        "$path": "src/StarterGui/EventNotifier"
+      },
+      "BaseHUD": {
+        "$className": "Folder",
+        "$path": "src/StarterGui/BaseHUD"
+      },
+      "ShopUI": {
+        "$className": "Folder",
+        "$path": "src/StarterGui/ShopUI"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts",
+        "Controllers": {
+          "$className": "Folder",
+          "$path": "src/StarterPlayer/StarterPlayerScripts/Controllers"
+        }
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "$path": "src/StarterPlayer/StarterCharacterScripts"
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$path": "src/Workspace"
+    }
+  },
+  "globIgnorePaths": [
+    "src/**/__Rojo_*"
+  ]
+}
