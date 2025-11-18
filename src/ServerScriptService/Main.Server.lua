@@ -70,8 +70,14 @@ local Economy = require(ServerScriptService.EconomyModule)
 local Events = require(ServerScriptService.EventManager)
 local Base = require(ServerScriptService.BaseModule)
 
+-- ✅ POWERUP SYSTEM
+local PowerUpModule = require(ServerScriptService.PowerUpModule)
+
 -- ✅ NUEVO: Inyectar BaseModule en EventManager (arregla dependencia circular)
 Events:SetBaseModule(Base)
+
+-- ✅ Inyectar dependencias en PowerUpModule
+PowerUpModule.SetDependencies(Base, Economy)
 
 -- Módulo de achievements (crear si no existe)
 local Achievements = ServerScriptService:FindFirstChild("AchievementModule")
@@ -1337,8 +1343,11 @@ DashRequest.OnServerEvent:Connect(function(plr: Player, direction: Vector3?)
 	local userId = plr.UserId
 	local now = tick()
 
-	-- Verificar cooldown
-	if DashCooldowns[userId] and now - DashCooldowns[userId] < DASH_COOLDOWN then
+	-- ✅ POWERUP: Verificar si SuperDash está activo (sin cooldown)
+	local hasSuperDash = PowerUpModule.IsSuperDashActive and PowerUpModule.IsSuperDashActive(userId)
+
+	-- Verificar cooldown (ignorar si tiene SuperDash)
+	if not hasSuperDash and DashCooldowns[userId] and now - DashCooldowns[userId] < DASH_COOLDOWN then
 		if Config.DEBUG_MODE then
 			local remaining = math.ceil(DASH_COOLDOWN - (now - DashCooldowns[userId]))
 			warn(("[DASH] %s en cooldown (%ds restantes)"):format(plr.Name, remaining))
@@ -1752,6 +1761,17 @@ if eventsEnabled then
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
+
+					-- ✅ POWERUP: Spawnear powerup al completar wave
+					local waveType = "Normal"
+					if ServerState.CurrentWave % 10 == 0 then
+						waveType = "Boss"
+					elseif ServerState.CurrentWave % 5 == 0 then
+						waveType = "MiniBoss"
+					end
+
+					-- Spawnear powerup para el jugador
+					PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType)
 
 					if Config.DEBUG_MODE then
 						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))

@@ -39,6 +39,20 @@ local RunService = game:GetService("RunService")
 -- ✅ ARREGLADO: Eliminado require de EventManager (dependencia circular)
 -- local EventManager = require(game.ServerScriptService:WaitForChild("EventManager"))
 
+-- ✅ POWERUP MODULE (lazy load para evitar circular dependency)
+local PowerUpModule = nil
+local function getPowerUpModule()
+	if not PowerUpModule then
+		local ok, mod = pcall(function()
+			return require(game.ServerScriptService:WaitForChild("PowerUpModule"))
+		end)
+		if ok then
+			PowerUpModule = mod
+		end
+	end
+	return PowerUpModule
+end
+
 -------------------------------------------------------------------------
 -- CONFIGURACIÓN
 -------------------------------------------------------------------------
@@ -354,6 +368,30 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 
 		return 0
 	end
+
+	-- ✅ POWERUP: Mini Drone - Verificar si puede interceptar el daño
+	local pum = getPowerUpModule()
+	if pum and pum.TryDroneIntercept and pum.TryDroneIntercept(userId) then
+		state.LastDamageTime = now
+		if DEBUG then
+			print(("[BaseModule] 🛸 DRON INTERCEPTÓ! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+		end
+		return 0
+	end
+
+	-- ✅ POWERUP: Base Shield - Verificar si puede bloquear el daño
+	if pum and pum.TryUseBaseShield and pum.TryUseBaseShield(userId) then
+		state.LastDamageTime = now
+		if DEBUG then
+			print(("[BaseModule] 🛡️ BASE SHIELD! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+		end
+		return 0
+	end
+
+	-- ✅ POWERUP: Critical Parry - Marcar posición del meteorito para parry
+	local meteorPosition = nil
+	-- La posición del meteorito debería pasarse como parámetro, por ahora usamos nil
+	-- Esto se manejará cuando el meteorito impacte
 
 	-- Reducción por escudo
 	local shield = tonumber(state.ShieldLevel) or 0

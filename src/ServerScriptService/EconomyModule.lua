@@ -835,6 +835,20 @@ end
 -- INCOME TICK SYSTEM
 -- ========================
 
+-- ✅ POWERUP MODULE (lazy load)
+local PowerUpModule = nil
+local function getPowerUpModule()
+	if not PowerUpModule then
+		local ok, mod = pcall(function()
+			return require(game.ServerScriptService:WaitForChild("PowerUpModule"))
+		end)
+		if ok then
+			PowerUpModule = mod
+		end
+	end
+	return PowerUpModule
+end
+
 function EconomyModule.TickAll()
 	local startTime = os.clock()
 	local tickCount = 0
@@ -843,6 +857,14 @@ function EconomyModule.TickAll()
 		ensureIncomeUpdated(s)
 
 		local incPerTick = (s.IncomePerSec or 0) * (TICK_SECS > 0 and TICK_SECS or 1)
+
+		-- ✅ POWERUP: Aplicar multiplier de IncomeBoost
+		local pum = getPowerUpModule()
+		if pum and pum.GetIncomeMultiplier then
+			local multiplier = pum.GetIncomeMultiplier(uid)
+			incPerTick = incPerTick * multiplier
+		end
+
 		if incPerTick > 0 then
 			local oldCash = s.Cash
 			s.Cash = clampCash(s.Cash + incPerTick)

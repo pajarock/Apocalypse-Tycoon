@@ -1,0 +1,607 @@
+--!strict
+--[[
+	═══════════════════════════════════════════════════════════════════════
+	POWERUP UI CLIENT - Apocalypse Tycoon
+	═══════════════════════════════════════════════════════════════════════
+
+	UI Cliente para mostrar:
+	✓ Powerups activos con temporizador
+	✓ Efectos visuales en el jugador (auras, trails, etc.)
+	✓ Notificaciones al recoger powerups
+	✓ HUD épico y tóxico
+
+	═══════════════════════════════════════════════════════════════════════
+--]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart") :: BasePart
+
+-- Remotes
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local PowerUpActivated = Remotes:WaitForChild("PowerUpActivated") :: RemoteEvent
+local PowerUpExpired = Remotes:WaitForChild("PowerUpExpired") :: RemoteEvent
+local PowerUpCollected = Remotes:WaitForChild("PowerUpCollected") :: RemoteEvent
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- ESTADO
+-- ═══════════════════════════════════════════════════════════════════════
+
+local ActivePowerUpFrames = {} -- {powerUpId: Frame}
+local ActiveEffects = {} -- {powerUpId: {effects}}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- CREAR HUD DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+local function createPowerUpHUD()
+	-- Crear ScreenGui
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "PowerUpHUD"
+	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.Parent = playerGui
+
+	-- Container de powerups activos (esquina superior derecha)
+	local container = Instance.new("Frame")
+	container.Name = "PowerUpContainer"
+	container.Size = UDim2.new(0, 300, 0, 500)
+	container.Position = UDim2.new(1, -320, 0, 20) -- Top right
+	container.BackgroundTransparency = 1
+	container.Parent = screenGui
+
+	-- UIListLayout para organizar powerups verticalmente
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 10)
+	listLayout.Parent = container
+
+	return container
+end
+
+local powerUpContainer = createPowerUpHUD()
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- CREAR FRAME DE POWERUP INDIVIDUAL
+-- ═══════════════════════════════════════════════════════════════════════
+
+local function createPowerUpFrame(powerUpId: string, duration: number, icon: string, color: Color3): Frame
+	local frame = Instance.new("Frame")
+	frame.Name = powerUpId
+	frame.Size = UDim2.new(1, 0, 0, 80)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.BackgroundTransparency = 0.3
+	frame.BorderSizePixel = 0
+
+	-- Corner radius
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = frame
+
+	-- Borde brillante del color del powerup
+	local border = Instance.new("UIStroke")
+	border.Color = color
+	border.Thickness = 3
+	border.Transparency = 0
+	border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	border.Parent = frame
+
+	-- Icono
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Name = "Icon"
+	iconLabel.Size = UDim2.new(0, 60, 0, 60)
+	iconLabel.Position = UDim2.new(0, 10, 0.5, -30)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Font = Enum.Font.GothamBold
+	iconLabel.TextScaled = true
+	iconLabel.TextColor3 = Color3.new(1, 1, 1)
+	iconLabel.Text = icon
+	iconLabel.Parent = frame
+
+	-- Nombre del powerup
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Name = "Name"
+	nameLabel.Size = UDim2.new(1, -80, 0, 30)
+	nameLabel.Position = UDim2.new(0, 80, 0, 10)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 18
+	nameLabel.TextColor3 = color
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.Text = powerUpId:gsub("(%u)", " %1"):sub(2) -- "GodShield" -> "God Shield"
+	nameLabel.Parent = frame
+
+	-- Barra de progreso
+	local progressBack = Instance.new("Frame")
+	progressBack.Name = "ProgressBack"
+	progressBack.Size = UDim2.new(1, -90, 0, 8)
+	progressBack.Position = UDim2.new(0, 80, 1, -20)
+	progressBack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	progressBack.BorderSizePixel = 0
+	progressBack.Parent = frame
+
+	local progressCorner = Instance.new("UICorner")
+	progressCorner.CornerRadius = UDim.new(1, 0)
+	progressCorner.Parent = progressBack
+
+	local progressBar = Instance.new("Frame")
+	progressBar.Name = "ProgressBar"
+	progressBar.Size = UDim2.new(1, 0, 1, 0)
+	progressBar.BackgroundColor3 = color
+	progressBar.BorderSizePixel = 0
+	progressBar.Parent = progressBack
+
+	local progressBarCorner = Instance.new("UICorner")
+	progressBarCorner.CornerRadius = UDim.new(1, 0)
+	progressBarCorner.Parent = progressBar
+
+	-- Timer label
+	local timerLabel = Instance.new("TextLabel")
+	timerLabel.Name = "Timer"
+	timerLabel.Size = UDim2.new(0, 60, 0, 30)
+	timerLabel.Position = UDim2.new(0, 80, 0, 40)
+	timerLabel.BackgroundTransparency = 1
+	timerLabel.Font = Enum.Font.GothamBold
+	timerLabel.TextSize = 16
+	timerLabel.TextColor3 = Color3.new(1, 1, 1)
+	timerLabel.TextXAlignment = Enum.TextXAlignment.Left
+	timerLabel.Text = string.format("%.1fs", duration)
+	timerLabel.Parent = frame
+
+	-- Animación de entrada (slide in desde la derecha)
+	frame.Position = UDim2.new(1, 0, 0, 0) -- Start off-screen
+	frame.Parent = powerUpContainer
+
+	local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+	local tween = TweenService:Create(frame, tweenInfo, {
+		Position = UDim2.new(0, 0, 0, 0)
+	})
+	tween:Play()
+
+	-- Efecto de brillo pulsante en el borde
+	task.spawn(function()
+		while frame and frame.Parent do
+			local pulseTween = TweenService:Create(border, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Transparency = 0.5
+			})
+			pulseTween:Play()
+			pulseTween.Completed:Wait()
+
+			pulseTween = TweenService:Create(border, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Transparency = 0
+			})
+			pulseTween:Play()
+			pulseTween.Completed:Wait()
+		end
+	end)
+
+	return frame
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- EFECTOS VISUALES EN EL PERSONAJE
+-- ═══════════════════════════════════════════════════════════════════════
+
+local function createGodShieldEffect(): {Instance}
+	local effects = {}
+
+	-- Aura brillante alrededor del jugador
+	local aura = Instance.new("Part")
+	aura.Name = "GodShieldAura"
+	aura.Size = Vector3.new(8, 8, 8)
+	aura.Anchored = true
+	aura.CanCollide = false
+	aura.Transparency = 0.7
+	aura.Material = Enum.Material.Neon
+	aura.Color = Color3.fromRGB(100, 200, 255)
+	aura.Parent = character
+
+	-- Mesh esférico
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = aura
+
+	-- Partículas
+	local particles = Instance.new("ParticleEmitter")
+	particles.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 200, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200)),
+	})
+	particles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	particles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	particles.Lifetime = NumberRange.new(1, 2)
+	particles.Rate = 50
+	particles.Speed = NumberRange.new(5, 10)
+	particles.SpreadAngle = Vector2.new(180, 180)
+	particles.LightEmission = 1
+	particles.Parent = aura
+
+	table.insert(effects, aura)
+
+	-- Animar aura para seguir al jugador y pulsar
+	task.spawn(function()
+		local t = 0
+		while aura and aura.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.016
+			local scale = 1 + math.sin(t * 5) * 0.2 -- Pulsar
+			mesh.Scale = Vector3.new(scale, scale, scale)
+			aura.CFrame = humanoidRootPart.CFrame
+			task.wait(0.016)
+		end
+	end)
+
+	return effects
+end
+
+local function createSpeedBoostEffect(): {Instance}
+	local effects = {}
+
+	-- Trail detrás del jugador
+	local attachment0 = Instance.new("Attachment")
+	attachment0.Name = "TrailAttachment0"
+	attachment0.Position = Vector3.new(0, -2, 0)
+	attachment0.Parent = humanoidRootPart
+
+	local attachment1 = Instance.new("Attachment")
+	attachment1.Name = "TrailAttachment1"
+	attachment1.Position = Vector3.new(0, 2, 0)
+	attachment1.Parent = humanoidRootPart
+
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = attachment0
+	trail.Attachment1 = attachment1
+	trail.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0))
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	trail.Lifetime = 0.5
+	trail.LightEmission = 1
+	trail.Parent = humanoidRootPart
+
+	table.insert(effects, trail)
+	table.insert(effects, attachment0)
+	table.insert(effects, attachment1)
+
+	return effects
+end
+
+local function createDoubleDamageEffect(): {Instance}
+	local effects = {}
+
+	-- Glow rojo en el personaje
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and not part.Name:match("Attachment") then
+			local originalColor = part.Color
+			part.Color = Color3.fromRGB(255, 50, 50)
+
+			-- Crear efecto de fuego
+			local fire = Instance.new("Fire")
+			fire.Color = Color3.fromRGB(255, 0, 0)
+			fire.SecondaryColor = Color3.fromRGB(255, 100, 0)
+			fire.Size = 3
+			fire.Heat = 5
+			fire.Parent = part
+
+			table.insert(effects, fire)
+
+			-- Restaurar color al terminar (se maneja en cleanup)
+			task.spawn(function()
+				while fire and fire.Parent do
+					task.wait()
+				end
+				if part and part.Parent then
+					part.Color = originalColor
+				end
+			end)
+		end
+	end
+
+	return effects
+end
+
+local function createBaseShieldEffect(): {Instance}
+	local effects = {}
+
+	-- Dome/esfera protectora en la base del jugador
+	-- (Esto iría en la base física, pero podemos hacer un indicador visual)
+
+	local indicator = Instance.new("Part")
+	indicator.Name = "BaseShieldIndicator"
+	indicator.Size = Vector3.new(1, 10, 1)
+	indicator.Anchored = true
+	indicator.CanCollide = false
+	indicator.Transparency = 0.5
+	indicator.Material = Enum.Material.Neon
+	indicator.Color = Color3.fromRGB(0, 255, 150)
+	indicator.CFrame = humanoidRootPart.CFrame
+	indicator.Parent = workspace
+
+	-- Mesh cilíndrico
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Cylinder
+	mesh.Parent = indicator
+
+	-- Animar indicador
+	task.spawn(function()
+		local t = 0
+		while indicator and indicator.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.016
+			indicator.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, t * 2, 0)
+			task.wait(0.016)
+		end
+	end)
+
+	table.insert(effects, indicator)
+
+	return effects
+end
+
+local function createCriticalParryEffect(): {Instance}
+	local effects = {}
+
+	-- Aura de carga violeta
+	local chargeAura = Instance.new("Part")
+	chargeAura.Name = "CriticalParryAura"
+	chargeAura.Size = Vector3.new(6, 6, 6)
+	chargeAura.Anchored = true
+	chargeAura.CanCollide = false
+	chargeAura.Transparency = 0.6
+	chargeAura.Material = Enum.Material.Neon
+	chargeAura.Color = Color3.fromRGB(255, 0, 255)
+	chargeAura.Parent = character
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = chargeAura
+
+	-- Partículas eléctricas
+	local particles = Instance.new("ParticleEmitter")
+	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	particles.Color = ColorSequence.new(Color3.fromRGB(255, 0, 200))
+	particles.Size = NumberSequence.new(0.5)
+	particles.Lifetime = NumberRange.new(0.5, 1)
+	particles.Rate = 30
+	particles.Speed = NumberRange.new(3, 6)
+	particles.LightEmission = 1
+	particles.Parent = chargeAura
+
+	table.insert(effects, chargeAura)
+
+	-- Animar
+	task.spawn(function()
+		local t = 0
+		while chargeAura and chargeAura.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.016
+			chargeAura.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, t * 3, 0)
+			task.wait(0.016)
+		end
+	end)
+
+	return effects
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- MAPEO DE EFECTOS VISUALES
+-- ═══════════════════════════════════════════════════════════════════════
+
+local PowerUpVFXMap = {
+	GodShield = createGodShieldEffect,
+	SpeedBoost = createSpeedBoostEffect,
+	DoubleDamage = createDoubleDamageEffect,
+	BaseShield = createBaseShieldEffect,
+	CriticalParry = createCriticalParryEffect,
+}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- MANEJO DE EVENTOS DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+local PowerUpColors = {
+	GodShield = Color3.fromRGB(100, 200, 255),
+	DoubleDamage = Color3.fromRGB(255, 50, 50),
+	SuperDash = Color3.fromRGB(255, 255, 100),
+	FullHeal = Color3.fromRGB(0, 255, 100),
+	MiniDrone = Color3.fromRGB(150, 150, 255),
+	SpeedBoost = Color3.fromRGB(255, 255, 0),
+	BaseShield = Color3.fromRGB(100, 255, 100),
+	MeteorJammer = Color3.fromRGB(200, 100, 255),
+	DefensiveBurst = Color3.fromRGB(255, 150, 0),
+	CriticalParry = Color3.fromRGB(255, 0, 255),
+	UltraCharge = Color3.fromRGB(255, 255, 255),
+	EggCatalyst = Color3.fromRGB(255, 200, 100),
+	IncomeBoost = Color3.fromRGB(255, 215, 0),
+}
+
+local PowerUpIcons = {
+	GodShield = "🛡️",
+	DoubleDamage = "⚔️",
+	SuperDash = "💨",
+	FullHeal = "❤️",
+	MiniDrone = "🛸",
+	SpeedBoost = "⚡",
+	BaseShield = "🛡️",
+	MeteorJammer = "📡",
+	DefensiveBurst = "💥",
+	CriticalParry = "🔥",
+	UltraCharge = "⚡",
+	EggCatalyst = "🥚",
+	IncomeBoost = "💰",
+}
+
+-- Activar powerup
+PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: number)
+	local color = PowerUpColors[powerUpId] or Color3.new(1, 1, 1)
+	local icon = PowerUpIcons[powerUpId] or "✨"
+
+	-- Crear frame de UI
+	local frame = createPowerUpFrame(powerUpId, duration, icon, color)
+	ActivePowerUpFrames[powerUpId] = {
+		Frame = frame,
+		StartTime = tick(),
+		Duration = duration,
+	}
+
+	-- Crear efectos visuales
+	if PowerUpVFXMap[powerUpId] then
+		local effects = PowerUpVFXMap[powerUpId]()
+		ActiveEffects[powerUpId] = effects
+	end
+
+	-- Notificación flotante
+	local notification = Instance.new("ScreenGui")
+	notification.Name = "PowerUpNotification"
+	notification.ResetOnSpawn = false
+	notification.Parent = playerGui
+
+	local notifFrame = Instance.new("Frame")
+	notifFrame.Size = UDim2.new(0, 400, 0, 100)
+	notifFrame.Position = UDim2.new(0.5, -200, 0, -150) -- Start above screen
+	notifFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	notifFrame.BackgroundTransparency = 0.2
+	notifFrame.BorderSizePixel = 0
+	notifFrame.Parent = notification
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 15)
+	corner.Parent = notifFrame
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = 4
+	stroke.Parent = notifFrame
+
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Size = UDim2.new(0, 80, 0, 80)
+	iconLabel.Position = UDim2.new(0, 10, 0.5, -40)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Font = Enum.Font.GothamBold
+	iconLabel.TextScaled = true
+	iconLabel.TextColor3 = Color3.new(1, 1, 1)
+	iconLabel.Text = icon
+	iconLabel.Parent = notifFrame
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, -100, 1, 0)
+	textLabel.Position = UDim2.new(0, 100, 0, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Font = Enum.Font.GothamBold
+	textLabel.TextSize = 24
+	textLabel.TextColor3 = color
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.Text = "POWERUP ACTIVATED!\n" .. powerUpId:gsub("(%u)", " %1"):sub(2)
+	textLabel.Parent = notifFrame
+
+	-- Animar notificación (slide in, hold, slide out)
+	local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, -200, 0, 50)
+	})
+	tweenIn:Play()
+
+	task.wait(2)
+
+	local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+		Position = UDim2.new(0.5, -200, 0, -150)
+	})
+	tweenOut:Play()
+	tweenOut.Completed:Wait()
+
+	notification:Destroy()
+end)
+
+-- Expirar powerup
+PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
+	-- Remover frame de UI
+	if ActivePowerUpFrames[powerUpId] then
+		local data = ActivePowerUpFrames[powerUpId]
+		if data.Frame and data.Frame.Parent then
+			-- Animación de salida (fade out)
+			local tweenOut = TweenService:Create(data.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Position = UDim2.new(1, 0, 0, 0)
+			})
+			tweenOut:Play()
+			tweenOut.Completed:Wait()
+			data.Frame:Destroy()
+		end
+		ActivePowerUpFrames[powerUpId] = nil
+	end
+
+	-- Remover efectos visuales
+	if ActiveEffects[powerUpId] then
+		for _, effect in ipairs(ActiveEffects[powerUpId]) do
+			if effect and effect.Parent then
+				effect:Destroy()
+			end
+		end
+		ActiveEffects[powerUpId] = nil
+	end
+end)
+
+-- Powerup recogido (feedback instantáneo)
+PowerUpCollected.OnClientEvent:Connect(function(powerUpId: string)
+	-- Sonido de pickup (puedes agregar un SoundService aquí)
+	-- Por ahora solo print
+	print(("[PowerUpUI] PowerUp recogido: %s"):format(powerUpId))
+end)
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- UPDATE LOOP PARA TIMERS
+-- ═══════════════════════════════════════════════════════════════════════
+
+RunService.RenderStepped:Connect(function()
+	local now = tick()
+
+	for powerUpId, data in pairs(ActivePowerUpFrames) do
+		if data.Frame and data.Frame.Parent then
+			local elapsed = now - data.StartTime
+			local remaining = math.max(0, data.Duration - elapsed)
+			local progress = data.Duration > 0 and (remaining / data.Duration) or 0
+
+			-- Actualizar timer label
+			local timerLabel = data.Frame:FindFirstChild("Timer")
+			if timerLabel then
+				timerLabel.Text = string.format("%.1fs", remaining)
+			end
+
+			-- Actualizar barra de progreso
+			local progressBar = data.Frame:FindFirstChild("ProgressBack"):FindFirstChild("ProgressBar")
+			if progressBar then
+				progressBar.Size = UDim2.new(progress, 0, 1, 0)
+			end
+		end
+	end
+end)
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- CHARACTER RESPAWN HANDLER
+-- ═══════════════════════════════════════════════════════════════════════
+
+player.CharacterAdded:Connect(function(newCharacter)
+	character = newCharacter
+	humanoidRootPart = character:WaitForChild("HumanoidRootPart") :: BasePart
+
+	-- Limpiar efectos anteriores
+	for _, effects in pairs(ActiveEffects) do
+		for _, effect in ipairs(effects) do
+			if effect and effect.Parent then
+				effect:Destroy()
+			end
+		end
+	end
+	ActiveEffects = {}
+end)
+
+print("[PowerUpUI] ✅ PowerUp UI Client inicializado")
