@@ -822,28 +822,27 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 		plr:SetAttribute("ShieldLevel", (plr:GetAttribute("ShieldLevel") or 0) + 1)
 	end
 
+	-- ✅ Upgrade_7: Wall Section (+5 HP max por compra)
 	if upgradeId == "Upgrade_7" then
-		Config.BASE_MAX_HP += 5
-		Base.SetMaxHP(plr.UserId, Config.BASE_MAX_HP)
-		Base.AddHP(plr.UserId, 5)
+		local currentMaxHP = Base.GetMaxHP(plr.UserId)
+		local newMaxHP = currentMaxHP + 5
+		Base.SetMaxHP(plr.UserId, newMaxHP)
+		Base.AddHP(plr.UserId, 5) -- Dar el HP extra inmediatamente
 		if DEBUG then
-			print(("[PURCHASE] Max HP aumentado a " .. Config.BASE_MAX_HP))
+			print(("[PURCHASE] Upgrade_7 - Max HP: %d → %d"):format(currentMaxHP, newMaxHP))
 		end
-	
-	
-	--[[local baseVisuals = ServerStorage.Managers:FindFirstChild("BaseVisualsManager")
-	if baseVisuals then
-		local BaseVisualsManager = require(baseVisuals)
-		BaseVisualsManager.UpdateBaseVisuals(
-			plr.UserId,
-			Base.GetHP(plr.UserId),
-			Config.BASE_MAX_HP  -- ← MaxHP nuevo
-		)
 	end
 
-	if DEBUG then
-		print(("[PURCHASE] Max HP aumentado a %d"):format(Config.BASE_MAX_HP))
-	end]]--
+	-- ✅ Upgrade_8: Reinforced Walls (+20 HP max por compra, sin modelo físico)
+	if upgradeId == "Upgrade_8" then
+		local currentMaxHP = Base.GetMaxHP(plr.UserId)
+		local newMaxHP = currentMaxHP + 20
+		Base.SetMaxHP(plr.UserId, newMaxHP)
+		Base.AddHP(plr.UserId, 20) -- Dar el HP extra inmediatamente
+		if DEBUG then
+			print(("[PURCHASE] Upgrade_8 - Max HP: %d → %d"):format(currentMaxHP, newMaxHP))
+		end
+	end
 end
 
 	-- Sync leaderstats

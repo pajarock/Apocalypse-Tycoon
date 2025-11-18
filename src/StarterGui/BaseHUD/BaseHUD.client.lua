@@ -136,72 +136,7 @@ repairPadding.PaddingBottom = UDim.new(0, 4)
 
 -- ✅ Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
-local function updateRepairButton()
-	-- ✅ FIX: Usar RequestRepairPreview del servidor (incluye streak escalable)
-	local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-	local RequestRepairPreview = Remotes:FindFirstChild("RequestRepairPreview")
-
-	if not RequestRepairPreview then
-		warn("[BaseHUD] RequestRepairPreview remote no encontrado")
-		return
-	end
-
-	local ok, preview = pcall(function()
-		return RequestRepairPreview:InvokeServer()
-	end)
-
-	if not ok or not preview then
-		warn("[BaseHUD] Error obteniendo preview de repair")
-		return
-	end
-
-	if not preview.canRepair or preview.willHeal <= 0 then
-		repairBtn.Text = "✓ FULL!"
-		repairBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-		repairStroke.Color = Color3.fromRGB(150, 150, 150)
-	else
-		-- ✅ Mostrar streak si es > 0 (sistema escalable activo)
-		local streakText = ""
-		if preview.streak > 0 then
-			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque será el próximo
-		end
-
-		repairBtn.Text = string.format("REPAIR%s\n$%d", streakText, preview.cost)
-		repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-		repairStroke.Color = Color3.fromRGB(0, 255, 100)
-	end
-end
-
-repairBtn.MouseButton1Click:Connect(function()
-	ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
-	task.wait(0.1)
-	updateRepairButton()
-	update()
-end)
-
--- Tecla R
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.R then
-		ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
-		task.wait(0.1)
-		updateRepairButton()
-		update()
-	end
-end)
-
--- Llamar updateRepairButton en el loop
-
--- Tecla R
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.R then
-		ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
-	end
-end)
-
+-- ✅ FIX: Definir función update() ANTES de usarla
 local function update()
 	local state = RequestBaseState:InvokeServer()
 	if not state then return end
@@ -250,6 +185,62 @@ local function update()
 
 	label.Text = string.format("%d/%d", hp, max)
 end
+
+local function updateRepairButton()
+	-- ✅ FIX: Usar RequestRepairPreview del servidor (incluye streak escalable)
+	local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+	local RequestRepairPreview = Remotes:FindFirstChild("RequestRepairPreview")
+
+	if not RequestRepairPreview then
+		warn("[BaseHUD] RequestRepairPreview remote no encontrado")
+		return
+	end
+
+	local ok, preview = pcall(function()
+		return RequestRepairPreview:InvokeServer()
+	end)
+
+	if not ok or not preview then
+		warn("[BaseHUD] Error obteniendo preview de repair")
+		return
+	end
+
+	if not preview.canRepair or preview.willHeal <= 0 then
+		repairBtn.Text = "✓ FULL!"
+		repairBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		repairStroke.Color = Color3.fromRGB(150, 150, 150)
+	else
+		-- ✅ Mostrar streak si es > 0 (sistema escalable activo)
+		local streakText = ""
+		if preview.streak > 0 then
+			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque será el próximo
+		end
+
+		repairBtn.Text = string.format("REPAIR%s\n$%d", streakText, preview.cost)
+		repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+		repairStroke.Color = Color3.fromRGB(0, 255, 100)
+	end
+end
+
+-- ✅ FIX: Click en botón de reparación
+repairBtn.MouseButton1Click:Connect(function()
+	ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
+	task.wait(0.1)
+	updateRepairButton()
+	update()
+end)
+
+-- ✅ FIX: Tecla R para reparar (sin duplicado)
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.R then
+		ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
+		task.wait(0.1)
+		updateRepairButton()
+		update()
+	end
+end)
 
 BaseStateChanged.OnClientEvent:Connect(update)
 
