@@ -66,12 +66,12 @@ screenGui.ResetOnSpawn = false
 screenGui.DisplayOrder = 5 -- Debajo del HUD permanente
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Contenedor principal
+-- Contenedor principal - REUBICADO ABAJO
 local mainContainer = Instance.new("Frame")
 mainContainer.Name = "MainContainer"
-mainContainer.AnchorPoint = Vector2.new(0.5, 0)
-mainContainer.Position = UDim2.new(0.5, 0, 0.08, 0)
-mainContainer.Size = UDim2.fromOffset(800, 110) -- Más grande
+mainContainer.AnchorPoint = Vector2.new(0.5, 1)
+mainContainer.Position = UDim2.new(0.5, 0, 0.85, 0) -- Parte inferior central
+mainContainer.Size = UDim2.fromOffset(700, 100) -- Más compacto
 mainContainer.BackgroundTransparency = 1
 mainContainer.Visible = false
 mainContainer.Rotation = -2 -- Inclinación grafiti
@@ -377,7 +377,132 @@ end
 local queue: {{any}} = {}
 local busy = false
 
+-- ============================================================================
+-- BOSS NOTIFICATION ÉPICA (PANTALLA COMPLETA)
+-- ============================================================================
+local function showBossNotification(message: string, duration: number?)
+	duration = duration or 5.0
+
+	-- Crear overlay épico
+	local bossGui = Instance.new("ScreenGui")
+	bossGui.Name = "BossNotification"
+	bossGui.DisplayOrder = 200 -- Encima de TODO
+	bossGui.Parent = playerGui
+
+	-- Flash rojo/dorado de fondo
+	local flash = Instance.new("Frame")
+	flash.Size = UDim2.fromScale(1, 1)
+	flash.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+	flash.BackgroundTransparency = 1
+	flash.BorderSizePixel = 0
+	flash.Parent = bossGui
+
+	-- Texto ÉPICO gigante
+	local bossText = Instance.new("TextLabel")
+	bossText.Size = UDim2.new(1, 0, 0.4, 0)
+	bossText.Position = UDim2.fromScale(0.5, 0.4)
+	bossText.AnchorPoint = Vector2.new(0.5, 0.5)
+	bossText.BackgroundTransparency = 1
+	bossText.Text = message
+	bossText.Font = Enum.Font.LuckiestGuy -- GRAFITI ÉPICO
+	bossText.TextScaled = true
+	bossText.TextColor3 = Color3.fromRGB(255, 50, 50)
+	bossText.TextStrokeTransparency = 0
+	bossText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	bossText.Rotation = -3
+	bossText.TextTransparency = 1
+	bossText.Parent = bossGui
+
+	-- Gradiente rojo intenso
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 50, 50)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 0, 0))
+	})
+	gradient.Rotation = 90
+	gradient.Parent = bossText
+
+	-- Animación DRAMÁTICA
+	-- Flash background
+	TweenService:Create(flash, TweenInfo.new(0.3), { BackgroundTransparency = 0.7 }):Play()
+	task.delay(0.3, function()
+		TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1 }):Play()
+	end)
+
+	-- Texto aparece con SHAKE
+	bossText.Size = UDim2.new(0.5, 0, 0.2, 0)
+	local appearTween = TweenService:Create(bossText, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+		Size = UDim2.new(1, 0, 0.4, 0),
+		TextTransparency = 0,
+		TextStrokeTransparency = 0
+	})
+	appearTween:Play()
+
+	-- Shake del texto
+	task.spawn(function()
+		local baseRot = -3
+		for i = 1, 6 do
+			bossText.Rotation = baseRot + math.random(-5, 5)
+			task.wait(0.08)
+		end
+		bossText.Rotation = baseRot
+	end)
+
+	-- Sonido épico
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://9114397505" -- Sonido grave épico
+	sound.Volume = 0.8
+	sound.Parent = game.SoundService
+	sound:Play()
+	Debris:AddItem(sound, 4)
+
+	-- Desaparecer después de duración
+	task.delay(duration, function()
+		TweenService:Create(bossText, TweenInfo.new(0.5), {
+			TextTransparency = 1,
+			TextStrokeTransparency = 1,
+			Position = UDim2.fromScale(0.5, 0.3)
+		}):Play()
+
+		task.wait(0.5)
+		bossGui:Destroy()
+	end)
+end
+
+-- ============================================================================
+-- NOTIFICATION NORMAL (con filtro de importantes)
+-- ============================================================================
 local function showNotification(message: string, typeTag: string?, duration: number?)
+	-- FILTRO: Detectar si es notificación de BOSS
+	if message:find("💀") or message:find("BOSS") or message:find("MINI%-BOSS") or message:find("COLOSSUS") then
+		showBossNotification(message, duration)
+		return
+	end
+
+	-- FILTRO: Solo mostrar notificaciones IMPORTANTES
+	local importantKeywords = {"WAVE", "COMPLETED", "VICTORY", "DEFEAT", "CRITICAL", "EPIC"}
+	local isImportant = false
+	for _, keyword in ipairs(importantKeywords) do
+		if message:upper():find(keyword) then
+			isImportant = true
+			break
+		end
+	end
+
+	-- Filtrar tipo CRITICAL o EPIC
+	if typeTag == "CRITICAL" or typeTag == "EPIC" or typeTag == "WARNING" then
+		isImportant = true
+	end
+
+	-- Si no es importante, ignorar
+	if not isImportant then
+		if DEBUG then
+			print("[EventNotifier] ⏭️ Notificación filtrada (no importante):", message)
+		end
+		return
+	end
+
 	typeTag = typeTag or CONFIG.DEFAULT_TYPE
 	duration = duration or CONFIG.DEFAULT_DURATION
 
@@ -442,7 +567,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	local expandTween = TweenService:Create(
 		mainContainer,
 		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Size = UDim2.fromOffset(800, 110) }
+		{ Size = UDim2.fromOffset(700, 100) }
 	)
 	expandTween:Play()
 
@@ -507,7 +632,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	local collapseTween = TweenService:Create(
 		mainContainer,
 		TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-		{ Size = UDim2.fromOffset(100, 110) }
+		{ Size = UDim2.fromOffset(100, 100) }
 	)
 	collapseTween:Play()
 	collapseTween.Completed:Wait()

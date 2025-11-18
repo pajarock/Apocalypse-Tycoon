@@ -58,7 +58,7 @@ shopGradient.Parent = shopStroke
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, -20, 0, 32)
+title.Size = UDim2.new(0.6, 0, 0, 32)
 title.Position = UDim2.fromOffset(10, 8)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.LuckiestGuy -- GRAFITI
@@ -72,19 +72,54 @@ title.Rotation = -2 -- Inclinación grafiti
 title.ZIndex = 2
 title.Parent = frame
 
-local info = Instance.new("TextLabel")
-info.Name = "Info"
-info.Size = UDim2.new(1, -20, 0, 22)
-info.Position = UDim2.fromOffset(10, 42)
-info.BackgroundTransparency = 1
-info.Font = Enum.Font.GothamBold
-info.TextScaled = true
-info.TextXAlignment = Enum.TextXAlignment.Left
-info.TextColor3 = Color3.fromRGB(100, 255, 140)
-info.Text = "Cash: $0 | IPS: 0"
-info.TextStrokeTransparency = 0.6
-info.ZIndex = 2
-info.Parent = frame
+-- Shield level (pequeño, al lado del título)
+local shieldLabel = Instance.new("TextLabel")
+shieldLabel.Name = "ShieldLabel"
+shieldLabel.Size = UDim2.new(0.35, 0, 0, 28)
+shieldLabel.Position = UDim2.new(1, -10, 0, 10)
+shieldLabel.AnchorPoint = Vector2.new(1, 0)
+shieldLabel.BackgroundTransparency = 1
+shieldLabel.Font = Enum.Font.GothamBold
+shieldLabel.TextScaled = true
+shieldLabel.TextXAlignment = Enum.TextXAlignment.Right
+shieldLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+shieldLabel.Text = "🛡 L0"
+shieldLabel.TextStrokeTransparency = 0.6
+shieldLabel.ZIndex = 2
+shieldLabel.Parent = frame
+
+-- Cash info
+local cashLabel = Instance.new("TextLabel")
+cashLabel.Name = "CashLabel"
+cashLabel.Size = UDim2.new(0.48, 0, 0, 20)
+cashLabel.Position = UDim2.fromOffset(10, 44)
+cashLabel.BackgroundTransparency = 1
+cashLabel.Font = Enum.Font.GothamBold
+cashLabel.TextScaled = true
+cashLabel.TextXAlignment = Enum.TextXAlignment.Left
+cashLabel.TextColor3 = Color3.fromRGB(100, 255, 140)
+cashLabel.Text = "💰 $0"
+cashLabel.TextStrokeTransparency = 0.6
+cashLabel.ZIndex = 2
+cashLabel.Parent = frame
+
+-- Income per second (NOTORIO)
+local incomeLabel = Instance.new("TextLabel")
+incomeLabel.Name = "IncomeLabel"
+incomeLabel.Size = UDim2.new(0.48, 0, 0, 20)
+incomeLabel.Position = UDim2.new(1, -10, 0, 44)
+incomeLabel.AnchorPoint = Vector2.new(1, 0)
+incomeLabel.BackgroundTransparency = 1
+incomeLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI para destacar
+incomeLabel.TextScaled = true
+incomeLabel.TextXAlignment = Enum.TextXAlignment.Right
+incomeLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+incomeLabel.Text = "⚡ 0/s"
+incomeLabel.TextStrokeTransparency = 0.3
+incomeLabel.TextStrokeColor3 = Color3.fromRGB(80, 60, 0)
+incomeLabel.Rotation = -1 -- Toque grafiti sutil
+incomeLabel.ZIndex = 2
+incomeLabel.Parent = frame
 
 local list = Instance.new("Frame")
 list.Name = "List"
@@ -209,8 +244,9 @@ local function refreshAll()
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	title.Text = string.format("SHOP | SHIELD L%d", shieldLevel)
-	info.Text = string.format("💰 %s | ⚡ %d/s", fmtMoney(cash), ips)
+	shieldLabel.Text = string.format("🛡 L%d", shieldLevel)
+	cashLabel.Text = string.format("💰 %s", fmtMoney(cash))
+	incomeLabel.Text = string.format("⚡%d/s", ips)
 
 	for _, upgId in ipairs(ORDER) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
@@ -229,11 +265,12 @@ local function refreshAll()
 	end
 end
 
--- Toggle con G
+-- Toggle con G - FIX: ocultar sombra también
 local open = true
 local function setOpen(v: boolean)
 	open = v
 	frame.Visible = open
+	shopShadow.Visible = open -- FIX: La sombra también se oculta
 end
 setOpen(true)
 

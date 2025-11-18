@@ -58,8 +58,9 @@ dashUI.Parent = playerGui
 
 local cooldownFrame = Instance.new("Frame")
 cooldownFrame.Name = "CooldownFrame"
-cooldownFrame.Size = UDim2.fromOffset(80, 80)
-cooldownFrame.Position = UDim2.new(1, -100, 1, -100) -- Esquina inferior derecha
+cooldownFrame.Size = UDim2.fromOffset(90, 90)
+cooldownFrame.Position = UDim2.new(0.5, -45, 1, -110) -- Centro inferior - NO tapa BaseHUD
+cooldownFrame.AnchorPoint = Vector2.new(0.5, 0)
 cooldownFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 cooldownFrame.BackgroundTransparency = 0.2
 cooldownFrame.BorderSizePixel = 0
