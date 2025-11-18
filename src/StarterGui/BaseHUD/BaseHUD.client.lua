@@ -15,7 +15,7 @@ sg.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", sg)
 frame.Size = UDim2.new(0, 320, 0, 60)
-frame.Position = UDim2.new(1, -340, 1, -80)
+frame.Position = UDim2.new(1, -340, 1, -120) -- ✅ FIX: Subido de -80 a -120
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
@@ -26,7 +26,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 local shadow = Instance.new("Frame", sg)
 shadow.Name = "HPShadow"
 shadow.Size = UDim2.new(0, 326, 0, 66)
-shadow.Position = UDim2.new(1, -343, 1, -77)
+shadow.Position = UDim2.new(1, -343, 1, -117) -- ✅ FIX: Ajustado para seguir al frame
 shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 shadow.BackgroundTransparency = 0.6
 shadow.BorderSizePixel = 0
@@ -97,7 +97,7 @@ label.Rotation = -2 -- Inclinación grafiti
 
 local repairBtn = Instance.new("TextButton", sg)
 repairBtn.Size = UDim2.new(0, 100, 0, 50)
-repairBtn.Position = UDim2.new(1, -360, 1, -145)
+repairBtn.Position = UDim2.new(1, -360, 1, -185) -- ✅ FIX: Subido de -145 a -185
 repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
 repairBtn.TextColor3 = Color3.new(1, 1, 1)
 repairBtn.Font = Enum.Font.LuckiestGuy -- ESTILO GRAFITI
@@ -119,7 +119,7 @@ repairStroke.Transparency = 0
 -- Sombra del botón
 local repairShadow = Instance.new("Frame", sg)
 repairShadow.Size = UDim2.new(0, 106, 0, 56)
-repairShadow.Position = UDim2.new(1, -363, 1, -142)
+repairShadow.Position = UDim2.new(1, -363, 1, -182) -- ✅ FIX: Ajustado para seguir al botón
 repairShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 repairShadow.BackgroundTransparency = 0.6
 repairShadow.BorderSizePixel = 0

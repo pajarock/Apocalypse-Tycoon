@@ -81,7 +81,7 @@ info.Font = Enum.Font.GothamBold
 info.TextScaled = true
 info.TextXAlignment = Enum.TextXAlignment.Left
 info.TextColor3 = Color3.fromRGB(100, 255, 140)
-info.Text = "Cash: $0 | IPS: 0"
+info.Text = "Cash: $0" -- ✅ FIX: Solo mostrar Cash, Income movido a widget separado
 info.TextStrokeTransparency = 0.6
 info.ZIndex = 2
 info.Parent = frame
@@ -210,7 +210,7 @@ local function refreshAll()
 	shieldLevel = st.ShieldLevel or 0
 
 	title.Text = string.format("SHOP | SHIELD L%d", shieldLevel)
-	info.Text = string.format("💰 %s | ⚡ %d/s", fmtMoney(cash), ips)
+	info.Text = string.format("💰 %s", fmtMoney(cash)) -- ✅ FIX: Solo Cash
 
 	for _, upgId in ipairs(ORDER) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
@@ -234,6 +234,7 @@ local open = true
 local function setOpen(v: boolean)
 	open = v
 	frame.Visible = open
+	shopShadow.Visible = open -- ✅ FIX: También ocultar la sombra
 end
 setOpen(true)
 

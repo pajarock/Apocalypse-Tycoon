@@ -182,6 +182,70 @@ moneyPadding.PaddingRight = UDim.new(0, 10)
 moneyPadding.Parent = moneyFrame
 
 --═══════════════════════════════════════════════════════════════════════
+-- ✅ INCOME WIDGET (Debajo del dinero - NOTORIO)
+--═══════════════════════════════════════════════════════════════════════
+
+local incomeFrame = Instance.new("Frame")
+incomeFrame.Name = "IncomeFrame"
+incomeFrame.Size = UDim2.fromOffset(280, 70) -- Grande y notorio
+incomeFrame.Position = UDim2.new(0.5, -140, 0, 100) -- Debajo del dinero
+incomeFrame.BackgroundColor3 = Color3.fromRGB(12, 15, 10)
+incomeFrame.BackgroundTransparency = 0.05
+incomeFrame.BorderSizePixel = 0
+incomeFrame.Rotation = -1.2 -- Rotación sutil
+incomeFrame.Parent = screenGui
+
+local incomeCorner = Instance.new("UICorner")
+incomeCorner.CornerRadius = UDim.new(0, 10)
+incomeCorner.Parent = incomeFrame
+
+local incomeStroke = Instance.new("UIStroke")
+incomeStroke.Color = Color3.fromRGB(255, 200, 0) -- Amarillo dorado para income
+incomeStroke.Thickness = 4
+incomeStroke.Transparency = 0
+incomeStroke.Parent = incomeFrame
+
+local incomeGradient = Instance.new("UIGradient")
+incomeGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 0))
+}
+incomeGradient.Rotation = 90
+incomeGradient.Parent = incomeStroke
+
+-- Ícono de rayo
+local incomeIcon = Instance.new("TextLabel")
+incomeIcon.Name = "Icon"
+incomeIcon.Size = UDim2.fromScale(0.25, 0.7)
+incomeIcon.Position = UDim2.fromScale(0.05, 0.15)
+incomeIcon.BackgroundTransparency = 1
+incomeIcon.Text = "⚡"
+incomeIcon.TextScaled = true
+incomeIcon.Font = Enum.Font.GothamBold
+incomeIcon.Parent = incomeFrame
+
+-- Label de income en LuckiestGuy (GRANDE Y NOTORIO)
+local incomeLabel = Instance.new("TextLabel")
+incomeLabel.Name = "IncomeLabel"
+incomeLabel.Size = UDim2.fromScale(0.7, 0.8)
+incomeLabel.Position = UDim2.fromScale(0.32, 0.1)
+incomeLabel.BackgroundTransparency = 1
+incomeLabel.Text = "+$0/s"
+incomeLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
+incomeLabel.TextScaled = true
+incomeLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI - NOTORIO
+incomeLabel.TextStrokeTransparency = 0.4
+incomeLabel.TextStrokeColor3 = Color3.fromRGB(50, 40, 0)
+incomeLabel.TextXAlignment = Enum.TextXAlignment.Left
+incomeLabel.Rotation = -2 -- Inclinación grafiti
+incomeLabel.Parent = incomeFrame
+
+local incomePadding = Instance.new("UIPadding")
+incomePadding.PaddingLeft = UDim.new(0, 10)
+incomePadding.PaddingRight = UDim.new(0, 10)
+incomePadding.Parent = incomeFrame
+
+--═══════════════════════════════════════════════════════════════════════
 -- MENSAJE "WAVE COMPLETED" (Centro Pantalla)
 --═══════════════════════════════════════════════════════════════════════
 
@@ -590,6 +654,40 @@ if cashValue then
 
 	if DEBUG then
 		print("[WaveCounterUI] ✓ Money counter conectado")
+	end
+end
+
+-- ✅ INCOME COUNTER (sincronización con IncomePerSec)
+local incomePerSecValue = leaderstats:WaitForChild("IncomePerSec")
+
+if incomePerSecValue then
+	-- Actualizar inicial
+	local function updateIncome()
+		local ips = incomePerSecValue.Value
+		if ips >= 1000000 then
+			incomeLabel.Text = string.format("+$%.1fM/s", ips / 1000000)
+		elseif ips >= 1000 then
+			incomeLabel.Text = string.format("+$%.1fK/s", ips / 1000)
+		else
+			incomeLabel.Text = string.format("+$%d/s", ips)
+		end
+
+		-- Flash dorado cuando aumenta
+		if ips > 0 then
+			incomeStroke.Color = Color3.fromRGB(255, 255, 100)
+			TweenService:Create(incomeStroke, TweenInfo.new(0.5), {
+				Color = Color3.fromRGB(255, 200, 0)
+			}):Play()
+		end
+	end
+
+	updateIncome()
+
+	-- Actualizar cuando cambie
+	incomePerSecValue:GetPropertyChangedSignal("Value"):Connect(updateIncome)
+
+	if DEBUG then
+		print("[WaveCounterUI] ✓ Income counter conectado")
 	end
 end
 

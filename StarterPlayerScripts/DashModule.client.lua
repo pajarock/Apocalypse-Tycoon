@@ -52,13 +52,13 @@ if not screenGui then
 	screenGui.Parent = player:WaitForChild("PlayerGui")
 end
 
--- Frame de cooldown (círculo en bottom-right)
+-- Frame de cooldown (círculo en bottom-left) - ✅ FIX: Movido de bottom-right a bottom-left
 local cooldownFrame = screenGui:FindFirstChild("CooldownFrame")
 if not cooldownFrame then
 	cooldownFrame = Instance.new("Frame")
 	cooldownFrame.Name = "CooldownFrame"
 	cooldownFrame.Size = UDim2.new(0, 80, 0, 80)
-	cooldownFrame.Position = UDim2.new(1, -100, 1, -100) -- Bottom-right
+	cooldownFrame.Position = UDim2.new(0, 100, 1, -100) -- ✅ Bottom-left (antes bottom-right)
 	cooldownFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	cooldownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	cooldownFrame.BackgroundTransparency = 0.3

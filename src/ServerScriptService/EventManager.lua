@@ -252,10 +252,11 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 		print(("[Meteor] %s lanzado hacia %s"):format(meteorType, plr.Name))
 	end
 
-	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
-	if ShowNotif then
-		ShowNotif:FireClient(plr, "☄️ INCOMING!", 2)
-	end
+	-- ✅ FIX: Quitado "INCOMING" porque satura notificaciones
+	-- local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
+	-- if ShowNotif then
+	-- 	ShowNotif:FireClient(plr, "☄️ INCOMING!", 2)
+	-- end
 
 	local applied = false
 	local conn: RBXScriptConnection? = nil
@@ -413,10 +414,11 @@ function EventManager:MeteorStorm()
 		task.wait(config.WarnTime)
 	end
 
+	-- ✅ FIX: Usar tipo WARNING para meteor storm
 	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
 	if ShowNotif then
 		for _, plr in ipairs(Players:GetPlayers()) do
-			ShowNotif:FireClient(plr, "☄️ METEOR STORM", 3)
+			ShowNotif:FireClient(plr, "☄️ METEOR STORM", "WARNING", 3)
 		end
 	end
 
@@ -548,9 +550,9 @@ local function BossPhase_Colossus(plr: Player)
 	bv.Velocity = dir * 15 + Vector3.new(0, -15, 0) -- Muy lento
 	bv.Parent = meteor
 
-	-- Notificación épica
+	-- Notificación épica - ✅ FIX: Usar tipo EPIC para coloso
 	if ShowNotification then
-		ShowNotification:FireClient(plr, "💀 THE COLOSSUS DESCENDS!", 4)
+		ShowNotification:FireClient(plr, "💀 THE COLOSSUS DESCENDS!", "EPIC", 4)
 	end
 
 	-- Sistema de impacto (igual que spawnMeteorTowards pero con más drama)
@@ -676,9 +678,10 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 		-- Boss completo: las 4 fases en orden
 		phasesToExecute = {1, 2, 3, 4}
 
+		-- ✅ FIX: Usar tipo EPIC para notificación grande y épica
 		if ShowNotification then
 			for _, plr in ipairs(Players:GetPlayers()) do
-				ShowNotification:FireClient(plr, "💀 BOSS WAVE: The Crimson Colossus", 5)
+				ShowNotification:FireClient(plr, "💀 BOSS WAVE: The Crimson Colossus", "EPIC", 5)
 			end
 		end
 	else
@@ -686,9 +689,10 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 		local randomPhase = math.random(1, 4)
 		phasesToExecute = {randomPhase}
 
+		-- ✅ FIX: Usar tipo CRITICAL para mini-boss
 		if ShowNotification then
 			for _, plr in ipairs(Players:GetPlayers()) do
-				ShowNotification:FireClient(plr, string.format("💀 MINI-BOSS: %s", phaseNames[randomPhase]), 4)
+				ShowNotification:FireClient(plr, string.format("💀 MINI-BOSS: %s", phaseNames[randomPhase]), "CRITICAL", 4)
 			end
 		end
 	end
@@ -699,10 +703,10 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 		task.delay(totalDuration, function()
 			print(("[BossMeteor] Ejecutando Fase %d: %s"):format(phaseNum, phaseNames[phaseNum]))
 
-			-- Anunciar fase
+			-- Anunciar fase - ✅ FIX: Usar tipo WARNING para fases
 			if ShowNotification and isFullBoss then
 				for _, plr in ipairs(Players:GetPlayers()) do
-					ShowNotification:FireClient(plr, string.format("🔥 PHASE %d: %s", phaseNum, phaseNames[phaseNum]), 3)
+					ShowNotification:FireClient(plr, string.format("🔥 PHASE %d: %s", phaseNum, phaseNames[phaseNum]), "WARNING", 3)
 				end
 			end
 
