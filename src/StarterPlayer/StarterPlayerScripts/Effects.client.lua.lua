@@ -15,6 +15,12 @@ local function makeCashPopup(amount: number)
 	local plate = baseFolder:FindFirstChild(plr.Name.."_Base")
 	if not (plate and plate:IsA("BasePart")) then return end
 
+	-- âœ… Determinar si es ganancia o gasto
+	local isGain = amount > 0
+	local absAmount = math.abs(amount)
+	local prefix = isGain and "+" or "-"
+	local color = isGain and Color3.fromRGB(60, 255, 120) or Color3.fromRGB(255, 80, 80)  -- Verde o Rojo
+
 	-- Billboard + texto
 	local bb = Instance.new("BillboardGui")
 	bb.Size = UDim2.fromOffset(120, 40)
@@ -30,8 +36,8 @@ local function makeCashPopup(amount: number)
 	label.Font = Enum.Font.GothamBold
 	label.TextScaled = true
 	label.TextStrokeTransparency = 0.2
-	label.Text = string.format("+$%s", tostring(amount))
-	label.TextColor3 = Color3.fromRGB(60, 255, 120)
+	label.Text = string.format("%s$%s", prefix, tostring(absAmount))
+	label.TextColor3 = color
 	label.Parent = bb
 
 	-- anim: subir, desvanecer
@@ -49,13 +55,13 @@ local function makeCashPopup(amount: number)
 end
 
 CashTick.OnClientEvent:Connect(function(gain: number)
-	if typeof(gain) == "number" and gain > 0 then
+	if typeof(gain) == "number" and gain ~= 0 then  -- âœ… Aceptar tanto positivos como negativos
 		makeCashPopup(gain)
 	end
 end)
 --!strict
 -- ShieldVFX.client.lua  (StarterPlayerScripts)
--- Muestra un Highlight en la base según ShieldLevel del jugador
+-- Muestra un Highlight en la base segï¿½n ShieldLevel del jugador
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -95,12 +101,12 @@ local function applyShieldVFX(level: number)
     highlight.FillColor = col
     highlight.OutlineColor = col
 
-    -- pequeño “pulso” al cambiar
+    -- pequeï¿½o ï¿½pulsoï¿½ al cambiar
     highlight.FillTransparency = 0.9
     TweenService:Create(highlight, TweenInfo.new(0.25), { FillTransparency = 0.7 }):Play()
 end
 
--- Cuando aparezca el character, asegúrate de crear el efecto
+-- Cuando aparezca el character, asegï¿½rate de crear el efecto
 local function onCharacter()
     task.delay(0.2, function()
         applyShieldVFX(LOCAL:GetAttribute("ShieldLevel") or 0)

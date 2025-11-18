@@ -958,7 +958,12 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		MaxHP = max,
 	})
 
-	notifyPlayer(plr, string.format("✓ Repaired +%d HP!", will), 2)
+	-- ✅ Mostrar popup visual de gasto (-$XXX)
+	if CashTick then
+		CashTick:FireClient(plr, -cost)  -- Enviar valor negativo
+	end
+
+	notifyPlayer(plr, string.format("✓ Repaired +%d HP! -$%d", will, cost), 2)
 end)
 
 --═══════════════════════════════════════════════════════════════════════
@@ -1305,20 +1310,30 @@ end)
 --═══════════════════════════════════════════════════════════════════════
 
 -- Crear RemoteEvent si no existe
-local DashRequest = RemotesFolder:FindFirstChild("DashRequest") :: RemoteEvent?
+local DashRequest = Remotes:FindFirstChild("DashRequest") :: RemoteEvent?
 if not DashRequest then
 	DashRequest = Instance.new("RemoteEvent")
 	DashRequest.Name = "DashRequest"
-	DashRequest.Parent = RemotesFolder
+	DashRequest.Parent = Remotes
 	warn("[Main.Server] RemoteEvent 'DashRequest' creado automáticamente")
+end
+
+-- ✅ NUEVO: RemoteEvent para feedback de evasión
+local DashEvaded = Remotes:FindFirstChild("DashEvaded") :: RemoteEvent?
+if not DashEvaded then
+	DashEvaded = Instance.new("RemoteEvent")
+	DashEvaded.Name = "DashEvaded"
+	DashEvaded.Parent = Remotes
+	warn("[Main.Server] RemoteEvent 'DashEvaded' creado automáticamente")
 end
 
 -- Cooldowns por jugador (prevenir spam)
 local DashCooldowns: {[number]: number} = {}
-local DASH_COOLDOWN = 4 -- segundos
+local DASH_COOLDOWN = 2.5 -- ✅ Reducido de 4s para acción más rápida
 local DASH_DURATION = 0.3 -- duración de invulnerabilidad
+local DASH_DISTANCE = 20 -- studs de teletransporte
 
-DashRequest.OnServerEvent:Connect(function(plr: Player)
+DashRequest.OnServerEvent:Connect(function(plr: Player, direction: Vector3?)
 	local userId = plr.UserId
 	local now = tick()
 
@@ -1331,15 +1346,139 @@ DashRequest.OnServerEvent:Connect(function(plr: Player)
 		return
 	end
 
+	-- Obtener character
+	local character = plr.Character
+	if not character then return end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	local humanoid = character:FindFirstChild("Humanoid") :: Humanoid?
+
+	if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then
+		return
+	end
+
+	-- Validar dirección (anti-exploit)
+	if not direction or typeof(direction) ~= "Vector3" then
+		direction = humanoidRootPart.CFrame.LookVector
+	end
+
+	-- Normalizar y proyectar en plano horizontal
+	direction = Vector3.new(direction.X, 0, direction.Z).Unit
+
 	-- Actualizar cooldown
 	DashCooldowns[userId] = now
+
+	-- ✅ TELETRANSPORTE INSTANTÁNEO (20 studs)
+	local originPos = humanoidRootPart.Position
+	local targetPos = originPos + (direction * DASH_DISTANCE)
+
+	-- Raycast para evitar teletransporte a través de paredes
+	local rayParams = RaycastParams.new()
+	rayParams.FilterDescendantsInstances = {character}
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+	local rayResult = workspace:Raycast(originPos, direction * DASH_DISTANCE, rayParams)
+
+	if rayResult then
+		-- Si hay obstáculo, teleportar hasta justo antes del obstáculo
+		targetPos = rayResult.Position - (direction * 1) -- 1 stud antes del muro
+	end
+
+	-- Mantener Y original (no teleportar verticalmente)
+	targetPos = Vector3.new(targetPos.X, originPos.Y, targetPos.Z)
+
+	-- Resetear velocidad antes de teleportar (evita inercia)
+	if humanoidRootPart:FindFirstChild("AssemblyLinearVelocity") then
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+	end
+	humanoidRootPart.Velocity = Vector3.zero
+
+	-- Ejecutar teletransporte
+	humanoidRootPart.CFrame = CFrame.new(targetPos, targetPos + direction)
+
+	if Config.DEBUG_MODE then
+		print(("[DASH] 🚀 %s teleportado de %s a %s (distancia: %.1f studs)"):format(
+			plr.Name,
+			tostring(Vector3.new(math.floor(originPos.X), math.floor(originPos.Y), math.floor(originPos.Z))),
+			tostring(Vector3.new(math.floor(targetPos.X), math.floor(targetPos.Y), math.floor(targetPos.Z))),
+			(targetPos - originPos).Magnitude
+		))
+	end
+
+	-- ✅ Efectos de partículas en origen
+	local originEffect = Instance.new("Part")
+	originEffect.Size = Vector3.new(4, 0.5, 4)
+	originEffect.Position = originPos
+	originEffect.Anchored = true
+	originEffect.CanCollide = false
+	originEffect.Transparency = 1
+	originEffect.Parent = workspace
+
+	local originParticles = Instance.new("ParticleEmitter")
+	originParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	originParticles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+	originParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	originParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	originParticles.Lifetime = NumberRange.new(0.5, 0.8)
+	originParticles.Rate = 100
+	originParticles.Speed = NumberRange.new(5, 10)
+	originParticles.SpreadAngle = Vector2.new(180, 180)
+	originParticles.LightEmission = 1
+	originParticles.Parent = originEffect
+	originParticles.Enabled = true
+
+	task.delay(0.1, function()
+		originParticles.Enabled = false
+	end)
+	game.Debris:AddItem(originEffect, 2)
+
+	-- ✅ Efectos de partículas en destino
+	local destEffect = Instance.new("Part")
+	destEffect.Size = Vector3.new(4, 0.5, 4)
+	destEffect.Position = targetPos
+	destEffect.Anchored = true
+	destEffect.CanCollide = false
+	destEffect.Transparency = 1
+	destEffect.Parent = workspace
+
+	local destParticles = Instance.new("ParticleEmitter")
+	destParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	destParticles.Color = ColorSequence.new(Color3.fromRGB(0, 255, 200))
+	destParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.5, 2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	destParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	destParticles.Lifetime = NumberRange.new(0.5, 0.8)
+	destParticles.Rate = 100
+	destParticles.Speed = NumberRange.new(5, 10)
+	destParticles.SpreadAngle = Vector2.new(180, 180)
+	destParticles.LightEmission = 1
+	destParticles.Parent = destEffect
+	destParticles.Enabled = true
+
+	task.delay(0.1, function()
+		destParticles.Enabled = false
+	end)
+	game.Debris:AddItem(destEffect, 2)
 
 	-- Aplicar invulnerabilidad temporal
 	if Base and Base.SetInvulnerable then
 		Base.SetInvulnerable(userId, true, DASH_DURATION)
 
 		if Config.DEBUG_MODE then
-			print(("[DASH] ✅ %s dash! Invulnerable por %.1fs"):format(plr.Name, DASH_DURATION))
+			print(("[DASH] ✅ %s teleported %.1f studs! Invulnerable por %.1fs"):format(plr.Name, DASH_DISTANCE, DASH_DURATION))
 		end
 
 		-- Notificación opcional

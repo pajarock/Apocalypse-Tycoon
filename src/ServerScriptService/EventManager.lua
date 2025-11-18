@@ -489,7 +489,7 @@ local function BossPhase_Circle(plr: Player)
 	if not base then return end
 
 	local basePos = base.Position
-	local radius = 30
+	local radius = 35  -- ✅ Radio aumentado para patrón más visible
 	local meteorCount = 6
 
 	for i = 1, meteorCount do
@@ -501,8 +501,10 @@ local function BossPhase_Circle(plr: Player)
 				math.sin(angle) * radius
 			)
 
+			-- ✅ Spawn desde arriba del punto del círculo
 			local startPos = basePos + offset + Vector3.new(0, 100, 0)
-			local targetPos = basePos + offset * 0.3
+			-- ✅ ARREGLADO: Caer directamente en el punto del círculo (offset completo)
+			local targetPos = basePos + offset
 			spawnMeteorTowards(plr, startPos, targetPos, "Normal")
 		end)
 	end
