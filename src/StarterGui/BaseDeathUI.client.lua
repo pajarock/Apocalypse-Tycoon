@@ -66,19 +66,20 @@ vignette.ImageTransparency = 0.5
 vignette.ZIndex = 2
 vignette.Parent = screenGui
 
--- Texto principal "BASE DESTROYED"
+-- Texto principal "BASE DESTROYED" en GRAFITI
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, 0, 0.3, 0)
+titleLabel.Size = UDim2.new(1, 0, 0.35, 0)
 titleLabel.Position = UDim2.new(0, 0, 0.25, 0)
 titleLabel.AnchorPoint = Vector2.new(0, 0.5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "BASE DESTROYED"
-titleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-titleLabel.Font = Enum.Font.GothamBlack
-titleLabel.TextSize = 80
+titleLabel.Text = "💀 BASE DESTROYED! 💀"
+titleLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+titleLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
+titleLabel.TextScaled = true
 titleLabel.TextStrokeTransparency = 0
-titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+titleLabel.TextStrokeColor3 = Color3.fromRGB(80, 0, 0)
+titleLabel.Rotation = -3 -- Inclinación grafiti
 titleLabel.ZIndex = 3
 titleLabel.Parent = screenGui
 
@@ -92,33 +93,36 @@ gradient.Color = ColorSequence.new({
 gradient.Rotation = 90
 gradient.Parent = titleLabel
 
--- Subtítulo "Money Lost"
+-- Subtítulo "Money Lost" más dramático
 local moneyLostLabel = Instance.new("TextLabel")
 moneyLostLabel.Name = "MoneyLost"
-moneyLostLabel.Size = UDim2.new(1, 0, 0.15, 0)
-moneyLostLabel.Position = UDim2.new(0, 0, 0.45, 0)
+moneyLostLabel.Size = UDim2.new(1, 0, 0.18, 0)
+moneyLostLabel.Position = UDim2.new(0, 0, 0.48, 0)
 moneyLostLabel.AnchorPoint = Vector2.new(0, 0.5)
 moneyLostLabel.BackgroundTransparency = 1
-moneyLostLabel.Text = "You lost $0"
-moneyLostLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
-moneyLostLabel.Font = Enum.Font.GothamBold
-moneyLostLabel.TextSize = 36
-moneyLostLabel.TextStrokeTransparency = 0.5
+moneyLostLabel.Text = "💸 LOST $0 💸"
+moneyLostLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+moneyLostLabel.Font = Enum.Font.LuckiestGuy
+moneyLostLabel.TextScaled = true
+moneyLostLabel.TextStrokeTransparency = 0.2
+moneyLostLabel.TextStrokeColor3 = Color3.fromRGB(80, 40, 0)
+moneyLostLabel.Rotation = 2 -- Rotación opuesta para contraste
 moneyLostLabel.ZIndex = 3
 moneyLostLabel.Parent = screenGui
 
--- Countdown "Respawning in..."
+-- Countdown "Respawning in..." más visible
 local countdownLabel = Instance.new("TextLabel")
 countdownLabel.Name = "Countdown"
 countdownLabel.Size = UDim2.new(1, 0, 0.15, 0)
-countdownLabel.Position = UDim2.new(0, 0, 0.6, 0)
+countdownLabel.Position = UDim2.new(0, 0, 0.65, 0)
 countdownLabel.AnchorPoint = Vector2.new(0, 0.5)
 countdownLabel.BackgroundTransparency = 1
-countdownLabel.Text = "Respawning in 10s..."
+countdownLabel.Text = "⏱ RESPAWN: 10s"
 countdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-countdownLabel.Font = Enum.Font.Gotham
-countdownLabel.TextSize = 28
-countdownLabel.TextStrokeTransparency = 0.5
+countdownLabel.Font = Enum.Font.GothamBlack
+countdownLabel.TextScaled = true
+countdownLabel.TextStrokeTransparency = 0.3
+countdownLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 countdownLabel.ZIndex = 3
 countdownLabel.Parent = screenGui
 
@@ -127,27 +131,33 @@ countdownLabel.Parent = screenGui
 -------------------------------------------------------------------------
 
 local function pulseAnimation()
-	-- Hacer que el título pulse
-	local originalSize = titleLabel.TextSize
+	-- Hacer que el título pulse y rote
+	local baseRotation = -3
 
 	while screenGui.Enabled do
-		-- Expand
+		-- Expand y rotar
 		TweenService:Create(
 			titleLabel,
-			TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-			{TextSize = originalSize + 10}
+			TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+			{
+				Size = UDim2.new(1.05, 0, 0.38, 0),
+				Rotation = baseRotation - 2
+			}
 		):Play()
 
-		task.wait(0.8)
+		task.wait(0.6)
 
-		-- Shrink
+		-- Shrink y volver
 		TweenService:Create(
 			titleLabel,
-			TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-			{TextSize = originalSize}
+			TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+			{
+				Size = UDim2.new(1, 0, 0.35, 0),
+				Rotation = baseRotation + 2
+			}
 		):Play()
 
-		task.wait(0.8)
+		task.wait(0.6)
 	end
 end
 
@@ -202,8 +212,8 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	moneyLost = moneyLost or 0
 	respawnTime = respawnTime or 10
 
-	-- Update text
-	moneyLostLabel.Text = string.format("You lost $%s",
+	-- Update text con formato más dramático
+	moneyLostLabel.Text = string.format("💸 LOST $%s! 💸",
 		tostring(math.floor(moneyLost)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 	)
 
@@ -214,10 +224,17 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	task.spawn(pulseAnimation)
 	task.spawn(shakeBackground)
 
-	-- Countdown
+	-- Countdown con animación
 	local countdown = respawnTime
 	while countdown > 0 do
-		countdownLabel.Text = string.format("Respawning in %ds...", countdown)
+		countdownLabel.Text = string.format("⏱ RESPAWN: %ds", countdown)
+
+		-- Flash rápido en cada segundo
+		countdownLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+		TweenService:Create(countdownLabel, TweenInfo.new(0.3), {
+			TextColor3 = Color3.fromRGB(255, 255, 255)
+		}):Play()
+
 		task.wait(1)
 		countdown -= 1
 	end

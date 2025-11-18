@@ -43,11 +43,12 @@ screenGui.Parent = playerGui
 
 local waveFrame = Instance.new("Frame")
 waveFrame.Name = "WaveFrame"
-waveFrame.Size = UDim2.fromOffset(200, 70)
+waveFrame.Size = UDim2.fromOffset(220, 80) -- Más grande
 waveFrame.Position = UDim2.new(0, 10, 0, 10) -- ✅ Superior IZQUIERDA
-waveFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-waveFrame.BackgroundTransparency = 0.1
+waveFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+waveFrame.BackgroundTransparency = 0.05
 waveFrame.BorderSizePixel = 0
+waveFrame.Rotation = -1.5 -- Rotación sutil estilo urbano
 waveFrame.Parent = screenGui
 
 local waveCorner = Instance.new("UICorner")
@@ -56,7 +57,7 @@ waveCorner.Parent = waveFrame
 
 local waveStroke = Instance.new("UIStroke")
 waveStroke.Color = Color3.fromRGB(255, 170, 0)
-waveStroke.Thickness = 3
+waveStroke.Thickness = 4 -- Más grueso
 waveStroke.Transparency = 0
 waveStroke.Parent = waveFrame
 
@@ -71,26 +72,29 @@ waveGradient.Parent = waveStroke
 -- Label "WAVE"
 local labelWave = Instance.new("TextLabel")
 labelWave.Name = "LabelWave"
-labelWave.Size = UDim2.fromScale(1, 0.35)
-labelWave.Position = UDim2.fromScale(0, 0.1)
+labelWave.Size = UDim2.fromScale(1, 0.3)
+labelWave.Position = UDim2.fromScale(0, 0.08)
 labelWave.BackgroundTransparency = 1
 labelWave.Text = "WAVE"
-labelWave.TextColor3 = Color3.fromRGB(255, 170, 0)
+labelWave.TextColor3 = Color3.fromRGB(255, 180, 20)
 labelWave.TextScaled = true
-labelWave.Font = Enum.Font.GothamBold
+labelWave.Font = Enum.Font.GothamBlack
+labelWave.TextStrokeTransparency = 0.5
 labelWave.Parent = waveFrame
 
--- Label número
+-- Label número en LuckiestGuy (ESTILO GRAFITI)
 local labelNumber = Instance.new("TextLabel")
 labelNumber.Name = "LabelNumber"
-labelNumber.Size = UDim2.fromScale(1, 0.4)
-labelNumber.Position = UDim2.fromScale(0, 0.3)
+labelNumber.Size = UDim2.fromScale(1, 0.42)
+labelNumber.Position = UDim2.fromScale(0, 0.28)
 labelNumber.BackgroundTransparency = 1
 labelNumber.Text = "1"
 labelNumber.TextColor3 = Color3.new(1, 1, 1)
 labelNumber.TextScaled = true
-labelNumber.Font = Enum.Font.GothamBlack
-labelNumber.TextStrokeTransparency = 0.5
+labelNumber.Font = Enum.Font.LuckiestGuy -- GRAFITI
+labelNumber.TextStrokeTransparency = 0.3
+labelNumber.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+labelNumber.Rotation = -2 -- Inclinación grafiti
 labelNumber.Parent = waveFrame
 
 -- ✅ Label "Survived" (rondas sobrevividas)
@@ -119,11 +123,12 @@ wavePadding.Parent = waveFrame
 
 local moneyFrame = Instance.new("Frame")
 moneyFrame.Name = "MoneyFrame"
-moneyFrame.Size = UDim2.fromOffset(280, 70)
-moneyFrame.Position = UDim2.new(0.5, -140, 0, 10) -- Centro superior
-moneyFrame.BackgroundColor3 = Color3.fromRGB(10, 15, 10)
-moneyFrame.BackgroundTransparency = 0.1
+moneyFrame.Size = UDim2.fromOffset(300, 80) -- Más grande
+moneyFrame.Position = UDim2.new(0.5, -150, 0, 10) -- Centro superior
+moneyFrame.BackgroundColor3 = Color3.fromRGB(10, 18, 12)
+moneyFrame.BackgroundTransparency = 0.05
 moneyFrame.BorderSizePixel = 0
+moneyFrame.Rotation = -1 -- Rotación sutil
 moneyFrame.Parent = screenGui
 
 local moneyCorner = Instance.new("UICorner")
@@ -132,7 +137,7 @@ moneyCorner.Parent = moneyFrame
 
 local moneyStroke = Instance.new("UIStroke")
 moneyStroke.Color = Color3.fromRGB(85, 255, 127)
-moneyStroke.Thickness = 3
+moneyStroke.Thickness = 4 -- Más grueso
 moneyStroke.Transparency = 0
 moneyStroke.Parent = moneyFrame
 
@@ -155,18 +160,20 @@ moneyIcon.TextScaled = true
 moneyIcon.Font = Enum.Font.GothamBold
 moneyIcon.Parent = moneyFrame
 
--- Label de dinero
+-- Label de dinero en LuckiestGuy
 local moneyLabel = Instance.new("TextLabel")
 moneyLabel.Name = "MoneyLabel"
 moneyLabel.Size = UDim2.fromScale(0.7, 0.8)
 moneyLabel.Position = UDim2.fromScale(0.28, 0.1)
 moneyLabel.BackgroundTransparency = 1
 moneyLabel.Text = "$0"
-moneyLabel.TextColor3 = Color3.fromRGB(85, 255, 127)
+moneyLabel.TextColor3 = Color3.fromRGB(100, 255, 140)
 moneyLabel.TextScaled = true
-moneyLabel.Font = Enum.Font.GothamBlack
-moneyLabel.TextStrokeTransparency = 0.7
+moneyLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
+moneyLabel.TextStrokeTransparency = 0.4
+moneyLabel.TextStrokeColor3 = Color3.fromRGB(0, 50, 20)
 moneyLabel.TextXAlignment = Enum.TextXAlignment.Left
+moneyLabel.Rotation = -2 -- Inclinación grafiti
 moneyLabel.Parent = moneyFrame
 
 local moneyPadding = Instance.new("UIPadding")
@@ -199,17 +206,19 @@ completedStroke.Thickness = 5
 completedStroke.Transparency = 0
 completedStroke.Parent = completedFrame
 
--- Texto principal
+-- Texto principal en LuckiestGuy
 local completedText = Instance.new("TextLabel")
 completedText.Name = "Text"
 completedText.Size = UDim2.fromScale(1, 0.6)
 completedText.Position = UDim2.fromScale(0, 0.15)
 completedText.BackgroundTransparency = 1
 completedText.Text = "WAVE 1 COMPLETED!"
-completedText.TextColor3 = Color3.fromRGB(255, 215, 0)
+completedText.TextColor3 = Color3.fromRGB(255, 220, 50)
 completedText.TextScaled = true
-completedText.Font = Enum.Font.GothamBlack
+completedText.Font = Enum.Font.LuckiestGuy -- GRAFITI
 completedText.TextStrokeTransparency = 0
+completedText.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
+completedText.Rotation = -3 -- Inclinación grafiti
 completedText.Parent = completedFrame
 
 -- Subtexto
@@ -268,7 +277,7 @@ end
 local function playWavePulse()
 	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, true)
 	TweenService:Create(waveFrame, tweenInfo, {
-		Size = UDim2.fromOffset(220, 80)
+		Size = UDim2.fromOffset(240, 90) -- Más grande el pulse
 	}):Play()
 end
 

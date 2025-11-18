@@ -13,47 +13,85 @@ local RequestPurchase = Remotes:WaitForChild("RequestPurchase") :: RemoteEvent
 -- UI ROOT
 local gui = script.Parent :: ScreenGui
 
--- Panel principal
+-- Panel principal con estilo urbano
 local frame = Instance.new("Frame")
 frame.Name = "ShopFrame"
 frame.AnchorPoint = Vector2.new(0, 0)
 frame.Position = UDim2.new(0, 20, 0, 100)
-frame.Size = UDim2.fromOffset(260, 300)
-frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.Size = UDim2.fromOffset(280, 320)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
+frame.Rotation = -1 -- Rotación sutil urbano
 frame.Parent = gui
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+-- Sombra pronunciada
+local shopShadow = Instance.new("Frame")
+shopShadow.Size = UDim2.fromOffset(286, 326)
+shopShadow.Position = UDim2.new(0, 17, 0, 103)
+shopShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shopShadow.BackgroundTransparency = 0.6
+shopShadow.BorderSizePixel = 0
+shopShadow.Rotation = -1
+shopShadow.ZIndex = 0
+shopShadow.Parent = gui
+Instance.new("UICorner", shopShadow).CornerRadius = UDim.new(0, 12)
+frame.ZIndex = 1
+
+-- Borde grueso vibrante
+local shopStroke = Instance.new("UIStroke")
+shopStroke.Color = Color3.fromRGB(255, 170, 50)
+shopStroke.Thickness = 4
+shopStroke.Transparency = 0
+shopStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+shopStroke.Parent = frame
+
+-- Gradiente en el borde
+local shopGradient = Instance.new("UIGradient")
+shopGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 170, 50)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 100, 200))
+})
+shopGradient.Rotation = 45
+shopGradient.Parent = shopStroke
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, -20, 0, 28)
+title.Size = UDim2.new(1, -20, 0, 32)
 title.Position = UDim2.fromOffset(10, 8)
 title.BackgroundTransparency = 1
-title.Font = Enum.Font.GothamBlack
+title.Font = Enum.Font.LuckiestGuy -- GRAFITI
 title.TextScaled = true
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextColor3 = Color3.fromRGB(240,240,240)
-title.Text = "Apocalypse Shop"
+title.TextColor3 = Color3.fromRGB(255, 200, 80)
+title.Text = "SHOP"
+title.TextStrokeTransparency = 0.3
+title.TextStrokeColor3 = Color3.fromRGB(50, 25, 0)
+title.Rotation = -2 -- Inclinación grafiti
+title.ZIndex = 2
 title.Parent = frame
 
 local info = Instance.new("TextLabel")
 info.Name = "Info"
-info.Size = UDim2.new(1, -20, 0, 20)
-info.Position = UDim2.fromOffset(10, 38)
+info.Size = UDim2.new(1, -20, 0, 22)
+info.Position = UDim2.fromOffset(10, 42)
 info.BackgroundTransparency = 1
-info.Font = Enum.Font.Gotham
+info.Font = Enum.Font.GothamBold
 info.TextScaled = true
 info.TextXAlignment = Enum.TextXAlignment.Left
-info.TextColor3 = Color3.fromRGB(200,200,200)
+info.TextColor3 = Color3.fromRGB(100, 255, 140)
 info.Text = "Cash: $0 | IPS: 0"
+info.TextStrokeTransparency = 0.6
+info.ZIndex = 2
 info.Parent = frame
 
 local list = Instance.new("Frame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 64)
-list.Size = UDim2.new(1, -20, 1, -74)
+list.Position = UDim2.fromOffset(10, 70)
+list.Size = UDim2.new(1, -20, 1, -80)
+list.ZIndex = 2
 list.Parent = frame
 
 local layout = Instance.new("UIListLayout")
@@ -84,19 +122,35 @@ local function fetchState()
 	return st
 end
 
--- Crear fila de upgrade
+-- Crear fila de upgrade con estilo urbano
 local function makeRow(upgId: string): TextButton
 	local btn = Instance.new("TextButton")
 	btn.Name = upgId
-	btn.Size = UDim2.new(1, 0, 0, 28)
-	btn.BackgroundColor3 = Color3.fromRGB(30,85,50)
-	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Size = UDim2.new(1, 0, 0, 32)
+	btn.BackgroundColor3 = Color3.fromRGB(25, 80, 45)
+	btn.TextColor3 = Color3.new(1, 1, 1)
 	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true -- FIX: Auto-escalar para evitar overflow
 	btn.TextXAlignment = Enum.TextXAlignment.Left
 	btn.AutoButtonColor = true
-	btn.TextScaled = true
+	btn.TextStrokeTransparency = 0.5
+	btn.ZIndex = 3
 	btn.Parent = list
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+	-- Borde del botón
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = Color3.fromRGB(0, 255, 100)
+	btnStroke.Thickness = 2
+	btnStroke.Transparency = 0.3
+	btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	btnStroke.Parent = btn
+
+	-- Padding
+	local btnPadding = Instance.new("UIPadding")
+	btnPadding.PaddingLeft = UDim.new(0, 8)
+	btnPadding.PaddingRight = UDim.new(0, 8)
+	btnPadding.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
 		local currentState = fetchState()
@@ -155,8 +209,8 @@ local function refreshAll()
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	title.Text = string.format("Apocalypse Shop | Shield: L%d", shieldLevel)
-	info.Text = string.format("Cash: %s | IPS: %d", fmtMoney(cash), ips)
+	title.Text = string.format("SHOP | SHIELD L%d", shieldLevel)
+	info.Text = string.format("💰 %s | ⚡ %d/s", fmtMoney(cash), ips)
 
 	for _, upgId in ipairs(ORDER) do
 		local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]

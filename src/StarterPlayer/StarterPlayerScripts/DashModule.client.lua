@@ -53,7 +53,7 @@ local dashUI = Instance.new("ScreenGui")
 dashUI.Name = "DashUI"
 dashUI.ResetOnSpawn = false
 dashUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-dashUI.DisplayOrder = 15
+dashUI.DisplayOrder = 8 -- Debajo del HUD permanente
 dashUI.Parent = playerGui
 
 local cooldownFrame = Instance.new("Frame")

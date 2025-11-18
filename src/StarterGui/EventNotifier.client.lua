@@ -63,7 +63,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ApocalypseNotifier"
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999
+screenGui.DisplayOrder = 5 -- Debajo del HUD permanente
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Contenedor principal
@@ -71,9 +71,10 @@ local mainContainer = Instance.new("Frame")
 mainContainer.Name = "MainContainer"
 mainContainer.AnchorPoint = Vector2.new(0.5, 0)
 mainContainer.Position = UDim2.new(0.5, 0, 0.08, 0)
-mainContainer.Size = UDim2.fromOffset(750, 95)
+mainContainer.Size = UDim2.fromOffset(800, 110) -- Más grande
 mainContainer.BackgroundTransparency = 1
 mainContainer.Visible = false
+mainContainer.Rotation = -2 -- Inclinación grafiti
 mainContainer.Parent = screenGui
 
 -- Sombra dura (no suave - más apocalíptica)
@@ -143,12 +144,12 @@ local leftCorner = Instance.new("UICorner")
 leftCorner.CornerRadius = UDim.new(0, 8)
 leftCorner.Parent = leftBar
 
--- Icono de advertencia (más pequeño pero visible)
+-- Icono de advertencia (MÁS GRANDE Y DRAMÁTICO)
 local iconContainer = Instance.new("Frame")
 iconContainer.Name = "IconContainer"
 iconContainer.Position = UDim2.new(0, 25, 0.5, 0)
 iconContainer.AnchorPoint = Vector2.new(0, 0.5)
-iconContainer.Size = UDim2.fromOffset(50, 50)
+iconContainer.Size = UDim2.fromOffset(70, 70) -- Más grande
 iconContainer.BackgroundTransparency = 1
 iconContainer.ZIndex = 4
 iconContainer.Parent = mainFrame
@@ -159,13 +160,14 @@ iconLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 iconLabel.Position = UDim2.fromScale(0.5, 0.5)
 iconLabel.Size = UDim2.fromScale(1, 1)
 iconLabel.BackgroundTransparency = 1
-iconLabel.Font = Enum.Font.GothamBold
+iconLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
 iconLabel.Text = "⚠"
 iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 iconLabel.TextScaled = true
-iconLabel.TextStrokeTransparency = 0.5
+iconLabel.TextStrokeTransparency = 0.2 -- Borde más fuerte
 iconLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 iconLabel.ZIndex = 5
+iconLabel.Rotation = -5 -- Rotación grafiti
 iconLabel.Parent = iconContainer
 
 -- ============================================================================
@@ -184,18 +186,19 @@ local messageLabel = Instance.new("TextLabel")
 messageLabel.Name = "MessageLabel"
 messageLabel.AnchorPoint = Vector2.new(0, 0.5)
 messageLabel.Position = UDim2.new(0, 0, 0.5, 0)
-messageLabel.Size = UDim2.new(1, 0, 0, 50)
+messageLabel.Size = UDim2.new(1, 0, 0, 60) -- Más alto
 messageLabel.BackgroundTransparency = 1
-messageLabel.Font = Enum.Font.GothamBold
+messageLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI FONT
 messageLabel.Text = ""
 messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 messageLabel.TextScaled = true
 messageLabel.TextWrapped = true
-messageLabel.TextStrokeTransparency = 0.5
+messageLabel.TextStrokeTransparency = 0.2 -- Borde más fuerte
 messageLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 messageLabel.TextXAlignment = Enum.TextXAlignment.Left
 messageLabel.TextYAlignment = Enum.TextYAlignment.Center
 messageLabel.ZIndex = 5
+messageLabel.Rotation = -3 -- Inclinación grafiti
 messageLabel.Parent = textContainer
 
 -- ============================================================================
@@ -435,11 +438,11 @@ local function showNotification(message: string, typeTag: string?, duration: num
 
 	-- ===== ENTRADA RÁPIDA Y AGRESIVA =====
 
-	-- Expandir RÁPIDO
+	-- Expandir RÁPIDO con PUNCH
 	local expandTween = TweenService:Create(
 		mainContainer,
-		TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Size = UDim2.fromOffset(750, 95) }
+		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = UDim2.fromOffset(800, 110) }
 	)
 	expandTween:Play()
 
@@ -451,14 +454,16 @@ local function showNotification(message: string, typeTag: string?, duration: num
 
 	task.wait(0.12)
 
-	-- Icono con impacto
-	iconLabel.Size = UDim2.fromScale(0.7, 0.7)
+	-- Icono con SUPER impacto y rotación
+	iconLabel.Size = UDim2.fromScale(0.5, 0.5)
+	iconLabel.Rotation = -25 -- Empieza muy rotado
 	TweenService:Create(
 		iconLabel,
-		TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+		TweenInfo.new(0.25, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
 		{
 			Size = UDim2.fromScale(1, 1),
-			TextTransparency = 0
+			TextTransparency = 0,
+			Rotation = -5 -- Vuelve a rotación normal
 		}
 	):Play()
 
@@ -502,7 +507,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	local collapseTween = TweenService:Create(
 		mainContainer,
 		TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-		{ Size = UDim2.fromOffset(100, 95) }
+		{ Size = UDim2.fromOffset(100, 110) }
 	)
 	collapseTween:Play()
 	collapseTween.Completed:Wait()
