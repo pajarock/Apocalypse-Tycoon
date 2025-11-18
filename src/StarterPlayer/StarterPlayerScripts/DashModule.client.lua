@@ -347,114 +347,150 @@ local function showEvasionFeedback(damageEvaded: number)
 		return
 	end
 
-	-- ✅ Flash dorado brillante en pantalla
+	-- ✅ TEXTO "EVADED!" ESTILO GRAFITI
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "EvadedFeedback"
+	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.Parent = playerGui
+
+	-- Flash dorado en toda la pantalla
 	local flash = Instance.new("Frame")
+	flash.Name = "Flash"
 	flash.Size = UDim2.fromScale(1, 1)
-	flash.BackgroundColor3 = Color3.fromRGB(255, 220, 100) -- Dorado
-	flash.BackgroundTransparency = 0.5
+	flash.BackgroundColor3 = Color3.fromRGB(255, 220, 100)
+	flash.BackgroundTransparency = 1
 	flash.BorderSizePixel = 0
-	flash.ZIndex = 10
-	flash.Parent = playerGui
+	flash.ZIndex = 100
+	flash.Parent = screenGui
 
-	-- Pulsar 3 veces
-	local pulseCount = 0
-	local function pulse()
-		pulseCount = pulseCount + 1
-		if pulseCount > 3 then
-			flash:Destroy()
-			return
-		end
-
-		TweenService:Create(flash, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			BackgroundTransparency = 0.3
-		}):Play()
-
-		task.wait(0.15)
-
-		local fadeOut = TweenService:Create(flash, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			BackgroundTransparency = 1
-		})
-		fadeOut:Play()
-
-		task.wait(0.15)
-
-		if pulseCount < 3 then
-			task.spawn(pulse)
-		else
-			task.delay(0.2, function()
-				flash:Destroy()
-			end)
-		end
-	end
-
-	task.spawn(pulse)
-
-	-- ✅ Texto "EVADED!" flotante en el centro de la pantalla
+	-- Texto EVADED estilo grafiti
 	local evadedLabel = Instance.new("TextLabel")
-	evadedLabel.Size = UDim2.fromOffset(400, 100)
-	evadedLabel.Position = UDim2.fromScale(0.5, 0.4)
+	evadedLabel.Name = "EvadedText"
+	evadedLabel.Size = UDim2.fromOffset(600, 150)
+	evadedLabel.Position = UDim2.fromScale(0.5, 0.35)
 	evadedLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 	evadedLabel.BackgroundTransparency = 1
 	evadedLabel.Text = "⚡ EVADED! ⚡"
-	evadedLabel.Font = Enum.Font.GothamBold
-	evadedLabel.TextSize = 60
-	evadedLabel.TextColor3 = Color3.fromRGB(255, 220, 100)
+	evadedLabel.Font = Enum.Font.LuckiestGuy -- Font estilo grafiti/street art
+	evadedLabel.TextSize = 80
+	evadedLabel.TextColor3 = Color3.fromRGB(255, 230, 100) -- Amarillo dorado
 	evadedLabel.TextStrokeTransparency = 0
-	evadedLabel.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
+	evadedLabel.TextStrokeColor3 = Color3.fromRGB(50, 30, 0) -- Borde café oscuro
 	evadedLabel.TextTransparency = 0
-	evadedLabel.ZIndex = 11
-	evadedLabel.Parent = playerGui
+	evadedLabel.ZIndex = 101
+	evadedLabel.Rotation = -5 -- Ligera inclinación estilo grafiti
+	evadedLabel.Parent = screenGui
 
-	-- Animación de escala y fade
+	-- Damage evadido (texto pequeño debajo)
+	local damageLabel = Instance.new("TextLabel")
+	damageLabel.Name = "DamageText"
+	damageLabel.Size = UDim2.fromOffset(400, 60)
+	damageLabel.Position = UDim2.fromScale(0.5, 0.5)
+	damageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	damageLabel.BackgroundTransparency = 1
+	damageLabel.Text = string.format("Blocked %d damage!", damageEvaded)
+	damageLabel.Font = Enum.Font.GothamBold
+	damageLabel.TextSize = 28
+	damageLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
+	damageLabel.TextStrokeTransparency = 0.5
+	damageLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	damageLabel.TextTransparency = 0
+	damageLabel.ZIndex = 101
+	damageLabel.Parent = screenGui
+
+	-- Animación: aparecer con bounce
 	evadedLabel.Size = UDim2.fromOffset(0, 0)
-	TweenService:Create(evadedLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.fromOffset(400, 100)
-	}):Play()
+	damageLabel.TextTransparency = 1
+	damageLabel.TextStrokeTransparency = 1
 
-	task.delay(0.8, function()
-		local fadeOut = TweenService:Create(evadedLabel, TweenInfo.new(0.3), {
+	local appearTween = TweenService:Create(evadedLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(600, 150)
+	})
+	appearTween:Play()
+
+	task.delay(0.15, function()
+		TweenService:Create(damageLabel, TweenInfo.new(0.2), {
+			TextTransparency = 0,
+			TextStrokeTransparency = 0.5
+		}):Play()
+	end)
+
+	-- Flash dorado (3 pulsos)
+	task.spawn(function()
+		for i = 1, 3 do
+			TweenService:Create(flash, TweenInfo.new(0.1), {
+				BackgroundTransparency = 0.6
+			}):Play()
+			task.wait(0.1)
+			TweenService:Create(flash, TweenInfo.new(0.1), {
+				BackgroundTransparency = 1
+			}):Play()
+			task.wait(0.1)
+		end
+	end)
+
+	-- Desaparecer después de 1.2s
+	task.delay(1.2, function()
+		local fadeOut = TweenService:Create(evadedLabel, TweenInfo.new(0.4), {
 			TextTransparency = 1,
 			TextStrokeTransparency = 1,
-			Position = UDim2.fromScale(0.5, 0.3)
+			Position = UDim2.fromScale(0.5, 0.25)
 		})
 		fadeOut:Play()
+
+		TweenService:Create(damageLabel, TweenInfo.new(0.4), {
+			TextTransparency = 1,
+			TextStrokeTransparency = 1
+		}):Play()
+
 		fadeOut.Completed:Connect(function()
-			evadedLabel:Destroy()
+			screenGui:Destroy()
 		end)
 	end)
+
+	-- ✅ Anillo dorado expandiéndose en 3D
+	local ring = Instance.new("Part")
+	ring.Name = "EvadeRing"
+	ring.Size = Vector3.new(2, 0.5, 2)
+	ring.CFrame = CFrame.new(humanoidRootPart.Position) * CFrame.Angles(math.rad(90), 0, 0)
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.Transparency = 0.3
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(255, 220, 100)
+	ring.Parent = workspace
+
+	-- Mesh de anillo
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.FileMesh
+	mesh.MeshId = "rbxassetid://3270017" -- Anillo/Ring mesh
+	mesh.Scale = Vector3.new(2, 2, 0.5)
+	mesh.Parent = ring
+
+	-- Animar: expandir y desvanecer
+	TweenService:Create(ring, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Transparency = 1,
+		Size = Vector3.new(20, 0.5, 20)
+	}):Play()
+
+	TweenService:Create(mesh, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Scale = Vector3.new(10, 10, 0.5)
+	}):Play()
+
+	game.Debris:AddItem(ring, 1)
 
 	-- ✅ Sonido de éxito
 	local sound = Instance.new("Sound")
 	sound.SoundId = "rbxassetid://6026984224" -- Epic shield/block sound
-	sound.Volume = 0.6
+	sound.Volume = 0.7
 	sound.PlaybackSpeed = 1.1
 	sound.Parent = humanoidRootPart
 	sound:Play()
 	game.Debris:AddItem(sound, 3)
 
-	-- ✅ Efecto de anillo dorado expandiéndose
-	local ring = Instance.new("Part")
-	ring.Size = Vector3.new(1, 0.5, 1)
-	ring.Position = humanoidRootPart.Position
-	ring.Anchored = true
-	ring.CanCollide = false
-	ring.Transparency = 0.5
-	ring.Material = Enum.Material.Neon
-	ring.Color = Color3.fromRGB(255, 220, 100)
-	ring.Shape = Enum.PartType.Cylinder
-	ring.Orientation = Vector3.new(0, 0, 90)
-	ring.Parent = workspace
-
-	-- Expandir y desvanecer
-	TweenService:Create(ring, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = Vector3.new(12, 0.5, 12),
-		Transparency = 1
-	}):Play()
-
-	game.Debris:AddItem(ring, 1)
-
 	if DEBUG then
-		print(("[DASH] ⚡ EVADED %d damage!"):format(damageEvaded))
+		print(("[DASH] ⚡ EVADED visual feedback mostrado!"):format())
 	end
 end
 
