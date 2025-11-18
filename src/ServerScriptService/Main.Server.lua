@@ -1310,20 +1310,20 @@ end)
 --═══════════════════════════════════════════════════════════════════════
 
 -- Crear RemoteEvent si no existe
-local DashRequest = RemotesFolder:FindFirstChild("DashRequest") :: RemoteEvent?
+local DashRequest = Remotes:FindFirstChild("DashRequest") :: RemoteEvent?
 if not DashRequest then
 	DashRequest = Instance.new("RemoteEvent")
 	DashRequest.Name = "DashRequest"
-	DashRequest.Parent = RemotesFolder
+	DashRequest.Parent = Remotes
 	warn("[Main.Server] RemoteEvent 'DashRequest' creado automáticamente")
 end
 
 -- ✅ NUEVO: RemoteEvent para feedback de evasión
-local DashEvaded = RemotesFolder:FindFirstChild("DashEvaded") :: RemoteEvent?
+local DashEvaded = Remotes:FindFirstChild("DashEvaded") :: RemoteEvent?
 if not DashEvaded then
 	DashEvaded = Instance.new("RemoteEvent")
 	DashEvaded.Name = "DashEvaded"
-	DashEvaded.Parent = RemotesFolder
+	DashEvaded.Parent = Remotes
 	warn("[Main.Server] RemoteEvent 'DashEvaded' creado automáticamente")
 end
 
@@ -1387,8 +1387,23 @@ DashRequest.OnServerEvent:Connect(function(plr: Player, direction: Vector3?)
 	-- Mantener Y original (no teleportar verticalmente)
 	targetPos = Vector3.new(targetPos.X, originPos.Y, targetPos.Z)
 
+	-- Resetear velocidad antes de teleportar (evita inercia)
+	if humanoidRootPart:FindFirstChild("AssemblyLinearVelocity") then
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+	end
+	humanoidRootPart.Velocity = Vector3.zero
+
 	-- Ejecutar teletransporte
 	humanoidRootPart.CFrame = CFrame.new(targetPos, targetPos + direction)
+
+	if Config.DEBUG_MODE then
+		print(("[DASH] 🚀 %s teleportado de %s a %s (distancia: %.1f studs)"):format(
+			plr.Name,
+			tostring(Vector3.new(math.floor(originPos.X), math.floor(originPos.Y), math.floor(originPos.Z))),
+			tostring(Vector3.new(math.floor(targetPos.X), math.floor(targetPos.Y), math.floor(targetPos.Z))),
+			(targetPos - originPos).Magnitude
+		))
+	end
 
 	-- ✅ Efectos de partículas en origen
 	local originEffect = Instance.new("Part")

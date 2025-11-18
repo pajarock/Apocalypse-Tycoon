@@ -337,6 +337,16 @@ end)
 -------------------------------------------------------------------------
 
 local function showEvasionFeedback(damageEvaded: number)
+	if DEBUG then
+		print(("[DASH] 🛡️ showEvasionFeedback llamado con damage: %d"):format(damageEvaded))
+	end
+
+	-- Verificar que tenemos referencias válidas
+	if not character or not humanoidRootPart then
+		warn("[DASH] No se puede mostrar feedback - character o HRP no disponible")
+		return
+	end
+
 	-- ✅ Flash dorado brillante en pantalla
 	local flash = Instance.new("Frame")
 	flash.Size = UDim2.fromScale(1, 1)
@@ -450,7 +460,17 @@ end
 
 -- Escuchar eventos de evasión
 DashEvaded.OnClientEvent:Connect(function(damageEvaded: number)
-	showEvasionFeedback(damageEvaded)
+	if DEBUG then
+		print(("[DASH] 🛡️ DashEvaded event recibido! Damage: %d"):format(damageEvaded))
+	end
+
+	local success, err = pcall(function()
+		showEvasionFeedback(damageEvaded)
+	end)
+
+	if not success then
+		warn(("[DASH] ❌ Error en showEvasionFeedback: %s"):format(tostring(err)))
+	end
 end)
 
 -- Re-conectar cuando cambie el personaje
