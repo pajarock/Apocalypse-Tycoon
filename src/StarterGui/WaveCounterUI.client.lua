@@ -396,17 +396,27 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 		):Play()
 	end)
 
-	-- Flash dorado en borde
+	-- ✅ Flash dorado en borde (3 pulsos)
 	waveStroke.Color = Color3.fromRGB(255, 215, 0)
 	waveStroke.Thickness = 5
-	TweenService:Create(waveStroke, TweenInfo.new(0.8), {
+
+	-- TweenInfo(tiempo, estilo, dirección, repeticiones, reversa)
+	local pulseInfo = TweenInfo.new(
+		0.25,  -- Duración por pulso
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.InOut,
+		2,  -- Repetir 2 veces (ida y vuelta = 1 pulso, así que 2 repeticiones = 3 pulsos totales)
+		true  -- Reversa (ida y vuelta)
+	)
+
+	TweenService:Create(waveStroke, pulseInfo, {
 		Color = Color3.fromRGB(255, 170, 0),
 		Thickness = 3
 	}):Play()
 
-	-- Flash en texto "WAVE"
+	-- ✅ Flash en texto "WAVE" (3 pulsos)
 	labelWave.TextColor3 = Color3.fromRGB(255, 215, 0)
-	TweenService:Create(labelWave, TweenInfo.new(0.6), {
+	TweenService:Create(labelWave, pulseInfo, {
 		TextColor3 = Color3.fromRGB(255, 170, 0)
 	}):Play()
 

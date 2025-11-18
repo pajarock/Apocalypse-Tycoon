@@ -41,7 +41,20 @@ repairBtn.Position = UDim2.new(0, -90, 0, 5)
 repairBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
 repairBtn.TextColor3 = Color3.new(1,1,1)
 repairBtn.Font = Enum.Font.GothamBold
-repairBtn.TextSize = 14
+repairBtn.TextScaled = true  -- ✅ Auto-escalar para que se vea el texto completo
+repairBtn.TextWrapped = true  -- ✅ Permitir salto de línea
+repairBtn.TextStrokeTransparency = 0.7  -- ✅ Sombra para mejor legibilidad
+repairBtn.BorderSizePixel = 0
+
+-- ✅ Bordes redondeados para el botón
+Instance.new("UICorner", repairBtn).CornerRadius = UDim.new(0, 6)
+
+-- ✅ Padding interno para que el texto no toque los bordes
+local repairPadding = Instance.new("UIPadding", repairBtn)
+repairPadding.PaddingLeft = UDim.new(0, 4)
+repairPadding.PaddingRight = UDim.new(0, 4)
+repairPadding.PaddingTop = UDim.new(0, 2)
+repairPadding.PaddingBottom = UDim.new(0, 2)
 
 -- ✅ Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
