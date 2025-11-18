@@ -129,7 +129,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 	--═══════════════════════════════════════════════════════════════════════
 	-- ⚙️ UTILIDADES (Mid-Late Game)
 	--═══════════════════════════════════════════════════════════════════════
-	Upgrade_8 = {
+	Upgrade_11 = {
 		Title = "Auto-Repair System",
 		Description = "Repara base automáticamente. +2 HP/s",
 		BasePrice = 2000000,

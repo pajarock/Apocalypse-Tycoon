@@ -1164,15 +1164,20 @@ RequestState.OnServerInvoke = function(plr: Player)
 
 	local info = {}
 	for id, def in pairs(UpgDefs) do
-		info[id] = {
-			Title = def.Title or id,
-			Description = def.Description or "",
-			Price = Economy.GetCurrentPrice(plr.UserId, id),
-			Count = s.OwnedUpgrades[id] or 0,
-			MaxCount = def.MaxCount,
-			IncomePerSec = def.IncomePerSec or 0,
-			Category = def.Category or "Income",
-		}
+		-- ✅ FIX: Defensive check - skip if def is not a valid table
+		if type(def) == "table" and def.Title then
+			info[id] = {
+				Title = def.Title or id,
+				Description = def.Description or "",
+				Price = Economy.GetCurrentPrice(plr.UserId, id),
+				Count = s.OwnedUpgrades[id] or 0,
+				MaxCount = def.MaxCount,
+				IncomePerSec = def.IncomePerSec or 0,
+				Category = def.Category or "Income",
+			}
+		else
+			warn(("[RequestState] Invalid upgrade definition for %s: %s"):format(id, tostring(def)))
+		end
 	end
 
 	return {
