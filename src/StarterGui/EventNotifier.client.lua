@@ -63,7 +63,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ApocalypseNotifier"
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999
+screenGui.DisplayOrder = 5 -- Debajo del HUD permanente
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Contenedor principal
