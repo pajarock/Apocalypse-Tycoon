@@ -34,9 +34,10 @@ local CONFIG = {
 		EPIC     = "rbxassetid://6895079853",
 	},
 	DEFAULT_TYPE = "WARNING",
-	DEFAULT_DURATION = 3.0,  -- Más rápido = más urgente
+	DEFAULT_DURATION = 2.0,  -- ✅ REDUCIDO: 3.0 → 2.0 (más rápido)
 	PARTICLE_COUNT = 12,
-	SHAKE_INTENSITY = 6,  -- Shake sutil pero presente
+	SHAKE_INTENSITY = 6,
+	MAX_QUEUE_SIZE = 2,  -- ✅ NUEVO: Máximo 2 notificaciones en cola
 }
 
 -- ============================================================================
@@ -381,7 +382,12 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	typeTag = typeTag or CONFIG.DEFAULT_TYPE
 	duration = duration or CONFIG.DEFAULT_DURATION
 
+	-- ✅ FIX: Limitar tamaño de la cola para evitar atraso
 	if busy then
+		-- Si la cola está llena, eliminar la notificación más antigua
+		if #queue >= CONFIG.MAX_QUEUE_SIZE then
+			table.remove(queue, 1) -- Eliminar la primera (más vieja)
+		end
 		table.insert(queue, {message, typeTag, duration})
 		return
 	end
