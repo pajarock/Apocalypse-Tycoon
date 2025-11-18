@@ -73,6 +73,15 @@ end
 
 -- Spawnear powerup aleatorio cerca de un jugador
 function PowerUpManager:SpawnRandomPowerUp(userId: number, waveType: string?)
+	-- ✅ VALIDACIÓN: Verificar que userId sea un número
+	if type(userId) ~= "number" then
+		warn(("[PowerUpManager] ❌ SpawnRandomPowerUp recibió userId inválido: %s (tipo: %s)"):format(
+			tostring(userId), type(userId)
+		))
+		warn("[PowerUpManager] 💡 Tip: Asegúrate de pasar player.UserId, no player o position")
+		return
+	end
+
 	local module = getPowerUpModule()
 	if not module then
 		warn("[PowerUpManager] No se pudo cargar PowerUpModule")

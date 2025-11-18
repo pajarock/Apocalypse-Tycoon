@@ -745,6 +745,14 @@ end
 
 -- Spawnear powerup para un jugador que completó una wave
 function PowerUpModule.SpawnPowerUpForPlayer(userId: number, waveType: string)
+	-- ✅ VALIDACIÓN: Verificar que userId sea un número
+	if type(userId) ~= "number" then
+		warn(("[PowerUpModule] ❌ SpawnPowerUpForPlayer recibió userId inválido: %s (tipo: %s)"):format(
+			tostring(userId), type(userId)
+		))
+		return
+	end
+
 	local player = getPlayer(userId)
 	if not player or not player.Character then return end
 
