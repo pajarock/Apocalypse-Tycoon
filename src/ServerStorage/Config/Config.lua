@@ -58,9 +58,9 @@ Config.BASE_MAX_HP = 100
 Config.BASE_REGEN_RATE = 0.5  -- HP por segundo (0 = sin regen pasiva)
 Config.REPAIR_COST_PER_HP = 100  -- $50 por punto de HP reparado
 
--- Escudos
-Config.SHIELD_REDUCTION_PER_LEVEL = 0.2  -- 20% reducción por nivel (era duplicado)
-Config.SHIELD_MAX_REDUCTION = 0.6  -- Máximo 60% de reducción (3 niveles)
+-- Escudos (✅ BALANCEADO: +20% efectividad)
+Config.SHIELD_REDUCTION_PER_LEVEL = 0.18  -- 18% reducción por nivel (antes 15%)
+Config.SHIELD_MAX_REDUCTION = 0.54  -- Máximo 54% de reducción (3 niveles)
 Config.SHIELD_MAX_LEVEL = 3  -- 🆕 Nivel máximo de escudo
 
 -- 🆕 Sistema de invencibilidad temporal
@@ -333,16 +333,16 @@ if Config.DEBUG_MODE then
 end
 
 --═══════════════════════════════════════════════════════════════════════
--- 🌊 SISTEMA DE WAVES
+-- 🌊 SISTEMA DE WAVES (✅ BALANCEADO - Opción B: Moderado)
 --═══════════════════════════════════════════════════════════════════════
 Config.CURRENT_WAVE = 1
-Config.METEORS_PER_WAVE_BASE = 8
+Config.METEORS_PER_WAVE_BASE = 7  -- ✅ REDUCIDO: 8 → 7 (-12% meteoritos)
 
 function Config.GetWaveDifficulty(waveNum: number)
 	return {
-		Meteors = Config.METEORS_PER_WAVE_BASE + (waveNum * 2),
-		Damage = 20 + (waveNum * 5),
-		Interval = math.max(45, 90 - (waveNum * 3))
+		Meteors = Config.METEORS_PER_WAVE_BASE + (waveNum * 2),  -- Wave 1: 7, Wave 2: 9, Wave 3: 11
+		Damage = 14 + (waveNum * 4),  -- ✅ REDUCIDO: base 20→14, crecimiento +5→+4 (Wave 1: 18, Wave 2: 22, Wave 3: 26)
+		Interval = math.max(45, 90 - (waveNum * 3))  -- Tiempo entre waves (mantener)
 	}
 end
 

@@ -197,8 +197,8 @@ local function refreshAll()
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	-- ✅ FIX: Mostrar reducción de daño del shield actual
-	local shieldReduction = shieldLevel * 15 -- 15% por nivel
+	-- ✅ FIX: Mostrar reducción de daño del shield actual (18% por nivel - BALANCEADO)
+	local shieldReduction = shieldLevel * 18 -- ✅ BALANCEADO: 18% por nivel (antes 15%)
 	if shieldLevel > 0 then
 		title.Text = string.format("SHOP | 🛡️ L%d (-%d%%)", shieldLevel, shieldReduction)
 	else
@@ -221,9 +221,9 @@ local function refreshAll()
 				count
 			)
 
-			-- Agregar info especial para shields
+			-- Agregar info especial para shields (18% por nivel - BALANCEADO)
 			if upgId == "Upgrade_6" then
-				local nextReduction = (shieldLevel + 1) * 15
+				local nextReduction = (shieldLevel + 1) * 18  -- ✅ BALANCEADO: 18% por nivel
 				label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
 			end
 
