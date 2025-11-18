@@ -6,7 +6,8 @@
 	FEATURES:
 	- Detecta Shift + WASD para dash direccional
 	- Cooldown UI visible
-	- Efectos visuales (trail, screen flash)
+	- Efectos visuales (trail, screen flash, particles)
+	- Efecto fantasmal: Player semi-transparente durante el dash (0.3s)
 	- Sonido de dash
 
 	CONTROLS:
@@ -256,6 +257,56 @@ local function playDashSound()
 	game.Debris:AddItem(sound, 2)
 end
 
+-- ✅ EFECTO FANTASMAL: Hacer al player semi-transparente durante el dash
+local function applyGhostEffect()
+	if not character then return end
+
+	-- Transparencia fantasmal (70-80%)
+	local GHOST_TRANSPARENCY = 0.75
+
+	-- Tabla para guardar transparencias originales
+	local originalTransparencies = {}
+
+	-- Hacer transparentes todas las partes del body
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("Part") then
+			-- Guardar transparencia original
+			originalTransparencies[part] = part.Transparency
+
+			-- Aplicar transparencia fantasmal
+			part.Transparency = GHOST_TRANSPARENCY
+		end
+
+		-- También hacer transparentes los accesorios
+		if part:IsA("Decal") or part:IsA("Texture") then
+			originalTransparencies[part] = part.Transparency
+			part.Transparency = GHOST_TRANSPARENCY
+		end
+	end
+
+	-- Restaurar después del dash
+	task.delay(DASH_INVULN_DURATION, function()
+		for part, originalTransparency in pairs(originalTransparencies) do
+			if part and part.Parent then
+				-- Tween suave de regreso para efecto épico
+				if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("Part") or part:IsA("Decal") or part:IsA("Texture") then
+					TweenService:Create(part, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Transparency = originalTransparency
+					}):Play()
+				end
+			end
+		end
+
+		if DEBUG then
+			print("[DASH] 👻 Efecto fantasmal terminado - restaurando visibilidad")
+		end
+	end)
+
+	if DEBUG then
+		print("[DASH] 👻 Efecto fantasmal aplicado!")
+	end
+end
+
 local function executeDash()
 	if not canDash() then
 		if DEBUG then
@@ -281,6 +332,7 @@ local function executeDash()
 	-- Efectos visuales locales
 	playDashVFX()
 	playDashSound()
+	applyGhostEffect() -- 👻 Efecto fantasmal de invisibilidad
 
 	-- Actualizar UI
 	updateCooldownUI()
