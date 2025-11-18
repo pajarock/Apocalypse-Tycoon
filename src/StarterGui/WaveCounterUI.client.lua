@@ -118,68 +118,8 @@ wavePadding.PaddingBottom = UDim.new(0, 5)
 wavePadding.Parent = waveFrame
 
 --═══════════════════════════════════════════════════════════════════════
--- CONTADOR DE DINERO ÉPICO (Superior Centro-Derecha)
+-- ✅ ELIMINADO: CONTADOR DE DINERO (ahora en CashIncomeWidget centralizado)
 --═══════════════════════════════════════════════════════════════════════
-
-local moneyFrame = Instance.new("Frame")
-moneyFrame.Name = "MoneyFrame"
-moneyFrame.Size = UDim2.fromOffset(300, 80) -- Más grande
-moneyFrame.Position = UDim2.new(0.5, -150, 0, 10) -- Centro superior
-moneyFrame.BackgroundColor3 = Color3.fromRGB(10, 18, 12)
-moneyFrame.BackgroundTransparency = 0.05
-moneyFrame.BorderSizePixel = 0
-moneyFrame.Rotation = -1 -- Rotación sutil
-moneyFrame.Parent = screenGui
-
-local moneyCorner = Instance.new("UICorner")
-moneyCorner.CornerRadius = UDim.new(0, 10)
-moneyCorner.Parent = moneyFrame
-
-local moneyStroke = Instance.new("UIStroke")
-moneyStroke.Color = Color3.fromRGB(85, 255, 127)
-moneyStroke.Thickness = 4 -- Más grueso
-moneyStroke.Transparency = 0
-moneyStroke.Parent = moneyFrame
-
-local moneyGradient = Instance.new("UIGradient")
-moneyGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(85, 255, 127)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 100))
-}
-moneyGradient.Rotation = 90
-moneyGradient.Parent = moneyStroke
-
--- Ícono de dinero
-local moneyIcon = Instance.new("TextLabel")
-moneyIcon.Name = "Icon"
-moneyIcon.Size = UDim2.fromScale(0.2, 0.7)
-moneyIcon.Position = UDim2.fromScale(0.05, 0.15)
-moneyIcon.BackgroundTransparency = 1
-moneyIcon.Text = "💰"
-moneyIcon.TextScaled = true
-moneyIcon.Font = Enum.Font.GothamBold
-moneyIcon.Parent = moneyFrame
-
--- Label de dinero en LuckiestGuy
-local moneyLabel = Instance.new("TextLabel")
-moneyLabel.Name = "MoneyLabel"
-moneyLabel.Size = UDim2.fromScale(0.7, 0.8)
-moneyLabel.Position = UDim2.fromScale(0.28, 0.1)
-moneyLabel.BackgroundTransparency = 1
-moneyLabel.Text = "$0"
-moneyLabel.TextColor3 = Color3.fromRGB(100, 255, 140)
-moneyLabel.TextScaled = true
-moneyLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
-moneyLabel.TextStrokeTransparency = 0.4
-moneyLabel.TextStrokeColor3 = Color3.fromRGB(0, 50, 20)
-moneyLabel.TextXAlignment = Enum.TextXAlignment.Left
-moneyLabel.Rotation = -2 -- Inclinación grafiti
-moneyLabel.Parent = moneyFrame
-
-local moneyPadding = Instance.new("UIPadding")
-moneyPadding.PaddingLeft = UDim.new(0, 10)
-moneyPadding.PaddingRight = UDim.new(0, 10)
-moneyPadding.Parent = moneyFrame
 
 --═══════════════════════════════════════════════════════════════════════
 -- MENSAJE "WAVE COMPLETED" (Centro Pantalla)
@@ -237,42 +177,7 @@ completedSubtext.Parent = completedFrame
 -- FUNCIONES DE ANIMACIÓN
 --═══════════════════════════════════════════════════════════════════════
 
-local function formatMoney(amount: number): string
-	if amount >= 1000000 then
-		return string.format("$%.1fM", amount / 1000000)
-	elseif amount >= 1000 then
-		return string.format("$%.1fK", amount / 1000)
-	else
-		return string.format("$%d", amount)
-	end
-end
-
-local function animateMoneyChange(oldValue: number, newValue: number)
-	-- Interpolación suave
-	local duration = 0.5
-	local startTime = tick()
-
-	task.spawn(function()
-		while tick() - startTime < duration do
-			local alpha = (tick() - startTime) / duration
-			local current = oldValue + (newValue - oldValue) * alpha
-			moneyLabel.Text = formatMoney(math.floor(current))
-			task.wait()
-		end
-		moneyLabel.Text = formatMoney(newValue)
-	end)
-
-	-- Flash verde si ganas dinero, rojo si pierdes
-	if newValue > oldValue then
-		moneyStroke.Color = Color3.fromRGB(0, 255, 0)
-	else
-		moneyStroke.Color = Color3.fromRGB(255, 0, 0)
-	end
-
-	TweenService:Create(moneyStroke, TweenInfo.new(0.5), {
-		Color = Color3.fromRGB(85, 255, 127)
-	}):Play()
-end
+-- ✅ ELIMINADO: formatMoney y animateMoneyChange (ahora en CashIncomeWidget)
 
 local function playWavePulse()
 	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, true)
@@ -574,24 +479,7 @@ else
 	warn("[WaveCounterUI] ⚠️ No se encontró CurrentWave")
 end
 
--- Money Counter
-local leaderstats = player:WaitForChild("leaderstats")
-local cashValue = leaderstats:WaitForChild("Cash")
-
-if cashValue then
-	moneyLabel.Text = formatMoney(cashValue.Value)
-
-	local previousCash = cashValue.Value
-
-	cashValue:GetPropertyChangedSignal("Value"):Connect(function()
-		animateMoneyChange(previousCash, cashValue.Value)
-		previousCash = cashValue.Value
-	end)
-
-	if DEBUG then
-		print("[WaveCounterUI] ✓ Money counter conectado")
-	end
-end
+-- ✅ ELIMINADO: Money Counter (ahora en CashIncomeWidget centralizado)
 
 -- ✅ Waves Survived Counter
 local stats = player:WaitForChild("Stats", 10)

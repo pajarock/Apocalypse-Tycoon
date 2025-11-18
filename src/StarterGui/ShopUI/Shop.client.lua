@@ -13,12 +13,12 @@ local RequestPurchase = Remotes:WaitForChild("RequestPurchase") :: RemoteEvent
 -- UI ROOT
 local gui = script.Parent :: ScreenGui
 
--- Panel principal con estilo urbano (✅ Más alto para categorías)
+-- Panel principal con estilo urbano (tamaño original)
 local frame = Instance.new("Frame")
 frame.Name = "ShopFrame"
 frame.AnchorPoint = Vector2.new(0, 0)
 frame.Position = UDim2.new(0, 20, 0, 100)
-frame.Size = UDim2.fromOffset(280, 420) -- ✅ AUMENTADO: 320→420 para categorías
+frame.Size = UDim2.fromOffset(280, 360) -- ✅ Tamaño fijo que no desborda
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
@@ -28,7 +28,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
 -- Sombra pronunciada
 local shopShadow = Instance.new("Frame")
-shopShadow.Size = UDim2.fromOffset(286, 426) -- ✅ Ajustado a nuevo tamaño
+shopShadow.Size = UDim2.fromOffset(286, 366) -- ✅ Ajustado
 shopShadow.Position = UDim2.new(0, 17, 0, 103)
 shopShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 shopShadow.BackgroundTransparency = 0.6
@@ -58,8 +58,8 @@ shopGradient.Parent = shopStroke
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, -20, 0, 32)
-title.Position = UDim2.fromOffset(10, 8)
+title.Size = UDim2.new(1, -20, 0, 28)
+title.Position = UDim2.fromOffset(10, 6)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.LuckiestGuy -- GRAFITI
 title.TextScaled = true
@@ -72,13 +72,33 @@ title.Rotation = -2 -- Inclinación grafiti
 title.ZIndex = 2
 title.Parent = frame
 
--- ✅ ELIMINADO: Widget de income movido a CashIncomeWidget centralizado
+-- ✅ PESTAÑAS (TABS) - Contenedor horizontal
+local tabsContainer = Instance.new("Frame")
+tabsContainer.Name = "TabsContainer"
+tabsContainer.Size = UDim2.new(1, -20, 0, 32)
+tabsContainer.Position = UDim2.fromOffset(10, 38)
+tabsContainer.BackgroundTransparency = 1
+tabsContainer.ZIndex = 2
+tabsContainer.Parent = frame
 
-local list = Instance.new("Frame")
+local tabsLayout = Instance.new("UIListLayout")
+tabsLayout.FillDirection = Enum.FillDirection.Horizontal
+tabsLayout.Padding = UDim.new(0, 4)
+tabsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+tabsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabsLayout.Parent = tabsContainer
+
+-- ✅ Lista de upgrades (con scroll)
+local list = Instance.new("ScrollingFrame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 50) -- Ajustado: más arriba sin el info widget
-list.Size = UDim2.new(1, -20, 1, -60) -- Más espacio para la lista
+list.Position = UDim2.fromOffset(10, 76) -- Debajo de pestañas
+list.Size = UDim2.new(1, -20, 1, -86) -- Ajustado para no desbordar
+list.BorderSizePixel = 0
+list.ScrollBarThickness = 6
+list.ScrollBarImageColor3 = Color3.fromRGB(255, 170, 50)
+list.CanvasSize = UDim2.fromOffset(0, 0) -- Se auto-ajusta
+list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 list.ZIndex = 2
 list.Parent = frame
 
@@ -97,8 +117,9 @@ local function fmtMoney(n: any): string
 end
 
 local buttons: {[string]: TextButton} = {}
-local categoryHeaders: {[string]: TextLabel} = {}
+local tabButtons: {[string]: TextButton} = {}
 local shieldLevel = 0
+local currentTab = "Income" -- ✅ Pestaña activa por defecto
 
 -- Función para obtener estado del servidor
 local function fetchState()
@@ -111,41 +132,15 @@ local function fetchState()
 	return st
 end
 
--- ✅ NUEVO: Crear header de categoría
-local function makeCategoryHeader(categoryName: string, emoji: string): TextLabel
-	local header = Instance.new("TextLabel")
-	header.Name = "Header_" .. categoryName
-	header.Size = UDim2.new(1, 0, 0, 24)
-	header.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-	header.BackgroundTransparency = 0.3
-	header.BorderSizePixel = 0
-	header.Font = Enum.Font.GothamBold
-	header.TextSize = 14
-	header.TextColor3 = Color3.fromRGB(255, 200, 80)
-	header.Text = string.format("%s %s", emoji, categoryName:upper())
-	header.TextXAlignment = Enum.TextXAlignment.Left
-	header.TextStrokeTransparency = 0.5
-	header.ZIndex = 3
-	header.Parent = list
-	Instance.new("UICorner", header).CornerRadius = UDim.new(0, 6)
-
-	-- Padding interno
-	local headerPadding = Instance.new("UIPadding")
-	headerPadding.PaddingLeft = UDim.new(0, 8)
-	headerPadding.Parent = header
-
-	return header
-end
-
 -- Crear fila de upgrade con estilo urbano
 local function makeRow(upgId: string): TextButton
 	local btn = Instance.new("TextButton")
 	btn.Name = upgId
-	btn.Size = UDim2.new(1, 0, 0, 32)
+	btn.Size = UDim2.new(1, -6, 0, 32) -- ✅ Ajustado para scrollbar
 	btn.BackgroundColor3 = Color3.fromRGB(25, 80, 45)
 	btn.TextColor3 = Color3.new(1, 1, 1)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true -- FIX: Auto-escalar para evitar overflow
+	btn.TextScaled = true
 	btn.TextXAlignment = Enum.TextXAlignment.Left
 	btn.AutoButtonColor = true
 	btn.TextStrokeTransparency = 0.5
@@ -176,7 +171,7 @@ local function makeRow(upgId: string): TextButton
 		local price = upgradeInfo.Price or 999999
 		local cash = currentState.Cash or 0
 		local count = upgradeInfo.Count or 0
-		local maxCount = upgradeInfo.MaxCount  -- Necesitas pasar esto desde servidor
+		local maxCount = upgradeInfo.MaxCount
 
 		-- Verificar MaxCount
 		if maxCount and count >= maxCount then
@@ -186,7 +181,7 @@ local function makeRow(upgId: string): TextButton
 			sound.Volume = 0.3
 			sound:Play()
 			game:GetService("Debris"):AddItem(sound, 2)
-			return  -- No enviar compra
+			return
 		end
 
 		if cash >= price then
@@ -211,12 +206,51 @@ local function makeRow(upgId: string): TextButton
 	return btn
 end
 
--- ✅ NUEVO: Upgrades organizados por categoría
+-- ✅ NUEVO: Upgrades organizados por categoría con 4 pestañas
 local CATEGORIES = {
 	{ name = "Income", emoji = "💰", upgrades = {"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5", "Upgrade_9"} },
 	{ name = "Defense", emoji = "🛡️", upgrades = {"Upgrade_6", "Upgrade_7", "Upgrade_8"} },
 	{ name = "Utility", emoji = "⚙️", upgrades = {"Upgrade_11", "Upgrade_10"} },
+	{ name = "Eggs", emoji = "🥚", upgrades = {} }, -- ✅ 4ta pestaña para gacha (vacía por ahora)
 }
+
+-- ✅ Crear botón de pestaña
+local function makeTabButton(category: {name: string, emoji: string}): TextButton
+	local tabBtn = Instance.new("TextButton")
+	tabBtn.Name = "Tab_" .. category.name
+	tabBtn.Size = UDim2.fromOffset(64, 30)
+	tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	tabBtn.BackgroundTransparency = 0.3
+	tabBtn.BorderSizePixel = 0
+	tabBtn.Font = Enum.Font.GothamBold
+	tabBtn.TextSize = 16
+	tabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	tabBtn.Text = category.emoji
+	tabBtn.ZIndex = 3
+	tabBtn.Parent = tabsContainer
+	Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 8)
+
+	local tabStroke = Instance.new("UIStroke")
+	tabStroke.Color = Color3.fromRGB(100, 100, 120)
+	tabStroke.Thickness = 2
+	tabStroke.Transparency = 0.5
+	tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	tabStroke.Parent = tabBtn
+
+	-- Click handler
+	tabBtn.MouseButton1Click:Connect(function()
+		currentTab = category.name
+		refreshAll()
+	end)
+
+	tabButtons[category.name] = tabBtn
+	return tabBtn
+end
+
+-- Crear todas las pestañas
+for _, category in ipairs(CATEGORIES) do
+	makeTabButton(category)
+end
 
 -- Refrescar UI
 local function refreshAll()
@@ -226,55 +260,67 @@ local function refreshAll()
 	shieldLevel = st.ShieldLevel or 0
 
 	-- ✅ FIX: Mostrar reducción de daño del shield actual (18% por nivel - BALANCEADO)
-	local shieldReduction = shieldLevel * 18 -- ✅ BALANCEADO: 18% por nivel (antes 15%)
+	local shieldReduction = shieldLevel * 18
 	if shieldLevel > 0 then
 		title.Text = string.format("SHOP | 🛡️ L%d (-%d%%)", shieldLevel, shieldReduction)
 	else
 		title.Text = "SHOP | 🛡️ NO SHIELD"
 	end
 
-	-- ✅ NUEVO: Organizar por categorías
+	-- ✅ Actualizar estilo de pestañas (activa vs inactiva)
+	for categoryName, tabBtn in pairs(tabButtons) do
+		if categoryName == currentTab then
+			tabBtn.BackgroundColor3 = Color3.fromRGB(80, 100, 60)
+			tabBtn.BackgroundTransparency = 0
+			tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			tabBtn.Parent.BorderColor3 = Color3.fromRGB(0, 255, 100)
+		else
+			tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+			tabBtn.BackgroundTransparency = 0.3
+			tabBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+		end
+	end
+
+	-- ✅ Mostrar solo upgrades de la categoría activa
 	local layoutOrder = 0
 	for _, category in ipairs(CATEGORIES) do
-		-- Crear/actualizar header de categoría
-		local header = categoryHeaders[category.name]
-		if not header then
-			header = makeCategoryHeader(category.name, category.emoji)
-			categoryHeaders[category.name] = header
-		end
-		header.LayoutOrder = layoutOrder
-		layoutOrder = layoutOrder + 1
+		if category.name == currentTab then
+			for _, upgId in ipairs(category.upgrades) do
+				local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
+				if infoU then
+					local btn = buttons[upgId] or makeRow(upgId)
+					btn.LayoutOrder = layoutOrder
+					btn.Visible = true
+					layoutOrder = layoutOrder + 1
 
-		-- Crear/actualizar botones de upgrades en esta categoría
-		for _, upgId in ipairs(category.upgrades) do
-			local infoU = st.UpgradesInfo and st.UpgradesInfo[upgId]
-			if infoU then
-				local btn = buttons[upgId] or makeRow(upgId)
-				btn.LayoutOrder = layoutOrder
-				layoutOrder = layoutOrder + 1
+					local count = tonumber(infoU.Count) or 0
+					local maxCount = infoU.MaxCount
 
-				local count = tonumber(infoU.Count) or 0
-				local maxCount = infoU.MaxCount
+					local label = string.format("%s | %s | x%d",
+						tostring(infoU.Title or upgId),
+						fmtMoney(infoU.Price or 0),
+						count
+					)
 
-				-- ✅ FIX: Mostrar más claramente el estado del upgrade
-				local label = string.format("%s | %s | x%d",
-					tostring(infoU.Title or upgId),
-					fmtMoney(infoU.Price or 0),
-					count
-				)
+					-- Info especial para shields
+					if upgId == "Upgrade_6" then
+						local nextReduction = (shieldLevel + 1) * 18
+						label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
+					end
 
-				-- Agregar info especial para shields (18% por nivel - BALANCEADO)
-				if upgId == "Upgrade_6" then
-					local nextReduction = (shieldLevel + 1) * 18  -- ✅ BALANCEADO: 18% por nivel
-					label = label .. string.format(" (L%d → -%d%%)", shieldLevel, nextReduction)
+					if maxCount and count >= maxCount then
+						label = label .. " [MAX]"
+					end
+
+					btn.Text = label
 				end
-
-				-- Mostrar si alcanzó el máximo
-				if maxCount and count >= maxCount then
-					label = label .. " [MAX]"
+			end
+		else
+			-- Ocultar botones de otras categorías
+			for _, upgId in ipairs(category.upgrades) do
+				if buttons[upgId] then
+					buttons[upgId].Visible = false
 				end
-
-				btn.Text = label
 			end
 		end
 	end
@@ -285,6 +331,7 @@ local open = true
 local function setOpen(v: boolean)
 	open = v
 	frame.Visible = open
+	shopShadow.Visible = open
 end
 setOpen(true)
 
