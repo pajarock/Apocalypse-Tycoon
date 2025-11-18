@@ -744,12 +744,16 @@ end
 -- ═══════════════════════════════════════════════════════════════════════
 
 -- Spawnear powerup para un jugador que completó una wave
-function PowerUpModule.SpawnPowerUpForPlayer(userId: number, waveType: string)
+function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string)
 	-- ✅ VALIDACIÓN: Verificar que userId sea un número
 	if type(userId) ~= "number" then
 		warn(("[PowerUpModule] ❌ SpawnPowerUpForPlayer recibió userId inválido: %s (tipo: %s)"):format(
 			tostring(userId), type(userId)
 		))
+		warn("[PowerUpModule] Stack trace - Esto se llamó desde EventManager probablemente")
+		warn("[PowerUpModule] 💡 SOLUCIÓN: En EventManager.lua línea ~349, cambia a:")
+		warn("    PowerUpManager:SpawnRandomPowerUp(userId, 'Normal')")
+		warn("    NO pases meteorPosition o player, solo player.UserId")
 		return
 	end
 
