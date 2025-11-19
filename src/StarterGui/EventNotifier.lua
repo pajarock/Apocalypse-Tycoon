@@ -15,7 +15,7 @@ local Debris = game:GetService("Debris")
 local player = Players.LocalPlayer
 
 -- ============================================================================
--- CONFIG — Paleta Apocalíptica
+-- CONFIG — Paleta Apocalíptica + POSICIÓN EN PANTALLA
 -- ============================================================================
 
 local CONFIG = {
@@ -34,9 +34,21 @@ local CONFIG = {
 		EPIC     = "rbxassetid://6895079853",
 	},
 	DEFAULT_TYPE = "WARNING",
-	DEFAULT_DURATION = 3.0,  -- Más rápido = más urgente
+	DEFAULT_DURATION = 2.0,  -- Más rápido
 	PARTICLE_COUNT = 12,
-	SHAKE_INTENSITY = 6,  -- Shake sutil pero presente
+	SHAKE_INTENSITY = 6,
+	MAX_QUEUE_SIZE = 2,  -- Máximo 2 notificaciones en cola
+
+	-- UI: AQUÍ CONTROLAS POSICIÓN Y TAMAÑO DEL NOTIFIER
+	UI = {
+		-- ANCHOR_Y controla la altura en pantalla (0 = arriba, 1 = abajo).
+		-- Si tapa algo, súbelo/bájalo aquí.
+		ANCHOR_Y = 0.18, -- ANTES ~0.08. Más abajo para no tapar tu widget.
+
+		WIDTH = 800,
+		HEIGHT = 110,
+		MIN_WIDTH = 100,
+	},
 }
 
 -- ============================================================================
@@ -55,6 +67,15 @@ local function getSoundFor(typeTag: string?): string?
 	return CONFIG.SOUNDS[key] or CONFIG.SOUNDS[CONFIG.DEFAULT_TYPE]
 end
 
+-- Un pequeño boost de shake para cosas épicas/críticas
+local function getShakeIntensity(typeTag: string?): number
+	typeTag = typeTag and string.upper(typeTag) or CONFIG.DEFAULT_TYPE
+	if typeTag == "EPIC" or typeTag == "CRITICAL" then
+		return CONFIG.SHAKE_INTENSITY * 1.4
+	end
+	return CONFIG.SHAKE_INTENSITY
+end
+
 -- ============================================================================
 -- ROOT GUI
 -- ============================================================================
@@ -63,17 +84,25 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ApocalypseNotifier"
 screenGui.IgnoreGuiInset = true
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 999
+screenGui.DisplayOrder = 5 -- Debajo del HUD permanente
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Contenedor principal
 local mainContainer = Instance.new("Frame")
 mainContainer.Name = "MainContainer"
 mainContainer.AnchorPoint = Vector2.new(0.5, 0)
-mainContainer.Position = UDim2.new(0.5, 0, 0.08, 0)
-mainContainer.Size = UDim2.fromOffset(750, 95)
+
+-- POSICIÓN DEL NOTIFIER EN PANTALLA
+-- X = 0.5 (centrado)
+-- Y = CONFIG.UI.ANCHOR_Y (ajusta esto si tapa algo)
+mainContainer.Position = UDim2.new(0.5, 0, CONFIG.UI.ANCHOR_Y, 0)
+
+-- Tamaño inicial pequeño (se expande con animación)
+mainContainer.Size = UDim2.fromOffset(CONFIG.UI.MIN_WIDTH, CONFIG.UI.HEIGHT)
+
 mainContainer.BackgroundTransparency = 1
 mainContainer.Visible = false
+mainContainer.Rotation = -2 -- Inclinación grafiti
 mainContainer.Parent = screenGui
 
 -- Sombra dura (no suave - más apocalíptica)
@@ -129,7 +158,7 @@ bgGradient.Transparency = NumberSequence.new({
 })
 bgGradient.Parent = mainFrame
 
--- Barra izquierda gruesa (como alerta de peligro)
+-- Barra izquierda gruesa (alerta)
 local leftBar = Instance.new("Frame")
 leftBar.Name = "LeftBar"
 leftBar.Position = UDim2.new(0, 0, 0, 0)
@@ -143,12 +172,12 @@ local leftCorner = Instance.new("UICorner")
 leftCorner.CornerRadius = UDim.new(0, 8)
 leftCorner.Parent = leftBar
 
--- Icono de advertencia (más pequeño pero visible)
+-- Icono de advertencia (MÁS GRANDE Y DRAMÁTICO)
 local iconContainer = Instance.new("Frame")
 iconContainer.Name = "IconContainer"
 iconContainer.Position = UDim2.new(0, 25, 0.5, 0)
 iconContainer.AnchorPoint = Vector2.new(0, 0.5)
-iconContainer.Size = UDim2.fromOffset(50, 50)
+iconContainer.Size = UDim2.fromOffset(70, 70) -- Más grande
 iconContainer.BackgroundTransparency = 1
 iconContainer.ZIndex = 4
 iconContainer.Parent = mainFrame
@@ -159,13 +188,14 @@ iconLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 iconLabel.Position = UDim2.fromScale(0.5, 0.5)
 iconLabel.Size = UDim2.fromScale(1, 1)
 iconLabel.BackgroundTransparency = 1
-iconLabel.Font = Enum.Font.GothamBold
+iconLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
 iconLabel.Text = "?"
 iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 iconLabel.TextScaled = true
-iconLabel.TextStrokeTransparency = 0.5
+iconLabel.TextStrokeTransparency = 0.2
 iconLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 iconLabel.ZIndex = 5
+iconLabel.Rotation = -5
 iconLabel.Parent = iconContainer
 
 -- ============================================================================
@@ -184,18 +214,19 @@ local messageLabel = Instance.new("TextLabel")
 messageLabel.Name = "MessageLabel"
 messageLabel.AnchorPoint = Vector2.new(0, 0.5)
 messageLabel.Position = UDim2.new(0, 0, 0.5, 0)
-messageLabel.Size = UDim2.new(1, 0, 0, 50)
+messageLabel.Size = UDim2.new(1, 0, 0, 60)
 messageLabel.BackgroundTransparency = 1
-messageLabel.Font = Enum.Font.GothamBold
+messageLabel.Font = Enum.Font.LuckiestGuy
 messageLabel.Text = ""
 messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 messageLabel.TextScaled = true
 messageLabel.TextWrapped = true
-messageLabel.TextStrokeTransparency = 0.5
+messageLabel.TextStrokeTransparency = 0.2
 messageLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 messageLabel.TextXAlignment = Enum.TextXAlignment.Left
 messageLabel.TextYAlignment = Enum.TextYAlignment.Center
 messageLabel.ZIndex = 5
+messageLabel.Rotation = -3
 messageLabel.Parent = textContainer
 
 -- ============================================================================
@@ -311,7 +342,6 @@ local function animateParticles(duration: number, color: Color3)
 		task.delay(randomDelay, function()
 			if not p or not p.Parent then return end
 
-			-- Suben como calor/ceniza
 			local targetY = -0.2 - math.random() * 0.3
 			local wobbleX = p.Position.X.Scale + (math.random() - 0.5) * 0.15
 
@@ -378,7 +408,11 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	typeTag = typeTag or CONFIG.DEFAULT_TYPE
 	duration = duration or CONFIG.DEFAULT_DURATION
 
+	-- Cola limitada para no atrasar notis
 	if busy then
+		if #queue >= CONFIG.MAX_QUEUE_SIZE then
+			table.remove(queue, 1) -- Saca la más vieja
+		end
 		table.insert(queue, {message, typeTag, duration})
 		return
 	end
@@ -407,7 +441,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 		CRITICAL = "?",
 		SUCCESS = "?",
 		INFO = "?",
-		EPIC = "?"  -- Radiación para épico
+		EPIC = "?", -- Radiación para épico
 	}
 	iconLabel.Text = icons[string.upper(typeTag)] or "?"
 	iconLabel.TextColor3 = color
@@ -415,9 +449,9 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	-- Mensaje en mayúsculas (más urgente)
 	messageLabel.Text = string.upper(message)
 
-	-- Reset
+	-- Reset visual
 	mainContainer.Visible = true
-	mainContainer.Size = UDim2.fromOffset(100, 95)
+	mainContainer.Size = UDim2.fromOffset(CONFIG.UI.MIN_WIDTH, CONFIG.UI.HEIGHT)
 	shadow.BackgroundTransparency = 1
 	mainFrame.BackgroundTransparency = 1
 	leftBar.BackgroundTransparency = 1
@@ -433,17 +467,15 @@ local function showNotification(message: string, typeTag: string?, duration: num
 		Debris:AddItem(s, 4)
 	end
 
-	-- ===== ENTRADA RÁPIDA Y AGRESIVA =====
+	-- ===== ENTRADA RÁPIDA =====
 
-	-- Expandir RÁPIDO
 	local expandTween = TweenService:Create(
 		mainContainer,
-		TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Size = UDim2.fromOffset(750, 95) }
+		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = UDim2.fromOffset(CONFIG.UI.WIDTH, CONFIG.UI.HEIGHT) }
 	)
 	expandTween:Play()
 
-	-- Capas aparecen INMEDIATAMENTE
 	TweenService:Create(shadow, TweenInfo.new(0.2), { BackgroundTransparency = 0.5 }):Play()
 	TweenService:Create(mainFrame, TweenInfo.new(0.2), { BackgroundTransparency = 0.05 }):Play()
 	TweenService:Create(leftBar, TweenInfo.new(0.15), { BackgroundTransparency = 0 }):Play()
@@ -451,37 +483,37 @@ local function showNotification(message: string, typeTag: string?, duration: num
 
 	task.wait(0.12)
 
-	-- Icono con impacto
-	iconLabel.Size = UDim2.fromScale(0.7, 0.7)
+	iconLabel.Size = UDim2.fromScale(0.5, 0.5)
+	iconLabel.Rotation = -25
 	TweenService:Create(
 		iconLabel,
-		TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+		TweenInfo.new(0.25, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
 		{
 			Size = UDim2.fromScale(1, 1),
-			TextTransparency = 0
+			TextTransparency = 0,
+			Rotation = -5
 		}
 	):Play()
 
 	task.wait(0.08)
 
-	-- Texto aparece RÁPIDO
 	TweenService:Create(
 		messageLabel,
 		TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 		{ TextTransparency = 0 }
 	):Play()
 
-	-- Efectos de urgencia
+	-- Efectos
 	animateGradient()
 	pulseBorder()
 	pulseLeftBar()
 	animateParticles(duration, color)
-	shakeEffect(CONFIG.SHAKE_INTENSITY, 0.3)
+	shakeEffect(getShakeIntensity(typeTag), 0.3)
 
-	-- Permanencia
+	-- Tiempo en pantalla
 	task.wait(duration)
 
-	-- ===== SALIDA RÁPIDA =====
+	-- ===== SALIDA =====
 
 	TweenService:Create(
 		messageLabel,
@@ -502,7 +534,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	local collapseTween = TweenService:Create(
 		mainContainer,
 		TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In),
-		{ Size = UDim2.fromOffset(100, 95) }
+		{ Size = UDim2.fromOffset(CONFIG.UI.MIN_WIDTH, CONFIG.UI.HEIGHT) }
 	)
 	collapseTween:Play()
 	collapseTween.Completed:Wait()
@@ -510,7 +542,6 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	mainContainer.Visible = false
 	busy = false
 
-	-- Siguiente
 	if #queue > 0 then
 		local nxt = table.remove(queue, 1)
 		task.wait(0.2)
@@ -518,7 +549,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	end
 end
 
--- Helper global
+-- Helper global (por si quieres usarlo desde otros LocalScripts)
 _G.ApocalypseNotify = function(msg: string, typeTag: string?, duration: number?)
 	showNotification(msg, typeTag, duration)
 end
@@ -526,6 +557,12 @@ end
 -- ============================================================================
 -- REMOTES
 -- ============================================================================
+
+-- FORMAS SOPORTADAS DESDE EL SERVIDOR:
+-- 1) ShowNotification:FireClient(player, "WAVE 1 INCOMING")
+-- 2) ShowNotification:FireClient(player, "WAVE 1 INCOMING", "EPIC")
+-- 3) ShowNotification:FireClient(player, "WAVE 1 INCOMING", "EPIC", 3)
+-- 4) ShowNotification:FireClient(player, { message = "WAVE 1 INCOMING", type = "EPIC", duration = 3 })
 
 local remotes = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:WaitForChild("Remotes", 5)
 if not remotes then
@@ -535,7 +572,8 @@ else
 	if not evt then
 		warn("[ApocalypseNotifier] RemoteEvent 'ShowNotification' no encontrado.")
 	else
-		evt.OnClientEvent:Connect(function(a: any, b: any, c: any, d: any)
+		evt.OnClientEvent:Connect(function(a: any, b: any, c: any)
+			-- Modo tabla/payload
 			if typeof(a) == "table" then
 				local payload = a :: {message: any, type: any, duration: any}
 				local msg = tostring(payload.message or "")
@@ -546,19 +584,18 @@ else
 				return
 			end
 
-			if typeof(b) == "string" then
-				local msg = b
-				local t = (typeof(c) == "string") and c or nil
-				local du = (typeof(d) == "number") and d or nil
+			-- Modo clásico: mensaje, tipo?, duración?
+			-- ej: FireClient(plr, "Wave 1 incoming", "EPIC", 3)
+			if typeof(a) == "string" then
+				local msg = a
+				local t = (typeof(b) == "string") and (b :: string) or nil
+				local du = (typeof(c) == "number") and (c :: number) or nil
 				showNotification(msg, t, du)
 				return
-			end
-
-			if typeof(a) == "string" then
-				showNotification(a, nil, nil)
 			end
 		end)
 	end
 end
 
 print("? Apocalypse Notifier cargado — RUSH MODE")
+

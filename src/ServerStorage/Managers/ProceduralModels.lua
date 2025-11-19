@@ -3,14 +3,14 @@
 	PROCEDURAL MODELS - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Genera modelos 3D procedurales para upgrades con estilo apocalíptico.
+	Genera modelos 3D procedurales para upgrades con estilo apocal?ptico.
 
 	FEATURES:
 	? 10+ modelos pre-definidos
 	? Low-poly futurista/industrial
 	? Animaciones simples (rotar, flotar, pulsar)
-	? Efectos de partículas integrados
-	? Colores metálicos con acentos neón
+	? Efectos de part?culas integrados
+	? Colores met?licos con acentos ne?n
 	? < 100 triangles por modelo
 
 	USAGE:
@@ -41,21 +41,21 @@ local TweenService = game:GetService("TweenService")
 
 local DEBUG_MODE = false
 
--- Colores por categoría
+-- Colores por categor?a
 local CATEGORY_COLORS = {
 	Income = {
-		Primary = Color3.fromRGB(180, 180, 180), -- Gris metálico
+		Primary = Color3.fromRGB(180, 180, 180), -- Gris met?lico
 		Accent = Color3.fromRGB(255, 215, 0),    -- Dorado
 		Glow = Color3.fromRGB(255, 255, 100),
 	},
 	Defense = {
 		Primary = Color3.fromRGB(100, 120, 140), -- Gris azulado
-		Accent = Color3.fromRGB(100, 150, 255),  -- Azul neón
+		Accent = Color3.fromRGB(100, 150, 255),  -- Azul ne?n
 		Glow = Color3.fromRGB(150, 200, 255),
 	},
 	Utility = {
 		Primary = Color3.fromRGB(140, 100, 140), -- Gris morado
-		Accent = Color3.fromRGB(200, 100, 255),  -- Morado neón
+		Accent = Color3.fromRGB(200, 100, 255),  -- Morado ne?n
 		Glow = Color3.fromRGB(220, 150, 255),
 	},
 }
@@ -75,7 +75,7 @@ local function addRotationAnimation(part: BasePart, speed: number)
 	task.spawn(function()
 		while part and part.Parent do
 			part.CFrame = part.CFrame * CFrame.Angles(0, math.rad(speed), 0)
-			task.wait(1/30) -- 30 FPS para animación
+			task.wait(1/30) -- 30 FPS para animaci?n
 		end
 	end)
 end
@@ -721,6 +721,118 @@ local function createWaterPump(): Model
 	return model
 end
 
+-- -----------------------------------------------------------------------
+-- ?? POWERUP VENDING MACHINE (Máquina Expendedora de PowerUps)
+-- -----------------------------------------------------------------------
+local function createPowerUpVendingMachine(): Model
+	local model = Instance.new("Model")
+	model.Name = "PowerUpVendingMachine"
+
+	-- Colores vibrantes para powerups
+	local machineColors = {
+		Primary = Color3.fromRGB(220, 50, 50),     -- Rojo vibrante
+		Accent = Color3.fromRGB(255, 215, 0),      -- Dorado
+		Glow = Color3.fromRGB(255, 100, 255),      -- Magenta brillante
+		Glass = Color3.fromRGB(150, 220, 255),     -- Azul cristal
+	}
+
+	-- Base de la máquina
+	local base = Instance.new("Part")
+	base.Name = "Base"
+	base.Size = Vector3.new(5, 1, 4)
+	base.Anchored = true
+	base.Material = Enum.Material.Metal
+	base.Color = machineColors.Primary
+	base.Parent = model
+
+	-- Cuerpo principal
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Size = Vector3.new(4.5, 6, 3.5)
+	body.Anchored = true
+	body.Material = Enum.Material.Metal
+	body.Color = machineColors.Primary
+	body.CFrame = base.CFrame * CFrame.new(0, 3.5, 0)
+	body.Parent = model
+
+	-- Esfera de cristal (gumball globe)
+	local globe = Instance.new("Part")
+	globe.Name = "Globe"
+	globe.Shape = Enum.PartType.Ball
+	globe.Size = Vector3.new(3.5, 3.5, 3.5)
+	globe.Anchored = true
+	globe.Material = Enum.Material.Glass
+	globe.Transparency = 0.3
+	globe.Color = machineColors.Glass
+	globe.CFrame = body.CFrame * CFrame.new(0, 2, 0)
+	globe.Parent = model
+
+	-- PowerUp visual dentro de la esfera (pequeña esfera brillante)
+	local powerUpSample = Instance.new("Part")
+	powerUpSample.Name = "PowerUpSample"
+	powerUpSample.Shape = Enum.PartType.Ball
+	powerUpSample.Size = Vector3.new(1.2, 1.2, 1.2)
+	powerUpSample.Anchored = true
+	powerUpSample.Material = Enum.Material.Neon
+	powerUpSample.Color = machineColors.Glow
+	powerUpSample.CFrame = globe.CFrame
+	powerUpSample.Parent = model
+
+	-- Botón de compra (grande y obvio)
+	local button = Instance.new("Part")
+	button.Name = "Button"
+	button.Shape = Enum.PartType.Cylinder
+	button.Size = Vector3.new(0.8, 2, 2) -- Cilindro horizontal
+	button.Anchored = true
+	button.Material = Enum.Material.Neon
+	button.Color = machineColors.Accent
+	button.CFrame = body.CFrame * CFrame.new(0, -1, 2) * CFrame.Angles(0, 0, math.rad(90))
+	button.Parent = model
+
+	-- ProximityPrompt para interactuar
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "PurchasePrompt"
+	prompt.ActionText = "Buy PowerUp"
+	prompt.ObjectText = "Vending Machine"
+	prompt.HoldDuration = 0.5
+	prompt.MaxActivationDistance = 10
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = button
+
+	-- Ranura para powerup (donde sale)
+	local slot = Instance.new("Part")
+	slot.Name = "Slot"
+	slot.Size = Vector3.new(2, 0.3, 1.5)
+	slot.Anchored = true
+	slot.Material = Enum.Material.SmoothPlastic
+	slot.Color = Color3.fromRGB(50, 50, 50)
+	slot.CFrame = body.CFrame * CFrame.new(0, -2.5, 1.8)
+	slot.Parent = model
+
+	-- Letrero "POWER-UPS" en la parte superior
+	local sign = Instance.new("Part")
+	sign.Name = "Sign"
+	sign.Size = Vector3.new(4, 1, 0.2)
+	sign.Anchored = true
+	sign.Material = Enum.Material.Neon
+	sign.Color = machineColors.Accent
+	sign.CFrame = body.CFrame * CFrame.new(0, 3.5, -1.8)
+	sign.Parent = model
+
+	-- Efectos visuales
+	addGlowEffect(globe, machineColors.Glow)
+	addGlowEffect(button, machineColors.Accent)
+	addGlowEffect(sign, machineColors.Accent)
+
+	-- Animaciones
+	addRotationAnimation(powerUpSample, 2) -- Rotar la muestra de powerup
+	addPulseAnimation(button, 0.15, 1.2) -- Pulsar el botón para llamar atención
+	addFloatAnimation(powerUpSample, 0.3, 2) -- Flotar dentro de la esfera
+
+	model.PrimaryPart = base
+	return model
+end
+
 -------------------------------------------------------------------------
 -- PUBLIC API
 -------------------------------------------------------------------------
@@ -741,6 +853,9 @@ local ModelGenerators = {
 	StorageContainer = createStorageContainer,
 	AutoRepairDrone = createAutoRepairDrone,
 	WaterPump = createWaterPump,
+
+	-- ?? PowerUps
+	PowerUpVendingMachine = createPowerUpVendingMachine,
 }
 
 --[[

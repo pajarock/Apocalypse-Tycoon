@@ -3,35 +3,35 @@
 	UPGRADES.LUA - Apocalypse Tycoon
 	Define todos los upgrades disponibles para comprar
 	
-	VERSIÓN: 2.0
+	VERSI�N: 2.0
 	MEJORAS:
 	- Campo IncomePerSec corregido (era IncomeDelta)
-	- Más upgrades (10 total)
+	- M�s upgrades (10 total)
 	- Descripciones para UI
 	- Balance mejorado
-	- Categorías por tipo
+	- Categor�as por tipo
 --]]
 
 export type UpgradeDef = {
 	Title: string,           -- Nombre mostrado en UI
-	Description: string,     -- Descripción para tooltip
+	Description: string,     -- Descripci�n para tooltip
 	BasePrice: number,       -- Precio inicial
 	PriceGrowth: number,     -- Multiplicador de precio (era PriceMul)
-	IncomePerSec: number,    -- 🔧 CORREGIDO: era IncomeDelta
+	IncomePerSec: number,    -- ?? CORREGIDO: era IncomeDelta
 	ModelName: string?,      -- Nombre del modelo en ServerStorage.Models
-	Repeatable: boolean,     -- Si se puede comprar múltiples veces
-	MaxCount: number?,       -- Límite de compras (nil = infinito)
+	Repeatable: boolean,     -- Si se puede comprar m�ltiples veces
+	MaxCount: number?,       -- L�mite de compras (nil = infinito)
 	Category: string?,       -- Para organizar UI (Income, Defense, Utility)
 }
 
 local Upgrades: {[string]: UpgradeDef} = {
 
-	--═══════════════════════════════════════════════════════════════════════
-	-- 💰 GENERADORES DE INCOME (Early Game)
-	--═══════════════════════════════════════════════════════════════════════
+	-------------------------------------------------------------------------
+	-- ?? GENERADORES DE INCOME (Early Game)
+	-------------------------------------------------------------------------
 	Upgrade_1 = {
 		Title = "Solar Panel",
-		Description = "Genera energía del sol. +1$/s",
+		Description = "Genera energ�a del sol. +1$/s",
 		BasePrice = 50,
 		PriceGrowth = 5,
 		IncomePerSec = 1,
@@ -43,7 +43,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 
 	Upgrade_2 = {
 		Title = "Wind Turbine",
-		Description = "Aprovecha el viento apocalíptico. +3$/s",
+		Description = "Aprovecha el viento apocal�ptico. +3$/s",
 		BasePrice = 150,
 		PriceGrowth = 5,
 		IncomePerSec = 3,
@@ -89,18 +89,18 @@ local Upgrades: {[string]: UpgradeDef} = {
 		Category = "Income",
 	},
 
-	--═══════════════════════════════════════════════════════════════════════
-	-- 🛡️ DEFENSA
-	--═══════════════════════════════════════════════════════════════════════
+	-------------------------------------------------------------------------
+	-- ??? DEFENSA
+	-------------------------------------------------------------------------
 	Upgrade_6 = {
 		Title = "Shield Generator Mk1",
-		Description = "Reduce daño recibido en 20%",
+		Description = "Reduce da�o recibido en 20%",
 		BasePrice = 500000,
 		PriceGrowth = 5.0,  -- Muy caro escalar
 		IncomePerSec = 0,
 		ModelName = "ShieldEmitter",
 		Repeatable = true,
-		MaxCount = 3,  -- Máximo 3 niveles = 60% reducción
+		MaxCount = 3,  -- M�ximo 3 niveles = 60% reducci�n
 		Category = "Defense",
 	},
 	Upgrade_7 = {
@@ -116,22 +116,22 @@ local Upgrades: {[string]: UpgradeDef} = {
 	},
 	Upgrade_8 = {
 		Title = "Reinforced Walls",
-		Description = "Aumenta HP máximo de la base en +20",
+		Description = "Aumenta HP m�ximo de la base en +20",
 		BasePrice = 1000000,
 		PriceGrowth = 3,
 		IncomePerSec = 0,
-		ModelName = "ReinforcedWalls", 
+		ModelName = "ReinforcedWalls", -- ? Placeholder discreto (se mejorar� visualmente despu�s)
 		Repeatable = true,
-		MaxCount = 5,  -- +100 HP máximo
+		MaxCount = 5,  -- +100 HP m�ximo
 		Category = "Defense",
 	},
 
-	--═══════════════════════════════════════════════════════════════════════
-	-- ⚙️ UTILIDADES (Mid-Late Game)
-	--═══════════════════════════════════════════════════════════════════════
-	Upgrade_8 = {
+	-------------------------------------------------------------------------
+	-- ?? UTILIDADES (Mid-Late Game)
+	-------------------------------------------------------------------------
+	Upgrade_11 = {
 		Title = "Auto-Repair System",
-		Description = "Repara base automáticamente. +2 HP/s",
+		Description = "Repara base autom�ticamente. +2 HP/s",
 		BasePrice = 2000000,
 		PriceGrowth = 1.5,
 		IncomePerSec = 0,

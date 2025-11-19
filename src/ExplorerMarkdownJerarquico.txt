@@ -1,0 +1,350 @@
+APOCALYPSE TYCOON – EXPLORER (LIMPIO)
+Workspace
+│  Camera
+│
+├─ Terrain
+│
+├─ Bases
+│
+├─ SpawnLocation
+│  └─ Decal
+│
+├─ Baseplate
+│  └─ Texture
+│
+├─ Players
+│  └─ averockMx
+│     ├─ Backpack
+│     └─ PlayerScripts
+│
+├─ Lighting
+│  ├─ Atmosphere
+│  ├─ Sky
+│  ├─ Bloom
+│  ├─ DepthOfField
+│  └─ SunRays
+│
+├─ MaterialService
+│
+├─ NetworkClient
+├─ ClientReplicator
+├─ ReplicatedFirst
+│
+└─ ReplicatedStorage
+   ├─ Remotes
+   │  ├─ RequestBaseState
+   │  ├─ RequestState
+   │  ├─ BaseDamaged
+   │  ├─ CameraShake
+   │  ├─ DashRequest
+   │  ├─ DebugSpawnMeteor
+   │  ├─ HotkeyM
+   │  ├─ PowerUpCollected
+   │  ├─ PowerUpExpired
+   │  ├─ RequestPurchase
+   │  ├─ RequestRepair
+   │  ├─ RequestSell
+   │  ├─ ShowNotification
+   │  ├─ UpdateInventory
+   │  └─ WaveChanged
+   │
+   └─ EnvToggle
+      └─ Script
+ServerScriptService
+ServerScriptService
+│  1_CreateRemotes
+│  DebugManager
+│  InitializeMap
+│  LightingPreset.server.lua
+│  Main.server.lua
+│
+├─ AchievementModule
+├─ AmbientEffects
+├─ BaseModule
+├─ DataStoreModule
+├─ EconomyModule
+├─ EventManager
+├─ MapConfig
+├─ MasterMapGenerator
+├─ PowerUpModule
+├─ PreHispanicDecorations
+└─ TerrainGenerator
+ServerStorage
+ServerStorage
+├─ Config
+│  ├─ PowerUpConfig
+│  ├─ Products
+│  ├─ UpgradeModels
+│  ├─ Upgrades
+│  └─ VFXConfig
+│
+├─ Managers
+│  ├─ BaseVisualsManager
+│  ├─ BuildEffectsManager
+│  ├─ EnvironmentManager
+│  ├─ MeteorDamageSystem
+│  ├─ PowerUpManager
+│  ├─ ProceduralModels
+│  └─ VFXManager
+│
+└─ Models
+   ├─ GeneratorMk1
+   ├─ MinerDrill
+   ├─ ReinforcedWalls
+   ├─ ShieldEmitter
+   ├─ WallSection
+   └─ WaterPump
+StarterGui
+StarterGui
+├─ BaseDeathUI
+├─ CashIncomeWidget.client.lua
+├─ DamageNumbers
+├─ EventNotifier
+├─ WaveCounterUI.client.lua
+│
+├─ BaseHUD
+│  ├─ BaseHUD.client.lua
+│  └─ BaseHUD.client.lua1
+│
+├─ PowerUpUI
+│  └─ PowerUpDisplay.client.lua
+│
+└─ ShopUI
+   ├─ ShopUI_OLD
+   └─ Shop_client.lua
+StarterPack
+StarterPack
+StarterPlayer
+StarterPlayer
+└─ StarterPlayerScripts
+   ├─ Controllers
+   │  ├─ PowerUpController
+   │  ├─ PowerUpNotifications
+   │  ├─ CameraController
+   │  └─ UIController
+   │
+   ├─ BackgroundMusic.client.lua
+   ├─ CashIncomeWidget.client.lua
+   ├─ DashModule.client.lua
+   ├─ Debug.controls.client.lua
+   ├─ Effects.client.lua
+   ├─ PowerUpInventory.client.lua
+   ├─ PowerUpUI.client.lua
+   ├─ PowerUpVendingMachine.client.lua
+   ├─ ProximityUpgrades.client.lua
+   ├─ Screenflash
+   ├─ ShieldVFX.client.lua
+   ├─ ShieldVisual.client.lua
+   └─ SoundManager.client.lua
+Teams
+Teams
+SoundService
+SoundService
+TextChatService
+TextChatService
+├─ ChatWindowConfiguration
+├─ ChatInputBarConfiguration
+├─ ChannelTabsConfiguration
+└─ BubbleChatConfiguration
+   ├─ UICorner
+   ├─ UIGradient
+   ├─ UIPadding
+   └─ ImageLabel
+Si quieres, te lo convierto en JSON, YAML, Markdown jerárquico, o diagramita ASCII para documentación.
+
+You said:
+me puedes explicar los 3 formatos que me dices jeje? y por mientras me puedas dar todo unificado en uno solo
+ChatGPT said:
+Te lo explico directo y sin mamadas, para que lo entiendas YA y lo uses YA.
+
+LOS 3 FORMATOS — EXPLICACIÓN BRUTAL Y SIMPLE
+1) JSON
+Es un formato estructurado tipo diccionario/lista.
+Ventaja: lo puede leer cualquier programa, fácil de parsear.
+Desventaja: no muestra jerarquías visuales bonitas; es más técnico.
+
+Ejemplo:
+
+{
+  "Workspace": {
+    "Camera": {},
+    "Terrain": {},
+    "Bases": {},
+    "SpawnLocation": {
+      "Decal": {}
+    }
+  }
+}
+Ideal si quieres que otra IA, script o herramienta entienda tu estructura.
+
+2) YAML
+Es como JSON pero más limpio, más humano.
+Ventaja: se lee más fácil.
+Desventaja: el indentado importa; un espacio mal puesto lo arruina.
+
+Ejemplo:
+
+Workspace:
+  Camera:
+  Terrain:
+  Bases:
+  SpawnLocation:
+    Decal:
+Esto es lo que usan sistemas grandes (Docker, Kubernetes, etc.).
+
+3) Markdown jerárquico (listas sangradas)
+Es el más cómodo para documentación.
+Ventaja: se ve bonito, fácil de leer.
+Desventaja: no sirve para scripts, solo para humanos.
+
+Ejemplo:
+
+Workspace
+- Camera
+- Terrain
+- Bases
+- SpawnLocation
+  - Decal
+Perfecto para Notion, Obsidian, GitHub READMEs.
+
+TE DOY TODO UNIFICADO EN UN SOLO BLOQUE
+Formato: Markdown jerárquico limpio, porque es el más útil para ti AHORA.
+
+Listo para copiar/pegar como un rey.
+
+APOCALYPSE TYCOON – EXPLORER (UNIFICADO)
+Workspace
+- Camera
+- Terrain
+- Bases
+- SpawnLocation
+  - Decal
+- Baseplate
+  - Texture
+- Players
+  - averockMx
+    - Backpack
+    - PlayerScripts
+- Lighting
+  - Atmosphere
+  - Sky
+  - Bloom
+  - DepthOfField
+  - SunRays
+- MaterialService
+- NetworkClient
+- ClientReplicator
+- ReplicatedFirst
+- ReplicatedStorage
+  - Remotes
+    - RequestBaseState
+    - RequestState
+    - BaseDamaged
+    - CameraShake
+    - DashRequest
+    - DebugSpawnMeteor
+    - HotkeyM
+    - PowerUpCollected
+    - PowerUpExpired
+    - RequestPurchase
+    - RequestRepair
+    - RequestSell
+    - ShowNotification
+    - UpdateInventory
+    - WaveChanged
+  - EnvToggle
+    - Script
+
+ServerScriptService
+- 1_CreateRemotes
+- DebugManager
+- InitializeMap
+- LightingPreset.server.lua
+- Main.server.lua
+- AchievementModule
+- AmbientEffects
+- BaseModule
+- DataStoreModule
+- EconomyModule
+- EventManager
+- MapConfig
+- MasterMapGenerator
+- PowerUpModule
+- PreHispanicDecorations
+- TerrainGenerator
+
+ServerStorage
+- Config
+  - PowerUpConfig
+  - Products
+  - UpgradeModels
+  - Upgrades
+  - VFXConfig
+- Managers
+  - BaseVisualsManager
+  - BuildEffectsManager
+  - EnvironmentManager
+  - MeteorDamageSystem
+  - PowerUpManager
+  - ProceduralModels
+  - VFXManager
+- Models
+  - GeneratorMk1
+  - MinerDrill
+  - ReinforcedWalls
+  - ShieldEmitter
+  - WallSection
+  - WaterPump
+
+StarterGui
+- BaseDeathUI
+- CashIncomeWidget.client.lua
+- DamageNumbers
+- EventNotifier
+- WaveCounterUI.client.lua
+- BaseHUD
+  - BaseHUD.client.lua
+  - BaseHUD.client.lua1
+- PowerUpUI
+  - PowerUpDisplay.client.lua
+- ShopUI
+  - ShopUI_OLD
+  - Shop_client.lua
+
+StarterPack
+
+StarterPlayer
+- StarterPlayerScripts
+  - Controllers
+    - PowerUpController
+    - PowerUpNotifications
+    - CameraController
+    - UIController
+  - BackgroundMusic.client.lua
+  - CashIncomeWidget.client.lua
+  - DashModule.client.lua
+  - Debug.controls.client.lua
+  - Effects.client.lua
+  - PowerUpInventory.client.lua
+  - PowerUpUI.client.lua
+  - PowerUpVendingMachine.client.lua
+  - ProximityUpgrades.client.lua
+  - Screenflash
+  - ShieldVFX.client.lua
+  - ShieldVisual.client.lua
+  - SoundManager.client.lua
+
+Teams
+
+SoundService
+
+TextChatService
+- ChatWindowConfiguration
+- ChatInputBarConfiguration
+- ChannelTabsConfiguration
+- BubbleChatConfiguration
+  - UICorner
+  - UIGradient
+  - UIPadding
+  - ImageLabel
+

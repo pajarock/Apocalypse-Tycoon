@@ -252,11 +252,6 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 		print(("[Meteor] %s lanzado hacia %s"):format(meteorType, plr.Name))
 	end
 
-	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
-	if ShowNotif then
-		ShowNotif:FireClient(plr, "?? INCOMING!", 2)
-	end
-
 	local applied = false
 	local conn: RBXScriptConnection? = nil
 
@@ -448,6 +443,282 @@ function EventManager:MeteorStorm()
 			notifyPlayer(plr, "? Tormenta terminada", Config.UI_COLORS.Income)
 		end
 	end)
+end
+
+-------------------------------------------------------------------------
+-- ?? BOSS METEOR - Sistema de Fases
+-------------------------------------------------------------------------
+
+-- Fase 1: "Esquinas del Caos" - 4 meteoritos Small en esquinas NW?NE?SE?SW
+local function BossPhase_Corners(plr: Player)
+	local base = getPlayerBasePart(plr)
+	if not base then return end
+
+	local basePos = base.Position
+	local offset = 25 -- studs desde el centro
+
+	-- Esquinas en orden: NW, NE, SE, SW
+	local corners = {
+		Vector3.new(-offset, 0, -offset), -- NW
+		Vector3.new(offset, 0, -offset),  -- NE
+		Vector3.new(offset, 0, offset),   -- SE
+		Vector3.new(-offset, 0, offset)   -- SW
+	}
+
+	for i, cornerOffset in ipairs(corners) do
+		task.delay((i - 1) * 0.8, function() -- 0.8s entre cada meteorito
+			local startPos = basePos + cornerOffset + Vector3.new(0, 120, 0)
+			local targetPos = basePos + cornerOffset * 0.5
+			spawnMeteorTowards(plr, startPos, targetPos, "Small")
+		end)
+	end
+
+	if Config.DEBUG_MODE then
+		print(("[BossMeteor] Fase 1 'Esquinas del Caos' ejecutada para %s"):format(plr.Name))
+	end
+end
+
+-- Fase 2: "Círculo Infernal" - 6 meteoritos Normal en círculo rotando
+local function BossPhase_Circle(plr: Player)
+	local base = getPlayerBasePart(plr)
+	if not base then return end
+
+	local basePos = base.Position
+	local radius = 35  -- ? Radio aumentado para patrón más visible
+	local meteorCount = 6
+
+	for i = 1, meteorCount do
+		task.delay((i - 1) * 0.5, function() -- 0.5s entre cada meteorito
+			local angle = (i / meteorCount) * math.pi * 2
+			local offset = Vector3.new(
+				math.cos(angle) * radius,
+				0,
+				math.sin(angle) * radius
+			)
+
+			-- ? Spawn desde arriba del punto del círculo
+			local startPos = basePos + offset + Vector3.new(0, 100, 0)
+			-- ? ARREGLADO: Caer directamente en el punto del círculo (offset completo)
+			local targetPos = basePos + offset
+			spawnMeteorTowards(plr, startPos, targetPos, "Normal")
+		end)
+	end
+
+	if Config.DEBUG_MODE then
+		print(("[BossMeteor] Fase 2 'Círculo Infernal' ejecutada para %s"):format(plr.Name))
+	end
+end
+
+-- Fase 3: "El Coloso" - 1 meteorito GIGANTE lento (8s caída)
+local function BossPhase_Colossus(plr: Player)
+	local base = getPlayerBasePart(plr)
+	if not base then return end
+
+	local basePos = base.Position
+
+	-- Spawn muy alto para caída lenta épica
+	local startPos = basePos + Vector3.new(0, 250, 0)
+	local targetPos = basePos
+
+	-- Usar tipo Boss (más grande, más lento, más daño)
+	local meteor = createMeteor("Boss")
+	meteor.Position = startPos
+	meteor.Parent = workspace
+
+	meteor:SetAttribute("TargetUserId", plr.UserId)
+	meteor:SetAttribute("MeteorType", "Boss")
+
+	-- VFX trail épico
+	task.spawn(function()
+		while meteor and meteor.Parent do
+			VFXManager:PlayEffect("MeteorTrail", meteor.Position, meteor)
+			task.wait(0.1)
+		end
+	end)
+
+	-- Velocidad MUY lenta para caída dramática
+	local dir = (targetPos - startPos).Unit
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+	bv.Velocity = dir * 15 + Vector3.new(0, -15, 0) -- Muy lento
+	bv.Parent = meteor
+
+	-- Notificación épica
+	if ShowNotification then
+		ShowNotification:FireClient(plr, "?? THE COLOSSUS DESCENDS!", 4)
+	end
+
+	-- Sistema de impacto (igual que spawnMeteorTowards pero con más drama)
+	local applied = false
+	local conn: RBXScriptConnection? = nil
+
+	local function cleanup()
+		if conn then conn:Disconnect() end
+		meteor.Anchored = true
+		Debris:AddItem(meteor, 0.1)
+	end
+
+	task.delay(12, function() -- Más tiempo para caída lenta
+		if meteor and meteor.Parent and not applied then
+			cleanup()
+		end
+	end)
+
+	conn = meteor.Touched:Connect(function(hit: BasePart)
+		if not meteor or not meteor.Parent then return end
+		if applied then return end
+		if not hit or not hit:IsA("BasePart") then return end
+		if hit.Name:match("^Meteor_") then return end
+
+		local hitPos = meteor.Position
+		local userId = resolveOwnerForHit(meteor, hit, hitPos)
+		if not userId then return end
+
+		-- ¡EXPLOSIÓN ÉPICA!
+		VFXManager:PlayEffect("MeteorExplosion", hitPos)
+
+		local ownerPlr = Players:GetPlayerByUserId(userId)
+		if ownerPlr then
+			-- Shake EXTRA HEAVY
+			if CameraShake then
+				CameraShake:FireClient(ownerPlr, "Heavy", 1.5)
+			end
+
+			-- Flash rojo intenso
+			if ScreenFlash then
+				ScreenFlash:FireClient(ownerPlr, "Red", 0.6, 0.5)
+			end
+		end
+
+		-- Daño
+		if BaseModule and BaseModule.ApplyDamage then
+			local typeConfig = Config.METEOR_TYPES.Boss
+			local rawDamage = typeConfig.Damage
+			local appliedAmount = BaseModule.ApplyDamage(userId, rawDamage)
+			applied = appliedAmount > 0
+
+			if Config.DEBUG_MODE then
+				print(("[BossMeteor] COLOSSUS impactó - daño=%d"):format(rawDamage))
+			end
+
+			if ownerPlr and appliedAmount > 0 then
+				if BaseDamaged then
+					BaseDamaged:FireClient(ownerPlr, appliedAmount)
+				end
+			end
+		end
+
+		cleanup()
+	end)
+
+	Debris:AddItem(meteor, 15)
+
+	if Config.DEBUG_MODE then
+		print(("[BossMeteor] Fase 3 'El Coloso' ejecutada para %s"):format(plr.Name))
+	end
+end
+
+-- Fase 4: "Triángulo de Fuego" - 3 meteoritos Large en triángulo simultáneo
+local function BossPhase_Triangle(plr: Player)
+	local base = getPlayerBasePart(plr)
+	if not base then return end
+
+	local basePos = base.Position
+	local radius = 20
+
+	-- Triángulo equilátero: 3 puntos a 120° cada uno
+	for i = 1, 3 do
+		task.delay(0.2, function() -- Casi simultáneos (0.2s delay para drama)
+			local angle = (i / 3) * math.pi * 2 + math.pi / 6 -- Offset para rotación
+			local offset = Vector3.new(
+				math.cos(angle) * radius,
+				0,
+				math.sin(angle) * radius
+			)
+
+			local startPos = basePos + offset + Vector3.new(0, 130, 0)
+			local targetPos = basePos + offset * 0.4
+			spawnMeteorTowards(plr, startPos, targetPos, "Large")
+		end)
+	end
+
+	if Config.DEBUG_MODE then
+		print(("[BossMeteor] Fase 4 'Triángulo de Fuego' ejecutada para %s"):format(plr.Name))
+	end
+end
+
+-- ?? FUNCIÓN PRINCIPAL: BossMeteor
+function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
+	print(("[EVENT] ?? BOSS METEOR iniciado - Wave %d | Full Boss: %s"):format(waveNum, tostring(isFullBoss)))
+
+	local phaseNames = {
+		"Esquinas del Caos",
+		"Círculo Infernal",
+		"El Coloso",
+		"Triángulo de Fuego"
+	}
+
+	local phaseFunctions = {
+		BossPhase_Corners,
+		BossPhase_Circle,
+		BossPhase_Colossus,
+		BossPhase_Triangle
+	}
+
+	-- Elegir fases
+	local phasesToExecute = {}
+	if isFullBoss then
+		-- Boss completo: las 4 fases en orden
+		phasesToExecute = {1, 2, 3, 4}
+
+		if ShowNotification then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				ShowNotification:FireClient(plr, "?? BOSS WAVE: The Crimson Colossus", 5)
+			end
+		end
+	else
+		-- Mini-boss: 1 fase aleatoria
+		local randomPhase = math.random(1, 4)
+		phasesToExecute = {randomPhase}
+
+		if ShowNotification then
+			for _, plr in ipairs(Players:GetPlayers()) do
+				ShowNotification:FireClient(plr, string.format("?? MINI-BOSS: %s", phaseNames[randomPhase]), 4)
+			end
+		end
+	end
+
+	-- Ejecutar fases
+	local totalDuration = 0
+	for idx, phaseNum in ipairs(phasesToExecute) do
+		task.delay(totalDuration, function()
+			print(("[BossMeteor] Ejecutando Fase %d: %s"):format(phaseNum, phaseNames[phaseNum]))
+
+			-- Anunciar fase
+			if ShowNotification and isFullBoss then
+				for _, plr in ipairs(Players:GetPlayers()) do
+					ShowNotification:FireClient(plr, string.format("?? PHASE %d: %s", phaseNum, phaseNames[phaseNum]), 3)
+				end
+			end
+
+			-- Ejecutar fase para cada jugador
+			for _, plr in ipairs(Players:GetPlayers()) do
+				phaseFunctions[phaseNum](plr)
+			end
+		end)
+
+		-- Timing entre fases
+		if phaseNum == 3 then
+			totalDuration += 10 -- Coloso tarda más
+		else
+			totalDuration += 6 -- Otras fases
+		end
+	end
+
+	-- Esperar a que terminen todas las fases
+	task.wait(totalDuration + 2)
+
+	print("[BossMeteor] ? Boss Meteor completado")
 end
 
 -- Limpieza

@@ -3,21 +3,21 @@
 	-----------------------------------------------------------------------
 	APOCALYPSE TYCOON - MAIN SERVER
 	-----------------------------------------------------------------------
-	VERSIï¿½N: 5.0 PRODUCTION READY
+	VERSIÓN: 5.0 PRODUCTION READY
 	AUTOR: Tu Equipo
-	ï¿½LTIMA ACTUALIZACIï¿½N: 2025
+	ÚLTIMA ACTUALIZACIÓN: 2025
 	
-	CARACTERï¿½STICAS:
-	? Sistema completo de economï¿½a con anti-exploit
-	? Sistema de waves dinï¿½micas con boss fights
+	CARACTERÍSTICAS:
+	? Sistema completo de economía con anti-exploit
+	? Sistema de waves dinámicas con boss fights
 	? Sistema de achievements y badges
-	? Sistema de prestige y progresiï¿½n
+	? Sistema de prestige y progresión
 	? Sistema VIP y gamepasses
 	? Sistema de daily rewards
 	? Sistema de leaderboards global
 	? Sistema de commands (admin y debug)
-	? Sistema de analytics y telemetrï¿½a
-	? Sistema de backup automï¿½tico
+	? Sistema de analytics y telemetría
+	? Sistema de backup automático
 	? Sistema de rate limiting
 	? Sistema de tutorial para nuevos jugadores
 	? Sistema de quests/missions
@@ -26,8 +26,8 @@
 	? Optimizaciones de rendimiento
 	? Manejo robusto de errores
 	
-	NOTAS DE PRODUCCIï¿½N:
-	- Testear en servidor privado antes de pï¿½blico
+	NOTAS DE PRODUCCIÓN:
+	- Testear en servidor privado antes de público
 	- Configurar gamepasses IDs en Config
 	- Configurar badge IDs en AchievementModule
 	- Activar analytics si es necesario
@@ -61,7 +61,7 @@ local ProceduralModels = require(ServerStorage.Managers.ProceduralModels)
 local BuildEffectsManager = require(ServerStorage.Managers.BuildEffectsManager)
 
 -------------------------------------------------------------------------
--- Mï¿½DULOS
+-- MÓDULOS
 -------------------------------------------------------------------------
 local Config = require(ServerStorage.Config.Config)
 local UpgDefs = require(ServerStorage.Config.Upgrades)
@@ -70,29 +70,36 @@ local Economy = require(ServerScriptService.EconomyModule)
 local Events = require(ServerScriptService.EventManager)
 local Base = require(ServerScriptService.BaseModule)
 
+-- ? POWERUP SYSTEM
+local PowerUpModule = require(ServerScriptService.PowerUpModule)
+
 -- ? NUEVO: Inyectar BaseModule en EventManager (arregla dependencia circular)
 Events:SetBaseModule(Base)
 
--- Mï¿½dulo de achievements (crear si no existe)
+-- ? Inyectar dependencias en PowerUpModule
+PowerUpModule.SetDependencies(Base, Economy)
+
+
+-- Módulo de achievements (crear si no existe)
 local Achievements = ServerScriptService:FindFirstChild("AchievementModule")
 if Achievements then
 	Achievements = require(Achievements)
 end
 
 -------------------------------------------------------------------------
--- CONSTANTES Y CONFIGURACIï¿½N
+-- CONSTANTES Y CONFIGURACIÓN
 -------------------------------------------------------------------------
 local IS_STUDIO = RunService:IsStudio()
 local DEBUG = Config.DEBUG_MODE and IS_STUDIO
 
--- IDs de gamepasses (CONFIGURAR EN PRODUCCIï¿½N)
+-- IDs de gamepasses (CONFIGURAR EN PRODUCCIÓN)
 local GAMEPASS_DOUBLE_INCOME = Config.GAMEPASSES.DoubleIncome.ID
 local GAMEPASS_INSTANT_REPAIR = Config.GAMEPASSES.InstantRepair.ID
 local GAMEPASS_PREMIUM_SLOTS = Config.GAMEPASSES.PremiumSlots.ID
 
 -- Admin list (userId)
 local ADMINS = {
-	-- Agregar tus IDs aquï¿½
+	-- Agregar tus IDs aquí
 }
 
 -- Limits de rate limiting
@@ -114,15 +121,14 @@ local ServerState = {
 	ServerEvents = {},
 	Leaderboard = {},
 }
-
--- Crear IntValue para sincronizar el contador de waves con el cliente
+-- ? NUEVO: Crear IntValue para sincronizar wave counter con clientes
 local CurrentWaveValue = Instance.new("IntValue")
 CurrentWaveValue.Name = "CurrentWave"
 CurrentWaveValue.Value = ServerState.CurrentWave
 CurrentWaveValue.Parent = ReplicatedStorage
 
-if DEBUG then
-	print("[MAIN] âœ… IntValue 'CurrentWave' creado en ReplicatedStorage")
+if Config.DEBUG_MODE then
+	print("[MAIN] ? IntValue 'CurrentWave' creado en ReplicatedStorage")
 end
 
 local NextSlot = 1
@@ -153,6 +159,24 @@ local RequestBaseState = Remotes:WaitForChild("RequestBaseState") :: RemoteFunct
 local RequestRepair = Remotes:WaitForChild("RequestRepair") :: RemoteEvent
 local BaseStateChanged = Remotes:WaitForChild("BaseStateChanged") :: RemoteEvent
 local CashTick = Remotes:WaitForChild("CashTick") :: RemoteEvent
+-- ?? Remote para comprar powerups desde la máquina
+local PurchasePowerUp = Remotes:FindFirstChild("PurchasePowerUp") :: RemoteEvent?
+if not PurchasePowerUp then
+	PurchasePowerUp = Instance.new("RemoteEvent")
+	PurchasePowerUp.Name = "PurchasePowerUp"
+	PurchasePowerUp.Parent = Remotes
+	print("[POWERUP] RemoteEvent 'PurchasePowerUp' creado automáticamente")
+end
+
+-- ?? Remote para usar powerup desde el inventario
+local UseFromInventory = Remotes:FindFirstChild("UseFromInventory") :: RemoteEvent?
+if not UseFromInventory then
+	UseFromInventory = Instance.new("RemoteEvent")
+	UseFromInventory.Name = "UseFromInventory"
+	UseFromInventory.Parent = Remotes
+	print("[POWERUP] RemoteEvent 'UseFromInventory' creado automáticamente")
+end
+
 local BaseDamaged = Remotes:WaitForChild("BaseDamaged") :: RemoteEvent
 
 -- Remotes adicionales (crear si no existen)
@@ -181,6 +205,7 @@ local AdminCommand = getOrCreateRemote("AdminCommand", "Event") :: RemoteEvent
 local RequestLeaderboard = getOrCreateRemote("RequestLeaderboard", "Function") :: RemoteFunction
 local ShowNotification = getOrCreateRemote("ShowNotification", "Event") :: RemoteEvent
 local CompleteTutorial = getOrCreateRemote("CompleteTutorial", "Event") :: RemoteEvent
+local WaveResult = getOrCreateRemote("WaveResult", "Event") :: RemoteEvent -- ? Para mensajes épicos
 
 -------------------------------------------------------------------------
 -- UTILIDADES
@@ -235,15 +260,15 @@ local function checkRateLimit(userId: number, action: string): boolean
 	data.times = newTimes
 	data.count = #newTimes
 
-	-- Verificar lï¿½mite
+	-- Verificar límite
 	if data.count >= limit.max then
 		if DEBUG then
-			warn(("[RATE_LIMIT] Usuario %d excediï¿½ lï¿½mite de %s"):format(userId, action))
+			warn(("[RATE_LIMIT] Usuario %d excedió límite de %s"):format(userId, action))
 		end
 		return false
 	end
 
-	-- Registrar acciï¿½n
+	-- Registrar acción
 	table.insert(data.times, now)
 	data.count += 1
 	return true
@@ -269,8 +294,8 @@ end
 local function logAnalytic(eventName: string, data: any?)
 	if not Config.ANALYTICS.Enabled then return end
 
-	-- Aquï¿½ puedes integrar con servicios externos como Google Analytics
-	-- o simplemente guardar en DataStore para anï¿½lisis posterior
+	-- Aquí puedes integrar con servicios externos como Google Analytics
+	-- o simplemente guardar en DataStore para análisis posterior
 
 	if DEBUG then
 		print(("[ANALYTICS] %s: %s"):format(eventName, HttpService:JSONEncode(data or {})))
@@ -318,7 +343,7 @@ local function createLeaderstats(plr: Player)
 	ips.Value = 0
 	ips.Parent = ls
 
-	-- Stats adicionales (ocultas para UI pero ï¿½tiles)
+	-- Stats adicionales (ocultas para UI pero útiles)
 	local stats = Instance.new("Folder")
 	stats.Name = "Stats"
 	stats.Parent = plr
@@ -391,7 +416,7 @@ local function createBaseBillboard(plate: BasePart, playerName: string, userId: 
 	hpLabel.Text = string.format("HP: %d/%d", Base.GetHP(userId), Config.BASE_MAX_HP)
 	hpLabel.Parent = frame
 
-	-- Actualizar HP label periï¿½dicamente
+	-- Actualizar HP label periódicamente
 	task.spawn(function()
 		while plate and plate.Parent and Players:GetPlayerByUserId(userId) do
 			local hp = Base.GetHP(userId)
@@ -422,7 +447,6 @@ local function assignBase(plr: Player, slot: number)
 		math.sin(angle) * Config.SPAWN_RING_RADIUS
 	)
 
-	-- ?? USAR BaseVisualsManager en lugar de crear base manualmente
 	local plate = BaseVisualsManager:CreateBase(
 		plr.UserId,
 		center,
@@ -433,11 +457,28 @@ local function assignBase(plr: Player, slot: number)
 	plate.Parent = getBasesFolder()
 	BasePartByUser[plr.UserId] = plate
 	plr:SetAttribute("BaseSlot", slot)
+	-- ?? Spawnear máquina expendedora de powerups
+	local vendingMachine = ProceduralModels:CreateModel("PowerUpVendingMachine")
+	if vendingMachine then
+		-- Posicionar cerca del spawn (12 studs al frente, en el suelo)
+		-- La máquina tiene ~7 studs de altura, así que Y=4 la pone parcialmente visible
+		local machinePos = Vector3.new(center.X, 4, center.Z - 12)
+		vendingMachine:SetPrimaryPartCFrame(CFrame.new(machinePos))
+		vendingMachine:SetAttribute("OwnerUserId", plr.UserId)
+		vendingMachine.Name = "VendingMachine_" .. plr.Name
+		vendingMachine.Parent = getBasesFolder()
+
+		if DEBUG then
+			print(("[POWERUP] ?? Máquina expendedora spawneada para %s en posición %s"):format(plr.Name, tostring(machinePos)))
+		end
+	end
+
 
 	if DEBUG then
 		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
 	end
-end
+end 
+
 
 local function teleportToBase(plr: Player, char: Model)
 	task.defer(function()
@@ -458,7 +499,7 @@ local function teleportToBase(plr: Player, char: Model)
 end
 
 -------------------------------------------------------------------------
--- SISTEMA DE CATEGORï¿½AS Y PLACEMENT
+-- SISTEMA DE CATEGORÍAS Y PLACEMENT
 -------------------------------------------------------------------------
 local CategoryColors = {
 	Income = {
@@ -534,7 +575,7 @@ local function getNextBuildCFrame(basePart: BasePart, index: number, category: s
 	local MAX_PER_CATEGORY = 12
 
 	if index > MAX_PER_CATEGORY then
-		warn(("[PLACEMENT] Lï¿½mite alcanzado para categorï¿½a %s"):format(cat))
+		warn(("[PLACEMENT] Límite alcanzado para categoría %s"):format(cat))
 		return nil
 	end
 
@@ -610,7 +651,7 @@ local function createUpgradeButton(upgId: string, def: any, userId: number, base
 	local button = Instance.new("Model")
 	button.Name = "Button_" .. upgId
 
-	-- Base del botï¿½n
+	-- Base del botón
 	local base = Instance.new("Part")
 	base.Name = "Base"
 	base.Size = Vector3.new(8, 1.5, 8)
@@ -715,7 +756,7 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 	-- Validar upgrade existe
 	local def = UpgDefs[upgradeId]
 	if not def then
-		warn(("[PURCHASE] Upgrade invï¿½lido: %s"):format(upgradeId))
+		warn(("[PURCHASE] Upgrade inválido: %s"):format(upgradeId))
 		return
 	end
 
@@ -728,6 +769,26 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 			notifyPlayer(plr, "?? Max upgrades reached!", 2)
 		end
 		return
+	end
+
+	-- ? Actualizar Guardian para permitir compra legítima
+	local s = Economy.GetState(plr.UserId)
+	if s then
+		-- Actualizar target del Guardian PRIMERO
+		Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
+		-- Actualizar leaderstats inmediatamente para evitar race condition
+		local ls = plr:FindFirstChild("leaderstats")
+		if ls then
+			local cash = ls:FindFirstChild("Cash") :: IntValue?
+			if cash then
+				cash.Value = s.Cash
+			end
+		end
+
+		if Config.DEBUG_MODE then
+			print(("[PURCHASE] ? Guardian actualizado: nuevo target = $%d"):format(s.Cash))
+		end
 	end
 
 	-- Log analytics
@@ -748,7 +809,7 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 	local category = def.Category or "Income"
 
-	-- Primera compra: crear botï¿½n
+	-- Primera compra: crear botón
 	if count == 1 and def.ModelName then
 		local buttonName = "Button_" .. upgradeId
 		local existing = getBasesFolder():FindFirstChild(buttonName)
@@ -803,13 +864,27 @@ RequestPurchase.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 	end
 
 	if upgradeId == "Upgrade_7" then
-		Config.BASE_MAX_HP += 5
-		Base.SetMaxHP(plr.UserId, Config.BASE_MAX_HP)
-		Base.AddHP(plr.UserId, 5)
+		local currentMaxHP = Base.GetMaxHP(plr.UserId)
+		local newMaxHP = currentMaxHP + 5
+		Base.SetMaxHP(plr.UserId, newMaxHP)
+		Base.AddHP(plr.UserId, 5) -- Dar el HP extra inmediatamente
 		if DEBUG then
-			print(("[PURCHASE] Max HP aumentado a " .. Config.BASE_MAX_HP))
+			print(("[PURCHASE] Upgrade_7 - Max HP: %d ? %d"):format(currentMaxHP, newMaxHP))
+		end
+
+	end
+
+	-- ? Upgrade_8: Reinforced Walls (+20 HP max por compra, sin modelo físico)
+	if upgradeId == "Upgrade_8" then
+		local currentMaxHP = Base.GetMaxHP(plr.UserId)
+		local newMaxHP = currentMaxHP + 20
+		Base.SetMaxHP(plr.UserId, newMaxHP)
+		Base.AddHP(plr.UserId, 20) -- Dar el HP extra inmediatamente
+		if DEBUG then
+			print(("[PURCHASE] Upgrade_8 - Max HP: %d ? %d"):format(currentMaxHP, newMaxHP))
 		end
 	end
+	
 
 	-- Sync leaderstats
 	local ls = plr:FindFirstChild("leaderstats")
@@ -866,8 +941,135 @@ RequestSell.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 end)
 
 -------------------------------------------------------------------------
--- SISTEMA DE REPARACIï¿½N
+-- ?? SISTEMA DE COMPRA DE POWERUPS DESDE MÁQUINA
 -------------------------------------------------------------------------
+if PurchasePowerUp then
+	PurchasePowerUp.OnServerEvent:Connect(function(plr: Player)
+		-- Rate limiting
+		if not checkRateLimit(plr.UserId, "Purchase") then
+			notifyPlayer(plr, "?? Slow down!", 2)
+			return
+		end
+
+		-- Intentar compra desde la máquina
+		local success, errorMsg = PowerUpModule.PurchaseFromVendingMachine(plr.UserId)
+
+		if success then
+			-- errorMsg ahora contiene el powerUpId
+			local powerUpId = errorMsg
+
+			-- ?? Spawnear chicle/gumball físico desde la máquina
+			local vendingMachine = getBasesFolder():FindFirstChild("VendingMachine_" .. plr.Name)
+			if vendingMachine and powerUpId then
+				local slot = vendingMachine:FindFirstChild("Slot")
+				if slot then
+					-- Spawnear gumball en posición del slot + offset hacia arriba
+					local gumball = PowerUpModule.SpawnGumball(powerUpId, slot.Position + Vector3.new(0, 2, 0), plr.UserId)
+					if gumball then
+						gumball.Parent = workspace
+					end
+				end
+			end
+
+			notifyPlayer(plr, "?? PowerUp added to inventory!", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ? %s compró powerup '%s' desde máquina"):format(plr.Name, powerUpId or "unknown"))
+			end
+		else
+			-- Mostrar mensaje de error
+			notifyPlayer(plr, "? " .. (errorMsg or "Can't purchase"), 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ? %s intentó comprar pero falló: %s"):format(plr.Name, errorMsg or "unknown"))
+			end
+		end
+	end)
+end
+
+-------------------------------------------------------------------------
+-- ?? SISTEMA DE USO DESDE INVENTARIO
+-------------------------------------------------------------------------
+if UseFromInventory then
+	UseFromInventory.OnServerEvent:Connect(function(plr: Player, slotIndex: number)
+		-- Validar que slotIndex sea un número válido
+		if type(slotIndex) ~= "number" or slotIndex < 1 or slotIndex > 5 then
+			notifyPlayer(plr, "? Invalid slot", 2)
+			return
+		end
+
+		-- Rate limiting
+		if not checkRateLimit(plr.UserId, "UseInventory") then
+			notifyPlayer(plr, "?? Slow down!", 2)
+			return
+		end
+
+		-- Intentar usar el powerup del inventario
+		local success = PowerUpModule.UseFromInventory(plr.UserId, slotIndex)
+
+		if success then
+			notifyPlayer(plr, "? PowerUp Activated!", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ? %s usó powerup desde slot %d"):format(plr.Name, slotIndex))
+			end
+		else
+			notifyPlayer(plr, "? Slot empty or invalid", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ? %s intentó usar slot %d pero falló"):format(plr.Name, slotIndex))
+			end
+		end
+	end)
+end
+
+-------------------------------------------------------------------------
+-- SISTEMA DE REPARACIÓN (con streak escalable de EconomyModule)
+-------------------------------------------------------------------------
+
+-- Remote para obtener preview del repair (no gasta dinero)
+local RequestRepairPreview = getOrCreateRemote("RequestRepairPreview", "Function") :: RemoteFunction
+
+RequestRepairPreview.OnServerInvoke = function(plr: Player)
+	local cur = Base.GetHP(plr.UserId)
+	local max = Base.GetMaxHP(plr.UserId)
+	local missing = math.max(0, max - cur)
+
+	if missing <= 0 then
+		return {
+			canRepair = false,
+			cost = 0,
+			streak = 0,
+			willHeal = 0,
+			message = "Already at full HP!"
+		}
+	end
+
+	local willHeal = math.min(10, missing) -- Reparar 10 HP por vez
+	local damageRatio = missing / max -- % de daño (0.0 - 1.0)
+
+	-- Obtener preview del EconomyModule (incluye streak)
+	local preview = Economy.GetRepairPreview(plr.UserId, damageRatio)
+
+	-- Ajustar costo por cantidad de HP a reparar
+	local costPerHP = preview.price / 10 -- El preview es para ~10 HP
+	local totalCost = math.floor(costPerHP * willHeal)
+
+	-- Gamepass: Instant repair (50% descuento)
+	if hasGamepass(plr.UserId, GAMEPASS_INSTANT_REPAIR) then
+		totalCost = math.floor(totalCost * 0.5)
+	end
+
+	return {
+		canRepair = preview.canAfford,
+		cost = totalCost,
+		streak = preview.streak,
+		willHeal = willHeal,
+		currentHP = cur,
+		maxHP = max
+	}
+end
+
 RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	amount = tonumber(amount) or 10
 	if amount <= 0 or amount > Config.MAX_REPAIR_PER_REQUEST then return end
@@ -879,7 +1081,7 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	end
 
 	local cur = Base.GetHP(plr.UserId)
-	local max = Config.BASE_MAX_HP
+	local max = Base.GetMaxHP(plr.UserId)
 	local missing = math.max(0, max - cur)
 
 	if missing <= 0 then
@@ -887,43 +1089,62 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 		return
 	end
 
-	local will = math.min(missing, amount)
-	local s = Economy.GetState(plr.UserId)
-	if not s then return end
+	local willHeal = math.min(missing, amount)
+	local damageRatio = missing / max
 
-	-- Calcular costo con escala
-	local baseCost = Config.REPAIR_COST_PER_HP
-	local incomeScale = 1 + ((s.IncomePerSec or 0) / 10)
-	local hpScale = max / 100
-	local cost = will * math.floor(baseCost * incomeScale * hpScale)
+	-- ? USAR EconomyModule.TryRepair() con streak escalable
+	local ok, pricePaid, reason = Economy.TryRepair(plr.UserId, damageRatio)
 
-	-- Gamepass: Instant repair
-	if hasGamepass(plr.UserId, GAMEPASS_INSTANT_REPAIR) then
-		cost = math.floor(cost * 0.5) -- 50% de descuento
-	end
-
-	if s.Cash < cost then
-		notifyPlayer(plr, string.format("? Need $%d to repair!", cost), 2)
+	if not ok then
+		if reason == "NOT_ENOUGH_CASH" then
+			notifyPlayer(plr, string.format("? Need $%d to repair!", pricePaid), 2)
+		else
+			notifyPlayer(plr, "? Cannot repair!", 2)
+		end
 		return
 	end
 
-	s.Cash -= cost
-	Base.AddHP(plr.UserId, will)
+	-- Aplicar curación
+	Base.AddHP(plr.UserId, willHeal)
 
-	-- Sync
-	local ls = plr:FindFirstChild("leaderstats")
-	if ls then
-		local c = ls:FindFirstChild("Cash") :: IntValue?
-		if c then c.Value = s.Cash end
+	-- ? Reset streak si llegó a HP máximo
+	if Base.GetHP(plr.UserId) >= max then
+		Economy.ResetRepairStreak(plr.UserId)
+		if DEBUG then
+			print(("[REPAIR] Streak reseteado - HP máximo alcanzado"):format())
+		end
 	end
 
+	-- Sync leaderstats
+	local s = Economy.GetState(plr.UserId)
+	if s then
+		local ls = plr:FindFirstChild("leaderstats")
+		if ls then
+			local c = ls:FindFirstChild("Cash") :: IntValue?
+			if c then c.Value = s.Cash end
+		end
+	end
+
+	-- Sync base state
 	BaseStateChanged:FireClient(plr, {
 		UserId = plr.UserId,
 		BaseHP = Base.GetHP(plr.UserId),
 		MaxHP = max,
 	})
 
-	notifyPlayer(plr, string.format("? Repaired +%d HP!", will), 2)
+	-- Mostrar popup visual de gasto (-$XXX)
+	if CashTick then
+		CashTick:FireClient(plr, -pricePaid)
+	end
+
+	notifyPlayer(plr, string.format("? Repaired +%d HP! -$%d", willHeal, pricePaid), 2)
+
+	if DEBUG then
+		local preview = Economy.GetRepairPreview(plr.UserId, 0)
+		print(("[REPAIR] userId=%d heal=%d cost=$%d streak=%d"):format(
+			plr.UserId, willHeal, pricePaid, preview.streak
+			))
+	end
 end)
 
 -------------------------------------------------------------------------
@@ -949,7 +1170,7 @@ RequestPrestige.OnServerEvent:Connect(function(plr: Player)
 		return
 	end
 
-	-- Confirmar (esto deberï¿½a hacerse con un diï¿½logo en cliente)
+	-- Confirmar (esto debería hacerse con un diálogo en cliente)
 	-- Por ahora lo hacemos directo
 
 	-- Reset progreso
@@ -966,7 +1187,7 @@ RequestPrestige.OnServerEvent:Connect(function(plr: Player)
 		end
 	end
 
-	-- Reset ï¿½ndices
+	-- Reset índices
 	BuildIndexByCategory[plr.UserId] = {
 		Income = 1,
 		Defense = 1,
@@ -1023,7 +1244,7 @@ RequestDailyReward.OnServerEvent:Connect(function(plr: Player)
 		return
 	end
 
-	-- Determinar dï¿½a actual (reset si pasï¿½ mï¿½s de 1 dï¿½a)
+	-- Determinar día actual (reset si pasó más de 1 día)
 	local currentDay = (DailyRewards[userId] or 0) + 1
 	if daysPassed > 1 then
 		currentDay = 1 -- Reset streak
@@ -1066,15 +1287,20 @@ RequestState.OnServerInvoke = function(plr: Player)
 
 	local info = {}
 	for id, def in pairs(UpgDefs) do
-		info[id] = {
-			Title = def.Title or id,
-			Description = def.Description or "",
-			Price = Economy.GetCurrentPrice(plr.UserId, id),
-			Count = s.OwnedUpgrades[id] or 0,
-			MaxCount = def.MaxCount,
-			IncomePerSec = def.IncomePerSec or 0,
-			Category = def.Category or "Income",
-		}
+		-- ? FIX: Defensive check - skip if def is not a valid table
+		if type(def) == "table" and def.Title then
+			info[id] = {
+				Title = def.Title or id,
+				Description = def.Description or "",
+				Price = Economy.GetCurrentPrice(plr.UserId, id),
+				Count = s.OwnedUpgrades[id] or 0,
+				MaxCount = def.MaxCount,
+				IncomePerSec = def.IncomePerSec or 0,
+				Category = def.Category or "Income",
+			}
+		else
+			warn(("[RequestState] Invalid upgrade definition for %s: %s"):format(id, tostring(def)))
+		end
 	end
 
 	return {
@@ -1095,13 +1321,13 @@ RequestBaseState.OnServerInvoke = function(plr: Player)
 	return {
 		UserId = plr.UserId,
 		BaseHP = Base.GetHP(plr.UserId),
-		MaxHP = Config.BASE_MAX_HP,
+		MaxHP = Base.GetMaxHP(plr.UserId), -- ? FIX: Usar MaxHP individual del jugador
 		IsInvulnerable = Base.IsInvulnerable(plr.UserId),
 	}
 end
 
 RequestLeaderboard.OnServerInvoke = function(plr: Player, leaderboardType: string?)
-	-- Aquï¿½ puedes implementar diferentes tipos de leaderboards
+	-- Aquí puedes implementar diferentes tipos de leaderboards
 	-- Por ahora retornamos top players por cash
 
 	local leaders = {}
@@ -1266,7 +1492,200 @@ AdminCommand.OnServerEvent:Connect(function(plr: Player, commandString: string)
 end)
 
 -------------------------------------------------------------------------
--- SISTEMA DE ECONOMï¿½A (LOOP PRINCIPAL)
+-- ?? DASH SYSTEM - Handle Dash Requests
+-------------------------------------------------------------------------
+
+-- Crear RemoteEvent si no existe
+local DashRequest = Remotes:FindFirstChild("DashRequest") :: RemoteEvent?
+if not DashRequest then
+	DashRequest = Instance.new("RemoteEvent")
+	DashRequest.Name = "DashRequest"
+	DashRequest.Parent = Remotes
+	warn("[Main.Server] RemoteEvent 'DashRequest' creado automáticamente")
+end
+
+-- ? NUEVO: RemoteEvent para feedback de evasión
+local DashEvaded = Remotes:FindFirstChild("DashEvaded") :: RemoteEvent?
+if not DashEvaded then
+	DashEvaded = Instance.new("RemoteEvent")
+	DashEvaded.Name = "DashEvaded"
+	DashEvaded.Parent = Remotes
+	warn("[Main.Server] RemoteEvent 'DashEvaded' creado automáticamente")
+end
+
+-- Cooldowns por jugador (prevenir spam)
+local DashCooldowns: {[number]: number} = {}
+local DASH_COOLDOWN = 2.5 -- ? Reducido de 4s para acción más rápida
+local DASH_DURATION = 0.3 -- duración de invulnerabilidad
+local DASH_DISTANCE = 20 -- studs de teletransporte
+
+DashRequest.OnServerEvent:Connect(function(plr: Player, direction: Vector3?)
+	local userId = plr.UserId
+	local now = tick()
+
+	-- ? POWERUP: Verificar si SuperDash está activo (sin cooldown)
+	local hasSuperDash = PowerUpModule.IsSuperDashActive and PowerUpModule.IsSuperDashActive(userId)
+
+	-- Verificar cooldown (ignorar si tiene SuperDash)
+	if not hasSuperDash and DashCooldowns[userId] and now - DashCooldowns[userId] < DASH_COOLDOWN then
+		if Config.DEBUG_MODE then
+			local remaining = math.ceil(DASH_COOLDOWN - (now - DashCooldowns[userId]))
+			warn(("[DASH] %s en cooldown (%ds restantes)"):format(plr.Name, remaining))
+		end
+		return
+	end
+
+	-- Obtener character
+	local character = plr.Character
+	if not character then return end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	local humanoid = character:FindFirstChild("Humanoid") :: Humanoid?
+
+	if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then
+		return
+	end
+
+	-- Validar dirección (anti-exploit)
+	if not direction or typeof(direction) ~= "Vector3" then
+		direction = humanoidRootPart.CFrame.LookVector
+	end
+
+	-- Normalizar y proyectar en plano horizontal
+	direction = Vector3.new(direction.X, 0, direction.Z).Unit
+
+	-- Actualizar cooldown
+	DashCooldowns[userId] = now
+
+	-- ? TELETRANSPORTE INSTANTÁNEO (20 studs)
+	local originPos = humanoidRootPart.Position
+	local targetPos = originPos + (direction * DASH_DISTANCE)
+
+	-- Raycast para evitar teletransporte a través de paredes
+	local rayParams = RaycastParams.new()
+	rayParams.FilterDescendantsInstances = {character}
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
+	local rayResult = workspace:Raycast(originPos, direction * DASH_DISTANCE, rayParams)
+
+	if rayResult then
+		-- Si hay obstáculo, teleportar hasta justo antes del obstáculo
+		targetPos = rayResult.Position - (direction * 1) -- 1 stud antes del muro
+	end
+
+	-- Mantener Y original (no teleportar verticalmente)
+	targetPos = Vector3.new(targetPos.X, originPos.Y, targetPos.Z)
+
+	-- Resetear velocidad antes de teleportar (evita inercia)
+	if humanoidRootPart:FindFirstChild("AssemblyLinearVelocity") then
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+	end
+	humanoidRootPart.Velocity = Vector3.zero
+
+	-- Ejecutar teletransporte
+	humanoidRootPart.CFrame = CFrame.new(targetPos, targetPos + direction)
+
+	if Config.DEBUG_MODE then
+		print(("[DASH] ?? %s teleportado de %s a %s (distancia: %.1f studs)"):format(
+			plr.Name,
+			tostring(Vector3.new(math.floor(originPos.X), math.floor(originPos.Y), math.floor(originPos.Z))),
+			tostring(Vector3.new(math.floor(targetPos.X), math.floor(targetPos.Y), math.floor(targetPos.Z))),
+			(targetPos - originPos).Magnitude
+			))
+	end
+
+	-- ? Efectos de partículas en origen
+	local originEffect = Instance.new("Part")
+	originEffect.Size = Vector3.new(4, 0.5, 4)
+	originEffect.Position = originPos
+	originEffect.Anchored = true
+	originEffect.CanCollide = false
+	originEffect.Transparency = 1
+	originEffect.Parent = workspace
+
+	local originParticles = Instance.new("ParticleEmitter")
+	originParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	originParticles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+	originParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	originParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	originParticles.Lifetime = NumberRange.new(0.5, 0.8)
+	originParticles.Rate = 100
+	originParticles.Speed = NumberRange.new(5, 10)
+	originParticles.SpreadAngle = Vector2.new(180, 180)
+	originParticles.LightEmission = 1
+	originParticles.Parent = originEffect
+	originParticles.Enabled = true
+
+	task.delay(0.1, function()
+		originParticles.Enabled = false
+	end)
+	game.Debris:AddItem(originEffect, 2)
+
+	-- ? Efectos de partículas en destino
+	local destEffect = Instance.new("Part")
+	destEffect.Size = Vector3.new(4, 0.5, 4)
+	destEffect.Position = targetPos
+	destEffect.Anchored = true
+	destEffect.CanCollide = false
+	destEffect.Transparency = 1
+	destEffect.Parent = workspace
+
+	local destParticles = Instance.new("ParticleEmitter")
+	destParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	destParticles.Color = ColorSequence.new(Color3.fromRGB(0, 255, 200))
+	destParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.5, 2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	destParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.3, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	destParticles.Lifetime = NumberRange.new(0.5, 0.8)
+	destParticles.Rate = 100
+	destParticles.Speed = NumberRange.new(5, 10)
+	destParticles.SpreadAngle = Vector2.new(180, 180)
+	destParticles.LightEmission = 1
+	destParticles.Parent = destEffect
+	destParticles.Enabled = true
+
+	task.delay(0.1, function()
+		destParticles.Enabled = false
+	end)
+	game.Debris:AddItem(destEffect, 2)
+
+	-- Aplicar invulnerabilidad temporal
+	if Base and Base.SetInvulnerable then
+		Base.SetInvulnerable(userId, true, DASH_DURATION)
+
+		if Config.DEBUG_MODE then
+			print(("[DASH] ? %s teleported %.1f studs! Invulnerable por %.1fs"):format(plr.Name, DASH_DISTANCE, DASH_DURATION))
+		end
+
+		-- Notificación opcional
+		if ShowNotif then
+			ShowNotif:FireClient(plr, "?? DASH!", 0.5)
+		end
+	else
+		warn("[DASH] ?? BaseModule no disponible - no se aplicó invulnerabilidad")
+	end
+end)
+
+-- Limpieza al salir
+Players.PlayerRemoving:Connect(function(plr)
+	DashCooldowns[plr.UserId] = nil
+end)
+
+-------------------------------------------------------------------------
+-- SISTEMA DE ECONOMÍA (LOOP PRINCIPAL)
 -------------------------------------------------------------------------
 task.spawn(function()
 	while true do
@@ -1365,16 +1784,24 @@ if eventsEnabled then
 		while true do
 			local waveConfig = Config.GetWaveDifficulty(ServerState.CurrentWave)
 
-			-- Ajustar por nï¿½mero de jugadores
+			-- Ajustar por número de jugadores
 			local playerCount = #Players:GetPlayers()
 			local difficulty = Config.GetDynamicDifficulty(playerCount)
 			local adjustedInterval = waveConfig.Interval * difficulty
 
 			task.wait(adjustedInterval)
 
+			-- ? SINCRONIZAR AL INICIO (muestra la wave que VAS A JUGAR)
+			if CurrentWaveValue then
+				CurrentWaveValue.Value = ServerState.CurrentWave
+			end
+
+			-- ? RESETEAR FLAGS DE MUERTE AL INICIO DE CADA WAVE
+			Base.ResetAllWaveDeathFlags()
+
 			print(("-----------------------------------------------------------"):rep(1))
 			print(("[WAVE] Iniciando Wave %d"):format(ServerState.CurrentWave))
-			print(("[WAVE] Meteoritos: %d | Daï¿½o: %d | Jugadores: %d"):format(
+			print(("[WAVE] Meteoritos: %d | Daño: %d | Jugadores: %d"):format(
 				waveConfig.Meteors, waveConfig.Damage, playerCount
 				))
 			print(("-----------------------------------------------------------"):rep(1))
@@ -1382,30 +1809,111 @@ if eventsEnabled then
 			-- Anuncio
 			broadcastNotification(string.format("?? WAVE %d INCOMING!", ServerState.CurrentWave), 5)
 
-			-- Boss cada 5 waves
-			if ServerState.CurrentWave % 5 == 0 then
-				task.wait(5)
-				broadcastNotification("?? BOSS METEOR!", 3)
-				task.wait(2)
-				--Events:BossMeteor()
-				task.wait(15)  -- Esperar a que termine el boss meteor
+			-- ?? BOSS METEOR SYSTEM
+			local isBossWave = ServerState.CurrentWave % 10 == 0
+			local isMiniBossWave = (ServerState.CurrentWave % 5 == 0) and not isBossWave
+
+			if isBossWave then
+				-- ?? BOSS COMPLETO (Wave 10, 20, 30...)
+				task.wait(3)
+				Events:BossMeteor(ServerState.CurrentWave, true)
+
+				-- ?? RECOMPENSAS BOSS COMPLETO
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if not Base.DiedDuringCurrentWave(plr.UserId) then
+						local maxHP = Base.GetMaxHP(plr.UserId)
+						Base.SetHP(plr.UserId, maxHP)
+
+						local cashBonus = 500 * (ServerState.CurrentWave / 10)
+						local s = Economy.GetState(plr.UserId)
+						if s then
+							s.Cash += cashBonus
+							local ls = plr:FindFirstChild("leaderstats")
+							if ls then
+								local cash = ls:FindFirstChild("Cash") :: IntValue?
+								if cash then cash.Value = s.Cash end
+							end
+						end
+
+						broadcastNotification(string.format("?? %s DEFEATED THE BOSS! +$%d!", plr.Name, cashBonus), 5)
+
+						if ServerState.CurrentWave == 10 and Achievements then
+							Achievements.Award(plr.UserId, "ColossusSlayer")
+						end
+					end
+				end
+
+			elseif isMiniBossWave then
+				-- ?? MINI-BOSS (Wave 5, 15, 25...)
+				task.wait(3)
+				Events:BossMeteor(ServerState.CurrentWave, false)
+
+				-- ?? RECOMPENSAS MINI-BOSS
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if not Base.DiedDuringCurrentWave(plr.UserId) then
+						local maxHP = Base.GetMaxHP(plr.UserId)
+						Base.SetHP(plr.UserId, maxHP)
+
+						local cashBonus = 100 * ServerState.CurrentWave
+						local s = Economy.GetState(plr.UserId)
+						if s then
+							s.Cash += cashBonus
+							local ls = plr:FindFirstChild("leaderstats")
+							if ls then
+								local cash = ls:FindFirstChild("Cash") :: IntValue?
+								if cash then cash.Value = s.Cash end
+							end
+						end
+
+						broadcastNotification(string.format("? %s survived Mini-Boss! +$%d", plr.Name, cashBonus), 4)
+					end
+				end
+
 			else
-				-- Wave normal
+				-- ?? WAVE NORMAL
 				Config.METEOR_COUNT = waveConfig.Meteors
 				Config.METEOR_DAMAGE = waveConfig.Damage
 
 				task.wait(5)
 				Events:MeteorStorm()
 
-				-- Esperar a que todos los meteoritos caigan y hagan daÃ±o
-				-- CÃ¡lculo: (Meteoros / SpawnRate) + tiempo de caÃ­da extra
 				local stormDuration = (waveConfig.Meteors / Config.EVENTS.MeteorStorm.SpawnRate) + 10
 				task.wait(stormDuration)
+
+				-- ?? BONUS POR WAVE NORMAL
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if not Base.DiedDuringCurrentWave(plr.UserId) then
+						local waveBonus = 50 * ServerState.CurrentWave
+						local s = Economy.GetState(plr.UserId)
+						if s then
+							s.Cash += waveBonus
+							local ls = plr:FindFirstChild("leaderstats")
+							if ls then
+								local cash = ls:FindFirstChild("Cash") :: IntValue?
+								if cash then cash.Value = s.Cash end
+							end
+
+							if ShowNotification then
+								ShowNotification:FireClient(plr, string.format("? Wave %d! +$%d", ServerState.CurrentWave, waveBonus), 3)
+							end
+						end
+					end
+				end
 			end
 
-			-- Incrementar contador de meteoros sobrevividos
+			-- ? ARREGLADO: Wave completada (delay reducido para feedback inmediato)
+			task.wait(0.3) -- Esperar solo 0.3s para feedback instantáneo
+
+			if Config.DEBUG_MODE then
+				print(("[WAVE] ? Wave %d completada"):format(ServerState.CurrentWave))
+			end
+
+			-- ? Incrementar contador Y enviar resultado ÉPICO personalizado
 			for _, plr in ipairs(Players:GetPlayers()) do
-				if Base.GetHP(plr.UserId) > 0 then
+				local diedDuringWave = Base.DiedDuringCurrentWave(plr.UserId)
+
+				if not diedDuringWave then
+					-- ? Jugador SOBREVIVIÓ
 					Base.IncrementMeteorsSurvived(plr.UserId)
 
 					local stats = plr:FindFirstChild("Stats")
@@ -1416,26 +1924,96 @@ if eventsEnabled then
 						end
 					end
 
+					-- ? ENVIAR RESULTADO ÉPICO DE VICTORIA
+					if WaveResult then
+						local waveData = {
+							result = "victory",
+							waveNumber = ServerState.CurrentWave,
+							newSurvived = Base.GetMeteorsSurvived(plr.UserId)
+						}
+						print(("[WAVE] ?? Enviando VICTORIA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+						WaveResult:FireClient(plr, waveData)
+					else
+						warn("[WAVE] ?? WaveResult remote no existe!")
+					end
+
 					-- Achievement: 100 meteoros
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
+						--[[
+					?? SISTEMA DE POWERUPS AUTOMÁTICOS DESACTIVADO
+					------------------------------------------------
+					Los powerups ahora se obtienen comprando en la máquina expendedora.
+					El código antiguo está comentado abajo por si se necesita restaurar:
+
+
+					-- ? POWERUP: Spawnear powerup al completar wave (solo cada 3 waves normales, o boss/miniboss)
+					local shouldSpawnPowerUp = false
+					local waveType = "Normal"
+					if ServerState.CurrentWave % 10 == 0 then
+						waveType = "Boss"
+						shouldSpawnPowerUp = true
+					elseif ServerState.CurrentWave % 5 == 0 then
+						waveType = "MiniBoss"
+						shouldSpawnPowerUp = true
+					elseif ServerState.CurrentWave % 3 == 0 then
+						-- Solo cada 3 waves normales (3, 6, 9, 12, etc)
+						waveType = "Normal"
+						shouldSpawnPowerUp = true
+					end
+
+					-- Spawnear powerup solo si cumple la condición
+					if shouldSpawnPowerUp then
+						-- ? Pasar el número de wave para el sistema híbrido
+						PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType, ServerState.CurrentWave)
+
+						if Config.DEBUG_MODE then
+							print(("[POWERUP] ? Spawneando powerup para %s - Wave %d (%s)"):format(
+								plr.Name, ServerState.CurrentWave, waveType
+								))
+						end
+					end
+						--]]
+
+					if Config.DEBUG_MODE then
+						print(("[WAVE] ? Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
+					end
+				else
+					-- ? Jugador MURIÓ
+					-- ? ENVIAR RESULTADO ÉPICO DE DERROTA
+					if WaveResult then
+						local waveData = {
+							result = "defeat",
+							waveNumber = ServerState.CurrentWave,
+							survivedCount = Base.GetMeteorsSurvived(plr.UserId)
+						}
+						print(("[WAVE] ?? Enviando DERROTA a %s - Wave %d"):format(plr.Name, ServerState.CurrentWave))
+						WaveResult:FireClient(plr, waveData)
+					else
+						warn("[WAVE] ?? WaveResult remote no existe!")
+					end
+
+					if Config.DEBUG_MODE then
+						print(("[WAVE] ? Jugador %s MURIÓ durante wave %d"):format(plr.Name, ServerState.CurrentWave))
+					end
 				end
 			end
 
+			-- ? INCREMENTAR WAVE DESPUÉS de enviar mensajes
+			ServerState.CurrentWave += 1
+			CurrentWaveValue.Value = ServerState.CurrentWave
 
-		-- Mensaje de wave completada ANTES de incrementar
-		broadcastNotification(string.format("âœ… WAVE %d COMPLETADA!", ServerState.CurrentWave), 4)
-		task.wait(1)
-
-		ServerState.CurrentWave += 1
-		CurrentWaveValue.Value = ServerState.CurrentWave
-
-		logAnalytic("WaveCompleted", {
-			wave = ServerState.CurrentWave - 1,
-			survivors = #Players:GetPlayers(),
-		})
+			logAnalytic("WaveCompleted", {
+				wave = ServerState.CurrentWave - 1,
+				survivors = #Players:GetPlayers(),
+			})
+			-- Pausa de 5 segundos antes de anunciar el siguiente wave
+			task.wait(5)
 		end
+
+
+
 	end)
 
 	if DEBUG then
@@ -1452,7 +2030,7 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 	local s = Economy.GetState(plr.UserId)
 	if not (s and s.OwnedUpgrades) then return end
 
-	-- Reset ï¿½ndices
+	-- Reset índices
 	BuildIndexByCategory[plr.UserId] = {
 		Income = 1,
 		Defense = 1,
@@ -1506,7 +2084,7 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 
 				for i = 1, owned do
 					if totalRebuilt >= Config.MAX_MODELS_PER_BASE then
-						warn(("[REBUILD] Lï¿½mite alcanzado para %s"):format(plr.Name))
+						warn(("[REBUILD] Límite alcanzado para %s"):format(plr.Name))
 						return
 					end
 
@@ -1542,15 +2120,66 @@ local function rebuildPlayerProgress(plr: Player, basePart: BasePart)
 end
 
 -------------------------------------------------------------------------
--- ?? INICIALIZAR AMBIENTE APOCALï¿½PTICO
+-- ?? INICIALIZAR AMBIENTE APOCALÍPTICO
 -------------------------------------------------------------------------
 EnvironmentManager:Initialize()
 
 if Config.DEBUG_MODE then
-	print("[MAIN] ? Ambiente apocalï¿½ptico inicializado")
+	print("[MAIN] ? Ambiente apocalíptico inicializado")
 end
 
+if Config.DEBUG_MODE then
+	print("[MAIN] ?? Limpiando bases de sesiones anteriores...")
 
+	local basesFolder = workspace:FindFirstChild("Bases")
+	if basesFolder then
+		local count = 0
+		for _, obj in ipairs(basesFolder:GetChildren()) do
+			if obj:IsA("BasePart") or obj:IsA("Model") then
+				obj:Destroy()
+				count += 1
+			end
+		end
+		print(("[MAIN] ? Limpiadas %d bases viejas"):format(count))
+	end
+end
+
+local function diagnosticBillboards(userId: number)
+	task.delay(2, function() -- Esperar 2 segundos a que se creen las bases
+		local basesFolder = workspace:FindFirstChild("Bases")
+		if not basesFolder then return end
+
+		local billboardCount = 0
+		local baseCount = 0
+
+		for _, obj in ipairs(basesFolder:GetDescendants()) do
+			if obj:GetAttribute("OwnerUserId") == userId then
+				if obj:IsA("BasePart") then
+					baseCount += 1
+					print(("[DIAGNOSTIC] Base encontrada: %s"):format(obj.Name))
+				end
+			end
+
+			if obj:IsA("BillboardGui") then
+				local parent = obj.Parent
+				if parent and parent:GetAttribute("OwnerUserId") == userId then
+					billboardCount += 1
+					print(("[DIAGNOSTIC] Billboard #%d: Parent = %s"):format(
+						billboardCount, parent.Name
+						))
+				end
+			end
+		end
+
+		print(("[DIAGNOSTIC] RESUMEN userId %d: %d bases, %d billboards"):format(
+			userId, baseCount, billboardCount
+			))
+
+		if billboardCount > 1 then
+			warn(("[DIAGNOSTIC] ?? PROBLEMA: Hay %d billboards (debería ser 1)"):format(billboardCount))
+		end
+	end)
+end
 -------------------------------------------------------------------------
 -- PLAYER LIFECYCLE
 -------------------------------------------------------------------------
@@ -1560,7 +2189,7 @@ Players.PlayerAdded:Connect(function(plr: Player)
 	-- Crear leaderstats
 	local ls, cashVal, ipsVal = createLeaderstats(plr)
 
-	-- Inicializar mï¿½dulos
+	-- Inicializar módulos
 	Base.InitPlayer(plr.UserId)
 
 	-- Cargar datos
@@ -1587,7 +2216,7 @@ Players.PlayerAdded:Connect(function(plr: Player)
 			end
 
 			if DEBUG then
-				print(("[OFFLINE] %s ganï¿½ $%d en %ds"):format(plr.Name, earned, elapsed))
+				print(("[OFFLINE] %s ganó $%d en %ds"):format(plr.Name, earned, elapsed))
 			end
 		end
 	end
@@ -1621,6 +2250,10 @@ Players.PlayerAdded:Connect(function(plr: Player)
 	end
 
 	assignBase(plr, slot)
+	-- ? DIAGNÓSTICO TEMPORAL
+	if Config.DEBUG_MODE then
+		diagnosticBillboards(plr.UserId)
+	end
 
 	-- Rebuild progreso
 	local basePart = BasePartByUser[plr.UserId]
@@ -1733,12 +2366,12 @@ game:BindToClose(function()
 end)
 
 -------------------------------------------------------------------------
--- INICIALIZACIï¿½N FINAL
+-- INICIALIZACIÓN FINAL
 -------------------------------------------------------------------------
 print("-----------------------------------------------------------------------")
 print("  ?? APOCALYPSE TYCOON - SERVER INICIADO")
 print("-----------------------------------------------------------------------")
-print(("[CONFIG] Versiï¿½n: 5.0 PRODUCTION"):format())
+print(("[CONFIG] Versión: 5.0 PRODUCTION"):format())
 print(("[CONFIG] DataStore: %s (v%d)"):format(Config.DATASTORE_NAME, Config.DATA_VERSION))
 print(("[CONFIG] Start Cash: $%d | Max Cash: $%d"):format(Config.START_CASH, Config.MAX_CASH))
 print(("[CONFIG] Base HP: %d | Regen: %d/s"):format(Config.BASE_MAX_HP, Config.BASE_REGEN_RATE))
@@ -1763,10 +2396,10 @@ if DEBUG then
 	print("-----------------------------------------------------------------------\n")
 end
 
--- Validar configuraciï¿½n crï¿½tica
+-- Validar configuración crítica
 local isValid, errorMsg = Config.Validate()
 if not isValid then
-	error(("[CONFIG] ? Configuraciï¿½n invï¿½lida: %s"):format(errorMsg or "unknown"))
+	error(("[CONFIG] ? Configuración inválida: %s"):format(errorMsg or "unknown"))
 end
 
 print("? Servidor listo para jugadores\n")

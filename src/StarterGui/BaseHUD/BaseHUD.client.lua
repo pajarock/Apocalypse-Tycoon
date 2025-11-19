@@ -1,6 +1,7 @@
 --!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -13,74 +14,215 @@ sg.Name = "BaseHUD"
 sg.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 300, 0, 40)
-frame.Position = UDim2.new(1, -320, 1, -70)
-frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.Size = UDim2.new(0, 320, 0, 60)
+frame.Position = UDim2.new(1, -340, 1, -80)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+frame.Rotation = -1.5 -- Rotación sutil estilo urbano
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+-- Sombra pronunciada
+local shadow = Instance.new("Frame", sg)
+shadow.Name = "HPShadow"
+shadow.Size = UDim2.new(0, 326, 0, 66)
+shadow.Position = UDim2.new(1, -343, 1, -77)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.6
+shadow.BorderSizePixel = 0
+shadow.Rotation = -1.5
+shadow.ZIndex = 0
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 10)
+frame.ZIndex = 1
+
+-- Borde grueso vibrante con gradiente
+local stroke = Instance.new("UIStroke", frame)
+stroke.Thickness = 4
+stroke.Color = Color3.fromRGB(0, 255, 100)
+stroke.Transparency = 0
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local strokeGradient = Instance.new("UIGradient", stroke)
+strokeGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 100)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255))
+})
+strokeGradient.Rotation = 45
 
 local bar = Instance.new("Frame", frame)
 bar.Name = "Bar"
-bar.Size = UDim2.new(1, -10, 1, -10)
-bar.Position = UDim2.fromOffset(5, 5)
-bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+bar.Size = UDim2.new(1, -12, 0, 20)
+bar.Position = UDim2.fromOffset(6, 32)
+bar.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
 bar.BorderSizePixel = 0
+bar.ZIndex = 2
 Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 6)
 
+-- Gradiente en la barra
+local barGradient = Instance.new("UIGradient", bar)
+barGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 100)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 80))
+})
+barGradient.Rotation = 90
+
+-- Label "BASE HP" pequeño arriba
+local hpTitle = Instance.new("TextLabel", frame)
+hpTitle.Size = UDim2.new(0.5, 0, 0, 18)
+hpTitle.Position = UDim2.fromOffset(8, 4)
+hpTitle.BackgroundTransparency = 1
+hpTitle.Font = Enum.Font.GothamBold
+hpTitle.TextSize = 14
+hpTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+hpTitle.TextXAlignment = Enum.TextXAlignment.Left
+hpTitle.Text = "BASE HP"
+hpTitle.TextStrokeTransparency = 0.7
+hpTitle.ZIndex = 3
+
+-- Label de números en LuckiestGuy (GRANDE)
 local label = Instance.new("TextLabel", frame)
-label.Size = UDim2.new(1, 0, 1, 0)
+label.Size = UDim2.new(0.5, 0, 0, 24)
+label.Position = UDim2.new(1, -8, 0, 2)
+label.AnchorPoint = Vector2.new(1, 0)
 label.BackgroundTransparency = 1
-label.Font = Enum.Font.GothamBold
-label.TextSize = 18
-label.TextColor3 = Color3.new(1,1,1)
-label.Text = "HP: 100/100"
+label.Font = Enum.Font.LuckiestGuy -- ESTILO GRAFITI
+label.TextSize = 26
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.TextXAlignment = Enum.TextXAlignment.Right
+label.Text = "100/100"
+label.TextStrokeTransparency = 0.3
+label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+label.ZIndex = 3
+label.Rotation = -2 -- Inclinación grafiti
 
-local repairBtn = Instance.new("TextButton", frame)
-repairBtn.Size = UDim2.new(0, 80, 0, 30)
-repairBtn.Position = UDim2.new(0, -90, 0, 5)
-repairBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-repairBtn.TextColor3 = Color3.new(1,1,1)
-repairBtn.Font = Enum.Font.GothamBold
-repairBtn.TextSize = 14
+local repairBtn = Instance.new("TextButton", sg)
+repairBtn.Size = UDim2.new(0, 100, 0, 50)
+repairBtn.Position = UDim2.new(1, -360, 1, -145)
+repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+repairBtn.TextColor3 = Color3.new(1, 1, 1)
+repairBtn.Font = Enum.Font.LuckiestGuy -- ESTILO GRAFITI
+repairBtn.TextSize = 20
+repairBtn.TextStrokeTransparency = 0.3
+repairBtn.TextStrokeColor3 = Color3.fromRGB(0, 50, 0)
+repairBtn.BorderSizePixel = 0
+repairBtn.Rotation = -1.5
+repairBtn.ZIndex = 1
 
-local statsLabel = Instance.new("TextLabel", sg)
-statsLabel.Size = UDim2.new(0, 200, 0, 30)
-statsLabel.Position = UDim2.new(1, -220, 1, -110)
-statsLabel.BackgroundTransparency = 0.5
-statsLabel.BackgroundColor3 = Color3.fromRGB(20,20,20)
-statsLabel.TextColor3 = Color3.new(1,1,1)
-statsLabel.Font = Enum.Font.Gotham
-statsLabel.TextSize = 14
-statsLabel.Text = "Meteors survived: 0"
+Instance.new("UICorner", repairBtn).CornerRadius = UDim.new(0, 10)
 
-local function updateRepairButton()
+-- Borde del botón
+local repairStroke = Instance.new("UIStroke", repairBtn)
+repairStroke.Thickness = 3
+repairStroke.Color = Color3.fromRGB(0, 255, 100)
+repairStroke.Transparency = 0
+
+-- Sombra del botón
+local repairShadow = Instance.new("Frame", sg)
+repairShadow.Size = UDim2.new(0, 106, 0, 56)
+repairShadow.Position = UDim2.new(1, -363, 1, -142)
+repairShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+repairShadow.BackgroundTransparency = 0.6
+repairShadow.BorderSizePixel = 0
+repairShadow.Rotation = -1.5
+repairShadow.ZIndex = 0
+Instance.new("UICorner", repairShadow).CornerRadius = UDim.new(0, 10)
+
+-- Padding interno
+local repairPadding = Instance.new("UIPadding", repairBtn)
+repairPadding.PaddingLeft = UDim.new(0, 6)
+repairPadding.PaddingRight = UDim.new(0, 6)
+repairPadding.PaddingTop = UDim.new(0, 4)
+repairPadding.PaddingBottom = UDim.new(0, 4)
+
+-- ? Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
+
+-- ? FIX: Definir función update() ANTES de usarla
+local function update()
 	local state = RequestBaseState:InvokeServer()
 	if not state then return end
 
 	local hp = state.BaseHP
 	local max = state.MaxHP
-	local missing = max - hp
-	local repairAmount = math.min(10, missing)
+	local pct = hp/max
 
-	-- Calcular costo escalado (igual que en server)
-	local plr = game.Players.LocalPlayer
-	local leaderstats = plr:FindFirstChild("leaderstats")
-	local ips = leaderstats and leaderstats:FindFirstChild("IncomePerSec")
-	local incomePerSec = ips and ips.Value or 0
+	bar:TweenSize(UDim2.new(pct, -10, 1, -10), "Out", "Quad", 0.3, true)
 
-	local baseCost = 50  -- Debe coincidir con Config
-	local scaledCost = baseCost * (1 + (incomePerSec / 10))
-	local cost = repairAmount * math.floor(scaledCost)
-
-	if missing <= 0 then
-		repairBtn.Text = "âœ“ Full HP"
-		repairBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	-- Colores vibrantes según HP
+	local color1, color2, strokeColor
+	if pct > 0.7 then
+		color1 = Color3.fromRGB(0, 255, 100)
+		color2 = Color3.fromRGB(0, 200, 80)
+		strokeColor = Color3.fromRGB(0, 255, 100)
+	elseif pct > 0.3 then
+		color1 = Color3.fromRGB(255, 200, 0)
+		color2 = Color3.fromRGB(255, 150, 0)
+		strokeColor = Color3.fromRGB(255, 200, 0)
 	else
-		repairBtn.Text = string.format("Repair\n$%d", cost)
-		repairBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+		color1 = Color3.fromRGB(255, 50, 50)
+		color2 = Color3.fromRGB(200, 0, 0)
+		strokeColor = Color3.fromRGB(255, 50, 50)
+	end
+
+	bar.BackgroundColor3 = color1
+	barGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, color1),
+		ColorSequenceKeypoint.new(1, color2)
+	})
+
+	-- Animar cambio de color del borde
+	TweenService:Create(stroke, TweenInfo.new(0.3), {
+		Color = strokeColor
+	}):Play()
+
+	strokeGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, strokeColor),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(
+			math.clamp(strokeColor.R * 255 * 0.8, 0, 255),
+			math.clamp(strokeColor.G * 255 * 0.8, 0, 255),
+			math.clamp(strokeColor.B * 255 + 50, 0, 255)
+			))
+	})
+
+	label.Text = string.format("%d/%d", hp, max)
+end
+
+local function updateRepairButton()
+	-- ? FIX: Usar RequestRepairPreview del servidor (incluye streak escalable)
+	local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+	local RequestRepairPreview = Remotes:FindFirstChild("RequestRepairPreview")
+
+	if not RequestRepairPreview then
+		warn("[BaseHUD] RequestRepairPreview remote no encontrado")
+		return
+	end
+
+	local ok, preview = pcall(function()
+		return RequestRepairPreview:InvokeServer()
+	end)
+
+	if not ok or not preview then
+		warn("[BaseHUD] Error obteniendo preview de repair")
+		return
+	end
+
+	if not preview.canRepair or preview.willHeal <= 0 then
+		repairBtn.Text = "? FULL!"
+		repairBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		repairStroke.Color = Color3.fromRGB(150, 150, 150)
+	else
+		-- ? Mostrar streak si es > 0 (sistema escalable activo)
+		local streakText = ""
+		if preview.streak > 0 then
+			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque será el próximo
+		end
+
+		repairBtn.Text = string.format("REPAIR%s\n$%d", streakText, preview.cost)
+		repairBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+		repairStroke.Color = Color3.fromRGB(0, 255, 100)
 	end
 end
 
+-- ? FIX: Click en botón de reparación
 repairBtn.MouseButton1Click:Connect(function()
 	ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
 	task.wait(0.1)
@@ -88,7 +230,7 @@ repairBtn.MouseButton1Click:Connect(function()
 	update()
 end)
 
--- Tecla R
+-- ? FIX: Tecla R para reparar (sin duplicado)
 local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gp)
 	if gp then return end
@@ -100,45 +242,15 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	end
 end)
 
--- Llamar updateRepairButton en el loop
-
--- Tecla R
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.R then
-		ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
-	end
-end)
-
-local function update()
-	local state = RequestBaseState:InvokeServer()
-	if not state then return end
-
-	local hp = state.BaseHP
-	local max = state.MaxHP
-	local pct = hp/max
-
-	bar:TweenSize(UDim2.new(pct, -10, 1, -10), "Out", "Quad", 0.3, true)
-
-	if pct > 0.7 then
-		bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-	elseif pct > 0.3 then
-		bar.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-	else
-		bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-	end
-
-	label.Text = string.format("HP: %d/%d", hp, max)
-end
-
 BaseStateChanged.OnClientEvent:Connect(update)
 
 task.spawn(function()
 	while true do
 		update()
+		updateRepairButton() -- ? FIX: Actualizar botón de reparación cada 2 segundos
 		task.wait(2)
 	end
 end)
 
 update()
+updateRepairButton() -- ? FIX: Actualizar botón al inicio

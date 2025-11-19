@@ -446,7 +446,7 @@ function BaseVisualsManager:CreateBase(userId: number, position: Vector3, player
 	-- local walls = createWalls(basePart)
 	local walls = {} -- Sin muros por default
 	local towers = createTowers(basePart)
-	local billboard = createBillboard(basePart, playerName, userId)
+
 
 	-- Guardar referencias
 	BaseData[userId] = {
@@ -493,19 +493,25 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 	end
 
 	-- Actualizar HP bar en billboard
-	local billboard = data.decorations.billboard
-	if billboard then
-		local hpBar = billboard:FindFirstChild("HPBar", true)
-		local hpLabel = billboard:FindFirstChild("HPLabel", true)
+	local billboard = data.base:FindFirstChild("BaseBillboard")
+	if billboard and billboard:IsA("BillboardGui") then
+		local frame = billboard:FindFirstChild("Frame")
+		if not frame then return end
+
+		-- HP Bar
+		local hpBarBg = frame:FindFirstChild("HPBarBg")
+		local hpBar = hpBarBg and hpBarBg:FindFirstChild("HPBar")
+		local hpLabel = frame:FindFirstChild("HPLabel")
 
 		if hpBar then
+			-- ? Animar barra con porcentaje correcto
 			TweenService:Create(
 				hpBar,
 				TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 				{Size = UDim2.fromScale(hpPercent, 1)}
 			):Play()
 
-			-- Color bar según HP
+			-- Color según HP
 			if hpPercent > 0.7 then
 				hpBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 			elseif hpPercent > 0.3 then
@@ -516,6 +522,7 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 		end
 
 		if hpLabel then
+			-- ? IMPORTANTE: Mostrar HP actual vs MaxHP real
 			hpLabel.Text = string.format("HP: %d/%d", currentHP, maxHP)
 		end
 	end

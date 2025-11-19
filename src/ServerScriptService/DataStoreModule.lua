@@ -48,7 +48,7 @@ local function migrateData(data:any): SaveBlob
 	local b = table.clone(data) :: any
 	local version = tonumber(b.DataVersion) or 0
 
-	-- v0 -> v1: booleans a nÃºmeros, rellenar campos
+	-- v0 -> v1: booleans a números, rellenar campos
 	if version == 0 then
 		if b.OwnedUpgrades then
 			for id, val in pairs(b.OwnedUpgrades) do
@@ -103,7 +103,16 @@ end
 
 
 function DataStoreModule:LoadAsync(userId:number): SaveBlob
+		-- ?? TEMPORAL: Forzar datos fresh para testing
+		if Config.DEBUG_MODE then
+			print(("[DATASTORE] ?? FORZANDO datos fresh para testing"))
+			local freshBlob = self:DefaultBlob()
+			freshBlob.__fresh = true
+			return freshBlob
+		end
+		-- El resto del código normal continúa...
 	local key = "u_" .. tostring(userId)
+	
 
 	for attempt = 1, MAX_RETRIES do
 		local ok, result = pcall(function()
@@ -114,7 +123,7 @@ function DataStoreModule:LoadAsync(userId:number): SaveBlob
 			-- Jugador nuevo
 			if result == nil then
 				if DEBUG then
-					print(("[DATASTORE] nuevo %s â†’ defaults"):format(tostring(userId)))
+					print(("[DATASTORE] nuevo %s ? defaults"):format(tostring(userId)))
 				end
 				local b = self:DefaultBlob()
 				b.__fresh = true               -- << bandera para Economy
@@ -123,7 +132,7 @@ function DataStoreModule:LoadAsync(userId:number): SaveBlob
 
 			-- valida y migra
 			if not validateBlob(result) then
-				warn(("[DATASTORE] datos corruptos %s â†’ defaults"):format(tostring(userId)))
+				warn(("[DATASTORE] datos corruptos %s ? defaults"):format(tostring(userId)))
 				local b = self:DefaultBlob()
 				b.__fresh = true
 				return b
@@ -152,7 +161,7 @@ function DataStoreModule:LoadAsync(userId:number): SaveBlob
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CRÃTICO load uid=%d -> defaults"):format(userId))
+	warn(("[DATASTORE] FALLO CRÍTICO load uid=%d -> defaults"):format(userId))
 	return sanitizeBlob(self:DefaultBlob())
 end
 
@@ -181,7 +190,7 @@ function DataStoreModule:SaveAsync(userId:number, blob:SaveBlob): boolean
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CRÃTICO save uid=%d"):format(userId))
+	warn(("[DATASTORE] FALLO CRÍTICO save uid=%d"):format(userId))
 	return false
 end
 
@@ -219,7 +228,7 @@ function DataStoreModule:SaveAsyncSafe(userId:number, blob:SaveBlob): boolean
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CRÃTICO save(SAFE) uid=%d"):format(userId))
+	warn(("[DATASTORE] FALLO CRÍTICO save(SAFE) uid=%d"):format(userId))
 	return false
 end
 
@@ -233,9 +242,9 @@ function DataStoreModule:DeleteAsync(userId:number): boolean
 	end
 end
 
--- No disponible en DataStore estÃ¡ndar
+-- No disponible en DataStore estándar
 function DataStoreModule:ListKeysAsync(_prefix:string?, _limit:number?): {string}
-	warn("[DATASTORE] ListKeysAsync no disponible en DataStore estÃ¡ndar.")
+	warn("[DATASTORE] ListKeysAsync no disponible en DataStore estándar.")
 	return {}
 end
 
@@ -265,7 +274,7 @@ function DataStoreModule:GetStats(): {[string]: any}
 end
 
 if DEBUG then
-	print("[DATASTORE] mÃ³dulo cargado")
+	print("[DATASTORE] módulo cargado")
 	print(("[DATASTORE] store=%s  version=%d"):format(DS_NAME, DATA_VERSION))
 end
 
@@ -279,9 +288,9 @@ function DataStoreModule.WipePlayerData(userId: number)
 	end)
 
 	if success then
-		print("âœ… Data borrada para jugador:", userId)
+		print("? Data borrada para jugador:", userId)
 	else
-		warn("âŒ Error al borrar data para", userId, "->", err)
+		warn("? Error al borrar data para", userId, "->", err)
 	end
 end
 

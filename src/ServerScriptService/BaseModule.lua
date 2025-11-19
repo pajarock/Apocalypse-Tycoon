@@ -39,6 +39,20 @@ local RunService = game:GetService("RunService")
 -- ? ARREGLADO: Eliminado require de EventManager (dependencia circular)
 -- local EventManager = require(game.ServerScriptService:WaitForChild("EventManager"))
 
+-- ? POWERUP MODULE (lazy load para evitar circular dependency)
+local PowerUpModule = nil
+local function getPowerUpModule()
+	if not PowerUpModule then
+		local ok, mod = pcall(function()
+			return require(game.ServerScriptService:WaitForChild("PowerUpModule"))
+		end)
+		if ok then
+			PowerUpModule = mod
+		end
+	end
+	return PowerUpModule
+end
+
 -------------------------------------------------------------------------
 -- CONFIGURACIÓN
 -------------------------------------------------------------------------
@@ -336,8 +350,48 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 	-- Invulnerable
 	if state.IsInvulnerable then
 		state.LastDamageTime = now
+
+		-- ? NUEVO: Notificar al cliente que evadió daño exitosamente
+		local player = Players:GetPlayerByUserId(userId)
+		if player then
+			local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
+			if Remotes then
+				local DashEvaded = Remotes:FindFirstChild("DashEvaded")
+				if DashEvaded and DashEvaded:IsA("RemoteEvent") then
+					DashEvaded:FireClient(player, rawDamage)
+					if DEBUG then
+						print(("[BaseModule] ??? EVADIDO! userId %d evadió %d de daño"):format(userId, rawDamage))
+					end
+				end
+			end
+		end
+
 		return 0
 	end
+
+	-- ? POWERUP: Mini Drone - Verificar si puede interceptar el daño
+	local pum = getPowerUpModule()
+	if pum and pum.TryDroneIntercept and pum.TryDroneIntercept(userId) then
+		state.LastDamageTime = now
+		if DEBUG then
+			print(("[BaseModule] ?? DRON INTERCEPTÓ! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+		end
+		return 0
+	end
+
+	-- ? POWERUP: Base Shield - Verificar si puede bloquear el daño
+	if pum and pum.TryUseBaseShield and pum.TryUseBaseShield(userId) then
+		state.LastDamageTime = now
+		if DEBUG then
+			print(("[BaseModule] ??? BASE SHIELD! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+		end
+		return 0
+	end
+
+	-- ? POWERUP: Critical Parry - Marcar posición del meteorito para parry
+	local meteorPosition = nil
+	-- La posición del meteorito debería pasarse como parámetro, por ahora usamos nil
+	-- Esto se manejará cuando el meteorito impacte
 
 	-- Reducción por escudo
 	local shield = tonumber(state.ShieldLevel) or 0
@@ -641,6 +695,25 @@ end
 function BaseModule.IsInvulnerable(userId: number): boolean
 	if not BaseState[userId] then return false end
 	return BaseState[userId].IsInvulnerable
+end
+
+-------------------------------------------------------------------------
+-- GUARDIAN SYSTEM
+-------------------------------------------------------------------------
+
+-- ? NUEVA FUNCIÓN: Actualizar Guardian cuando se hace compra/reparación legítima
+function BaseModule.UpdateGuardianTarget(userId: number, newAmount: number)
+	-- Solo actualizar si hay un Guardian activo
+	if not PendingMoneyReductions[userId] then
+		return
+	end
+
+	-- Actualizar el target amount para que el Guardian no devuelva dinero en compras legítimas
+	PendingMoneyReductions[userId].TargetAmount = newAmount
+
+	if DEBUG then
+		print(("[BaseModule] ??? Guardian actualizado - nuevo target: $%d"):format(newAmount))
+	end
 end
 
 -------------------------------------------------------------------------
