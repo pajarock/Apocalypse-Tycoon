@@ -1020,11 +1020,11 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 
 	if not VendingMachineFirstUse[userId] then
 		powerUpId = "IncomeBoost"
-		price = 200 -- Precio especial para primer uso
+		price = 0 -- 🎁 GRATIS! Primer chicle es free para probar el sistema
 		VendingMachineFirstUse[userId] = true
 
 		if DEBUG then
-			print(("[PowerUpModule] 🎁 Primer uso de máquina - IncomeBoost garantizado para userId %d"):format(userId))
+			print(("[PowerUpModule] 🎁 Primer uso de máquina - IncomeBoost GRATIS garantizado para userId %d"):format(userId))
 		end
 	else
 		-- ✅ Usos siguientes: Random por rareza

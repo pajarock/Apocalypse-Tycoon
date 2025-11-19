@@ -113,45 +113,63 @@ local function createInventoryGUI(): ScreenGui
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
-	-- Frame contenedor
+	-- 🎨 Frame contenedor - ESTILO GRAFITI
 	local container = Instance.new("Frame")
 	container.Name = "InventoryContainer"
-	container.Size = UDim2.new(0, 400, 0, 90)
-	container.Position = UDim2.new(0.5, -200, 1, -120) -- Bottom center
-	container.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-	container.BackgroundTransparency = 0.3
+	container.Size = UDim2.new(0, 500, 0, 110)
+	container.Position = UDim2.new(0.5, -250, 1, -140) -- Bottom center
+	container.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	container.BackgroundTransparency = 0.1
 	container.BorderSizePixel = 0
+	container.Rotation = -1 -- Leve inclinación urbana
 	container.Parent = screenGui
 
-	-- UICorner para el contenedor
+	-- UICorner más redondeado
 	local containerCorner = Instance.new("UICorner")
-	containerCorner.CornerRadius = UDim.new(0, 12)
+	containerCorner.CornerRadius = UDim.new(0, 20)
 	containerCorner.Parent = container
 
-	-- UIStroke para bordes
+	-- 💎 STROKE NEÓN ÉPICO
 	local containerStroke = Instance.new("UIStroke")
-	containerStroke.Color = Color3.fromRGB(100, 100, 150)
-	containerStroke.Thickness = 2
-	containerStroke.Transparency = 0.5
+	containerStroke.Color = Color3.fromRGB(0, 255, 200)
+	containerStroke.Thickness = 4
+	containerStroke.Transparency = 0
 	containerStroke.Parent = container
 
-	-- Título
+	-- Glow exterior
+	local glow = Instance.new("UIGradient")
+	glow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 200, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200)),
+	})
+	glow.Rotation = 90
+	glow.Parent = containerStroke
+
+	-- 🎯 TÍTULO ÉPICO ESTILO GRAFITI
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0, 20)
+	title.Size = UDim2.new(1, 0, 0, 30)
 	title.Position = UDim2.new(0, 0, 0, 5)
 	title.BackgroundTransparency = 1
-	title.Text = "🎁 POWERUP INVENTORY"
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.TextSize = 14
-	title.Font = Enum.Font.GothamBold
+	title.Text = "⚡ POWERUP STASH ⚡"
+	title.TextColor3 = Color3.fromRGB(255, 255, 100)
+	title.TextSize = 22
+	title.Font = Enum.Font.LuckiestGuy -- 🔥 GRAFITI FONT
+	title.Rotation = -2
 	title.Parent = container
+
+	-- Stroke para el título
+	local titleStroke = Instance.new("UIStroke")
+	titleStroke.Color = Color3.fromRGB(0, 0, 0)
+	titleStroke.Thickness = 3
+	titleStroke.Parent = title
 
 	-- Frame para los slots
 	local slotsFrame = Instance.new("Frame")
 	slotsFrame.Name = "SlotsFrame"
-	slotsFrame.Size = UDim2.new(1, -20, 0, 50)
-	slotsFrame.Position = UDim2.new(0, 10, 0, 30)
+	slotsFrame.Size = UDim2.new(1, -20, 0, 65)
+	slotsFrame.Position = UDim2.new(0, 10, 0, 40)
 	slotsFrame.BackgroundTransparency = 1
 	slotsFrame.Parent = container
 
@@ -160,81 +178,126 @@ local function createInventoryGUI(): ScreenGui
 	listLayout.FillDirection = Enum.FillDirection.Horizontal
 	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	listLayout.Padding = UDim.new(0, 10)
+	listLayout.Padding = UDim.new(0, 15)
 	listLayout.Parent = slotsFrame
 
-	-- Crear 5 slots
+	-- 🎁 Crear 5 slots ÉPICOS
 	for i = 1, 5 do
 		local slot = Instance.new("TextButton")
 		slot.Name = "Slot" .. i
-		slot.Size = UDim2.new(0, 60, 0, 50)
-		slot.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+		slot.Size = UDim2.new(0, 75, 0, 65)
+		slot.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
 		slot.BorderSizePixel = 0
 		slot.Text = ""
 		slot.AutoButtonColor = false
 		slot:SetAttribute("SlotIndex", i)
+		slot.Rotation = math.random(-3, 3) -- Rotación random para look urbano
 		slot.Parent = slotsFrame
 
-		-- UICorner
+		-- UICorner más redondeado
 		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 8)
+		corner.CornerRadius = UDim.new(0, 15)
 		corner.Parent = slot
 
-		-- UIStroke
+		-- 💎 STROKE NEÓN GRUESO
 		local stroke = Instance.new("UIStroke")
-		stroke.Color = Color3.fromRGB(80, 80, 120)
-		stroke.Thickness = 2
-		stroke.Transparency = 0.5
+		stroke.Color = Color3.fromRGB(60, 60, 100)
+		stroke.Thickness = 4
+		stroke.Transparency = 0
+		stroke.Name = "Stroke"
 		stroke.Parent = slot
 
-		-- Icon Label (emoji del powerup)
+		-- Icon Label (emoji del powerup) - MÁS GRANDE
 		local icon = Instance.new("TextLabel")
 		icon.Name = "Icon"
 		icon.Size = UDim2.new(1, 0, 0.6, 0)
 		icon.Position = UDim2.new(0, 0, 0, 0)
 		icon.BackgroundTransparency = 1
 		icon.Text = "?"
-		icon.TextSize = 20
+		icon.TextSize = 32 -- MÁS GRANDE
 		icon.Font = Enum.Font.GothamBold
-		icon.TextColor3 = Color3.fromRGB(200, 200, 200)
+		icon.TextColor3 = Color3.fromRGB(150, 150, 150)
 		icon.Parent = slot
 
-		-- Name Label (nombre del powerup)
+		-- Icon stroke
+		local iconStroke = Instance.new("UIStroke")
+		iconStroke.Color = Color3.fromRGB(0, 0, 0)
+		iconStroke.Thickness = 2
+		iconStroke.Parent = icon
+
+		-- Name Label - ESTILO GRAFITI
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Name = "NameLabel"
-		nameLabel.Size = UDim2.new(1, 0, 0.4, 0)
-		nameLabel.Position = UDim2.new(0, 0, 0.6, 0)
+		nameLabel.Size = UDim2.new(1, 0, 0.35, 0)
+		nameLabel.Position = UDim2.new(0, 0, 0.65, 0)
 		nameLabel.BackgroundTransparency = 1
-		nameLabel.Text = "Empty"
-		nameLabel.TextSize = 8
-		nameLabel.Font = Enum.Font.Gotham
-		nameLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		nameLabel.Text = "EMPTY"
+		nameLabel.TextSize = 10
+		nameLabel.Font = Enum.Font.LuckiestGuy -- 🔥 GRAFITI
+		nameLabel.TextColor3 = Color3.fromRGB(100, 100, 100)
 		nameLabel.TextScaled = true
 		nameLabel.Parent = slot
 
-		-- Click handler
+		-- Name stroke
+		local nameStroke = Instance.new("UIStroke")
+		nameStroke.Color = Color3.fromRGB(0, 0, 0)
+		nameStroke.Thickness = 2
+		nameStroke.Parent = nameLabel
+
+		-- 🎯 Click handler con ANIMACIÓN ÉPICA
 		slot.MouseButton1Click:Connect(function()
 			if UseFromInventory then
 				UseFromInventory:FireServer(i)
 
-				-- Efecto visual de click
-				TweenService:Create(slot, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 80, 120)}):Play()
+				-- 💥 BOUNCE ÉPICO
+				local originalSize = slot.Size
+				TweenService:Create(slot, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+					Size = UDim2.new(0, 85, 0, 75)
+				}):Play()
+
 				task.wait(0.1)
-				TweenService:Create(slot, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(40, 40, 60)}):Play()
+
+				TweenService:Create(slot, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+					Size = originalSize
+				}):Play()
 			end
 		end)
 
-		-- Hover effects
+		-- 🌟 Hover effects ÉPICOS
 		slot.MouseEnter:Connect(function()
 			if CurrentInventory[i] then
-				TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0, Color = Color3.fromRGB(150, 150, 255)}):Play()
+				-- Glow neón
+				TweenService:Create(stroke, TweenInfo.new(0.2), {
+					Transparency = 0,
+					Color = Color3.fromRGB(0, 255, 200),
+					Thickness = 6
+				}):Play()
+
+				-- Scale up suave
+				TweenService:Create(slot, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+					Size = UDim2.new(0, 80, 0, 70)
+				}):Play()
 			end
 		end)
 
 		slot.MouseLeave:Connect(function()
-			TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.5, Color = Color3.fromRGB(80, 80, 120)}):Play()
+			TweenService:Create(stroke, TweenInfo.new(0.2), {
+				Transparency = 0,
+				Color = Color3.fromRGB(60, 60, 100),
+				Thickness = 4
+			}):Play()
+
+			TweenService:Create(slot, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 75, 0, 65)
+			}):Play()
 		end)
 	end
+
+	-- 💫 Animación de entrada épica
+	container.Position = UDim2.new(0.5, -250, 1, 50)
+	TweenService:Create(container, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, -250, 1, -140)
+	}):Play()
 
 	return screenGui
 end
@@ -244,8 +307,6 @@ end
 --═══════════════════════════════════════════════════════════════════════
 
 local function updateSlots(inventory: {string})
-	CurrentInventory = inventory
-
 	local gui = playerGui:FindFirstChild("PowerUpInventoryGUI")
 	if not gui then return end
 
@@ -257,12 +318,34 @@ local function updateSlots(inventory: {string})
 		local slot = slotsFrame:FindFirstChild("Slot" .. i)
 		if slot then
 			local powerUpId = inventory[i]
+			local oldPowerUpId = CurrentInventory[i]
 
 			local icon = slot:FindFirstChild("Icon") :: TextLabel?
 			local nameLabel = slot:FindFirstChild("NameLabel") :: TextLabel?
+			local stroke = slot:FindFirstChild("Stroke") :: UIStroke?
 
 			if powerUpId and PowerUpDisplayInfo[powerUpId] then
 				local info = PowerUpDisplayInfo[powerUpId]
+				local isNewItem = (oldPowerUpId ~= powerUpId)
+
+				-- 💥 ANIMACIÓN ÉPICA SI ES NUEVO ITEM
+				if isNewItem then
+					-- Bounce épico
+					local originalSize = slot.Size
+					slot.Size = UDim2.new(0, 50, 0, 50)
+					TweenService:Create(slot, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+						Size = originalSize
+					}):Play()
+
+					-- Flash del stroke
+					if stroke then
+						stroke.Color = info.Color
+						stroke.Thickness = 8
+						TweenService:Create(stroke, TweenInfo.new(0.3), {
+							Thickness = 4
+						}):Play()
+					end
+				end
 
 				-- Actualizar icono
 				if icon then
@@ -272,12 +355,17 @@ local function updateSlots(inventory: {string})
 
 				-- Actualizar nombre
 				if nameLabel then
-					nameLabel.Text = info.DisplayName or powerUpId
+					nameLabel.Text = string.upper(info.DisplayName or powerUpId)
 					nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 				end
 
-				-- Cambiar color de fondo para indicar que hay algo
-				slot.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+				-- Color de fondo con gradiente
+				slot.BackgroundColor3 = Color3.fromRGB(40, 40, 70)
+
+				-- Stroke con color del powerup
+				if stroke then
+					stroke.Color = info.Color
+				end
 			else
 				-- Slot vacío
 				if icon then
@@ -286,14 +374,21 @@ local function updateSlots(inventory: {string})
 				end
 
 				if nameLabel then
-					nameLabel.Text = "Empty"
+					nameLabel.Text = "EMPTY"
 					nameLabel.TextColor3 = Color3.fromRGB(100, 100, 100)
 				end
 
-				slot.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+				slot.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+
+				if stroke then
+					stroke.Color = Color3.fromRGB(60, 60, 100)
+				end
 			end
 		end
 	end
+
+	-- Actualizar inventario local
+	CurrentInventory = inventory
 end
 
 --═══════════════════════════════════════════════════════════════════════

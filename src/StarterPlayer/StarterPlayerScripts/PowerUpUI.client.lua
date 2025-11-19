@@ -555,35 +555,84 @@ end
 local function createMeteorJammerEffect(): {Instance}
 	local effects = {}
 
-	-- Pulsos electromagnéticos
-	local jammer = Instance.new("Part")
-	jammer.Name = "MeteorJammer"
-	jammer.Size = Vector3.new(4, 4, 4)
-	jammer.Anchored = true
-	jammer.CanCollide = false
-	jammer.Transparency = 0.5
-	jammer.Material = Enum.Material.Neon
-	jammer.Color = Color3.fromRGB(200, 100, 255)
-	jammer.Parent = character
+	-- 📡 PULSOS ELECTROMAGNÉTICOS EXPANDIÉNDOSE (sin burbuja)
+	-- Crear múltiples anillos que se expanden desde el jugador
+	local function createPulseRing()
+		local ring = Instance.new("Part")
+		ring.Name = "JammerRing"
+		ring.Size = Vector3.new(0.5, 0.5, 2)
+		ring.Anchored = true
+		ring.CanCollide = false
+		ring.Transparency = 0.2
+		ring.Material = Enum.Material.Neon
+		ring.Color = Color3.fromRGB(200, 100, 255)
+		ring.CFrame = humanoidRootPart.CFrame
+		ring.Parent = workspace
 
-	local mesh = Instance.new("SpecialMesh")
-	mesh.MeshType = Enum.MeshType.Sphere
-	mesh.Parent = jammer
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Cylinder
+		mesh.Scale = Vector3.new(0.1, 1, 1)
+		mesh.Parent = ring
 
-	-- Animar pulsos
+		-- Expandir y desvanecer
+		task.spawn(function()
+			for i = 1, 30 do
+				if ring and ring.Parent then
+					local scale = i * 0.8
+					ring.Size = Vector3.new(0.5, 0.5, 2 + scale)
+					ring.Transparency = 0.2 + (i / 30) * 0.8
+					ring.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, 0, math.rad(90))
+					task.wait(0.05)
+				end
+			end
+			if ring and ring.Parent then
+				ring:Destroy()
+			end
+		end)
+
+		return ring
+	end
+
+	-- Partículas eléctricas moradas
+	local particles = Instance.new("ParticleEmitter")
+	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	particles.Color = ColorSequence.new(Color3.fromRGB(200, 100, 255))
+	particles.Size = NumberSequence.new(1)
+	particles.Lifetime = NumberRange.new(0.5, 1)
+	particles.Rate = 50
+	particles.Speed = NumberRange.new(5, 10)
+	particles.SpreadAngle = Vector2.new(180, 180)
+	particles.LightEmission = 1
+	particles.Parent = humanoidRootPart
+
+	-- PointLight pulsante
+	local light = Instance.new("PointLight")
+	light.Brightness = 2
+	light.Range = 15
+	light.Color = Color3.fromRGB(200, 100, 255)
+	light.Parent = humanoidRootPart
+
+	-- Generar pulsos continuos
 	task.spawn(function()
 		local t = 0
-		while jammer and jammer.Parent and humanoidRootPart and humanoidRootPart.Parent do
-			t += 0.05
-			local scale = 1 + math.sin(t * 8) * 0.5
-			mesh.Scale = Vector3.new(scale, scale, scale)
-			jammer.Transparency = 0.3 + math.abs(math.sin(t * 8)) * 0.4
-			jammer.CFrame = humanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+		while humanoidRootPart and humanoidRootPart.Parent do
+			t += 1
+			if t % 10 == 0 then  -- Cada 0.5 segundos
+				local ring = createPulseRing()
+				table.insert(effects, ring)
+			end
+
+			-- Pulsar light
+			light.Brightness = 2 + math.sin(t * 0.3) * 0.8
+
 			task.wait(0.05)
+
+			if t > 600 then break end  -- Safety timeout
 		end
 	end)
 
-	table.insert(effects, jammer)
+	table.insert(effects, particles)
+	table.insert(effects, light)
 
 	return effects
 end
@@ -629,44 +678,85 @@ end
 local function createUltraChargeEffect(): {Instance}
 	local effects = {}
 
-	-- Rayos eléctricos blancos
-	local charge = Instance.new("Part")
-	charge.Name = "UltraCharge"
-	charge.Size = Vector3.new(6, 10, 6)
-	charge.Anchored = true
-	charge.CanCollide = false
-	charge.Transparency = 0.3
-	charge.Material = Enum.Material.Neon
-	charge.Color = Color3.fromRGB(255, 255, 255)
-	charge.Parent = character
-
-	local mesh = Instance.new("SpecialMesh")
-	mesh.MeshType = Enum.MeshType.Cylinder
-	mesh.Parent = charge
-
-	-- Partículas eléctricas
+	-- ⚡ EXPLOSIÓN MASIVA DE RAYOS ELÉCTRICOS
 	local lightning = Instance.new("ParticleEmitter")
 	lightning.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	lightning.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-	lightning.Size = NumberSequence.new(1)
-	lightning.Lifetime = NumberRange.new(0.2, 0.5)
-	lightning.Rate = 100
-	lightning.Speed = NumberRange.new(15, 25)
+	lightning.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 200, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+	})
+	lightning.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 2),
+		NumberSequenceKeypoint.new(0.5, 3),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	lightning.Lifetime = NumberRange.new(0.3, 0.7)
+	lightning.Rate = 150
+	lightning.Speed = NumberRange.new(20, 35)
 	lightning.SpreadAngle = Vector2.new(180, 180)
 	lightning.LightEmission = 1
-	lightning.Parent = charge
+	lightning.Parent = humanoidRootPart
 
-	-- Animar
+	-- Múltiples anillos de energía girando
+	local rings = {}
+	for i = 1, 3 do
+		local ring = Instance.new("Part")
+		ring.Name = "ChargeRing" .. i
+		ring.Size = Vector3.new(0.5, 0.5, 6 + (i * 2))
+		ring.Anchored = true
+		ring.CanCollide = false
+		ring.Transparency = 0.2 + (i * 0.1)
+		ring.Material = Enum.Material.Neon
+		ring.Color = Color3.fromRGB(255, 255, 255)
+		ring.Parent = workspace
+
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Cylinder
+		mesh.Scale = Vector3.new(0.1, 1, 1)
+		mesh.Parent = ring
+
+		table.insert(rings, ring)
+		table.insert(effects, ring)
+	end
+
+	-- PointLight pulsante MASIVA
+	local light = Instance.new("PointLight")
+	light.Brightness = 5
+	light.Range = 30
+	light.Color = Color3.fromRGB(255, 255, 255)
+	light.Parent = humanoidRootPart
+
+	-- Sparkles extra
+	local sparkles = Instance.new("Sparkles")
+	sparkles.SparkleColor = Color3.fromRGB(255, 255, 255)
+	sparkles.Parent = humanoidRootPart
+
+	-- Animar anillos con diferentes velocidades
 	task.spawn(function()
 		local t = 0
-		while charge and charge.Parent and humanoidRootPart and humanoidRootPart.Parent do
+		while humanoidRootPart and humanoidRootPart.Parent do
 			t += 0.05
-			charge.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, 0, t * 10)
+
+			for i, ring in ipairs(rings) do
+				if ring and ring.Parent then
+					local speed = 5 + (i * 2)
+					local angle = i % 2 == 0 and t * speed or -t * speed
+					local yOffset = math.sin(t * 3 + i) * 2
+					ring.CFrame = humanoidRootPart.CFrame * CFrame.new(0, yOffset, 0) * CFrame.Angles(0, 0, math.rad(angle))
+				end
+			end
+
+			-- Pulsar light dramáticamente
+			light.Brightness = 4 + math.sin(t * 10) * 2
+
 			task.wait(0.05)
 		end
 	end)
 
-	table.insert(effects, charge)
+	table.insert(effects, lightning)
+	table.insert(effects, light)
+	table.insert(effects, sparkles)
 
 	return effects
 end
@@ -674,24 +764,77 @@ end
 local function createEggCatalystEffect(): {Instance}
 	local effects = {}
 
-	-- Sparkles dorados
+	-- 🥚 EXPLOSIÓN DORADA MÁGICA
 	local sparkles = Instance.new("Sparkles")
 	sparkles.SparkleColor = Color3.fromRGB(255, 220, 100)
 	sparkles.Parent = humanoidRootPart
 
-	-- Partículas de huevo
+	-- Partículas masivas doradas
 	local eggParticles = Instance.new("ParticleEmitter")
 	eggParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	eggParticles.Color = ColorSequence.new(Color3.fromRGB(255, 200, 100))
-	eggParticles.Size = NumberSequence.new(0.5)
-	eggParticles.Lifetime = NumberRange.new(1, 2)
-	eggParticles.Rate = 30
-	eggParticles.Speed = NumberRange.new(3, 6)
-	eggParticles.LightEmission = 0.8
+	eggParticles.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 100)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 200, 100)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 50))
+	})
+	eggParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.5, 1.5),
+		NumberSequenceKeypoint.new(1, 0.5)
+	})
+	eggParticles.Lifetime = NumberRange.new(1.5, 3)
+	eggParticles.Rate = 60
+	eggParticles.Speed = NumberRange.new(5, 10)
+	eggParticles.SpreadAngle = Vector2.new(60, 60)
+	eggParticles.LightEmission = 1
+	eggParticles.RotSpeed = NumberRange.new(100, 200)
+	eggParticles.Rotation = NumberRange.new(0, 360)
 	eggParticles.Parent = humanoidRootPart
+
+	-- Anillo dorado en el suelo
+	local ring = Instance.new("Part")
+	ring.Name = "EggRing"
+	ring.Size = Vector3.new(0.5, 0.5, 10)
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.Transparency = 0.3
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(255, 200, 100)
+	ring.Parent = workspace
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Cylinder
+	mesh.Scale = Vector3.new(0.2, 1, 1)
+	mesh.Parent = ring
+
+	-- PointLight cálida
+	local light = Instance.new("PointLight")
+	light.Brightness = 3
+	light.Range = 18
+	light.Color = Color3.fromRGB(255, 200, 100)
+	light.Parent = humanoidRootPart
+
+	-- Animar anillo giratorio
+	task.spawn(function()
+		local t = 0
+		while ring and ring.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.05
+			ring.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -2.5, 0) * CFrame.Angles(0, 0, math.rad(t * 3))
+
+			-- Pulsar
+			local scale = 1 + math.sin(t * 5) * 0.1
+			mesh.Scale = Vector3.new(0.2, scale, scale)
+
+			light.Brightness = 2.5 + math.sin(t * 6) * 0.8
+
+			task.wait(0.05)
+		end
+	end)
 
 	table.insert(effects, sparkles)
 	table.insert(effects, eggParticles)
+	table.insert(effects, ring)
+	table.insert(effects, light)
 
 	return effects
 end
@@ -699,51 +842,83 @@ end
 local function createIncomeBoostEffect(): {Instance}
 	local effects = {}
 
-	-- Lluvia de monedas doradas
-	local coinRain = Instance.new("ParticleEmitter")
-	coinRain.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	coinRain.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
-	coinRain.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.5),
-		NumberSequenceKeypoint.new(0.5, 1),
+	-- 💰 EXPLOSIÓN MASIVA DE MONEDAS
+	local coinBurst = Instance.new("ParticleEmitter")
+	coinBurst.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	coinBurst.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 100)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 0))
+	})
+	coinBurst.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1.5),
+		NumberSequenceKeypoint.new(0.5, 2),
 		NumberSequenceKeypoint.new(1, 0.5)
 	})
-	coinRain.Lifetime = NumberRange.new(2, 3)
-	coinRain.Rate = 40
-	coinRain.Speed = NumberRange.new(5, 10)
-	coinRain.SpreadAngle = Vector2.new(30, 30)
-	coinRain.LightEmission = 1
-	coinRain.Parent = humanoidRootPart
+	coinBurst.Lifetime = NumberRange.new(2, 4)
+	coinBurst.Rate = 80
+	coinBurst.Speed = NumberRange.new(8, 15)
+	coinBurst.SpreadAngle = Vector2.new(180, 180)
+	coinBurst.LightEmission = 1
+	coinBurst.RotSpeed = NumberRange.new(200, 400)
+	coinBurst.Rotation = NumberRange.new(0, 360)
+	coinBurst.Parent = humanoidRootPart
 
-	-- Aura dorada
-	local goldAura = Instance.new("Part")
-	goldAura.Name = "GoldAura"
-	goldAura.Size = Vector3.new(6, 6, 6)
-	goldAura.Anchored = true
-	goldAura.CanCollide = false
-	goldAura.Transparency = 0.7
-	goldAura.Material = Enum.Material.Neon
-	goldAura.Color = Color3.fromRGB(255, 215, 0)
-	goldAura.Parent = character
+	-- 💎 Anillo dorado girando en el suelo (tipo EVADE)
+	local ring = Instance.new("Part")
+	ring.Name = "GoldRing"
+	ring.Size = Vector3.new(0.5, 0.5, 8)
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.Transparency = 0.3
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(255, 215, 0)
+	ring.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -2.5, 0)
+	ring.Parent = workspace
 
-	local mesh = Instance.new("SpecialMesh")
-	mesh.MeshType = Enum.MeshType.Sphere
-	mesh.Parent = goldAura
+	local ringMesh = Instance.new("SpecialMesh")
+	ringMesh.MeshType = Enum.MeshType.Cylinder
+	ringMesh.Scale = Vector3.new(0.2, 1, 1)
+	ringMesh.Parent = ring
 
-	-- Animar aura
+	-- Segundo anillo más grande
+	local ring2 = ring:Clone()
+	ring2.Size = Vector3.new(0.5, 0.5, 12)
+	ring2.Transparency = 0.5
+	ring2.Parent = workspace
+
+	-- PointLight dorada brillante
+	local light = Instance.new("PointLight")
+	light.Brightness = 3
+	light.Range = 20
+	light.Color = Color3.fromRGB(255, 215, 0)
+	light.Parent = humanoidRootPart
+
+	-- Sparkles en el torso
+	local sparkles = Instance.new("Sparkles")
+	sparkles.SparkleColor = Color3.fromRGB(255, 215, 0)
+	sparkles.Parent = humanoidRootPart
+
+	-- Animar anillos giratorios
 	task.spawn(function()
 		local t = 0
-		while goldAura and goldAura.Parent and humanoidRootPart and humanoidRootPart.Parent do
-			t += 0.016
-			local scale = 1 + math.sin(t * 4) * 0.3
-			mesh.Scale = Vector3.new(scale, scale, scale)
-			goldAura.CFrame = humanoidRootPart.CFrame
-			task.wait(0.016)
+		while ring and ring.Parent and ring2 and ring2.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.05
+			ring.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -2.5, 0) * CFrame.Angles(0, t * 5, math.rad(90))
+			ring2.CFrame = humanoidRootPart.CFrame * CFrame.new(0, -2.5, 0) * CFrame.Angles(0, -t * 3, math.rad(90))
+
+			-- Pulsar light
+			light.Brightness = 3 + math.sin(t * 8) * 1
+
+			task.wait(0.05)
 		end
 	end)
 
-	table.insert(effects, coinRain)
-	table.insert(effects, goldAura)
+	table.insert(effects, coinBurst)
+	table.insert(effects, ring)
+	table.insert(effects, ring2)
+	table.insert(effects, light)
+	table.insert(effects, sparkles)
 
 	return effects
 end
