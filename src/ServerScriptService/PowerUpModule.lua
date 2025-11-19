@@ -877,6 +877,114 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, wave
 end
 
 -- ═══════════════════════════════════════════════════════════════════════
+-- 📦 SISTEMA DE INVENTARIO DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+local MAX_INVENTORY_SLOTS = 5
+
+-- Inventario por jugador: {userId: {powerUpId, powerUpId, ...}}
+local PlayerInventories: {[number]: {string}} = {}
+
+-- Remote para actualizar inventario en cliente
+local UpdateInventoryRemote = RemotesFolder:FindFirstChild("UpdateInventory") :: RemoteEvent?
+if not UpdateInventoryRemote then
+	UpdateInventoryRemote = Instance.new("RemoteEvent")
+	UpdateInventoryRemote.Name = "UpdateInventory"
+	UpdateInventoryRemote.Parent = RemotesFolder
+	if DEBUG then
+		print("[PowerUpModule] Creado remote: UpdateInventory")
+	end
+end
+
+--[[
+	Agregar powerup al inventario del jugador.
+
+	@param userId number
+	@param powerUpId string
+	@return boolean - true si se agregó exitosamente
+	@return string? - mensaje de error
+]]
+function PowerUpModule.AddToInventory(userId: number, powerUpId: string): (boolean, string?)
+	if not PlayerInventories[userId] then
+		PlayerInventories[userId] = {}
+	end
+
+	local inventory = PlayerInventories[userId]
+
+	-- Verificar si hay espacio
+	if #inventory >= MAX_INVENTORY_SLOTS then
+		return false, "Inventario lleno! (máx 5)"
+	end
+
+	-- Agregar powerup
+	table.insert(inventory, powerUpId)
+
+	-- Sincronizar con cliente
+	local player = getPlayer(userId)
+	if player and UpdateInventoryRemote then
+		UpdateInventoryRemote:FireClient(player, inventory)
+	end
+
+	if DEBUG then
+		print(("[PowerUpModule] ✅ PowerUp agregado al inventario - userId %d, powerUp %s, total: %d/%d"):format(
+			userId, powerUpId, #inventory, MAX_INVENTORY_SLOTS
+		))
+	end
+
+	return true, nil
+end
+
+--[[
+	Usar powerup desde un slot del inventario.
+
+	@param userId number
+	@param slotIndex number - índice del slot (1-based)
+	@return boolean - true si se usó exitosamente
+]]
+function PowerUpModule.UseFromInventory(userId: number, slotIndex: number): boolean
+	if not PlayerInventories[userId] then
+		return false
+	end
+
+	local inventory = PlayerInventories[userId]
+	local powerUpId = inventory[slotIndex]
+
+	if not powerUpId then
+		return false
+	end
+
+	-- Remover del inventario
+	table.remove(inventory, slotIndex)
+
+	-- Activar el powerup
+	PowerUpModule.ActivatePowerUp(userId, powerUpId)
+
+	-- Sincronizar con cliente
+	local player = getPlayer(userId)
+	if player and UpdateInventoryRemote then
+		UpdateInventoryRemote:FireClient(player, inventory)
+	end
+
+	if DEBUG then
+		print(("[PowerUpModule] ✅ PowerUp usado desde inventario - userId %d, slot %d, powerUp %s"):format(
+			userId, slotIndex, powerUpId
+		))
+	end
+
+	return true
+end
+
+--[[
+	Obtener inventario del jugador.
+
+	@param userId number
+	@return {string} - array de powerUpIds
+]]
+function PowerUpModule.GetInventory(userId: number): {string}
+	return PlayerInventories[userId] or {}
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- 🎰 SISTEMA DE MÁQUINA EXPENDEDORA
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -911,12 +1019,12 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 	local price: number
 
 	if not VendingMachineFirstUse[userId] then
-		powerUpId = "DoubleIncome"
+		powerUpId = "IncomeBoost"
 		price = 200 -- Precio especial para primer uso
 		VendingMachineFirstUse[userId] = true
 
 		if DEBUG then
-			print(("[PowerUpModule] 🎁 Primer uso de máquina - DoubleIncome garantizado para userId %d"):format(userId))
+			print(("[PowerUpModule] 🎁 Primer uso de máquina - IncomeBoost garantizado para userId %d"):format(userId))
 		end
 	else
 		-- ✅ Usos siguientes: Random por rareza
@@ -964,19 +1072,40 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 		end
 	end
 
-	-- ✅ Dar powerup inmediatamente al jugador (sin spawnearlo en el mundo)
-	PowerUpModule.ActivatePowerUp(userId, powerUpId)
+	-- ✅ Agregar al inventario en vez de activar inmediatamente
+	local success, errorMsg = PowerUpModule.AddToInventory(userId, powerUpId)
+	if not success then
+		-- Revertir el cobro si el inventario está lleno
+		if EconomyModule then
+			local state = EconomyModule.GetState(userId)
+			if state then
+				state.Cash += price
+				local player = getPlayer(userId)
+				if player then
+					local ls = player:FindFirstChild("leaderstats")
+					if ls then
+						local cashValue = ls:FindFirstChild("Cash") :: IntValue?
+						if cashValue then
+							cashValue.Value = state.Cash
+						end
+					end
+				end
+			end
+		end
+		return false, errorMsg
+	end
 
 	-- ✅ Registrar cooldown
 	VendingMachineCooldowns[userId] = now
 
 	if DEBUG then
-		print(("[PowerUpModule] ✅ Compra exitosa - userId %d recibió %s por $%d"):format(
+		print(("[PowerUpModule] ✅ Compra exitosa - userId %d recibió %s por $%d (agregado a inventario)"):format(
 			userId, powerUpId, price
 		))
 	end
 
-	return true, nil
+	-- Devolver powerUpId para spawnearlo en el mundo
+	return true, powerUpId
 end
 
 -- Obtener rareza random para máquina expendedora
@@ -993,6 +1122,68 @@ function PowerUpModule.GetRandomVendingMachineRarity(): string
 	end
 
 	return "Common" -- Fallback
+end
+
+--[[
+	Spawnear chicle/pelota física de powerup que puede ser recogido.
+
+	@param powerUpId string - ID del powerup
+	@param position Vector3 - Posición donde spawnearlo
+	@param userId number - ID del dueño (para que solo él lo pueda recoger)
+	@return Part - El chicle spawneado
+]]
+function PowerUpModule.SpawnGumball(powerUpId: string, position: Vector3, userId: number): Part?
+	local def = PowerUpConfig.PowerUps[powerUpId]
+	if not def then return nil end
+
+	-- Crear chicle/pelota brillante
+	local gumball = Instance.new("Part")
+	gumball.Name = "PowerUpGumball"
+	gumball.Shape = Enum.PartType.Ball
+	gumball.Size = Vector3.new(1.5, 1.5, 1.5)
+	gumball.Material = Enum.Material.Neon
+	gumball.Color = def.VFX and def.VFX.ParticleColor and def.VFX.ParticleColor.Keypoints[1].Value or Color3.fromRGB(255, 100, 255)
+	gumball.Anchored = false
+	gumball.CanCollide = true
+	gumball.Position = position
+	gumball:SetAttribute("PowerUpId", powerUpId)
+	gumball:SetAttribute("OwnerUserId", userId)
+
+	-- PointLight para hacerlo brillante
+	local light = Instance.new("PointLight")
+	light.Brightness = 2
+	light.Range = 10
+	light.Color = gumball.Color
+	light.Parent = gumball
+
+	-- Sparkles para efecto mágico
+	local sparkles = Instance.new("Sparkles")
+	sparkles.SparkleColor = gumball.Color
+	sparkles.Parent = gumball
+
+	-- Touched event para recogerlo
+	gumball.Touched:Connect(function(hit)
+		if not hit or not hit.Parent then return end
+
+		local humanoid = hit.Parent:FindFirstChildOfClass("Humanoid")
+		if not humanoid then return end
+
+		local player = game:GetService("Players"):GetPlayerFromCharacter(hit.Parent)
+		if not player or player.UserId ~= userId then return end -- Solo el dueño puede recogerlo
+
+		-- Ya está en el inventario (se agregó al comprar)
+		-- Solo destruir el visual
+		gumball:Destroy()
+
+		if DEBUG then
+			print(("[PowerUpModule] 🎁 Jugador %d recogió chicle de %s"):format(userId, powerUpId))
+		end
+	end)
+
+	-- Auto-destruir después de 60 segundos si no se recoge
+	game:GetService("Debris"):AddItem(gumball, 60)
+
+	return gumball
 end
 
 -- ═══════════════════════════════════════════════════════════════════════
@@ -1024,6 +1215,9 @@ function PowerUpModule.CleanupPlayer(userId: number)
 	CriticalParryActive[userId] = nil
 	MeteorJammerActive[userId] = nil
 	ActiveDrones[userId] = nil
+
+	-- 📦 Limpiar inventario
+	PlayerInventories[userId] = nil
 
 	-- 🎰 Limpiar datos de vending machine
 	VendingMachineCooldowns[userId] = nil
