@@ -321,6 +321,12 @@ function PowerUpModule.ActivatePowerUp(userId: number, powerUpId: string)
 		task.delay(duration, function()
 			PowerUpModule.ExpirePowerUp(userId, powerUpId)
 		end)
+	else
+		-- ✅ FIX: Powerups instantáneos (duration = 0) deben expirar inmediatamente
+		-- Damos 0.5s para que se vea el efecto visual, luego expiramos
+		task.delay(0.5, function()
+			PowerUpModule.ExpirePowerUp(userId, powerUpId)
+		end)
 	end
 
 	if DEBUG then
@@ -871,6 +877,105 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, wave
 end
 
 -- ═══════════════════════════════════════════════════════════════════════
+-- 🎰 SISTEMA DE MÁQUINA EXPENDEDORA
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Tracking de cooldown y primer uso por jugador
+local VendingMachineCooldowns: {[number]: number} = {}
+local VendingMachineFirstUse: {[number]: boolean} = {}
+
+--[[
+	Comprar powerup desde la máquina expendedora.
+
+	@param userId number - ID del jugador
+	@return boolean - true si la compra fue exitosa
+	@return string? - Mensaje de error si falló
+]]
+function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, string?)
+	local player = getPlayer(userId)
+	if not player or not player.Character then
+		return false, "Jugador no encontrado"
+	end
+
+	-- ✅ Verificar cooldown
+	local now = tick()
+	local lastPurchase = VendingMachineCooldowns[userId] or 0
+	local cooldownRemaining = PowerUpConfig.VendingMachine.Cooldown - (now - lastPurchase)
+
+	if cooldownRemaining > 0 then
+		return false, string.format("Cooldown: %.0fs restantes", cooldownRemaining)
+	end
+
+	-- ✅ PRIMER USO: Siempre DoubleIncome
+	local powerUpId: string
+	local price: number
+
+	if not VendingMachineFirstUse[userId] then
+		powerUpId = "DoubleIncome"
+		price = 200 -- Precio especial para primer uso
+		VendingMachineFirstUse[userId] = true
+
+		if DEBUG then
+			print(("[PowerUpModule] 🎁 Primer uso de máquina - DoubleIncome garantizado para userId %d"):format(userId))
+		end
+	else
+		-- ✅ Usos siguientes: Random por rareza
+		local rarity = PowerUpModule.GetRandomVendingMachineRarity()
+		powerUpId = PowerUpConfig.GetRandomPowerUpByRarity(rarity)
+		price = PowerUpConfig.VendingMachine.Prices[rarity] or 300
+
+		if DEBUG then
+			print(("[PowerUpModule] 🎰 Máquina expendedora - Rareza: %s, PowerUp: %s, Precio: $%d"):format(
+				rarity, powerUpId, price
+			))
+		end
+	end
+
+	-- ✅ Verificar si tiene suficiente cash
+	if not EconomyModule or not EconomyModule.CanAfford(userId, price) then
+		return false, string.format("Necesitas $%d (te faltan $%d)",
+			price,
+			price - (EconomyModule and EconomyModule.GetCash(userId) or 0)
+		)
+	end
+
+	-- ✅ Cobrar
+	if EconomyModule then
+		EconomyModule.DeductCash(userId, price)
+	end
+
+	-- ✅ Dar powerup inmediatamente al jugador (sin spawnearlo en el mundo)
+	PowerUpModule.ActivatePowerUp(userId, powerUpId)
+
+	-- ✅ Registrar cooldown
+	VendingMachineCooldowns[userId] = now
+
+	if DEBUG then
+		print(("[PowerUpModule] ✅ Compra exitosa - userId %d recibió %s por $%d"):format(
+			userId, powerUpId, price
+		))
+	end
+
+	return true, nil
+end
+
+-- Obtener rareza random para máquina expendedora
+function PowerUpModule.GetRandomVendingMachineRarity(): string
+	local roll = math.random(1, 100)
+	local rates = PowerUpConfig.VendingMachine.DropRates
+
+	local cumulative = 0
+	for _, rarity in ipairs({"Epic", "Rare", "Uncommon", "Common"}) do
+		cumulative += rates[rarity]
+		if roll <= cumulative then
+			return rarity
+		end
+	end
+
+	return "Common" -- Fallback
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- SISTEMA DE INICIALIZACIÓN Y CLEANUP
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -899,6 +1004,10 @@ function PowerUpModule.CleanupPlayer(userId: number)
 	CriticalParryActive[userId] = nil
 	MeteorJammerActive[userId] = nil
 	ActiveDrones[userId] = nil
+
+	-- 🎰 Limpiar datos de vending machine
+	VendingMachineCooldowns[userId] = nil
+	VendingMachineFirstUse[userId] = nil
 
 	if DEBUG then
 		print(("[PowerUpModule] Jugador limpiado: %d"):format(userId))

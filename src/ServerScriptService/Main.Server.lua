@@ -158,6 +158,15 @@ local RequestBaseState = Remotes:WaitForChild("RequestBaseState") :: RemoteFunct
 local RequestRepair = Remotes:WaitForChild("RequestRepair") :: RemoteEvent
 local BaseStateChanged = Remotes:WaitForChild("BaseStateChanged") :: RemoteEvent
 local CashTick = Remotes:WaitForChild("CashTick") :: RemoteEvent
+
+-- 🎰 Remote para comprar powerups desde la máquina
+local PurchasePowerUp = Remotes:FindFirstChild("PurchasePowerUp") :: RemoteEvent?
+if not PurchasePowerUp then
+	PurchasePowerUp = Instance.new("RemoteEvent")
+	PurchasePowerUp.Name = "PurchasePowerUp"
+	PurchasePowerUp.Parent = Remotes
+	print("[POWERUP] RemoteEvent 'PurchasePowerUp' creado automáticamente")
+end
 local BaseDamaged = Remotes:WaitForChild("BaseDamaged") :: RemoteEvent
 
 -- Remotes adicionales (crear si no existen)
@@ -438,6 +447,21 @@ local function assignBase(plr: Player, slot: number)
 	plate.Parent = getBasesFolder()
 	BasePartByUser[plr.UserId] = plate
 	plr:SetAttribute("BaseSlot", slot)
+
+	-- 🎰 Spawnear máquina expendedora de powerups
+	local vendingMachine = ProceduralModels:CreateModel("PowerUpVendingMachine")
+	if vendingMachine then
+		-- Posicionar cerca del spawn (10 studs al frente)
+		local machinePos = center + Vector3.new(0, 4, -10)
+		vendingMachine:SetPrimaryPartCFrame(CFrame.new(machinePos))
+		vendingMachine:SetAttribute("OwnerUserId", plr.UserId)
+		vendingMachine.Name = "VendingMachine_" .. plr.Name
+		vendingMachine.Parent = getBasesFolder()
+
+		if DEBUG then
+			print(("[POWERUP] 🎰 Máquina expendedora spawneada para %s"):format(plr.Name))
+		end
+	end
 
 	if DEBUG then
 		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
@@ -905,6 +929,37 @@ RequestSell.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 
 	notifyPlayer(plr, string.format("✓ Sold! +$%d", refund), 2)
 end)
+
+--═══════════════════════════════════════════════════════════════════════
+-- 🎰 SISTEMA DE COMPRA DE POWERUPS DESDE MÁQUINA
+--═══════════════════════════════════════════════════════════════════════
+if PurchasePowerUp then
+	PurchasePowerUp.OnServerEvent:Connect(function(plr: Player)
+		-- Rate limiting
+		if not checkRateLimit(plr.UserId, "Purchase") then
+			notifyPlayer(plr, "⚠️ Slow down!", 2)
+			return
+		end
+
+		-- Intentar compra desde la máquina
+		local success, errorMsg = PowerUpModule.PurchaseFromVendingMachine(plr.UserId)
+
+		if success then
+			notifyPlayer(plr, "🎰 PowerUp Activated!", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ✅ %s compró powerup desde máquina"):format(plr.Name))
+			end
+		else
+			-- Mostrar mensaje de error
+			notifyPlayer(plr, "❌ " .. (errorMsg or "Can't purchase"), 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ❌ %s intentó comprar pero falló: %s"):format(plr.Name, errorMsg or "unknown"))
+			end
+		end
+	end)
+end
 
 --═══════════════════════════════════════════════════════════════════════
 -- SISTEMA DE REPARACIÓN
@@ -1762,6 +1817,12 @@ if eventsEnabled then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
 
+					--[[
+					🎰 SISTEMA DE POWERUPS AUTOMÁTICOS DESACTIVADO
+					════════════════════════════════════════════════
+					Los powerups ahora se obtienen comprando en la máquina expendedora.
+					El código antiguo está comentado abajo por si se necesita restaurar:
+
 					-- ✅ POWERUP: Spawnear powerup al completar wave (solo cada 3 waves normales, o boss/miniboss)
 					local shouldSpawnPowerUp = false
 					local waveType = "Normal"
@@ -1789,6 +1850,7 @@ if eventsEnabled then
 							))
 						end
 					end
+					--]]
 
 					if Config.DEBUG_MODE then
 						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))

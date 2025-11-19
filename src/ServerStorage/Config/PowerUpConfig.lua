@@ -19,6 +19,34 @@
 local PowerUpConfig = {}
 
 -- ═══════════════════════════════════════════════════════════════════════
+-- 🎰 MÁQUINA EXPENDEDORA DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+PowerUpConfig.VendingMachine = {
+	-- Costo inicial de la máquina (comprar el edificio)
+	PurchaseCost = 500,
+
+	-- Cooldown entre compras (segundos)
+	Cooldown = 45,
+
+	-- Pricing por rareza
+	Prices = {
+		Common = 200,
+		Uncommon = 350,
+		Rare = 500,
+		Epic = 500, -- Mismo precio pero drop rate extremadamente bajo
+	},
+
+	-- Drop rates para la máquina (más balanceados que waves)
+	DropRates = {
+		Common = 50,    -- 50%
+		Uncommon = 35,  -- 35%
+		Rare = 13,      -- 13%
+		Epic = 2,       -- 2% (muy raro!)
+	},
+}
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- PROBABILIDADES DE SPAWN
 -- ═══════════════════════════════════════════════════════════════════════
 
