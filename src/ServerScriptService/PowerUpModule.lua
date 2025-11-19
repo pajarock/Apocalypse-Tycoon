@@ -932,16 +932,36 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 	end
 
 	-- ✅ Verificar si tiene suficiente cash
-	if not EconomyModule or not EconomyModule.CanAfford(userId, price) then
-		return false, string.format("Necesitas $%d (te faltan $%d)",
-			price,
-			price - (EconomyModule and EconomyModule.GetCash(userId) or 0)
-		)
+	local currentCash = 0
+	if EconomyModule then
+		local state = EconomyModule.GetState(userId)
+		if state then
+			currentCash = state.Cash
+		end
 	end
 
-	-- ✅ Cobrar
+	if currentCash < price then
+		return false, string.format("Necesitas $%d (te faltan $%d)", price, price - currentCash)
+	end
+
+	-- ✅ Cobrar (restar cash directamente del state)
 	if EconomyModule then
-		EconomyModule.DeductCash(userId, price)
+		local state = EconomyModule.GetState(userId)
+		if state then
+			state.Cash -= price
+
+			-- Actualizar leaderstats
+			local player = getPlayer(userId)
+			if player then
+				local ls = player:FindFirstChild("leaderstats")
+				if ls then
+					local cashValue = ls:FindFirstChild("Cash") :: IntValue?
+					if cashValue then
+						cashValue.Value = state.Cash
+					end
+				end
+			end
+		end
 	end
 
 	-- ✅ Dar powerup inmediatamente al jugador (sin spawnearlo en el mundo)

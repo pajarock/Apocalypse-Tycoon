@@ -451,15 +451,16 @@ local function assignBase(plr: Player, slot: number)
 	-- 🎰 Spawnear máquina expendedora de powerups
 	local vendingMachine = ProceduralModels:CreateModel("PowerUpVendingMachine")
 	if vendingMachine then
-		-- Posicionar cerca del spawn (10 studs al frente)
-		local machinePos = center + Vector3.new(0, 4, -10)
+		-- Posicionar cerca del spawn (12 studs al frente, en el suelo)
+		-- La máquina tiene ~7 studs de altura, así que Y=4 la pone parcialmente visible
+		local machinePos = Vector3.new(center.X, 4, center.Z - 12)
 		vendingMachine:SetPrimaryPartCFrame(CFrame.new(machinePos))
 		vendingMachine:SetAttribute("OwnerUserId", plr.UserId)
 		vendingMachine.Name = "VendingMachine_" .. plr.Name
 		vendingMachine.Parent = getBasesFolder()
 
 		if DEBUG then
-			print(("[POWERUP] 🎰 Máquina expendedora spawneada para %s"):format(plr.Name))
+			print(("[POWERUP] 🎰 Máquina expendedora spawneada para %s en posición %s"):format(plr.Name, tostring(machinePos)))
 		end
 	end
 
