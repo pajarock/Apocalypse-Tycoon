@@ -148,6 +148,20 @@ if PowerUpActivated then
 			TweenService:Create(incomeLabel, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
 				TextSize = originalSize
 			}):Play()
+
+			-- 🎬 Animar número de 1X → 2X
+			local leaderstats = player:FindFirstChild("leaderstats")
+			if leaderstats then
+				local incomeValue = leaderstats:FindFirstChild("IncomePerSec")
+				if incomeValue then
+					local baseIncome = incomeValue.Value
+					animateNumber(displayedIncome, baseIncome * 2, 0.4, function(animatedValue)
+						incomeLabel.Text = string.format("💰 2X ⚡ %d/s", animatedValue)
+					end)
+					displayedIncome = baseIncome * 2
+					lastIncome = baseIncome * 2
+				end
+			end
 		end
 	end)
 end
@@ -160,6 +174,20 @@ if PowerUpExpired then
 
 			-- Volver a color naranja/dorado normal
 			incomeLabel.TextColor3 = Color3.fromRGB(255, 200, 80)
+
+			-- 🎬 Animar número de 2X → 1X
+			local leaderstats = player:FindFirstChild("leaderstats")
+			if leaderstats then
+				local incomeValue = leaderstats:FindFirstChild("IncomePerSec")
+				if incomeValue then
+					local baseIncome = incomeValue.Value
+					animateNumber(displayedIncome, baseIncome, 0.4, function(animatedValue)
+						incomeLabel.Text = string.format("⚡ %d/s", animatedValue)
+					end)
+					displayedIncome = baseIncome
+					lastIncome = baseIncome
+				end
+			end
 		end
 	end)
 end
@@ -178,6 +206,7 @@ end
 -- Animación de pulso cuando cambia el dinero
 local lastCash = 0
 local lastIncome = 0
+local displayedIncome = 0 -- Para animación de contador
 
 local function pulseAnimation(label: TextLabel)
 	local originalSize = label.TextSize
@@ -194,6 +223,29 @@ local function pulseAnimation(label: TextLabel)
 			TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 			{TextSize = originalSize}
 		):Play()
+	end)
+end
+
+-- 💰 Animación de números subiendo rápidamente
+local function animateNumber(startValue: number, endValue: number, duration: number, callback: (number) -> ())
+	local elapsed = 0
+	local connection: RBXScriptConnection?
+
+	connection = game:GetService("RunService").RenderStepped:Connect(function(dt)
+		elapsed += dt
+		local alpha = math.min(elapsed / duration, 1)
+
+		-- Easing suave (EaseOut)
+		local easedAlpha = 1 - (1 - alpha) ^ 3
+		local currentValue = startValue + (endValue - startValue) * easedAlpha
+
+		callback(math.floor(currentValue))
+
+		if alpha >= 1 then
+			if connection then
+				connection:Disconnect()
+			end
+		end
 	end)
 end
 
@@ -217,19 +269,36 @@ local function update()
 	end
 
 	if incomeValue then
-		local newIncome = incomeValue.Value
+		local baseIncome = incomeValue.Value
 
-		-- 💰 MOSTRAR 2X SI INCOMEBOOST ESTÁ ACTIVO
+		-- 💰 CALCULAR INCOME REAL (multiplicado por IncomeBoost si está activo)
+		local realIncome = baseIncome
 		if IncomeBoostActive then
-			incomeLabel.Text = string.format("💰 2X ⚡ %d/s", newIncome)
-		else
-			incomeLabel.Text = string.format("⚡ %d/s", newIncome)
+			realIncome = baseIncome * 2 -- 2X cuando IncomeBoost activo
 		end
 
-		-- Pulso si cambió el income
-		if newIncome ~= lastIncome then
+		-- Animar cambio de número si es diferente
+		if realIncome ~= lastIncome then
 			pulseAnimation(incomeLabel)
-			lastIncome = newIncome
+
+			-- 🎬 CONTADOR RÁPIDO animado
+			animateNumber(displayedIncome, realIncome, 0.3, function(animatedValue)
+				if IncomeBoostActive then
+					incomeLabel.Text = string.format("💰 2X ⚡ %d/s", animatedValue)
+				else
+					incomeLabel.Text = string.format("⚡ %d/s", animatedValue)
+				end
+			end)
+
+			displayedIncome = realIncome
+			lastIncome = realIncome
+		else
+			-- Actualizar texto sin animar (mantener formato correcto)
+			if IncomeBoostActive then
+				incomeLabel.Text = string.format("💰 2X ⚡ %d/s", displayedIncome)
+			else
+				incomeLabel.Text = string.format("⚡ %d/s", displayedIncome)
+			end
 		end
 	end
 end
