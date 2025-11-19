@@ -2,10 +2,11 @@
 --[[
 	KnitClient Bootstrap
 
-	Este script inicializa Knit en el cliente y registra todos los controllers.
-	NO modifica la lógica actual del juego, solo prepara la infraestructura de Knit.
+	Este script inicializa Knit en el cliente y registra todos los Knit controllers.
 
-	FASE 1: Setup inicial - Knit corre en paralelo con tus scripts actuales.
+	ESTRUCTURA:
+	- Controllers/       → Controllers antiguos (no Knit) - siguen funcionando normalmente
+	- KnitControllers/   → Controllers de Knit - se cargan automáticamente aquí
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,18 +15,19 @@ local Players = game:GetService("Players")
 -- Requerir Knit
 local Knit = require(ReplicatedStorage.Knit)
 
--- Registrar todos los controllers de la carpeta Controllers
+-- Registrar todos los Knit controllers de la carpeta KnitControllers
 local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts")
-local controllersFolder = playerScripts:FindFirstChild("Controllers")
+local knitControllersFolder = playerScripts:FindFirstChild("KnitControllers")
 
-if controllersFolder then
-	for _, moduleScript in controllersFolder:GetChildren() do
-		if moduleScript:IsA("ModuleScript") and moduleScript.Name:match("Controller$") then
+if knitControllersFolder then
+	for _, moduleScript in knitControllersFolder:GetChildren() do
+		if moduleScript:IsA("ModuleScript") then
 			require(moduleScript)
+			print("🔵 [KnitClient] Loaded controller:", moduleScript.Name)
 		end
 	end
 else
-	warn("[KnitClient] No se encontró carpeta 'Controllers'")
+	warn("[KnitClient] No se encontró carpeta 'KnitControllers'")
 end
 
 -- Iniciar Knit
