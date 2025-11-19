@@ -167,6 +167,16 @@ if not PurchasePowerUp then
 	PurchasePowerUp.Parent = Remotes
 	print("[POWERUP] RemoteEvent 'PurchasePowerUp' creado automáticamente")
 end
+
+-- 🎁 Remote para usar powerup desde el inventario
+local UseFromInventory = Remotes:FindFirstChild("UseFromInventory") :: RemoteEvent?
+if not UseFromInventory then
+	UseFromInventory = Instance.new("RemoteEvent")
+	UseFromInventory.Name = "UseFromInventory"
+	UseFromInventory.Parent = Remotes
+	print("[POWERUP] RemoteEvent 'UseFromInventory' creado automáticamente")
+end
+
 local BaseDamaged = Remotes:WaitForChild("BaseDamaged") :: RemoteEvent
 
 -- Remotes adicionales (crear si no existen)
@@ -946,10 +956,26 @@ if PurchasePowerUp then
 		local success, errorMsg = PowerUpModule.PurchaseFromVendingMachine(plr.UserId)
 
 		if success then
-			notifyPlayer(plr, "🎰 PowerUp Activated!", 2)
+			-- errorMsg ahora contiene el powerUpId
+			local powerUpId = errorMsg
+
+			-- 🎁 Spawnear chicle/gumball físico desde la máquina
+			local vendingMachine = getBasesFolder():FindFirstChild("VendingMachine_" .. plr.Name)
+			if vendingMachine and powerUpId then
+				local slot = vendingMachine:FindFirstChild("Slot")
+				if slot then
+					-- Spawnear gumball en posición del slot + offset hacia arriba
+					local gumball = PowerUpModule.SpawnGumball(powerUpId, slot.Position + Vector3.new(0, 2, 0), plr.UserId)
+					if gumball then
+						gumball.Parent = workspace
+					end
+				end
+			end
+
+			notifyPlayer(plr, "🎁 PowerUp added to inventory!", 2)
 
 			if Config.DEBUG_MODE then
-				print(("[POWERUP] ✅ %s compró powerup desde máquina"):format(plr.Name))
+				print(("[POWERUP] ✅ %s compró powerup '%s' desde máquina"):format(plr.Name, powerUpId or "unknown"))
 			end
 		else
 			-- Mostrar mensaje de error
@@ -957,6 +983,42 @@ if PurchasePowerUp then
 
 			if Config.DEBUG_MODE then
 				print(("[POWERUP] ❌ %s intentó comprar pero falló: %s"):format(plr.Name, errorMsg or "unknown"))
+			end
+		end
+	end)
+end
+
+--═══════════════════════════════════════════════════════════════════════
+-- 🎁 SISTEMA DE USO DESDE INVENTARIO
+--═══════════════════════════════════════════════════════════════════════
+if UseFromInventory then
+	UseFromInventory.OnServerEvent:Connect(function(plr: Player, slotIndex: number)
+		-- Validar que slotIndex sea un número válido
+		if type(slotIndex) ~= "number" or slotIndex < 1 or slotIndex > 5 then
+			notifyPlayer(plr, "❌ Invalid slot", 2)
+			return
+		end
+
+		-- Rate limiting
+		if not checkRateLimit(plr.UserId, "UseInventory") then
+			notifyPlayer(plr, "⚠️ Slow down!", 2)
+			return
+		end
+
+		-- Intentar usar el powerup del inventario
+		local success = PowerUpModule.UseFromInventory(plr.UserId, slotIndex)
+
+		if success then
+			notifyPlayer(plr, "✨ PowerUp Activated!", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ✅ %s usó powerup desde slot %d"):format(plr.Name, slotIndex))
+			end
+		else
+			notifyPlayer(plr, "❌ Slot empty or invalid", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ❌ %s intentó usar slot %d pero falló"):format(plr.Name, slotIndex))
 			end
 		end
 	end)
