@@ -373,14 +373,14 @@ PowerUpConfig.PowerUps = {
 	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	IncomeBoost = {
 		Name = "Income Boost",
-		Description = "+30% income por 30 segundos",
+		Description = "2X income por 30 segundos",
 		Rarity = "Rare",
 		Duration = 30,
 
 		Icon = "💰",
 		Color = Color3.fromRGB(255, 215, 0),
 
-		IncomeMultiplier = 1.3, -- +30%
+		IncomeMultiplier = 2.0, -- 💰 2X INCOME!
 
 		VFX = {
 			Type = "CoinRain",
