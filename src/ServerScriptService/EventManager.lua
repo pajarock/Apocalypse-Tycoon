@@ -252,11 +252,6 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 		print(("[Meteor] %s lanzado hacia %s"):format(meteorType, plr.Name))
 	end
 
-	local ShowNotif = RemotesFolder:FindFirstChild("ShowNotification")
-	if ShowNotif then
-		ShowNotif:FireClient(plr, "☄️ INCOMING!", 2)
-	end
-
 	local applied = false
 	local conn: RBXScriptConnection? = nil
 

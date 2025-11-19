@@ -1,0 +1,449 @@
+--!strict
+--[[
+	═══════════════════════════════════════════════════════════════════════
+	POWERUP CONFIG - Apocalypse Tycoon
+	═══════════════════════════════════════════════════════════════════════
+
+	Configuración completa de todos los powerups del juego.
+
+	TIPOS DE POWERUPS:
+	- Basic: Escudo, Doble Daño, Full Heal, Velocidad
+	- Movement: Dash mejorado
+	- Defensive: Dron, Escudo de Base, Meteor Jammer, Explosión
+	- Skill: Critical Meteor Parry
+	- Rare: Ultra Charge, Egg Catalyst, Bonus Recursos
+
+	═══════════════════════════════════════════════════════════════════════
+--]]
+
+local PowerUpConfig = {}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🎰 MÁQUINA EXPENDEDORA DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+PowerUpConfig.VendingMachine = {
+	-- Costo inicial de la máquina (comprar el edificio)
+	PurchaseCost = 500,
+
+	-- Cooldown entre compras (segundos)
+	Cooldown = 45,
+
+	-- Pricing por rareza
+	Prices = {
+		Common = 200,
+		Uncommon = 350,
+		Rare = 500,
+		Epic = 500, -- Mismo precio pero drop rate extremadamente bajo
+	},
+
+	-- Drop rates para la máquina (más balanceados que waves)
+	DropRates = {
+		Common = 50,    -- 50%
+		Uncommon = 35,  -- 35%
+		Rare = 13,      -- 13%
+		Epic = 2,       -- 2% (muy raro!)
+	},
+}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- PROBABILIDADES DE SPAWN
+-- ═══════════════════════════════════════════════════════════════════════
+
+PowerUpConfig.SpawnChances = {
+	-- Waves normales (1-4, 6-9, etc.)
+	Normal = {
+		Common = 60,    -- 60% chance powerup común
+		Uncommon = 30,  -- 30% chance powerup poco común
+		Rare = 10,      -- 10% chance powerup raro
+	},
+
+	-- Mini-boss waves (5, 15, 25...)
+	MiniBoss = {
+		Common = 40,
+		Uncommon = 40,
+		Rare = 20,      -- Mayor chance de raros
+	},
+
+	-- Boss waves (10, 20, 30...)
+	Boss = {
+		Common = 20,
+		Uncommon = 40,
+		Rare = 40,      -- Muy alta chance de raros
+	},
+}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- DEFINICIONES DE POWERUPS
+-- ═══════════════════════════════════════════════════════════════════════
+
+PowerUpConfig.PowerUps = {
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 1. GOD SHIELD (Escudo Temporal)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	GodShield = {
+		Name = "God Shield",
+		Description = "5-10 segundos de invulnerabilidad total",
+		Rarity = "Common",
+		Duration = {Min = 5, Max = 10}, -- Duración aleatoria entre 5-10 seg
+
+		Icon = "🛡️",
+		Color = Color3.fromRGB(100, 200, 255), -- Azul/verde tóxico
+
+		-- Efectos visuales
+		VFX = {
+			Type = "Aura",
+			ParticleColor = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 200, 255)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200)),
+			}),
+			LightEmission = 1,
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.3),
+				NumberSequenceKeypoint.new(1, 0.8),
+			}),
+		},
+
+		-- Función de activación (se llama en PowerUpModule)
+		OnActivate = "ActivateGodShield",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 2. DOUBLE DAMAGE (Doble Daño)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	DoubleDamage = {
+		Name = "Double Damage",
+		Description = "10-15 seg de daño x2 (ideal para mini-boss)",
+		Rarity = "Common",
+		Duration = {Min = 10, Max = 15},
+
+		Icon = "⚔️",
+		Color = Color3.fromRGB(255, 50, 50),
+
+		DamageMultiplier = 2.0,
+
+		VFX = {
+			Type = "WeaponGlow",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 0, 0)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateDoubleDamage",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 3. DASH MEJORADO (Evasión Perfecta)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	SuperDash = {
+		Name = "Super Dash",
+		Description = "Dash sin cooldown por 5-10 seg",
+		Rarity = "Uncommon",
+		Duration = {Min = 5, Max = 10},
+
+		Icon = "💨",
+		Color = Color3.fromRGB(255, 255, 100),
+
+		VFX = {
+			Type = "Trail",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 255, 0)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateSuperDash",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 4. FULL HEAL (Curación Instantánea)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	FullHeal = {
+		Name = "Full Heal",
+		Description = "Restaura 100% HP instantáneamente",
+		Rarity = "Common",
+		Duration = 0, -- Instantáneo
+
+		Icon = "❤️",
+		Color = Color3.fromRGB(0, 255, 100),
+
+		HealPercent = 1.0, -- 100%
+
+		VFX = {
+			Type = "Burst",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(0, 255, 0)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateFullHeal",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 5. MINI DRON (Defensa Automática)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	MiniDrone = {
+		Name = "Mini Drone",
+		Description = "Dron que intercepta 1-2 meteoritos por ti (15-20 seg)",
+		Rarity = "Uncommon",
+		Duration = {Min = 15, Max = 20},
+
+		Icon = "🛸",
+		Color = Color3.fromRGB(150, 150, 255),
+
+		InterceptCount = {Min = 1, Max = 2}, -- Cantidad de meteoritos que puede interceptar
+
+		VFX = {
+			Type = "Drone",
+			Model = "MiniDroneModel", -- Nombre del modelo en ServerStorage
+			OrbitRadius = 10,
+			OrbitSpeed = 2,
+		},
+
+		OnActivate = "ActivateMiniDrone",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 6. SPEED BOOST (Velocidad x2)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	SpeedBoost = {
+		Name = "Speed Boost",
+		Description = "Velocidad x2 por 7-10 seg",
+		Rarity = "Common",
+		Duration = {Min = 7, Max = 10},
+
+		Icon = "⚡",
+		Color = Color3.fromRGB(255, 255, 0),
+
+		SpeedMultiplier = 2.0,
+
+		VFX = {
+			Type = "Trail",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 255, 0)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateSpeedBoost",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 7. BASE SHIELD (Escudo de Base)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	BaseShield = {
+		Name = "Base Shield",
+		Description = "Mitiga el siguiente meteorito que impacte tu base",
+		Rarity = "Uncommon",
+		Duration = 0, -- Hasta que se use
+
+		Icon = "🛡️",
+		Color = Color3.fromRGB(100, 255, 100),
+
+		MitigationPercent = 1.0, -- 100% mitigation (bloquea completamente 1 meteorito)
+
+		VFX = {
+			Type = "BaseDome",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(0, 255, 150)),
+			LightEmission = 0.8,
+		},
+
+		OnActivate = "ActivateBaseShield",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 8. METEOR JAMMER (Ralentiza Meteoritos)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	MeteorJammer = {
+		Name = "Meteor Jammer",
+		Description = "Reduce intensidad de meteoritos por 5 seg",
+		Rarity = "Uncommon",
+		Duration = 5,
+
+		Icon = "📡",
+		Color = Color3.fromRGB(200, 100, 255),
+
+		SpawnRateReduction = 0.5, -- Reduce spawn rate a 50%
+
+		VFX = {
+			Type = "Pulse",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(150, 0, 255)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateMeteorJammer",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 9. DEFENSIVE BURST (Explosión Defensiva)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	DefensiveBurst = {
+		Name = "Defensive Burst",
+		Description = "Explosión que limpia meteoritos cercanos",
+		Rarity = "Uncommon",
+		Duration = 0, -- Instantáneo
+
+		Icon = "💥",
+		Color = Color3.fromRGB(255, 150, 0),
+
+		Range = 100, -- Studs de alcance
+
+		VFX = {
+			Type = "Explosion",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 100, 0)),
+			LightEmission = 1,
+			Size = 50,
+		},
+
+		OnActivate = "ActivateDefensiveBurst",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 10. CRITICAL PARRY (Parry de Meteorito)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	CriticalParry = {
+		Name = "Critical Parry",
+		Description = "Convierte el próximo impacto en explosión que daña meteoritos cercanos",
+		Rarity = "Rare",
+		Duration = 0, -- Hasta que se use
+
+		Icon = "🔥",
+		Color = Color3.fromRGB(255, 0, 255),
+
+		ExplosionRange = 80,
+
+		VFX = {
+			Type = "ChargeAura",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 0, 200)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateCriticalParry",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- RECOMPENSAS ESPECIALES (RARAS)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 11. ULTRA CHARGE (Regenera Cooldowns)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	UltraCharge = {
+		Name = "Ultra Charge",
+		Description = "Regenera todos los cooldowns + bonus random",
+		Rarity = "Rare",
+		Duration = 0, -- Instantáneo
+		SpawnChance = 0.10, -- 10% chance
+
+		Icon = "⚡",
+		Color = Color3.fromRGB(255, 255, 255),
+
+		BonusPowerUpChance = 0.5, -- 50% chance de dar un powerup adicional
+
+		VFX = {
+			Type = "Lightning",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 255, 255)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateUltraCharge",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 12. EGG CATALYST (Aumenta Probabilidad de Pet Egg)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	EggCatalyst = {
+		Name = "Egg Catalyst",
+		Description = "Aumenta probabilidad de obtener pet egg al final de la wave",
+		Rarity = "Rare",
+		Duration = 0, -- Efecto para la wave actual
+
+		Icon = "🥚",
+		Color = Color3.fromRGB(255, 200, 100),
+
+		EggDropChanceIncrease = 0.25, -- +25% chance
+
+		VFX = {
+			Type = "Sparkles",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 220, 100)),
+			LightEmission = 0.8,
+		},
+
+		OnActivate = "ActivateEggCatalyst",
+	},
+
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	-- 13. INCOME BOOST (Bonus de Recursos)
+	-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	IncomeBoost = {
+		Name = "Income Boost",
+		Description = "+30% income por 30 segundos",
+		Rarity = "Rare",
+		Duration = 30,
+
+		Icon = "💰",
+		Color = Color3.fromRGB(255, 215, 0),
+
+		IncomeMultiplier = 1.3, -- +30%
+
+		VFX = {
+			Type = "CoinRain",
+			ParticleColor = ColorSequence.new(Color3.fromRGB(255, 215, 0)),
+			LightEmission = 1,
+		},
+
+		OnActivate = "ActivateIncomeBoost",
+	},
+}
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- UTILIDADES
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Obtener powerup aleatorio según rarity
+function PowerUpConfig.GetRandomPowerUpByRarity(rarity: string): string?
+	local pool = {}
+
+	for id, def in pairs(PowerUpConfig.PowerUps) do
+		if def.Rarity == rarity then
+			-- Verificar spawn chance adicional (para raros)
+			if def.SpawnChance then
+				if math.random() <= def.SpawnChance then
+					table.insert(pool, id)
+				end
+			else
+				table.insert(pool, id)
+			end
+		end
+	end
+
+	if #pool == 0 then return nil end
+	return pool[math.random(1, #pool)]
+end
+
+-- Determinar rarity según wave type
+function PowerUpConfig.GetRandomRarity(waveType: string): string
+	local chances = PowerUpConfig.SpawnChances[waveType] or PowerUpConfig.SpawnChances.Normal
+
+	local roll = math.random(1, 100)
+
+	if roll <= chances.Common then
+		return "Common"
+	elseif roll <= chances.Common + chances.Uncommon then
+		return "Uncommon"
+	else
+		return "Rare"
+	end
+end
+
+-- Obtener duración aleatoria
+function PowerUpConfig.GetRandomDuration(powerUpId: string): number
+	local def = PowerUpConfig.PowerUps[powerUpId]
+	if not def then return 0 end
+
+	if type(def.Duration) == "number" then
+		return def.Duration
+	elseif type(def.Duration) == "table" then
+		return math.random(def.Duration.Min, def.Duration.Max)
+	end
+
+	return 0
+end
+
+return PowerUpConfig

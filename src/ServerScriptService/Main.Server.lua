@@ -70,8 +70,14 @@ local Economy = require(ServerScriptService.EconomyModule)
 local Events = require(ServerScriptService.EventManager)
 local Base = require(ServerScriptService.BaseModule)
 
+-- ✅ POWERUP SYSTEM
+local PowerUpModule = require(ServerScriptService.PowerUpModule)
+
 -- ✅ NUEVO: Inyectar BaseModule en EventManager (arregla dependencia circular)
 Events:SetBaseModule(Base)
+
+-- ✅ Inyectar dependencias en PowerUpModule
+PowerUpModule.SetDependencies(Base, Economy)
 
 -- Módulo de achievements (crear si no existe)
 local Achievements = ServerScriptService:FindFirstChild("AchievementModule")
@@ -152,6 +158,15 @@ local RequestBaseState = Remotes:WaitForChild("RequestBaseState") :: RemoteFunct
 local RequestRepair = Remotes:WaitForChild("RequestRepair") :: RemoteEvent
 local BaseStateChanged = Remotes:WaitForChild("BaseStateChanged") :: RemoteEvent
 local CashTick = Remotes:WaitForChild("CashTick") :: RemoteEvent
+
+-- 🎰 Remote para comprar powerups desde la máquina
+local PurchasePowerUp = Remotes:FindFirstChild("PurchasePowerUp") :: RemoteEvent?
+if not PurchasePowerUp then
+	PurchasePowerUp = Instance.new("RemoteEvent")
+	PurchasePowerUp.Name = "PurchasePowerUp"
+	PurchasePowerUp.Parent = Remotes
+	print("[POWERUP] RemoteEvent 'PurchasePowerUp' creado automáticamente")
+end
 local BaseDamaged = Remotes:WaitForChild("BaseDamaged") :: RemoteEvent
 
 -- Remotes adicionales (crear si no existen)
@@ -432,6 +447,22 @@ local function assignBase(plr: Player, slot: number)
 	plate.Parent = getBasesFolder()
 	BasePartByUser[plr.UserId] = plate
 	plr:SetAttribute("BaseSlot", slot)
+
+	-- 🎰 Spawnear máquina expendedora de powerups
+	local vendingMachine = ProceduralModels:CreateModel("PowerUpVendingMachine")
+	if vendingMachine then
+		-- Posicionar cerca del spawn (12 studs al frente, en el suelo)
+		-- La máquina tiene ~7 studs de altura, así que Y=4 la pone parcialmente visible
+		local machinePos = Vector3.new(center.X, 4, center.Z - 12)
+		vendingMachine:SetPrimaryPartCFrame(CFrame.new(machinePos))
+		vendingMachine:SetAttribute("OwnerUserId", plr.UserId)
+		vendingMachine.Name = "VendingMachine_" .. plr.Name
+		vendingMachine.Parent = getBasesFolder()
+
+		if DEBUG then
+			print(("[POWERUP] 🎰 Máquina expendedora spawneada para %s en posición %s"):format(plr.Name, tostring(machinePos)))
+		end
+	end
 
 	if DEBUG then
 		print(("[BASE] Asignada base slot %d a %s"):format(slot, plr.Name))
@@ -901,6 +932,37 @@ RequestSell.OnServerEvent:Connect(function(plr: Player, upgradeId: string)
 end)
 
 --═══════════════════════════════════════════════════════════════════════
+-- 🎰 SISTEMA DE COMPRA DE POWERUPS DESDE MÁQUINA
+--═══════════════════════════════════════════════════════════════════════
+if PurchasePowerUp then
+	PurchasePowerUp.OnServerEvent:Connect(function(plr: Player)
+		-- Rate limiting
+		if not checkRateLimit(plr.UserId, "Purchase") then
+			notifyPlayer(plr, "⚠️ Slow down!", 2)
+			return
+		end
+
+		-- Intentar compra desde la máquina
+		local success, errorMsg = PowerUpModule.PurchaseFromVendingMachine(plr.UserId)
+
+		if success then
+			notifyPlayer(plr, "🎰 PowerUp Activated!", 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ✅ %s compró powerup desde máquina"):format(plr.Name))
+			end
+		else
+			-- Mostrar mensaje de error
+			notifyPlayer(plr, "❌ " .. (errorMsg or "Can't purchase"), 2)
+
+			if Config.DEBUG_MODE then
+				print(("[POWERUP] ❌ %s intentó comprar pero falló: %s"):format(plr.Name, errorMsg or "unknown"))
+			end
+		end
+	end)
+end
+
+--═══════════════════════════════════════════════════════════════════════
 -- SISTEMA DE REPARACIÓN
 --═══════════════════════════════════════════════════════════════════════
 RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
@@ -1337,8 +1399,11 @@ DashRequest.OnServerEvent:Connect(function(plr: Player, direction: Vector3?)
 	local userId = plr.UserId
 	local now = tick()
 
-	-- Verificar cooldown
-	if DashCooldowns[userId] and now - DashCooldowns[userId] < DASH_COOLDOWN then
+	-- ✅ POWERUP: Verificar si SuperDash está activo (sin cooldown)
+	local hasSuperDash = PowerUpModule.IsSuperDashActive and PowerUpModule.IsSuperDashActive(userId)
+
+	-- Verificar cooldown (ignorar si tiene SuperDash)
+	if not hasSuperDash and DashCooldowns[userId] and now - DashCooldowns[userId] < DASH_COOLDOWN then
 		if Config.DEBUG_MODE then
 			local remaining = math.ceil(DASH_COOLDOWN - (now - DashCooldowns[userId]))
 			warn(("[DASH] %s en cooldown (%ds restantes)"):format(plr.Name, remaining))
@@ -1752,6 +1817,41 @@ if eventsEnabled then
 					if Base.GetMeteorsSurvived(plr.UserId) == 100 and Achievements then
 						Achievements.Award(plr.UserId, "Survivor100")
 					end
+
+					--[[
+					🎰 SISTEMA DE POWERUPS AUTOMÁTICOS DESACTIVADO
+					════════════════════════════════════════════════
+					Los powerups ahora se obtienen comprando en la máquina expendedora.
+					El código antiguo está comentado abajo por si se necesita restaurar:
+
+					-- ✅ POWERUP: Spawnear powerup al completar wave (solo cada 3 waves normales, o boss/miniboss)
+					local shouldSpawnPowerUp = false
+					local waveType = "Normal"
+
+					if ServerState.CurrentWave % 10 == 0 then
+						waveType = "Boss"
+						shouldSpawnPowerUp = true
+					elseif ServerState.CurrentWave % 5 == 0 then
+						waveType = "MiniBoss"
+						shouldSpawnPowerUp = true
+					elseif ServerState.CurrentWave % 3 == 0 then
+						-- Solo cada 3 waves normales (3, 6, 9, 12, etc)
+						waveType = "Normal"
+						shouldSpawnPowerUp = true
+					end
+
+					-- Spawnear powerup solo si cumple la condición
+					if shouldSpawnPowerUp then
+						-- ✅ Pasar el número de wave para el sistema híbrido
+						PowerUpModule.SpawnPowerUpForPlayer(plr.UserId, waveType, ServerState.CurrentWave)
+
+						if Config.DEBUG_MODE then
+							print(("[POWERUP] ✅ Spawneando powerup para %s - Wave %d (%s)"):format(
+								plr.Name, ServerState.CurrentWave, waveType
+							))
+						end
+					end
+					--]]
 
 					if Config.DEBUG_MODE then
 						print(("[WAVE] ✅ Jugador %s SOBREVIVIÓ wave %d"):format(plr.Name, ServerState.CurrentWave))
