@@ -978,7 +978,7 @@ local PowerUpMessages = {
 	},
 	IncomeBoost = {
 		MainText = "💰 2X INCOME! 💰",
-		SubText = "+30% money per second!",
+		SubText = "Double your money per second!",
 	},
 }
 

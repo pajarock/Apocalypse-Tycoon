@@ -697,10 +697,12 @@ end
 -- 13. INCOME BOOST
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function PowerUpModule.ActivateIncomeBoost(userId: number, powerUp: ActivePowerUp)
-	IncomeBoostMultipliers[userId] = 1.3 -- +30%
+	-- 💰 Leer multiplier del config (2.0 = verdadero 2X)
+	local config = PowerUpConfig.IncomeBoost
+	IncomeBoostMultipliers[userId] = config.IncomeMultiplier or 2.0
 
 	if DEBUG then
-		print(("[PowerUpModule] Income Boost activado para userId %d"):format(userId))
+		print(("[PowerUpModule] Income Boost activado para userId %d (multiplier: %.1fx)"):format(userId, IncomeBoostMultipliers[userId]))
 	end
 end
 
