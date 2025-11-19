@@ -394,6 +394,360 @@ local function createCriticalParryEffect(): {Instance}
 	return effects
 end
 
+local function createSuperDashEffect(): {Instance}
+	local effects = {}
+
+	-- Trail amarillo brillante
+	local attachment0 = Instance.new("Attachment")
+	attachment0.Name = "DashTrailAttachment0"
+	attachment0.Position = Vector3.new(0, -2, 0)
+	attachment0.Parent = humanoidRootPart
+
+	local attachment1 = Instance.new("Attachment")
+	attachment1.Name = "DashTrailAttachment1"
+	attachment1.Position = Vector3.new(0, 2, 0)
+	attachment1.Parent = humanoidRootPart
+
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = attachment0
+	trail.Attachment1 = attachment1
+	trail.Color = ColorSequence.new(Color3.fromRGB(255, 255, 100))
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	trail.Lifetime = 0.8
+	trail.LightEmission = 1
+	trail.Parent = humanoidRootPart
+
+	-- Partículas de velocidad
+	local speedParticles = Instance.new("ParticleEmitter")
+	speedParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	speedParticles.Color = ColorSequence.new(Color3.fromRGB(255, 255, 150))
+	speedParticles.Size = NumberSequence.new(1.5)
+	speedParticles.Lifetime = NumberRange.new(0.3, 0.5)
+	speedParticles.Rate = 50
+	speedParticles.Speed = NumberRange.new(10, 15)
+	speedParticles.SpreadAngle = Vector2.new(30, 30)
+	speedParticles.LightEmission = 1
+	speedParticles.Parent = humanoidRootPart
+
+	table.insert(effects, trail)
+	table.insert(effects, attachment0)
+	table.insert(effects, attachment1)
+	table.insert(effects, speedParticles)
+
+	return effects
+end
+
+local function createFullHealEffect(): {Instance}
+	local effects = {}
+
+	-- Burst de partículas verdes curativas
+	local healBurst = Instance.new("ParticleEmitter")
+	healBurst.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	healBurst.Color = ColorSequence.new(Color3.fromRGB(0, 255, 100))
+	healBurst.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	healBurst.Lifetime = NumberRange.new(1, 2)
+	healBurst.Rate = 100
+	healBurst.Speed = NumberRange.new(10, 20)
+	healBurst.SpreadAngle = Vector2.new(180, 180)
+	healBurst.LightEmission = 1
+	healBurst.Parent = humanoidRootPart
+
+	-- Desactivar después del burst inicial
+	task.delay(0.5, function()
+		if healBurst and healBurst.Parent then
+			healBurst.Enabled = false
+		end
+	end)
+
+	-- Aura verde temporal
+	local healAura = Instance.new("Part")
+	healAura.Name = "HealAura"
+	healAura.Size = Vector3.new(8, 8, 8)
+	healAura.Anchored = true
+	healAura.CanCollide = false
+	healAura.Transparency = 0.7
+	healAura.Material = Enum.Material.Neon
+	healAura.Color = Color3.fromRGB(0, 255, 100)
+	healAura.CFrame = humanoidRootPart.CFrame
+	healAura.Parent = workspace
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = healAura
+
+	-- Animar expansión
+	task.spawn(function()
+		for i = 1, 10 do
+			if healAura and healAura.Parent then
+				healAura.Size = healAura.Size + Vector3.new(2, 2, 2)
+				healAura.Transparency = 0.7 + (i * 0.03)
+				task.wait(0.05)
+			end
+		end
+		if healAura and healAura.Parent then
+			healAura:Destroy()
+		end
+	end)
+
+	table.insert(effects, healBurst)
+	table.insert(effects, healAura)
+
+	return effects
+end
+
+local function createMiniDroneEffect(): {Instance}
+	local effects = {}
+
+	-- Mini dron visual orbitando al jugador
+	local drone = Instance.new("Part")
+	drone.Name = "MiniDrone"
+	drone.Size = Vector3.new(2, 1, 2)
+	drone.Material = Enum.Material.Neon
+	drone.Color = Color3.fromRGB(150, 150, 255)
+	drone.Anchored = true
+	drone.CanCollide = false
+	drone.Parent = workspace
+
+	-- PointLight azul
+	local light = Instance.new("PointLight")
+	light.Brightness = 2
+	light.Range = 15
+	light.Color = Color3.fromRGB(150, 150, 255)
+	light.Parent = drone
+
+	-- Partículas tech
+	local particles = Instance.new("ParticleEmitter")
+	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
+	particles.Size = NumberSequence.new(0.3)
+	particles.Lifetime = NumberRange.new(0.5, 1)
+	particles.Rate = 20
+	particles.Speed = NumberRange.new(2, 4)
+	particles.LightEmission = 1
+	particles.Parent = drone
+
+	-- Orbitar alrededor del jugador
+	task.spawn(function()
+		local angle = 0
+		while drone and drone.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			angle += 0.05
+			local offset = CFrame.new(
+				math.cos(angle) * 8,
+				math.sin(angle * 2) * 2 + 5,
+				math.sin(angle) * 8
+			)
+			drone.CFrame = humanoidRootPart.CFrame * offset * CFrame.Angles(0, angle, 0)
+			task.wait(0.016)
+		end
+	end)
+
+	table.insert(effects, drone)
+
+	return effects
+end
+
+local function createMeteorJammerEffect(): {Instance}
+	local effects = {}
+
+	-- Pulsos electromagnéticos
+	local jammer = Instance.new("Part")
+	jammer.Name = "MeteorJammer"
+	jammer.Size = Vector3.new(4, 4, 4)
+	jammer.Anchored = true
+	jammer.CanCollide = false
+	jammer.Transparency = 0.5
+	jammer.Material = Enum.Material.Neon
+	jammer.Color = Color3.fromRGB(200, 100, 255)
+	jammer.Parent = character
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = jammer
+
+	-- Animar pulsos
+	task.spawn(function()
+		local t = 0
+		while jammer and jammer.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.05
+			local scale = 1 + math.sin(t * 8) * 0.5
+			mesh.Scale = Vector3.new(scale, scale, scale)
+			jammer.Transparency = 0.3 + math.abs(math.sin(t * 8)) * 0.4
+			jammer.CFrame = humanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+			task.wait(0.05)
+		end
+	end)
+
+	table.insert(effects, jammer)
+
+	return effects
+end
+
+local function createDefensiveBurstEffect(): {Instance}
+	local effects = {}
+
+	-- Explosión naranja masiva
+	local burst = Instance.new("Part")
+	burst.Name = "DefensiveBurst"
+	burst.Size = Vector3.new(5, 5, 5)
+	burst.Anchored = true
+	burst.CanCollide = false
+	burst.Transparency = 0.5
+	burst.Material = Enum.Material.Neon
+	burst.Color = Color3.fromRGB(255, 150, 0)
+	burst.CFrame = humanoidRootPart.CFrame
+	burst.Parent = workspace
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = burst
+
+	-- Expandir explosión
+	task.spawn(function()
+		for i = 1, 20 do
+			if burst and burst.Parent then
+				burst.Size = burst.Size + Vector3.new(10, 10, 10)
+				burst.Transparency = 0.5 + (i * 0.025)
+				task.wait(0.03)
+			end
+		end
+		if burst and burst.Parent then
+			burst:Destroy()
+		end
+	end)
+
+	table.insert(effects, burst)
+
+	return effects
+end
+
+local function createUltraChargeEffect(): {Instance}
+	local effects = {}
+
+	-- Rayos eléctricos blancos
+	local charge = Instance.new("Part")
+	charge.Name = "UltraCharge"
+	charge.Size = Vector3.new(6, 10, 6)
+	charge.Anchored = true
+	charge.CanCollide = false
+	charge.Transparency = 0.3
+	charge.Material = Enum.Material.Neon
+	charge.Color = Color3.fromRGB(255, 255, 255)
+	charge.Parent = character
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Cylinder
+	mesh.Parent = charge
+
+	-- Partículas eléctricas
+	local lightning = Instance.new("ParticleEmitter")
+	lightning.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	lightning.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+	lightning.Size = NumberSequence.new(1)
+	lightning.Lifetime = NumberRange.new(0.2, 0.5)
+	lightning.Rate = 100
+	lightning.Speed = NumberRange.new(15, 25)
+	lightning.SpreadAngle = Vector2.new(180, 180)
+	lightning.LightEmission = 1
+	lightning.Parent = charge
+
+	-- Animar
+	task.spawn(function()
+		local t = 0
+		while charge and charge.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.05
+			charge.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, 0, t * 10)
+			task.wait(0.05)
+		end
+	end)
+
+	table.insert(effects, charge)
+
+	return effects
+end
+
+local function createEggCatalystEffect(): {Instance}
+	local effects = {}
+
+	-- Sparkles dorados
+	local sparkles = Instance.new("Sparkles")
+	sparkles.SparkleColor = Color3.fromRGB(255, 220, 100)
+	sparkles.Parent = humanoidRootPart
+
+	-- Partículas de huevo
+	local eggParticles = Instance.new("ParticleEmitter")
+	eggParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	eggParticles.Color = ColorSequence.new(Color3.fromRGB(255, 200, 100))
+	eggParticles.Size = NumberSequence.new(0.5)
+	eggParticles.Lifetime = NumberRange.new(1, 2)
+	eggParticles.Rate = 30
+	eggParticles.Speed = NumberRange.new(3, 6)
+	eggParticles.LightEmission = 0.8
+	eggParticles.Parent = humanoidRootPart
+
+	table.insert(effects, sparkles)
+	table.insert(effects, eggParticles)
+
+	return effects
+end
+
+local function createIncomeBoostEffect(): {Instance}
+	local effects = {}
+
+	-- Lluvia de monedas doradas
+	local coinRain = Instance.new("ParticleEmitter")
+	coinRain.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	coinRain.Color = ColorSequence.new(Color3.fromRGB(255, 215, 0))
+	coinRain.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(0.5, 1),
+		NumberSequenceKeypoint.new(1, 0.5)
+	})
+	coinRain.Lifetime = NumberRange.new(2, 3)
+	coinRain.Rate = 40
+	coinRain.Speed = NumberRange.new(5, 10)
+	coinRain.SpreadAngle = Vector2.new(30, 30)
+	coinRain.LightEmission = 1
+	coinRain.Parent = humanoidRootPart
+
+	-- Aura dorada
+	local goldAura = Instance.new("Part")
+	goldAura.Name = "GoldAura"
+	goldAura.Size = Vector3.new(6, 6, 6)
+	goldAura.Anchored = true
+	goldAura.CanCollide = false
+	goldAura.Transparency = 0.7
+	goldAura.Material = Enum.Material.Neon
+	goldAura.Color = Color3.fromRGB(255, 215, 0)
+	goldAura.Parent = character
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = goldAura
+
+	-- Animar aura
+	task.spawn(function()
+		local t = 0
+		while goldAura and goldAura.Parent and humanoidRootPart and humanoidRootPart.Parent do
+			t += 0.016
+			local scale = 1 + math.sin(t * 4) * 0.3
+			mesh.Scale = Vector3.new(scale, scale, scale)
+			goldAura.CFrame = humanoidRootPart.CFrame
+			task.wait(0.016)
+		end
+	end)
+
+	table.insert(effects, coinRain)
+	table.insert(effects, goldAura)
+
+	return effects
+end
+
 -- ═══════════════════════════════════════════════════════════════════════
 -- MAPEO DE EFECTOS VISUALES
 -- ═══════════════════════════════════════════════════════════════════════
@@ -404,6 +758,14 @@ local PowerUpVFXMap = {
 	DoubleDamage = createDoubleDamageEffect,
 	BaseShield = createBaseShieldEffect,
 	CriticalParry = createCriticalParryEffect,
+	SuperDash = createSuperDashEffect,
+	FullHeal = createFullHealEffect,
+	MiniDrone = createMiniDroneEffect,
+	MeteorJammer = createMeteorJammerEffect,
+	DefensiveBurst = createDefensiveBurstEffect,
+	UltraCharge = createUltraChargeEffect,
+	EggCatalyst = createEggCatalystEffect,
+	IncomeBoost = createIncomeBoostEffect,
 }
 
 -- ═══════════════════════════════════════════════════════════════════════
