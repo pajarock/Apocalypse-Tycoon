@@ -924,6 +924,159 @@ local function createIncomeBoostEffect(): {Instance}
 end
 
 -- ═══════════════════════════════════════════════════════════════════════
+-- MENSAJES ÉPICOS DE ACTIVACIÓN
+-- ═══════════════════════════════════════════════════════════════════════
+
+local PowerUpMessages = {
+	GodShield = {
+		MainText = "🛡️ GOD SHIELD! 🛡️",
+		SubText = "Invulnerable!",
+	},
+	DoubleDamage = {
+		MainText = "⚔️ 2X DAMAGE! ⚔️",
+		SubText = "Destroy everything!",
+	},
+	SuperDash = {
+		MainText = "💨 SUPER DASH! 💨",
+		SubText = "No cooldown!",
+	},
+	FullHeal = {
+		MainText = "❤️ FULL HEAL! ❤️",
+		SubText = "100% HP restored!",
+	},
+	MiniDrone = {
+		MainText = "🛸 MINI DRONE! 🛸",
+		SubText = "Auto-defense active!",
+	},
+	SpeedBoost = {
+		MainText = "⚡ 2X SPEED! ⚡",
+		SubText = "Lightning fast!",
+	},
+	BaseShield = {
+		MainText = "🛡️ BASE SHIELD! 🛡️",
+		SubText = "Next meteor blocked!",
+	},
+	MeteorJammer = {
+		MainText = "📡 METEOR JAMMER! 📡",
+		SubText = "Slowing down attacks!",
+	},
+	DefensiveBurst = {
+		MainText = "💥 DEFENSIVE BURST! 💥",
+		SubText = "Area cleared!",
+	},
+	CriticalParry = {
+		MainText = "🔥 CRITICAL PARRY! 🔥",
+		SubText = "Next hit = explosion!",
+	},
+	UltraCharge = {
+		MainText = "⚡ ULTRA CHARGE! ⚡",
+		SubText = "All cooldowns reset!",
+	},
+	EggCatalyst = {
+		MainText = "🥚 EGG CATALYST! 🥚",
+		SubText = "Pet egg chance boosted!",
+	},
+	IncomeBoost = {
+		MainText = "💰 2X INCOME! 💰",
+		SubText = "+30% money per second!",
+	},
+}
+
+local function showEpicPowerUpMessage(powerUpId: string, color: Color3)
+	local messageData = PowerUpMessages[powerUpId]
+	if not messageData then return end
+
+	-- ScreenGui
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "EpicPowerUpMessage"
+	gui.ResetOnSpawn = false
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = playerGui
+
+	-- 🎨 TEXTO PRINCIPAL GIGANTE (estilo EVADED!)
+	local mainText = Instance.new("TextLabel")
+	mainText.Name = "MainText"
+	mainText.Size = UDim2.new(0.8, 0, 0.3, 0)
+	mainText.Position = UDim2.new(0.1, 0, 0.35, 0)
+	mainText.BackgroundTransparency = 1
+	mainText.Text = messageData.MainText
+	mainText.TextColor3 = color
+	mainText.TextSize = 80
+	mainText.Font = Enum.Font.LuckiestGuy -- 🔥 GRAFITI FONT
+	mainText.TextScaled = true
+	mainText.Rotation = -5 -- Inclinación urbana
+	mainText.Parent = gui
+
+	-- Stroke GRUESO para el texto
+	local mainStroke = Instance.new("UIStroke")
+	mainStroke.Color = Color3.fromRGB(0, 0, 0)
+	mainStroke.Thickness = 8
+	mainStroke.Parent = mainText
+
+	-- 📝 SUBTEXTO
+	local subText = Instance.new("TextLabel")
+	subText.Name = "SubText"
+	subText.Size = UDim2.new(0.6, 0, 0.1, 0)
+	subText.Position = UDim2.new(0.2, 0, 0.58, 0)
+	subText.BackgroundTransparency = 1
+	subText.Text = messageData.SubText
+	subText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	subText.TextSize = 28
+	subText.Font = Enum.Font.GothamBold
+	subText.TextTransparency = 1 -- Start invisible
+	subText.Parent = gui
+
+	-- Subtexto stroke
+	local subStroke = Instance.new("UIStroke")
+	subStroke.Color = Color3.fromRGB(0, 0, 0)
+	subStroke.Thickness = 4
+	subStroke.Transparency = 1
+	subStroke.Parent = subText
+
+	-- 💥 ANIMACIÓN ÉPICA DE BOUNCE
+	-- Empezar pequeño
+	mainText.TextTransparency = 1
+	mainText.Size = UDim2.new(0.4, 0, 0.15, 0)
+
+	-- Bounce in
+	TweenService:Create(mainText, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0.8, 0, 0.3, 0),
+		TextTransparency = 0
+	}):Play()
+
+	-- Aparecer subtexto después
+	task.delay(0.15, function()
+		TweenService:Create(subText, TweenInfo.new(0.2), {
+			TextTransparency = 0
+		}):Play()
+
+		TweenService:Create(subStroke, TweenInfo.new(0.2), {
+			Transparency = 0
+		}):Play()
+	end)
+
+	-- Mantener visible por 2 segundos
+	task.wait(2.5)
+
+	-- Fade out
+	TweenService:Create(mainText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		TextTransparency = 1,
+		Position = UDim2.new(0.1, 0, 0.25, 0) -- Slide up
+	}):Play()
+
+	TweenService:Create(subText, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		TextTransparency = 1
+	}):Play()
+
+	TweenService:Create(subStroke, TweenInfo.new(0.5), {
+		Transparency = 1
+	}):Play()
+
+	task.wait(0.5)
+	gui:Destroy()
+end
+
+-- ═══════════════════════════════════════════════════════════════════════
 -- MAPEO DE EFECTOS VISUALES
 -- ═══════════════════════════════════════════════════════════════════════
 
@@ -1023,65 +1176,10 @@ PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: num
 		print(("[PowerUpUI] ✅ Efectos visuales creados para: %s"):format(powerUpId))
 	end
 
-	-- Notificación flotante
-	local notification = Instance.new("ScreenGui")
-	notification.Name = "PowerUpNotification"
-	notification.ResetOnSpawn = false
-	notification.Parent = playerGui
-
-	local notifFrame = Instance.new("Frame")
-	notifFrame.Size = UDim2.new(0, 400, 0, 100)
-	notifFrame.Position = UDim2.new(0.5, -200, 0, -150) -- Start above screen
-	notifFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	notifFrame.BackgroundTransparency = 0.2
-	notifFrame.BorderSizePixel = 0
-	notifFrame.Parent = notification
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 15)
-	corner.Parent = notifFrame
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = color
-	stroke.Thickness = 4
-	stroke.Parent = notifFrame
-
-	local iconLabel = Instance.new("TextLabel")
-	iconLabel.Size = UDim2.new(0, 80, 0, 80)
-	iconLabel.Position = UDim2.new(0, 10, 0.5, -40)
-	iconLabel.BackgroundTransparency = 1
-	iconLabel.Font = Enum.Font.GothamBold
-	iconLabel.TextScaled = true
-	iconLabel.TextColor3 = Color3.new(1, 1, 1)
-	iconLabel.Text = icon
-	iconLabel.Parent = notifFrame
-
-	local textLabel = Instance.new("TextLabel")
-	textLabel.Size = UDim2.new(1, -100, 1, 0)
-	textLabel.Position = UDim2.new(0, 100, 0, 0)
-	textLabel.BackgroundTransparency = 1
-	textLabel.Font = Enum.Font.GothamBold
-	textLabel.TextSize = 24
-	textLabel.TextColor3 = color
-	textLabel.TextXAlignment = Enum.TextXAlignment.Left
-	textLabel.Text = "POWERUP ACTIVATED!\n" .. powerUpId:gsub("(%u)", " %1"):sub(2)
-	textLabel.Parent = notifFrame
-
-	-- Animar notificación (slide in, hold, slide out)
-	local tweenIn = TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0.5, -200, 0, 50)
-	})
-	tweenIn:Play()
-
-	task.wait(2)
-
-	local tweenOut = TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-		Position = UDim2.new(0.5, -200, 0, -150)
-	})
-	tweenOut:Play()
-	tweenOut.Completed:Wait()
-
-	notification:Destroy()
+	-- 🔥 MOSTRAR MENSAJE ÉPICO ESTILO GRAFITI
+	task.spawn(function()
+		showEpicPowerUpMessage(powerUpId, color)
+	end)
 end)
 
 -- Expirar powerup
