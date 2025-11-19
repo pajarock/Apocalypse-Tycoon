@@ -27,8 +27,76 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local UpdateInventory = Remotes:WaitForChild("UpdateInventory", 10) :: RemoteEvent?
 local UseFromInventory = Remotes:WaitForChild("UseFromInventory", 10) :: RemoteEvent?
 
--- Config
-local PowerUpConfig = require(ReplicatedStorage:WaitForChild("SharedModules"):WaitForChild("PowerUpConfig"))
+-- ═══════════════════════════════════════════════════════════════════════
+-- POWERUP DISPLAY CONFIG (solo info de UI, no lógica de juego)
+-- ═══════════════════════════════════════════════════════════════════════
+local PowerUpDisplayInfo = {
+	GodShield = {
+		DisplayName = "God Shield",
+		Icon = "🛡️",
+		Color = Color3.fromRGB(100, 200, 255),
+	},
+	DoubleDamage = {
+		DisplayName = "Double Damage",
+		Icon = "⚔️",
+		Color = Color3.fromRGB(255, 50, 50),
+	},
+	SuperDash = {
+		DisplayName = "Super Dash",
+		Icon = "💨",
+		Color = Color3.fromRGB(255, 255, 100),
+	},
+	FullHeal = {
+		DisplayName = "Full Heal",
+		Icon = "❤️",
+		Color = Color3.fromRGB(0, 255, 100),
+	},
+	MiniDrone = {
+		DisplayName = "Mini Drone",
+		Icon = "🛸",
+		Color = Color3.fromRGB(150, 150, 255),
+	},
+	SpeedBoost = {
+		DisplayName = "Speed Boost",
+		Icon = "⚡",
+		Color = Color3.fromRGB(255, 255, 0),
+	},
+	BaseShield = {
+		DisplayName = "Base Shield",
+		Icon = "🛡️",
+		Color = Color3.fromRGB(100, 255, 100),
+	},
+	MeteorJammer = {
+		DisplayName = "Meteor Jammer",
+		Icon = "📡",
+		Color = Color3.fromRGB(200, 100, 255),
+	},
+	DefensiveBurst = {
+		DisplayName = "Defensive Burst",
+		Icon = "💥",
+		Color = Color3.fromRGB(255, 150, 0),
+	},
+	CriticalParry = {
+		DisplayName = "Critical Parry",
+		Icon = "🔥",
+		Color = Color3.fromRGB(255, 0, 255),
+	},
+	UltraCharge = {
+		DisplayName = "Ultra Charge",
+		Icon = "⚡",
+		Color = Color3.fromRGB(255, 255, 255),
+	},
+	EggCatalyst = {
+		DisplayName = "Egg Catalyst",
+		Icon = "🥚",
+		Color = Color3.fromRGB(255, 200, 100),
+	},
+	IncomeBoost = {
+		DisplayName = "Income Boost",
+		Icon = "💰",
+		Color = Color3.fromRGB(255, 215, 0),
+	},
+}
 
 -- Estado del inventario local
 local CurrentInventory: {string} = {}
@@ -193,18 +261,18 @@ local function updateSlots(inventory: {string})
 			local icon = slot:FindFirstChild("Icon") :: TextLabel?
 			local nameLabel = slot:FindFirstChild("NameLabel") :: TextLabel?
 
-			if powerUpId and PowerUpConfig.PowerUps[powerUpId] then
-				local def = PowerUpConfig.PowerUps[powerUpId]
+			if powerUpId and PowerUpDisplayInfo[powerUpId] then
+				local info = PowerUpDisplayInfo[powerUpId]
 
 				-- Actualizar icono
 				if icon then
-					icon.Text = def.Icon or "⭐"
-					icon.TextColor3 = def.VFX and def.VFX.ParticleColor and def.VFX.ParticleColor.Keypoints[1].Value or Color3.fromRGB(255, 255, 255)
+					icon.Text = info.Icon or "⭐"
+					icon.TextColor3 = info.Color or Color3.fromRGB(255, 255, 255)
 				end
 
 				-- Actualizar nombre
 				if nameLabel then
-					nameLabel.Text = def.DisplayName or powerUpId
+					nameLabel.Text = info.DisplayName or powerUpId
 					nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 				end
 
