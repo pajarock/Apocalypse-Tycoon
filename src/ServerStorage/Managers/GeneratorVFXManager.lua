@@ -56,9 +56,9 @@ local DEBUG_MODE = false
 -- FASE 2 Constants
 local CONSTRUCTION_DURATION = 1 -- Segundos de animación de construcción
 local CONSTRUCTION_START_OFFSET = -10 -- Studs bajo tierra al inicio
-local CASH_REGISTER_SOUND_ID = "rbxassetid://16628919037" -- Sonido de cash register
-local AMBIENT_SOUND_ID = "rbxassetid://9113673075" -- Sonido ambient loop
-local PLACEMENT_SOUND_ID = "rbxassetid://6895079853" -- Sonido al colocar
+local CASH_REGISTER_SOUND_ID = "rbxassetid://1319346243" -- Sonido de cash register
+local AMBIENT_SOUND_ID = "rbxassetid://128457230683862" -- Sonido ambient loop
+local PLACEMENT_SOUND_ID = "rbxassetid://9116673678" -- Sonido al colocar
 local AMBIENT_VOLUME = 0.3 -- Volumen del sonido ambient
 local CASH_REGISTER_VOLUME = 0.5 -- Volumen del cash register
 local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
