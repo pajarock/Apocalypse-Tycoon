@@ -74,11 +74,24 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		Definition = definition,
 		Model = model,
 		Tier = tier, -- Guardar tier para uso posterior
+		TotalProduced = 0, -- FASE 2: Tracking de dinero total producido
+		SpawnTime = os.time(), -- FASE 2: Tiempo de spawn para calcular uptime
 	}
 
-	-- Aplicar efectos visuales
-	GeneratorVFXManager:ApplyGlowPulse(model, tier)
-	GeneratorVFXManager:CreateParticles(model, tier)
+	-- FASE 2: Animación de construcción (incluye efectos visuales)
+	local mainPart = model:FindFirstChild("MainPart") or model:FindFirstChild("HumanoidRootPart")
+	if mainPart then
+		local finalPosition = mainPart.Position
+		GeneratorVFXManager:PlayConstructionAnimation(model, finalPosition, tier)
+	else
+		-- Fallback: aplicar efectos inmediatamente si no hay MainPart
+		GeneratorVFXManager:ApplyGlowPulse(model, tier)
+		GeneratorVFXManager:CreateParticles(model, tier)
+		GeneratorVFXManager:CreateAmbientSound(model)
+	end
+
+	-- FASE 2: Crear ProximityPrompt con stats
+	GeneratorVFXManager:CreateStatsPrompt(model, userId, tier)
 
 	print(string.format(
 		"[UpgradeService] 💰 Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
@@ -101,6 +114,28 @@ function UpgradeService:UnregisterGenerator(objectId: string)
 		-- Limpiar efectos visuales
 		if data.Model then
 			GeneratorVFXManager:RemoveEffects(data.Model)
+
+			-- FASE 2: Limpiar sonidos y ProximityPrompt
+			local mainPart = data.Model:FindFirstChild("MainPart")
+			if mainPart then
+				-- Eliminar sonido ambiental
+				local ambient = mainPart:FindFirstChild("GeneratorAmbient")
+				if ambient then
+					ambient:Destroy()
+				end
+
+				-- Eliminar ProximityPrompt
+				local prompt = mainPart:FindFirstChild("StatsPrompt")
+				if prompt then
+					prompt:Destroy()
+				end
+
+				-- Eliminar billboard de estadísticas (si está visible)
+				local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
+				if statsBillboard then
+					statsBillboard:Destroy()
+				end
+			end
 		end
 
 		activeGenerators[objectId] = nil
@@ -133,10 +168,15 @@ local function updateGenerators()
 				end)
 
 				if success then
+					-- FASE 2: Actualizar estadísticas de producción
+					data.TotalProduced = data.TotalProduced + moneyToGive
+
 					-- Mostrar efecto visual de producción
 					if data.Model and data.Model:FindFirstChild("MainPart") then
 						local tier = data.Tier or 1
 						GeneratorVFXManager:ShowMoneyProduction(data.Model, moneyToGive, tier)
+						-- FASE 2: Reproducir sonido de "cash register"
+						GeneratorVFXManager:PlayCashRegisterSound(data.Model)
 					end
 				end
 			end
