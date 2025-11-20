@@ -11,6 +11,9 @@
 	✅ Glow pulsante dinámico por tier
 	✅ Performance-optimized con object pooling
 	✅ Temática apocalíptica (3 tiers)
+	✅ Sistema de sonidos (cash register, ambient, placement) [FASE 2]
+	✅ Animación de construcción (tween desde abajo) [FASE 2]
+	✅ ProximityPrompt con estadísticas [FASE 2]
 
 	TIER SYSTEM:
 	- Tier 1 (Volcánico): Rojo/Naranja, partículas de lava
@@ -49,6 +52,16 @@ local BILLBOARD_FLOAT_HEIGHT = 5 -- Studs que sube
 local GLOW_PULSE_SPEED = 1 -- Velocidad del pulso (segundos)
 local PARTICLE_RATE = 10 -- Partículas por segundo
 local DEBUG_MODE = false
+
+-- FASE 2 Constants
+local CONSTRUCTION_DURATION = 1 -- Segundos de animación de construcción
+local CONSTRUCTION_START_OFFSET = -10 -- Studs bajo tierra al inicio
+local CASH_REGISTER_SOUND_ID = "rbxassetid://16628919037" -- Sonido de cash register
+local AMBIENT_SOUND_ID = "rbxassetid://9113673075" -- Sonido ambient loop
+local PLACEMENT_SOUND_ID = "rbxassetid://6895079853" -- Sonido al colocar
+local AMBIENT_VOLUME = 0.3 -- Volumen del sonido ambient
+local CASH_REGISTER_VOLUME = 0.5 -- Volumen del cash register
+local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
 
 -------------------------------------------------------------------------
 -- TYPES
@@ -420,6 +433,275 @@ end
 ]]
 function GeneratorVFXManager:GetTierConfig(tier: number): TierConfig
 	return TIER_CONFIGS[tier] or TIER_CONFIGS[1]
+end
+
+-------------------------------------------------------------------------
+-- FASE 2: SOUND SYSTEM
+-------------------------------------------------------------------------
+
+--[[
+	Crea un sonido de cash register cuando el generador produce dinero.
+
+	@param model - Modelo del generador
+]]
+function GeneratorVFXManager:PlayCashRegisterSound(model: Model)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return
+	end
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = CASH_REGISTER_SOUND_ID
+	sound.Volume = CASH_REGISTER_VOLUME
+	sound.Parent = mainPart
+	sound:Play()
+
+	-- Limpiar después de reproducir
+	Debris:AddItem(sound, 2)
+end
+
+--[[
+	Crea y activa el sonido ambient loop del generador.
+
+	@param model - Modelo del generador
+]]
+function GeneratorVFXManager:CreateAmbientSound(model: Model)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return
+	end
+
+	-- Verificar si ya existe
+	local existingSound = mainPart:FindFirstChild("GeneratorAmbient")
+	if existingSound then
+		return
+	end
+
+	local sound = Instance.new("Sound")
+	sound.Name = "GeneratorAmbient"
+	sound.SoundId = AMBIENT_SOUND_ID
+	sound.Volume = AMBIENT_VOLUME
+	sound.Looped = true
+	sound.RollOffMaxDistance = 50
+	sound.RollOffMinDistance = 10
+	sound.Parent = mainPart
+	sound:Play()
+end
+
+--[[
+	Reproduce el sonido de placement cuando se coloca el generador.
+
+	@param model - Modelo del generador
+]]
+function GeneratorVFXManager:PlayPlacementSound(model: Model)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return
+	end
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = PLACEMENT_SOUND_ID
+	sound.Volume = PLACEMENT_VOLUME
+	sound.Parent = mainPart
+	sound:Play()
+
+	Debris:AddItem(sound, 3)
+end
+
+-------------------------------------------------------------------------
+-- FASE 2: CONSTRUCTION ANIMATION
+-------------------------------------------------------------------------
+
+--[[
+	Anima la construcción del generador (aparece desde abajo).
+
+	@param model - Modelo del generador
+	@param finalPosition - Posición final donde debe quedar
+	@param tier - Tier del generador
+]]
+function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPosition: Vector3, tier: number)
+	-- Obtener PrimaryPart o MainPart
+	local primaryPart = model.PrimaryPart or model:FindFirstChild("MainPart")
+	if not primaryPart then
+		warn("[GeneratorVFXManager] No PrimaryPart or MainPart found for construction animation")
+		return
+	end
+
+	-- Posición inicial (bajo tierra)
+	local startPosition = finalPosition + Vector3.new(0, CONSTRUCTION_START_OFFSET, 0)
+
+	-- Mover a posición inicial
+	if model.PrimaryPart then
+		model:SetPrimaryPartCFrame(CFrame.new(startPosition))
+	else
+		primaryPart.Position = startPosition
+	end
+
+	-- Reproducir sonido de placement
+	self:PlayPlacementSound(model)
+
+	-- Crear partículas temporales de construcción
+	local constructionParticles = Instance.new("ParticleEmitter")
+	constructionParticles.Name = "ConstructionParticles"
+	constructionParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	constructionParticles.Color = ColorSequence.new(Color3.fromRGB(100, 100, 100))
+	constructionParticles.Rate = 50
+	constructionParticles.Lifetime = NumberRange.new(0.5, 1)
+	constructionParticles.Speed = NumberRange.new(5, 10)
+	constructionParticles.SpreadAngle = Vector2.new(180, 180)
+	constructionParticles.EmissionDirection = Enum.NormalId.Top
+	constructionParticles.Parent = primaryPart
+
+	-- Tween de construcción
+	local tweenInfo = TweenInfo.new(
+		CONSTRUCTION_DURATION,
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.Out
+	)
+
+	local tween
+	if model.PrimaryPart then
+		tween = TweenService:Create(
+			model.PrimaryPart,
+			tweenInfo,
+			{ CFrame = CFrame.new(finalPosition) }
+		)
+	else
+		tween = TweenService:Create(
+			primaryPart,
+			tweenInfo,
+			{ Position = finalPosition }
+		)
+	end
+
+	tween:Play()
+
+	-- Limpiar partículas de construcción después de la animación
+	task.delay(CONSTRUCTION_DURATION, function()
+		constructionParticles:Destroy()
+
+		-- Reproducir sonido de "clank" al terminar
+		local clankSound = Instance.new("Sound")
+		clankSound.SoundId = "rbxassetid://3765689841"
+		clankSound.Volume = 0.6
+		clankSound.Parent = primaryPart
+		clankSound:Play()
+		Debris:AddItem(clankSound, 2)
+
+		-- Activar efectos normales
+		self:ApplyGlowPulse(model, tier)
+		self:CreateParticles(model, tier)
+		self:CreateAmbientSound(model)
+	end)
+
+	if DEBUG_MODE then
+		print("[GeneratorVFXManager] Construction animation started")
+	end
+end
+
+-------------------------------------------------------------------------
+-- FASE 2: PROXIMITY PROMPT WITH STATS
+-------------------------------------------------------------------------
+
+--[[
+	Crea un ProximityPrompt con estadísticas del generador.
+
+	@param model - Modelo del generador
+	@param userId - ID del dueño
+	@param tier - Tier del generador
+	@return ProximityPrompt - El prompt creado
+]]
+function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number): ProximityPrompt?
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return nil
+	end
+
+	-- Verificar si ya existe
+	local existingPrompt = mainPart:FindFirstChild("StatsPrompt")
+	if existingPrompt then
+		return existingPrompt :: ProximityPrompt
+	end
+
+	-- Crear ProximityPrompt
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "StatsPrompt"
+	prompt.ActionText = "View Stats"
+	prompt.ObjectText = "Generator"
+	prompt.KeyboardKeyCode = Enum.KeyCode.E
+	prompt.MaxActivationDistance = 10
+	prompt.HoldDuration = 0
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = mainPart
+
+	-- Crear BillboardGui para mostrar stats (invisible por defecto)
+	local statsBillboard = Instance.new("BillboardGui")
+	statsBillboard.Name = "StatsBillboard"
+	statsBillboard.Size = UDim2.new(8, 0, 5, 0)
+	statsBillboard.StudsOffset = Vector3.new(0, 4, 0)
+	statsBillboard.AlwaysOnTop = true
+	statsBillboard.Enabled = false -- Oculto por defecto
+	statsBillboard.Parent = mainPart
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.BackgroundTransparency = 0.2
+	frame.BorderSizePixel = 2
+	frame.BorderColor3 = TIER_CONFIGS[tier].Color
+	frame.Parent = statsBillboard
+
+	local uiCorner = Instance.new("UICorner")
+	uiCorner.CornerRadius = UDim.new(0, 10)
+	uiCorner.Parent = frame
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = "StatsText"
+	textLabel.Size = UDim2.new(1, -20, 1, -20)
+	textLabel.Position = UDim2.new(0, 10, 0, 10)
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextColor3 = Color3.new(1, 1, 1)
+	textLabel.TextScaled = false
+	textLabel.TextSize = 18
+	textLabel.Font = Enum.Font.Code
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.TextYAlignment = Enum.TextYAlignment.Top
+	textLabel.Text = "Loading stats..."
+	textLabel.Parent = frame
+
+	-- Evento para mostrar/ocultar stats
+	local statsVisible = false
+	prompt.Triggered:Connect(function(player)
+		statsVisible = not statsVisible
+		statsBillboard.Enabled = statsVisible
+
+		if statsVisible then
+			-- TODO: Actualizar stats dinámicamente desde UpgradeService
+			-- Por ahora, mostrar info básica
+			local tierConfig = TIER_CONFIGS[tier]
+			local Players = game:GetService("Players")
+			local owner = Players:GetPlayerByUserId(userId)
+			local ownerName = owner and owner.Name or "Unknown"
+
+			textLabel.Text = string.format([[
+━━━━━━━━━━━━━━━━━━━━━━
+💰 %s GENERATOR
+━━━━━━━━━━━━━━━━━━━━━━
+Rate: $5/second
+Tier: %d
+Status: ✅ Active
+Owner: %s
+━━━━━━━━━━━━━━━━━━━━━━
+Press E to close
+]], tierConfig.Name:upper(), tier, ownerName)
+		end
+	end)
+
+	if DEBUG_MODE then
+		print("[GeneratorVFXManager] Stats prompt created")
+	end
+
+	return prompt
 end
 
 -------------------------------------------------------------------------
