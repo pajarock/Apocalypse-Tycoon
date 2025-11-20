@@ -17,22 +17,41 @@ local Knit = require(ReplicatedStorage.Knit)
 
 -- Registrar todos los Knit controllers de la carpeta KnitControllers
 local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts")
+print("[KnitClient] Buscando KnitControllers en:", playerScripts:GetFullName())
+
 local knitControllersFolder = playerScripts:FindFirstChild("KnitControllers")
 
 if knitControllersFolder then
+	print("[KnitClient] ✅ Carpeta KnitControllers encontrada")
+	local controllerCount = 0
 	for _, moduleScript in knitControllersFolder:GetChildren() do
 		if moduleScript:IsA("ModuleScript") then
-			require(moduleScript)
-			print("🔵 [KnitClient] Loaded controller:", moduleScript.Name)
+			print("🔵 [KnitClient] Cargando controller:", moduleScript.Name)
+			local success, err = pcall(function()
+				require(moduleScript)
+			end)
+			if success then
+				controllerCount += 1
+				print("✅ [KnitClient] Controller cargado:", moduleScript.Name)
+			else
+				warn("❌ [KnitClient] Error cargando", moduleScript.Name, ":", err)
+			end
 		end
 	end
+	print(string.format("[KnitClient] Total controllers cargados: %d", controllerCount))
 else
-	warn("[KnitClient] No se encontró carpeta 'KnitControllers'")
+	warn("❌ [KnitClient] No se encontró carpeta 'KnitControllers'")
+	warn("[KnitClient] Estructura actual de PlayerScripts:")
+	for _, child in playerScripts:GetChildren() do
+		warn("  - " .. child.Name .. " (" .. child.ClassName .. ")")
+	end
 end
 
--- Iniciar Knit
-Knit.Start():andThen(function()
-	print("✅ [KnitClient] Started successfully")
-end):catch(function(err)
-	warn("❌ [KnitClient] Error during startup:", err)
+-- Iniciar Knit (versión simplificada sin Promises)
+local success, err = pcall(function()
+	Knit.Start()
 end)
+
+if not success then
+	warn("❌ [KnitClient] Error during startup:", err)
+end

@@ -26,9 +26,11 @@ else
 	warn("[KnitServer] No se encontró carpeta 'Services'")
 end
 
--- Iniciar Knit
-Knit.Start():andThen(function()
-	print("✅ [KnitServer] Started successfully")
-end):catch(function(err)
-	warn("❌ [KnitServer] Error during startup:", err)
+-- Iniciar Knit (versión simplificada sin Promises)
+local success, err = pcall(function()
+	Knit.Start()
 end)
+
+if not success then
+	warn("❌ [KnitServer] Error during startup:", err)
+end
