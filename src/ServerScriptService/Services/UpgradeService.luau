@@ -451,6 +451,117 @@ function UpgradeService:UnregisterUpgrade(objectId: string, objectType: string)
 end
 
 --[[────────────────────────────────────────────────────────────────────────
+	DEBUG / MONITORING API
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Obtiene información de debugging sobre todos los upgrades activos.
+
+	IMPORTANTE: Este método es para debugging/monitoring.
+	Retorna copias de datos, no referencias directas.
+
+	@return DebugInfo - Tabla con información de todos los upgrades
+]]
+export type DebugInfo = {
+	GeneratorCount: number,
+	TurretCount: number,
+	RepairStationCount: number,
+	Generators: {{
+		ObjectId: string,
+		UserId: number,
+		LastProduction: number,
+		MoneyPerSecond: number,
+		SecondsSinceProduction: number,
+	}},
+	Turrets: {{
+		ObjectId: string,
+		UserId: number,
+		Range: number,
+		Damage: number,
+		FireRate: number,
+	}},
+	RepairStations: {{
+		ObjectId: string,
+		UserId: number,
+	}},
+}
+
+function UpgradeService:GetDebugInfo(): DebugInfo
+	local currentTime = os.time()
+
+	-- Copiar datos de generators
+	local generatorList = {}
+	for objectId, data in pairs(activeGenerators) do
+		table.insert(generatorList, {
+			ObjectId = objectId,
+			UserId = data.UserId,
+			LastProduction = data.LastProduction,
+			MoneyPerSecond = data.Definition.Stats.MoneyPerSecond or 0,
+			SecondsSinceProduction = currentTime - data.LastProduction,
+		})
+	end
+
+	-- Copiar datos de turrets
+	local turretList = {}
+	for objectId, data in pairs(activeTurrets) do
+		table.insert(turretList, {
+			ObjectId = objectId,
+			UserId = data.UserId,
+			Range = data.Definition.Stats.Range or 0,
+			Damage = data.Definition.Stats.Damage or 0,
+			FireRate = data.Definition.Stats.FireRate or 0,
+		})
+	end
+
+	-- Copiar datos de repair stations
+	local repairStationList = {}
+	for objectId, data in pairs(repairStations) do
+		table.insert(repairStationList, {
+			ObjectId = objectId,
+			UserId = data.UserId,
+		})
+	end
+
+	return {
+		GeneratorCount = #generatorList,
+		TurretCount = #turretList,
+		RepairStationCount = #repairStationList,
+		Generators = generatorList,
+		Turrets = turretList,
+		RepairStations = repairStationList,
+	}
+end
+
+--[[
+	Obtiene conteo rápido de upgrades activos (lightweight).
+
+	@return counts - Tabla con conteos {Generators, Turrets, RepairStations}
+]]
+function UpgradeService:GetActiveUpgradeCounts(): {Generators: number, Turrets: number, RepairStations: number}
+	local generatorCount = 0
+	local turretCount = 0
+	local repairStationCount = 0
+
+	for _ in pairs(activeGenerators) do
+		generatorCount += 1
+	end
+
+	for _ in pairs(activeTurrets) do
+		turretCount += 1
+	end
+
+	for _ in pairs(repairStations) do
+		repairStationCount += 1
+	end
+
+	return {
+		Generators = generatorCount,
+		Turrets = turretCount,
+		RepairStations = repairStationCount,
+	}
+end
+
+--[[────────────────────────────────────────────────────────────────────────
 	LIFECYCLE HOOKS
 ────────────────────────────────────────────────────────────────────────]]
 
