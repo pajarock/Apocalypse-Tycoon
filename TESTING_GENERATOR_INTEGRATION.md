@@ -92,6 +92,36 @@ Una vez que el generador esté colocado, deberías ver en el Output (cada segund
 [UpgradeService] 💰 Generator registered: [objectId] (Owner: [userId], Rate: $5/s)
 ```
 
+**Verificar generadores activos (NUEVO MÉTODO DE DEBUG):**
+
+Usa este script en el Command Bar (F9 → Command Bar):
+```lua
+local Knit = require(game.ReplicatedStorage.Knit)
+local UpgradeService = Knit.GetService("UpgradeService")
+
+-- Método 1: Conteo rápido (lightweight)
+local counts = UpgradeService:GetActiveUpgradeCounts()
+print("🔢 Generators activos:", counts.Generators)
+print("🔢 Turrets activas:", counts.Turrets)
+print("🔢 Repair Stations activas:", counts.RepairStations)
+
+-- Método 2: Información detallada (full debug)
+local debugInfo = UpgradeService:GetDebugInfo()
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("📊 UPGRADE DEBUG INFO")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("Total Generators:", debugInfo.GeneratorCount)
+
+if debugInfo.GeneratorCount > 0 then
+    for i, gen in ipairs(debugInfo.Generators) do
+        print(string.format(
+            "  Generator #%d: Owner=%d, Rate=$%d/s, LastProduction=%ds ago",
+            i, gen.UserId, gen.MoneyPerSecond, gen.SecondsSinceProduction
+        ))
+    end
+end
+```
+
 **Monitorear dinero del jugador:**
 
 Usa este script en el Command Bar (F9 → Command Bar):
@@ -164,8 +194,25 @@ end)
 **Verificar**:
 ```lua
 -- En Command Bar
-local UpgradeService = require(game.ReplicatedStorage.Knit).GetService("UpgradeService")
-print("Generators activos:", UpgradeService.activeGenerators)
+local Knit = require(game.ReplicatedStorage.Knit)
+local UpgradeService = Knit.GetService("UpgradeService")
+
+-- CORRECTO: Usar método público de debugging
+local counts = UpgradeService:GetActiveUpgradeCounts()
+print("Generators activos:", counts.Generators)
+
+-- Si hay 0 generators, significa que no se registró
+if counts.Generators == 0 then
+    print("❌ No hay generadores registrados")
+    print("👉 Verifica que hayas colocado un generador en tu base")
+else
+    -- Ver detalles de los generadores
+    local debugInfo = UpgradeService:GetDebugInfo()
+    for i, gen in ipairs(debugInfo.Generators) do
+        print(string.format("Generator #%d: Owner=%d, $%d/s",
+            i, gen.UserId, gen.MoneyPerSecond))
+    end
+end
 ```
 
 **Causa 2**: El jugador no está inicializado en EconomyModule
