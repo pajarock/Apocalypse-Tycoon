@@ -197,7 +197,15 @@ function GeneratorVFXManager:ShowMoneyProduction(model: Model, amount: number, t
 	-- Obtener billboard del pool
 	local billboard = getBillboardFromPool()
 	billboard.Adornee = mainPart
-	billboard.Parent = mainPart
+
+	-- Parent debe ser workspace o un folder, NO el mainPart
+	local effectsFolder = workspace:FindFirstChild("Effects")
+	if not effectsFolder then
+		effectsFolder = Instance.new("Folder")
+		effectsFolder.Name = "Effects"
+		effectsFolder.Parent = workspace
+	end
+	billboard.Parent = effectsFolder
 
 	-- Configurar texto
 	local label = billboard:FindFirstChild("MoneyLabel") :: TextLabel
