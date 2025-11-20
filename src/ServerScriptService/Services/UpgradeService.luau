@@ -24,9 +24,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Knit = require(ReplicatedStorage.Knit)
 local UpgradeDefinitions = require(script.Parent.UpgradeDefinitions)
+local GeneratorVFXManager = require(ServerStorage.Managers.GeneratorVFXManager)
 
 --[[────────────────────────────────────────────────────────────────────────
 	SERVICE DEFINITION
@@ -62,18 +64,28 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		return
 	end
 
+	-- Determinar tier del generador (por ahora defaultea a Tier 1)
+	-- TODO: Expandir para soportar GeneratorT1, GeneratorT2, GeneratorT3
+	local tier = 1
+
 	activeGenerators[objectId] = {
 		UserId = userId,
 		LastProduction = os.time(),
 		Definition = definition,
 		Model = model,
+		Tier = tier, -- Guardar tier para uso posterior
 	}
 
+	-- Aplicar efectos visuales
+	GeneratorVFXManager:ApplyGlowPulse(model, tier)
+	GeneratorVFXManager:CreateParticles(model, tier)
+
 	print(string.format(
-		"[UpgradeService] 💰 Generator registered: %s (Owner: %d, Rate: $%d/s)",
+		"[UpgradeService] 💰 Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
 		objectId,
 		userId,
-		definition.Stats.MoneyPerSecond or 0
+		definition.Stats.MoneyPerSecond or 0,
+		tier
 	))
 end
 
@@ -84,6 +96,13 @@ end
 ]]
 function UpgradeService:UnregisterGenerator(objectId: string)
 	if activeGenerators[objectId] then
+		local data = activeGenerators[objectId]
+
+		-- Limpiar efectos visuales
+		if data.Model then
+			GeneratorVFXManager:RemoveEffects(data.Model)
+		end
+
 		activeGenerators[objectId] = nil
 		print(string.format("[UpgradeService] Generator unregistered: %s", objectId))
 	end
@@ -114,9 +133,10 @@ local function updateGenerators()
 				end)
 
 				if success then
-					-- Debug visual (opcional - agregar partículas)
+					-- Mostrar efecto visual de producción
 					if data.Model and data.Model:FindFirstChild("MainPart") then
-						-- TODO: Agregar efecto visual de producción
+						local tier = data.Tier or 1
+						GeneratorVFXManager:ShowMoneyProduction(data.Model, moneyToGive, tier)
 					end
 				end
 			end
