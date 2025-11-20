@@ -178,6 +178,157 @@ function UpgradeService:UnregisterGenerator(objectId: string)
 end
 
 --[[
+	PHASE 4: Upgradea un generator al siguiente tier (T1→T2→T3).
+
+	PROCESO:
+	1. Validar que el jugador es el dueño
+	2. Validar que puede upgradear (no está en tier máximo)
+	3. Calcular costo y validar dinero suficiente
+	4. Deducir dinero del jugador
+	5. Actualizar el modelo en workspace (tamaño, color, efectos)
+	6. Actualizar stats en activeGenerators
+	7. Mostrar efectos visuales de upgrade
+
+	@param objectId - ID del generator
+	@param userId - ID del jugador que intenta upgradear
+	@return boolean - true si el upgrade fue exitoso, false si falló
+]]
+function UpgradeService:UpgradeGenerator(objectId: string, userId: number): boolean
+	local data = activeGenerators[objectId]
+	if not data then
+		warn(string.format("[UpgradeService] UpgradeGenerator: Generator not found: %s", objectId))
+		return false
+	end
+
+	-- Validar ownership
+	if data.UserId ~= userId then
+		warn(string.format("[UpgradeService] UpgradeGenerator: User %d is not owner of generator %s", userId, objectId))
+		return false
+	end
+
+	-- Obtener tier actual
+	local currentTierName = data.Definition.Name
+
+	-- Validar que puede upgradear
+	if not UpgradeDefinitions.CanUpgrade(currentTierName) then
+		warn(string.format("[UpgradeService] UpgradeGenerator: Generator %s is already at max tier", objectId))
+		return false
+	end
+
+	-- Obtener siguiente tier y costo
+	local nextTierName = UpgradeDefinitions.GetNextTier(currentTierName)
+	local upgradeCost = UpgradeDefinitions.GetUpgradeCost(currentTierName)
+
+	if not nextTierName or not upgradeCost then
+		warn(string.format("[UpgradeService] UpgradeGenerator: Failed to get next tier or cost for %s", currentTierName))
+		return false
+	end
+
+	-- Validar dinero suficiente
+	if PlayerDataService then
+		local hasEnoughMoney = pcall(function()
+			return PlayerDataService:HasMoney(userId, upgradeCost)
+		end)
+
+		if not hasEnoughMoney then
+			warn(string.format("[UpgradeService] UpgradeGenerator: User %d does not have enough money ($%d)", userId, upgradeCost))
+			return false
+		end
+
+		-- Deducir dinero
+		local success = pcall(function()
+			PlayerDataService:RemoveMoney(userId, upgradeCost)
+		end)
+
+		if not success then
+			warn(string.format("[UpgradeService] UpgradeGenerator: Failed to remove money from user %d", userId))
+			return false
+		end
+	end
+
+	-- Obtener nueva definición
+	local nextDefinition = UpgradeDefinitions.GetDefinition(nextTierName)
+	if not nextDefinition then
+		warn(string.format("[UpgradeService] UpgradeGenerator: Definition not found for %s", nextTierName))
+		return false
+	end
+
+	-- Calcular nuevo tier number
+	local newTier = 1
+	if nextTierName == "GeneratorT2" then
+		newTier = 2
+	elseif nextTierName == "GeneratorT3" then
+		newTier = 3
+	end
+
+	local oldTier = data.Tier or 1
+
+	-- Actualizar datos internos PRIMERO
+	data.Definition = nextDefinition
+	data.Tier = newTier
+
+	-- Actualizar modelo en workspace
+	if data.Model then
+		local mainPart = data.Model:FindFirstChild("MainPart")
+		if mainPart then
+			-- Actualizar propiedades físicas
+			mainPart.Size = nextDefinition.Size
+			mainPart.Color = nextDefinition.Color
+			mainPart.Material = nextDefinition.Material
+
+			-- Actualizar highlight
+			local highlight = mainPart:FindFirstChild("Highlight")
+			if highlight then
+				highlight.FillColor = nextDefinition.Color
+			end
+
+			-- Actualizar valores en MainPart para stats dinámicos
+			local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec") :: NumberValue?
+			if moneyPerSecValue then
+				moneyPerSecValue.Value = nextDefinition.Stats.MoneyPerSecond or 0
+			end
+
+			local tierValue = mainPart:FindFirstChild("Tier") :: IntValue?
+			if tierValue then
+				tierValue.Value = newTier
+			end
+
+			-- Actualizar nombre del modelo
+			data.Model.Name = nextTierName
+
+			-- Actualizar billboard name tag
+			local billboard = mainPart:FindFirstChild("NameTag")
+			if billboard then
+				local label = billboard:FindFirstChild("TextLabel")
+				if label then
+					label.Text = nextDefinition.DisplayName
+				end
+			end
+
+			-- FASE 4: Mostrar efectos visuales de upgrade
+			GeneratorVFXManager:ShowUpgradeEffect(data.Model, oldTier, newTier)
+
+			-- Recrear partículas y sonido ambiental para el nuevo tier
+			GeneratorVFXManager:RemoveEffects(data.Model)
+			GeneratorVFXManager:ApplyGlowPulse(data.Model, newTier)
+			GeneratorVFXManager:CreateParticles(data.Model, newTier)
+			GeneratorVFXManager:CreateAmbientSound(data.Model)
+		end
+	end
+
+	print(string.format(
+		"[UpgradeService] ✨ Generator upgraded: %s (T%d → T%d, Cost: $%d, New Rate: $%d/s)",
+		objectId,
+		oldTier,
+		newTier,
+		upgradeCost,
+		nextDefinition.Stats.MoneyPerSecond or 0
+	))
+
+	return true
+end
+
+--[[
 	Update loop para generators - ejecuta cada segundo.
 
 	PROCESO:
