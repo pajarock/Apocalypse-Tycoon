@@ -669,31 +669,70 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	textLabel.Text = "Loading stats..."
 	textLabel.Parent = frame
 
-	-- Evento para mostrar/ocultar stats
+	-- FASE 3: Función para actualizar stats dinámicamente
+	local function updateStatsText()
+		-- Leer valores del modelo
+		local totalProducedValue = mainPart:FindFirstChild("TotalProduced")
+		local spawnTimeValue = mainPart:FindFirstChild("SpawnTime")
+		local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec")
+		local tierValue = mainPart:FindFirstChild("Tier")
+
+		local totalProduced = totalProducedValue and totalProducedValue.Value or 0
+		local spawnTime = spawnTimeValue and spawnTimeValue.Value or os.time()
+		local moneyPerSec = moneyPerSecValue and moneyPerSecValue.Value or 0
+		local currentTier = tierValue and tierValue.Value or tier
+
+		-- Calcular uptime
+		local uptime = os.time() - spawnTime
+		local uptimeMinutes = math.floor(uptime / 60)
+		local uptimeSeconds = uptime % 60
+
+		-- Obtener configuración del tier
+		local tierConfig = TIER_CONFIGS[currentTier] or TIER_CONFIGS[1]
+		local Players = game:GetService("Players")
+		local owner = Players:GetPlayerByUserId(userId)
+		local ownerName = owner and owner.Name or "Unknown"
+
+		-- Actualizar texto con stats en tiempo real
+		textLabel.Text = string.format([[
+⚙️ %s
+━━━━━━━━━━━━━━━━━
+💰 Rate: $%d/sec
+💵 Total: $%.0f
+⏱️ Uptime: %dm %ds
+👤 Owner: %s
+━━━━━━━━━━━━━━━━━
+Press E to close]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName)
+	end
+
+	-- Loop de actualización dinámica (cada segundo)
+	local updateLoop = nil
 	local statsVisible = false
+
+	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
 		statsVisible = not statsVisible
 		statsBillboard.Enabled = statsVisible
 
 		if statsVisible then
-			-- TODO: Actualizar stats dinámicamente desde UpgradeService
-			-- Por ahora, mostrar info básica
-			local tierConfig = TIER_CONFIGS[tier]
-			local Players = game:GetService("Players")
-			local owner = Players:GetPlayerByUserId(userId)
-			local ownerName = owner and owner.Name or "Unknown"
+			-- Actualizar inmediatamente al abrir
+			updateStatsText()
 
-			textLabel.Text = string.format([[
-━━━━━━━━━━━━━━━━━━━━━━
-💰 %s GENERATOR
-━━━━━━━━━━━━━━━━━━━━━━
-Rate: $5/second
-Tier: %d
-Status: ✅ Active
-Owner: %s
-━━━━━━━━━━━━━━━━━━━━━━
-Press E to close
-]], tierConfig.Name:upper(), tier, ownerName)
+			-- Iniciar loop de actualización
+			updateLoop = task.spawn(function()
+				while statsVisible and mainPart.Parent do
+					task.wait(1)
+					if statsVisible then
+						updateStatsText()
+					end
+				end
+			end)
+		else
+			-- Detener loop al cerrar
+			if updateLoop then
+				task.cancel(updateLoop)
+				updateLoop = nil
+			end
 		end
 	end)
 

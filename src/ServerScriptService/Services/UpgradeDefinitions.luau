@@ -9,10 +9,12 @@
 	- Comportamiento (funcionalidad específica)
 
 	UPGRADES DISPONIBLES:
-	1. Generator - Produce dinero pasivamente
-	2. Turret - Dispara a meteoros/enemigos
-	3. Storage - Aumenta capacidad de dinero
-	4. RepairStation - Estación física para reparar base (mobile-friendly)
+	1. Generator (T1) - Produce $5/s pasivamente
+	2. GeneratorT2 (T2) - Produce $15/s pasivamente (meteórico)
+	3. GeneratorT3 (T3) - Produce $50/s pasivamente (avanzado)
+	4. Turret - Dispara a meteoros/enemigos
+	5. Storage - Aumenta capacidad de dinero
+	6. RepairStation - Estación física para reparar base (mobile-friendly)
 ]]
 
 export type UpgradeDefinition = {
@@ -72,6 +74,46 @@ UpgradeDefinitions.Generator = {
 
 	Stats = {
 		MoneyPerSecond = 5,  -- Produce $5 por segundo
+	},
+
+	Category = "Production",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- GENERATOR TIER 2 - Meteórico (Producción media)
+UpgradeDefinitions.GeneratorT2 = {
+	Name = "GeneratorT2",
+	DisplayName = "⚡ Generator Meteórico",
+	Description = "Advanced generator with crystal-powered production",
+
+	Size = Vector3.new(10, 8, 10),  -- Más grande que T1
+	Color = Color3.fromRGB(150, 50, 200),  -- Púrpura
+	Material = Enum.Material.Neon,
+
+	Cost = 500,  -- 5x más caro que T1
+
+	Stats = {
+		MoneyPerSecond = 15,  -- 3x producción de T1
+	},
+
+	Category = "Production",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- GENERATOR TIER 3 - Avanzado (Producción alta)
+UpgradeDefinitions.GeneratorT3 = {
+	Name = "GeneratorT3",
+	DisplayName = "🔮 Generator Avanzado",
+	Description = "Elite energy generator with maximum efficiency",
+
+	Size = Vector3.new(12, 10, 12),  -- Más grande que T2
+	Color = Color3.fromRGB(0, 255, 255),  -- Cyan brillante
+	Material = Enum.Material.Neon,
+
+	Cost = 2000,  -- 20x más caro que T1
+
+	Stats = {
+		MoneyPerSecond = 50,  -- 10x producción de T1
 	},
 
 	Category = "Production",

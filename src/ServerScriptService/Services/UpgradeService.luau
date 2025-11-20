@@ -57,16 +57,25 @@ local PlayerDataService
 	@param objectId - ID del objeto
 	@param userId - Dueño del generator
 	@param model - Modelo 3D del generator
+	@param objectType - Tipo de generator (Generator, GeneratorT2, GeneratorT3)
 ]]
-function UpgradeService:RegisterGenerator(objectId: string, userId: number, model: Model)
-	local definition = UpgradeDefinitions.GetDefinition("Generator")
+function UpgradeService:RegisterGenerator(objectId: string, userId: number, model: Model, objectType: string?)
+	-- Default a "Generator" si no se especifica
+	local generatorType = objectType or "Generator"
+
+	local definition = UpgradeDefinitions.GetDefinition(generatorType)
 	if not definition then
+		warn(string.format("[UpgradeService] Definition not found for: %s", generatorType))
 		return
 	end
 
-	-- Determinar tier del generador (por ahora defaultea a Tier 1)
-	-- TODO: Expandir para soportar GeneratorT1, GeneratorT2, GeneratorT3
+	-- FASE 3: Detectar tier automáticamente basado en el tipo
 	local tier = 1
+	if generatorType == "GeneratorT2" then
+		tier = 2
+	elseif generatorType == "GeneratorT3" then
+		tier = 3
+	end
 
 	activeGenerators[objectId] = {
 		UserId = userId,
@@ -77,6 +86,31 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		TotalProduced = 0, -- FASE 2: Tracking de dinero total producido
 		SpawnTime = os.time(), -- FASE 2: Tiempo de spawn para calcular uptime
 	}
+
+	-- FASE 3: Almacenar stats en el modelo para acceso dinámico desde ProximityPrompt
+	local mainPart = model:FindFirstChild("MainPart")
+	if mainPart then
+		-- Crear valores para tracking dinámico
+		local totalProducedValue = Instance.new("NumberValue")
+		totalProducedValue.Name = "TotalProduced"
+		totalProducedValue.Value = 0
+		totalProducedValue.Parent = mainPart
+
+		local spawnTimeValue = Instance.new("NumberValue")
+		spawnTimeValue.Name = "SpawnTime"
+		spawnTimeValue.Value = os.time()
+		spawnTimeValue.Parent = mainPart
+
+		local moneyPerSecValue = Instance.new("NumberValue")
+		moneyPerSecValue.Name = "MoneyPerSec"
+		moneyPerSecValue.Value = definition.Stats.MoneyPerSecond or 0
+		moneyPerSecValue.Parent = mainPart
+
+		local tierValue = Instance.new("IntValue")
+		tierValue.Name = "Tier"
+		tierValue.Value = tier
+		tierValue.Parent = mainPart
+	end
 
 	-- FASE 2: Animación de construcción (incluye efectos visuales)
 	local mainPart = model:FindFirstChild("MainPart") or model:FindFirstChild("HumanoidRootPart")
@@ -171,12 +205,21 @@ local function updateGenerators()
 					-- FASE 2: Actualizar estadísticas de producción
 					data.TotalProduced = data.TotalProduced + moneyToGive
 
-					-- Mostrar efecto visual de producción
-					if data.Model and data.Model:FindFirstChild("MainPart") then
-						local tier = data.Tier or 1
-						GeneratorVFXManager:ShowMoneyProduction(data.Model, moneyToGive, tier)
-						-- FASE 2: Reproducir sonido de "cash register"
-						GeneratorVFXManager:PlayCashRegisterSound(data.Model)
+					-- FASE 3: Actualizar valor en el modelo para stats dinámicos
+					if data.Model then
+						local mainPart = data.Model:FindFirstChild("MainPart")
+						if mainPart then
+							local totalProducedValue = mainPart:FindFirstChild("TotalProduced") :: NumberValue?
+							if totalProducedValue then
+								totalProducedValue.Value = data.TotalProduced
+							end
+
+							-- Mostrar efectos visuales
+							local tier = data.Tier or 1
+							GeneratorVFXManager:ShowMoneyProduction(data.Model, moneyToGive, tier)
+							-- FASE 2: Reproducir sonido de "cash register"
+							GeneratorVFXManager:PlayCashRegisterSound(data.Model)
+						end
 					end
 				end
 			end
@@ -485,8 +528,9 @@ end
 	@param model - Modelo 3D
 ]]
 function UpgradeService:RegisterUpgrade(objectId: string, userId: number, objectType: string, model: Model)
-	if objectType == "Generator" then
-		self:RegisterGenerator(objectId, userId, model)
+	-- FASE 3: Detectar todos los tipos de generadores
+	if objectType == "Generator" or objectType == "GeneratorT2" or objectType == "GeneratorT3" then
+		self:RegisterGenerator(objectId, userId, model, objectType)
 	elseif objectType == "Turret" then
 		self:RegisterTurret(objectId, userId, model)
 	elseif objectType == "RepairStation" then
@@ -501,7 +545,8 @@ end
 	@param objectType - Tipo de upgrade
 ]]
 function UpgradeService:UnregisterUpgrade(objectId: string, objectType: string)
-	if objectType == "Generator" then
+	-- FASE 3: Detectar todos los tipos de generadores
+	if objectType == "Generator" or objectType == "GeneratorT2" or objectType == "GeneratorT3" then
 		self:UnregisterGenerator(objectId)
 	elseif objectType == "Turret" then
 		self:UnregisterTurret(objectId)
@@ -532,6 +577,10 @@ export type DebugInfo = {
 		LastProduction: number,
 		MoneyPerSecond: number,
 		SecondsSinceProduction: number,
+		TotalProduced: number, -- FASE 3: Dinero total producido
+		SpawnTime: number, -- FASE 3: Timestamp de spawn
+		Uptime: number, -- FASE 3: Segundos activo
+		Tier: number, -- FASE 3: Tier del generador
 	}},
 	Turrets: {{
 		ObjectId: string,
@@ -558,6 +607,10 @@ function UpgradeService:GetDebugInfo(): DebugInfo
 			LastProduction = data.LastProduction,
 			MoneyPerSecond = data.Definition.Stats.MoneyPerSecond or 0,
 			SecondsSinceProduction = currentTime - data.LastProduction,
+			TotalProduced = data.TotalProduced or 0, -- FASE 3
+			SpawnTime = data.SpawnTime or currentTime, -- FASE 3
+			Uptime = currentTime - (data.SpawnTime or currentTime), -- FASE 3
+			Tier = data.Tier or 1, -- FASE 3
 		})
 	end
 
