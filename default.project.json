@@ -1,0 +1,80 @@
+{
+	"name": "Apocalypse-Tycoon",
+	"tree": {
+		"$className": "DataModel",
+
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"$path": "src/ReplicatedStorage"
+		},
+
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"$path": "src/ServerScriptService"
+		},
+
+		"ServerStorage": {
+			"$className": "ServerStorage",
+			"$path": "src/ServerStorage"
+		},
+
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"$path": "src/StarterPlayer/StarterPlayerScripts"
+			}
+		},
+
+		"StarterGui": {
+			"$className": "StarterGui",
+			"$path": "src/StarterGui"
+		},
+
+		"Workspace": {
+			"$className": "Workspace",
+			"$properties": {
+				"FilteringEnabled": true
+			},
+			"Baseplate": {
+				"$path": "src/Workspace/Baseplate.rbxm"
+			},
+			"Bases": {
+				"$path": "src/Workspace/Bases.rbxm"
+			},
+			"SpawnLocation": {
+				"$path": "src/Workspace/SpawnLocation.rbxm"
+			},
+			"Terrain": {
+				"$path": "src/Workspace/Terrain.rbxm"
+			}
+		},
+
+		"Lighting": {
+			"$className": "Lighting",
+			"Atmosphere": {
+				"$path": "src/Lighting/Atmosphere.rbxm"
+			},
+			"Bloom": {
+				"$path": "src/Lighting/Bloom.rbxm"
+			},
+			"DepthOfField": {
+				"$path": "src/Lighting/DepthOfField.rbxm"
+			},
+			"Sky": {
+				"$path": "src/Lighting/Sky.rbxm"
+			},
+			"SunRays": {
+				"$path": "src/Lighting/SunRays.rbxm"
+			}
+		},
+
+		"SoundService": {
+			"$className": "SoundService"
+		},
+
+		"Players": {
+			"$className": "Players"
+		}
+	}
+}
