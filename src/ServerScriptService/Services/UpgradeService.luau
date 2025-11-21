@@ -843,15 +843,6 @@ function UpgradeService:KnitStart()
 		warn("[UpgradeService] PlayerDataService no encontrado - generators no darán dinero")
 	end
 
-	-- PHASE 4: Crear RemoteEvent para upgrades (debe existir desde el inicio)
-	local upgradeRemote = ReplicatedStorage:FindFirstChild("UpgradeGeneratorRemote")
-	if not upgradeRemote then
-		upgradeRemote = Instance.new("RemoteEvent")
-		upgradeRemote.Name = "UpgradeGeneratorRemote"
-		upgradeRemote.Parent = ReplicatedStorage
-		print("[UpgradeService] 📡 Created RemoteEvent: UpgradeGeneratorRemote")
-	end
-
 	-- Iniciar update loops
 	-- Generators: Update cada segundo
 	task.spawn(function()

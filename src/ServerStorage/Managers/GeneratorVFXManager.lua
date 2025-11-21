@@ -853,6 +853,63 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	upgradeCorner.CornerRadius = UDim.new(0, 8)
 	upgradeCorner.Parent = upgradeButton
 
+	-- PHASE 4: Crear Part invisible con ClickDetector para detectar clicks en el botón
+	-- (TextButton en BillboardGui del servidor no es clickeable por el cliente)
+	local clickPart = Instance.new("Part")
+	clickPart.Name = "UpgradeClickPart"
+	clickPart.Size = Vector3.new(3, 0.5, 0.1)  -- Tamaño del área clickeable
+	clickPart.CFrame = mainPart.CFrame + Vector3.new(0, 3.5, 0)  -- Posición relativa al generator
+	clickPart.Transparency = 1  -- Invisible
+	clickPart.CanCollide = false
+	clickPart.Anchored = true
+	clickPart.Parent = model
+
+	-- Hacer que la parte siga al generator
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = mainPart
+	weld.Part1 = clickPart
+	weld.Parent = clickPart
+
+	local clickDetector = Instance.new("ClickDetector")
+	clickDetector.MaxActivationDistance = 10
+	clickDetector.Parent = clickPart
+
+	-- Variable para controlar si el click detector está activo
+	local clickDetectorActive = false
+
+	-- Conectar evento de click
+	clickDetector.MouseClick:Connect(function(player)
+		if not clickDetectorActive then
+			return  -- Solo funciona cuando stats están visibles
+		end
+
+		print("[GeneratorVFXManager] 🎯 Upgrade click detected by:", player.Name)
+
+		-- Obtener objectId
+		local objectIdValue = mainPart:FindFirstChild("ObjectId")
+		if not objectIdValue then
+			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
+			return
+		end
+
+		local objectId = objectIdValue.Value
+
+		-- Obtener UpgradeService
+		local Knit = require(game.ReplicatedStorage.Knit)
+		local UpgradeService = Knit.GetService("UpgradeService")
+
+		-- Intentar upgradear
+		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
+
+		if success then
+			print("[GeneratorVFXManager] ✅ Upgrade successful!")
+			-- Actualizar stats inmediatamente
+			updateStatsText()
+		else
+			warn("[GeneratorVFXManager] ❌ Upgrade failed")
+		end
+	end)
+
 	-- FASE 3: Función para actualizar stats dinámicamente
 	local function updateStatsText()
 		-- Leer valores del modelo
@@ -916,13 +973,11 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	local updateLoop = nil
 	local statsVisible = false
 
-	-- NOTA: El botón de upgrade ya fue creado arriba (antes de updateStatsText)
-	-- El click del botón es manejado por: StarterPlayer/StarterPlayerScripts/UpgradeButtonHandler
-
 	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
 		statsVisible = not statsVisible
 		statsBillboard.Enabled = statsVisible
+		clickDetectorActive = statsVisible  -- Activar/desactivar click detector
 
 		if statsVisible then
 			-- Actualizar inmediatamente al abrir
@@ -944,49 +999,6 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 				updateLoop = nil
 			end
 		end
-	end)
-
-	-- PHASE 4: Manejar click del botón de upgrade (usando RemoteEvent desde cliente)
-	-- El RemoteEvent ya fue creado por UpgradeService en KnitStart
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local upgradeRemote = ReplicatedStorage:WaitForChild("UpgradeGeneratorRemote", 5)
-
-	if not upgradeRemote then
-		warn("[GeneratorVFXManager] ❌ UpgradeGeneratorRemote not found!")
-		return prompt
-	end
-
-	-- Evento del servidor: ejecutar upgrade cuando el cliente hace click
-	local connection = upgradeRemote.OnServerEvent:Connect(function(player, requestedObjectId)
-		-- Verificar que el objectId sea del generator correcto
-		local objectIdValue = mainPart:FindFirstChild("ObjectId")
-		if not objectIdValue or objectIdValue.Value ~= requestedObjectId then
-			warn("[GeneratorVFXManager] ❌ ObjectId mismatch or not found")
-			return
-		end
-
-		local objectId = objectIdValue.Value
-		print("[GeneratorVFXManager] 🎯 Upgrade button clicked by:", player.Name, "for", objectId)
-
-		-- Obtener UpgradeService
-		local Knit = require(game.ReplicatedStorage.Knit)
-		local UpgradeService = Knit.GetService("UpgradeService")
-
-		-- Intentar upgradear
-		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
-
-		if success then
-			print("[GeneratorVFXManager] ✅ Upgrade successful!")
-			-- Actualizar stats inmediatamente
-			updateStatsText()
-		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed - check UpgradeService logs")
-		end
-	end)
-
-	-- Limpiar conexión cuando el modelo se destruya
-	model.Destroying:Connect(function()
-		connection:Disconnect()
 	end)
 
 	if DEBUG_MODE then
