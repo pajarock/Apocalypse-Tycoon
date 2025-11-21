@@ -57,12 +57,12 @@ function PlayerDataService:AddMoney(userId: number, amount: number): boolean
 		return false
 	end
 
-	if type(amount) ~= "number" or amount <= 0 then
+	if type(amount) ~= "number" or amount == 0 then
 		warn(string.format("[PlayerDataService] Invalid amount: %s", tostring(amount)))
 		return false
 	end
 
-	-- Usar AdminGiveCash del EconomyModule
+	-- Usar AdminGiveCash del EconomyModule (acepta negativos para deducir)
 	local success = EconomyModule.AdminGiveCash(userId, amount)
 
 	if success then

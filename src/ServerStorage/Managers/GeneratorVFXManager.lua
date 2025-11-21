@@ -63,6 +63,11 @@ local AMBIENT_VOLUME = 0.3 -- Volumen del sonido ambient
 local CASH_REGISTER_VOLUME = 0.5 -- Volumen del cash register
 local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
 
+-- PHASE 4 Constants
+local UPGRADE_SOUND_ID = "rbxassetid://6895079853" -- Sonido de upgrade (reutilizando placement por ahora)
+local UPGRADE_ANIMATION_DURATION = 1.5 -- Duración de animación de upgrade
+local UPGRADE_PARTICLE_COUNT = 50 -- Cantidad de partículas de upgrade
+
 -------------------------------------------------------------------------
 -- TYPES
 -------------------------------------------------------------------------
@@ -393,6 +398,9 @@ end
 --[[
 	Remueve todos los efectos visuales de un generador.
 
+	IMPORTANTE: NO remueve el StatsBillboard ni los ProximityPrompts,
+	solo los efectos visuales temporales (luz, partículas, billboards de dinero).
+
 	@param model - Modelo del generador
 ]]
 function GeneratorVFXManager:RemoveEffects(model: Model)
@@ -413,15 +421,15 @@ function GeneratorVFXManager:RemoveEffects(model: Model)
 		particles:Destroy()
 	end
 
-	-- Remover billboards
+	-- CRÍTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard
 	for _, child in mainPart:GetChildren() do
-		if child:IsA("BillboardGui") then
+		if child:IsA("BillboardGui") and child.Name ~= "StatsBillboard" then
 			child:Destroy()
 		end
 	end
 
 	if DEBUG_MODE then
-		print("[GeneratorVFXManager] Removed all effects from generator")
+		print("[GeneratorVFXManager] Removed visual effects (preserved StatsBillboard)")
 	end
 end
 
@@ -600,6 +608,156 @@ function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPositi
 end
 
 -------------------------------------------------------------------------
+-- PHASE 4: UPGRADE EFFECTS SYSTEM
+-------------------------------------------------------------------------
+
+--[[
+	Muestra efectos visuales espectaculares al upgradear un generator.
+
+	EFECTOS:
+	- Partículas doradas explosivas
+	- Sonido de upgrade
+	- Flash de luz
+	- Tween suave de transformación
+
+	@param model - Modelo del generator
+	@param fromTier - Tier anterior
+	@param toTier - Tier nuevo
+]]
+function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, toTier: number)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return
+	end
+
+	-- Reproducir sonido de upgrade
+	local upgradeSound = Instance.new("Sound")
+	upgradeSound.SoundId = UPGRADE_SOUND_ID
+	upgradeSound.Volume = 0.8
+	upgradeSound.Parent = mainPart
+	upgradeSound:Play()
+	Debris:AddItem(upgradeSound, 3)
+
+	-- Crear flash de luz
+	local flashLight = Instance.new("PointLight")
+	flashLight.Brightness = 10
+	flashLight.Range = 30
+	flashLight.Color = Color3.fromRGB(255, 215, 0) -- Dorado
+	flashLight.Parent = mainPart
+
+	-- Fade out del flash
+	local flashTween = TweenService:Create(
+		flashLight,
+		TweenInfo.new(UPGRADE_ANIMATION_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ Brightness = 0 }
+	)
+	flashTween:Play()
+	Debris:AddItem(flashLight, UPGRADE_ANIMATION_DURATION + 1)
+
+	-- Crear partículas doradas explosivas
+	local upgradeParticles = Instance.new("ParticleEmitter")
+	upgradeParticles.Name = "UpgradeParticles"
+	upgradeParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	upgradeParticles.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),   -- Dorado
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 150)), -- Amarillo claro
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 0)),    -- Dorado oscuro
+	})
+	upgradeParticles.Rate = 0  -- Usaremos Emit() para burst
+	upgradeParticles.Lifetime = NumberRange.new(1, 1.5)
+	upgradeParticles.Speed = NumberRange.new(10, 20)
+	upgradeParticles.SpreadAngle = Vector2.new(180, 180)
+	upgradeParticles.Rotation = NumberRange.new(0, 360)
+	upgradeParticles.RotSpeed = NumberRange.new(-100, 100)
+	upgradeParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(0.5, 1),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	upgradeParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.7, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	upgradeParticles.Parent = mainPart
+
+	-- Burst de partículas
+	upgradeParticles:Emit(UPGRADE_PARTICLE_COUNT)
+
+	-- Limpiar partículas después
+	Debris:AddItem(upgradeParticles, 2)
+
+	-- Crear anillos de energía expandiéndose
+	for i = 1, 3 do
+		task.delay(i * 0.2, function()
+			local ring = Instance.new("Part")
+			ring.Name = "UpgradeRing"
+			ring.Size = Vector3.new(0.5, 0.5, 0.5)
+			ring.Shape = Enum.PartType.Ball
+			ring.Material = Enum.Material.Neon
+			ring.Color = Color3.fromRGB(255, 215, 0)
+			ring.Transparency = 0.3
+			ring.Anchored = true
+			ring.CanCollide = false
+			ring.Position = mainPart.Position
+			ring.Parent = workspace
+
+			-- Expandir el anillo
+			local ringTween = TweenService:Create(
+				ring,
+				TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{
+					Size = Vector3.new(15, 15, 15),
+					Transparency = 1
+				}
+			)
+			ringTween:Play()
+			Debris:AddItem(ring, 1)
+		end)
+	end
+
+	-- Mensaje flotante de upgrade
+	local upgradeBillboard = Instance.new("BillboardGui")
+	upgradeBillboard.Size = UDim2.new(0, 200, 0, 50)
+	upgradeBillboard.StudsOffset = Vector3.new(0, 5, 0)
+	upgradeBillboard.AlwaysOnTop = true
+	upgradeBillboard.Parent = mainPart
+
+	local upgradeLabel = Instance.new("TextLabel")
+	upgradeLabel.Size = UDim2.new(1, 0, 1, 0)
+	upgradeLabel.BackgroundTransparency = 1
+	upgradeLabel.Text = string.format("✨ UPGRADED TO TIER %d! ✨", toTier)
+	upgradeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+	upgradeLabel.TextStrokeTransparency = 0
+	upgradeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+	upgradeLabel.Font = Enum.Font.GothamBold
+	upgradeLabel.TextScaled = true
+	upgradeLabel.Parent = upgradeBillboard
+
+	-- Animar el texto flotando y desvaneciéndose
+	local textTween = TweenService:Create(
+		upgradeBillboard,
+		TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ StudsOffset = Vector3.new(0, 8, 0) }
+	)
+	textTween:Play()
+
+	-- Fade out del texto
+	local fadeTween = TweenService:Create(
+		upgradeLabel,
+		TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ TextTransparency = 1, TextStrokeTransparency = 1 }
+	)
+	fadeTween:Play()
+
+	Debris:AddItem(upgradeBillboard, 2.5)
+
+	if DEBUG_MODE then
+		print(string.format("[GeneratorVFXManager] Upgrade effect played: T%d → T%d", fromTier, toTier))
+	end
+end
+
+-------------------------------------------------------------------------
 -- FASE 2: PROXIMITY PROMPT WITH STATS
 -------------------------------------------------------------------------
 
@@ -609,12 +767,22 @@ end
 	@param model - Modelo del generador
 	@param userId - ID del dueño
 	@param tier - Tier del generador
+	@param objectId - ID único del objeto (PHASE 4)
 	@return ProximityPrompt - El prompt creado
 ]]
-function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number): ProximityPrompt?
+function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number, objectId: string?): ProximityPrompt?
 	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
 	if not mainPart then
 		return nil
+	end
+
+	-- PHASE 4: Guardar objectId en el modelo para uso en upgrades
+	if objectId then
+		local objectIdValue = Instance.new("StringValue")
+		objectIdValue.Name = "ObjectId"
+		objectIdValue.Value = objectId
+		objectIdValue.Parent = mainPart
+		print("[GeneratorVFXManager] 💾 ObjectId saved in model:", objectId)
 	end
 
 	-- Verificar si ya existe
@@ -657,7 +825,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "StatsText"
-	textLabel.Size = UDim2.new(1, -20, 1, -20)
+	textLabel.Size = UDim2.new(1, -20, 0.75, -10)  -- Reducido para dejar espacio al botón
 	textLabel.Position = UDim2.new(0, 10, 0, 10)
 	textLabel.BackgroundTransparency = 1
 	textLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -668,6 +836,18 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	textLabel.TextYAlignment = Enum.TextYAlignment.Top
 	textLabel.Text = "Loading stats..."
 	textLabel.Parent = frame
+
+	-- PHASE 4: ProximityPrompt para UPGRADE (tecla R)
+	local upgradePrompt = Instance.new("ProximityPrompt")
+	upgradePrompt.Name = "UpgradePrompt"
+	upgradePrompt.ActionText = "Upgrade Generator"
+	upgradePrompt.ObjectText = ""
+	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.R
+	upgradePrompt.MaxActivationDistance = 10
+	upgradePrompt.HoldDuration = 0
+	upgradePrompt.RequiresLineOfSight = false
+	upgradePrompt.Enabled = false  -- Se activa cuando puede upgradear
+	upgradePrompt.Parent = mainPart
 
 	-- FASE 3: Función para actualizar stats dinámicamente
 	local function updateStatsText()
@@ -693,7 +873,36 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		local owner = Players:GetPlayerByUserId(userId)
 		local ownerName = owner and owner.Name or "Unknown"
 
-		-- Actualizar texto con stats en tiempo real
+		-- PHASE 4: Verificar si puede upgradear y obtener costo
+		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
+		local tierName = "Generator"
+		if currentTier == 2 then
+			tierName = "GeneratorT2"
+		elseif currentTier == 3 then
+			tierName = "GeneratorT3"
+		end
+
+		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
+		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
+
+		-- PHASE 4: Actualizar ProximityPrompt de upgrade
+		if canUpgrade and upgradeCost then
+			local nextTier = currentTier + 1
+			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
+			upgradePrompt.Enabled = true
+		else
+			upgradePrompt.Enabled = false
+		end
+
+		-- Texto de stats (incluye info de upgrade)
+		local upgradeText = ""
+		if canUpgrade and upgradeCost then
+			local nextTier = currentTier + 1
+			upgradeText = string.format("\n✨ Press R to UPGRADE → Tier %d ($%d)", nextTier, upgradeCost)
+		elseif currentTier >= 3 then
+			upgradeText = "\n🏆 MAX TIER REACHED"
+		end
+
 		textLabel.Text = string.format([[
 ⚙️ %s
 ━━━━━━━━━━━━━━━━━
@@ -702,7 +911,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 ⏱️ Uptime: %dm %ds
 👤 Owner: %s
 ━━━━━━━━━━━━━━━━━
-Press E to close]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName)
+Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, upgradeText)
 	end
 
 	-- Loop de actualización dinámica (cada segundo)
@@ -736,11 +945,116 @@ Press E to close]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, 
 		end
 	end)
 
+	-- PHASE 4: Evento de upgrade (tecla R)
+	upgradePrompt.Triggered:Connect(function(player)
+		print("[GeneratorVFXManager] 🎯 Upgrade prompt triggered by:", player.Name)
+
+		-- Obtener objectId
+		local objectIdValue = mainPart:FindFirstChild("ObjectId")
+		if not objectIdValue then
+			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
+			return
+		end
+
+		local objectId = objectIdValue.Value
+
+		-- Obtener UpgradeService
+		local Knit = require(game.ReplicatedStorage.Knit)
+		local UpgradeService = Knit.GetService("UpgradeService")
+
+		-- Intentar upgradear
+		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
+
+		if success then
+			print("[GeneratorVFXManager] ✅ Upgrade successful!")
+			-- Actualizar stats inmediatamente
+			updateStatsText()
+		else
+			warn("[GeneratorVFXManager] ❌ Upgrade failed")
+		end
+	end)
+
 	if DEBUG_MODE then
 		print("[GeneratorVFXManager] Stats prompt created")
 	end
 
 	return prompt
+end
+
+-------------------------------------------------------------------------
+-- PHASE 4: UPGRADE HELPERS
+-------------------------------------------------------------------------
+
+--[[
+	Actualiza los ProximityPrompts después de un upgrade para reflejar el nuevo tier.
+
+	CRÍTICO: Este método se llama después de que RemoveEffects() haya preservado
+	el StatsBillboard, para asegurar que los prompts están correctamente actualizados.
+
+	@param model - Modelo del generador
+	@param newTier - Nuevo tier después del upgrade
+]]
+function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: number)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		warn("[GeneratorVFXManager] RefreshPromptsAfterUpgrade: MainPart not found")
+		return
+	end
+
+	-- Verificar que el StatsPrompt existe (debería existir siempre)
+	local statsPrompt = mainPart:FindFirstChild("StatsPrompt")
+	if not statsPrompt then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsPrompt not found after upgrade! This shouldn't happen.")
+	end
+
+	-- Verificar que el UpgradePrompt existe
+	local upgradePrompt = mainPart:FindFirstChild("UpgradePrompt")
+	if not upgradePrompt then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: UpgradePrompt not found after upgrade!")
+	end
+
+	-- Verificar que el StatsBillboard existe
+	local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
+	if not statsBillboard then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsBillboard destroyed during upgrade! This is the bug we're trying to fix.")
+	else
+		if DEBUG_MODE then
+			print("[GeneratorVFXManager] ✅ StatsBillboard preserved after upgrade to Tier", newTier)
+		end
+	end
+
+	-- Actualizar el UpgradePrompt según el nuevo tier
+	if upgradePrompt then
+		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
+		local tierName = "Generator"
+		if newTier == 2 then
+			tierName = "GeneratorT2"
+		elseif newTier == 3 then
+			tierName = "GeneratorT3"
+		end
+
+		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
+		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
+
+		if canUpgrade and upgradeCost then
+			local nextTier = newTier + 1
+			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
+			upgradePrompt.Enabled = true
+			if DEBUG_MODE then
+				print(string.format("[GeneratorVFXManager] UpgradePrompt updated: T%d → T%d ($%d)", newTier, nextTier, upgradeCost))
+			end
+		else
+			-- Tier máximo alcanzado
+			upgradePrompt.Enabled = false
+			if DEBUG_MODE then
+				print("[GeneratorVFXManager] UpgradePrompt disabled (max tier reached)")
+			end
+		end
+	end
+
+	if DEBUG_MODE then
+		print(string.format("[GeneratorVFXManager] Prompts refreshed after upgrade to Tier %d", newTier))
+	end
 end
 
 -------------------------------------------------------------------------

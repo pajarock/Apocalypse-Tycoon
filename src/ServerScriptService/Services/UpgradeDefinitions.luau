@@ -285,4 +285,62 @@ function UpgradeDefinitions.CreateModel(upgradeName: string): Model?
 	return model
 end
 
+--[[────────────────────────────────────────────────────────────────────────
+	PHASE 4: GENERATOR UPGRADE SYSTEM
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Obtiene el nombre del siguiente tier para un generador.
+
+	@param currentTierName - Nombre del tier actual ("Generator", "GeneratorT2", "GeneratorT3")
+	@return string? - Nombre del siguiente tier, o nil si ya está en tier máximo
+]]
+function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
+	if currentTierName == "Generator" then
+		return "GeneratorT2"
+	elseif currentTierName == "GeneratorT2" then
+		return "GeneratorT3"
+	elseif currentTierName == "GeneratorT3" then
+		return nil  -- Ya está en tier máximo
+	end
+
+	return nil
+end
+
+--[[
+	Calcula el costo de upgrade para un generador.
+
+	El costo es la diferencia entre el costo del siguiente tier y el tier actual.
+	Por ejemplo: T1→T2 cuesta $400 ($500 - $100)
+
+	@param currentTierName - Nombre del tier actual
+	@return number? - Costo de upgrade, o nil si no puede upgradear
+]]
+function UpgradeDefinitions.GetUpgradeCost(currentTierName: string): number?
+	local nextTierName = UpgradeDefinitions.GetNextTier(currentTierName)
+	if not nextTierName then
+		return nil  -- No puede upgradear
+	end
+
+	local currentDef = UpgradeDefinitions.GetDefinition(currentTierName)
+	local nextDef = UpgradeDefinitions.GetDefinition(nextTierName)
+
+	if not currentDef or not nextDef then
+		return nil
+	end
+
+	-- Costo de upgrade = diferencia entre costos
+	return nextDef.Cost - currentDef.Cost
+end
+
+--[[
+	Verifica si un generador puede ser upgradeado.
+
+	@param tierName - Nombre del tier a verificar
+	@return boolean - true si puede ser upgradeado, false si ya está en tier máximo
+]]
+function UpgradeDefinitions.CanUpgrade(tierName: string): boolean
+	return UpgradeDefinitions.GetNextTier(tierName) ~= nil
+end
+
 return UpgradeDefinitions
