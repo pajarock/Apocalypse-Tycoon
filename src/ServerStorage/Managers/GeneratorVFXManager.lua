@@ -834,81 +834,17 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	textLabel.Text = "Loading stats..."
 	textLabel.Parent = frame
 
-	-- PHASE 4: Crear botón de upgrade ANTES de updateStatsText() para que esté en scope
-	local upgradeButton = Instance.new("TextButton")
-	upgradeButton.Name = "UpgradeButton"
-	upgradeButton.Size = UDim2.new(0.9, 0, 0.15, 0)
-	upgradeButton.Position = UDim2.new(0.05, 0, 0.82, 0)
-	upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-	upgradeButton.BorderSizePixel = 2
-	upgradeButton.BorderColor3 = Color3.fromRGB(100, 255, 100)
-	upgradeButton.TextColor3 = Color3.new(1, 1, 1)
-	upgradeButton.TextScaled = true
-	upgradeButton.Font = Enum.Font.GothamBold
-	upgradeButton.Text = "🚀 UPGRADE"
-	upgradeButton.Visible = false  -- Oculto por defecto
-	upgradeButton.Parent = frame
-
-	local upgradeCorner = Instance.new("UICorner")
-	upgradeCorner.CornerRadius = UDim.new(0, 8)
-	upgradeCorner.Parent = upgradeButton
-
-	-- PHASE 4: Crear Part invisible con ClickDetector para detectar clicks en el botón
-	-- (TextButton en BillboardGui del servidor no es clickeable por el cliente)
-	local clickPart = Instance.new("Part")
-	clickPart.Name = "UpgradeClickPart"
-	clickPart.Size = Vector3.new(3, 0.5, 0.1)  -- Tamaño del área clickeable
-	clickPart.CFrame = mainPart.CFrame + Vector3.new(0, 3.5, 0)  -- Posición relativa al generator
-	clickPart.Transparency = 1  -- Invisible
-	clickPart.CanCollide = false
-	clickPart.Anchored = true
-	clickPart.Parent = model
-
-	-- Hacer que la parte siga al generator
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = mainPart
-	weld.Part1 = clickPart
-	weld.Parent = clickPart
-
-	local clickDetector = Instance.new("ClickDetector")
-	clickDetector.MaxActivationDistance = 10
-	clickDetector.Parent = clickPart
-
-	-- Variable para controlar si el click detector está activo
-	local clickDetectorActive = false
-
-	-- Conectar evento de click
-	clickDetector.MouseClick:Connect(function(player)
-		if not clickDetectorActive then
-			return  -- Solo funciona cuando stats están visibles
-		end
-
-		print("[GeneratorVFXManager] 🎯 Upgrade click detected by:", player.Name)
-
-		-- Obtener objectId
-		local objectIdValue = mainPart:FindFirstChild("ObjectId")
-		if not objectIdValue then
-			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
-			return
-		end
-
-		local objectId = objectIdValue.Value
-
-		-- Obtener UpgradeService
-		local Knit = require(game.ReplicatedStorage.Knit)
-		local UpgradeService = Knit.GetService("UpgradeService")
-
-		-- Intentar upgradear
-		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
-
-		if success then
-			print("[GeneratorVFXManager] ✅ Upgrade successful!")
-			-- Actualizar stats inmediatamente
-			updateStatsText()
-		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed")
-		end
-	end)
+	-- PHASE 4: ProximityPrompt para UPGRADE (tecla R)
+	local upgradePrompt = Instance.new("ProximityPrompt")
+	upgradePrompt.Name = "UpgradePrompt"
+	upgradePrompt.ActionText = "Upgrade Generator"
+	upgradePrompt.ObjectText = ""
+	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.R
+	upgradePrompt.MaxActivationDistance = 10
+	upgradePrompt.HoldDuration = 0
+	upgradePrompt.RequiresLineOfSight = false
+	upgradePrompt.Enabled = false  -- Se activa cuando puede upgradear
+	upgradePrompt.Parent = mainPart
 
 	-- FASE 3: Función para actualizar stats dinámicamente
 	local function updateStatsText()
@@ -946,17 +882,23 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
 		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
 
-		-- Actualizar botón de upgrade
+		-- PHASE 4: Actualizar ProximityPrompt de upgrade
 		if canUpgrade and upgradeCost then
 			local nextTier = currentTier + 1
-			upgradeButton.Text = string.format("🚀 UPGRADE TO TIER %d ($%d)", nextTier, upgradeCost)
-			upgradeButton.Visible = true
+			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
+			upgradePrompt.Enabled = true
 		else
-			upgradeButton.Visible = false
+			upgradePrompt.Enabled = false
 		end
 
-		-- Texto de stats sin info de upgrade (el botón maneja eso ahora)
-		local maxTierText = currentTier >= 3 and "\n🏆 MAX TIER REACHED" or ""
+		-- Texto de stats (incluye info de upgrade)
+		local upgradeText = ""
+		if canUpgrade and upgradeCost then
+			local nextTier = currentTier + 1
+			upgradeText = string.format("\n✨ Press R to UPGRADE → Tier %d ($%d)", nextTier, upgradeCost)
+		elseif currentTier >= 3 then
+			upgradeText = "\n🏆 MAX TIER REACHED"
+		end
 
 		textLabel.Text = string.format([[
 ⚙️ %s
@@ -966,7 +908,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 ⏱️ Uptime: %dm %ds
 👤 Owner: %s
 ━━━━━━━━━━━━━━━━━
-Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, maxTierText)
+Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, upgradeText)
 	end
 
 	-- Loop de actualización dinámica (cada segundo)
@@ -977,7 +919,6 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	prompt.Triggered:Connect(function(player)
 		statsVisible = not statsVisible
 		statsBillboard.Enabled = statsVisible
-		clickDetectorActive = statsVisible  -- Activar/desactivar click detector
 
 		if statsVisible then
 			-- Actualizar inmediatamente al abrir
@@ -998,6 +939,35 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 				task.cancel(updateLoop)
 				updateLoop = nil
 			end
+		end
+	end)
+
+	-- PHASE 4: Evento de upgrade (tecla R)
+	upgradePrompt.Triggered:Connect(function(player)
+		print("[GeneratorVFXManager] 🎯 Upgrade prompt triggered by:", player.Name)
+
+		-- Obtener objectId
+		local objectIdValue = mainPart:FindFirstChild("ObjectId")
+		if not objectIdValue then
+			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
+			return
+		end
+
+		local objectId = objectIdValue.Value
+
+		-- Obtener UpgradeService
+		local Knit = require(game.ReplicatedStorage.Knit)
+		local UpgradeService = Knit.GetService("UpgradeService")
+
+		-- Intentar upgradear
+		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
+
+		if success then
+			print("[GeneratorVFXManager] ✅ Upgrade successful!")
+			-- Actualizar stats inmediatamente
+			updateStatsText()
+		else
+			warn("[GeneratorVFXManager] ❌ Upgrade failed")
 		end
 	end)
 
