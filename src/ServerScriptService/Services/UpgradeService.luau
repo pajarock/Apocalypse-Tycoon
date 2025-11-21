@@ -305,10 +305,13 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 			GeneratorVFXManager:ShowUpgradeEffect(data.Model, oldTier, newTier)
 
 			-- Recrear partículas y sonido ambiental para el nuevo tier
-			GeneratorVFXManager:RemoveEffects(data.Model)
+			GeneratorVFXManager:RemoveEffects(data.Model)  -- Ahora preserva StatsBillboard ✅
 			GeneratorVFXManager:ApplyGlowPulse(data.Model, newTier)
 			GeneratorVFXManager:CreateParticles(data.Model, newTier)
 			GeneratorVFXManager:CreateAmbientSound(data.Model)
+
+			-- CRÍTICO: Refrescar prompts después del upgrade para asegurar que todo funciona
+			GeneratorVFXManager:RefreshPromptsAfterUpgrade(data.Model, newTier)
 		end
 	end
 

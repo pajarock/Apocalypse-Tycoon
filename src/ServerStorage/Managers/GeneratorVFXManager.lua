@@ -398,6 +398,9 @@ end
 --[[
 	Remueve todos los efectos visuales de un generador.
 
+	IMPORTANTE: NO remueve el StatsBillboard ni los ProximityPrompts,
+	solo los efectos visuales temporales (luz, partículas, billboards de dinero).
+
 	@param model - Modelo del generador
 ]]
 function GeneratorVFXManager:RemoveEffects(model: Model)
@@ -418,15 +421,15 @@ function GeneratorVFXManager:RemoveEffects(model: Model)
 		particles:Destroy()
 	end
 
-	-- Remover billboards
+	-- CRÍTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard
 	for _, child in mainPart:GetChildren() do
-		if child:IsA("BillboardGui") then
+		if child:IsA("BillboardGui") and child.Name ~= "StatsBillboard" then
 			child:Destroy()
 		end
 	end
 
 	if DEBUG_MODE then
-		print("[GeneratorVFXManager] Removed all effects from generator")
+		print("[GeneratorVFXManager] Removed visual effects (preserved StatsBillboard)")
 	end
 end
 
@@ -976,6 +979,82 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	end
 
 	return prompt
+end
+
+-------------------------------------------------------------------------
+-- PHASE 4: UPGRADE HELPERS
+-------------------------------------------------------------------------
+
+--[[
+	Actualiza los ProximityPrompts después de un upgrade para reflejar el nuevo tier.
+
+	CRÍTICO: Este método se llama después de que RemoveEffects() haya preservado
+	el StatsBillboard, para asegurar que los prompts están correctamente actualizados.
+
+	@param model - Modelo del generador
+	@param newTier - Nuevo tier después del upgrade
+]]
+function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: number)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		warn("[GeneratorVFXManager] RefreshPromptsAfterUpgrade: MainPart not found")
+		return
+	end
+
+	-- Verificar que el StatsPrompt existe (debería existir siempre)
+	local statsPrompt = mainPart:FindFirstChild("StatsPrompt")
+	if not statsPrompt then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsPrompt not found after upgrade! This shouldn't happen.")
+	end
+
+	-- Verificar que el UpgradePrompt existe
+	local upgradePrompt = mainPart:FindFirstChild("UpgradePrompt")
+	if not upgradePrompt then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: UpgradePrompt not found after upgrade!")
+	end
+
+	-- Verificar que el StatsBillboard existe
+	local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
+	if not statsBillboard then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsBillboard destroyed during upgrade! This is the bug we're trying to fix.")
+	else
+		if DEBUG_MODE then
+			print("[GeneratorVFXManager] ✅ StatsBillboard preserved after upgrade to Tier", newTier)
+		end
+	end
+
+	-- Actualizar el UpgradePrompt según el nuevo tier
+	if upgradePrompt then
+		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
+		local tierName = "Generator"
+		if newTier == 2 then
+			tierName = "GeneratorT2"
+		elseif newTier == 3 then
+			tierName = "GeneratorT3"
+		end
+
+		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
+		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
+
+		if canUpgrade and upgradeCost then
+			local nextTier = newTier + 1
+			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
+			upgradePrompt.Enabled = true
+			if DEBUG_MODE then
+				print(string.format("[GeneratorVFXManager] UpgradePrompt updated: T%d → T%d ($%d)", newTier, nextTier, upgradeCost))
+			end
+		else
+			-- Tier máximo alcanzado
+			upgradePrompt.Enabled = false
+			if DEBUG_MODE then
+				print("[GeneratorVFXManager] UpgradePrompt disabled (max tier reached)")
+			end
+		end
+	end
+
+	if DEBUG_MODE then
+		print(string.format("[GeneratorVFXManager] Prompts refreshed after upgrade to Tier %d", newTier))
+	end
 end
 
 -------------------------------------------------------------------------
