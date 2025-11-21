@@ -224,26 +224,27 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 		return false
 	end
 
-	-- Validar dinero suficiente
+	-- Validar dinero suficiente y deducir
 	if PlayerDataService then
-		local hasEnoughMoney = pcall(function()
-			return PlayerDataService:HasMoney(userId, upgradeCost)
-		end)
+		print(string.format("[UpgradeService] 💰 Checking money for user %d (need $%d)", userId, upgradeCost))
 
-		if not hasEnoughMoney then
-			warn(string.format("[UpgradeService] UpgradeGenerator: User %d does not have enough money ($%d)", userId, upgradeCost))
-			return false
-		end
-
-		-- Deducir dinero
-		local success = pcall(function()
+		-- PlayerDataService usa EconomyModule que no tiene HasMoney, solo AddMoney/RemoveMoney
+		-- Intentamos deducir directamente - si falla, es porque no tiene suficiente
+		local success, errorMsg = pcall(function()
 			PlayerDataService:RemoveMoney(userId, upgradeCost)
 		end)
 
 		if not success then
-			warn(string.format("[UpgradeService] UpgradeGenerator: Failed to remove money from user %d", userId))
+			warn(string.format("[UpgradeService] ❌ UpgradeGenerator: Failed to remove money from user %d", userId))
+			warn(string.format("[UpgradeService] Error: %s", tostring(errorMsg)))
+			warn(string.format("[UpgradeService] User may not have enough money ($%d needed)", upgradeCost))
 			return false
 		end
+
+		print(string.format("[UpgradeService] ✅ Money deducted: $%d from user %d", upgradeCost, userId))
+	else
+		warn("[UpgradeService] ❌ PlayerDataService not available")
+		return false
 	end
 
 	-- Obtener nueva definición

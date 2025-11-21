@@ -884,10 +884,25 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	local updateLoop = nil
 	local statsVisible = false
 
+	-- PHASE 4: Crear ProximityPrompt para UPGRADE (tecla U) ANTES del evento
+	local upgradePrompt = Instance.new("ProximityPrompt")
+	upgradePrompt.Name = "UpgradePrompt"
+	upgradePrompt.ActionText = "Upgrade Generator"
+	upgradePrompt.ObjectText = ""
+	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.U
+	upgradePrompt.MaxActivationDistance = 10
+	upgradePrompt.HoldDuration = 0
+	upgradePrompt.RequiresLineOfSight = false
+	upgradePrompt.Enabled = false  -- Solo activado cuando stats están visibles
+	upgradePrompt.Parent = mainPart
+
 	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
 		statsVisible = not statsVisible
 		statsBillboard.Enabled = statsVisible
+
+		-- PHASE 4: Habilitar/deshabilitar upgrade prompt
+		upgradePrompt.Enabled = statsVisible
 
 		if statsVisible then
 			-- Actualizar inmediatamente al abrir
@@ -911,26 +926,10 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 		end
 	end)
 
-	-- PHASE 4: Crear ProximityPrompt para UPGRADE (tecla U)
-	local upgradePrompt = Instance.new("ProximityPrompt")
-	upgradePrompt.Name = "UpgradePrompt"
-	upgradePrompt.ActionText = "Upgrade Generator"
-	upgradePrompt.ObjectText = ""
-	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.U
-	upgradePrompt.MaxActivationDistance = 10
-	upgradePrompt.HoldDuration = 0
-	upgradePrompt.RequiresLineOfSight = false
-	upgradePrompt.Enabled = false  -- Solo activado cuando stats están visibles
-	upgradePrompt.Parent = mainPart
-
-	-- Habilitar/deshabilitar upgrade prompt cuando stats están visibles
-	prompt.Triggered:Connect(function(player)
-		-- El upgradePrompt solo está activo cuando el billboard está visible
-		upgradePrompt.Enabled = statsBillboard.Enabled
-	end)
-
 	-- Manejar upgrade cuando se presiona U
 	upgradePrompt.Triggered:Connect(function(player)
+		print("[GeneratorVFXManager] 🎯 UpgradePrompt TRIGGERED by:", player.Name)
+
 		-- Obtener UpgradeService
 		local Knit = require(game.ReplicatedStorage.Knit)
 		local UpgradeService = Knit.GetService("UpgradeService")
@@ -939,25 +938,42 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 		local BaseOwnershipService = Knit.GetService("BaseOwnershipService")
 		local objectId = nil
 
+		print("[GeneratorVFXManager] 🔍 Searching for objectId in BaseOwnership...")
+
 		-- Buscar el objectId iterando sobre los objetos registrados
-		for id, data in pairs(BaseOwnershipService:GetAllObjects()) do
+		local allObjects = BaseOwnershipService:GetAllObjects()
+		local count = 0
+		for id, data in pairs(allObjects) do
+			count = count + 1
 			if data.Model == model then
 				objectId = id
+				print("[GeneratorVFXManager] ✅ Found objectId:", objectId)
 				break
 			end
 		end
 
+		print("[GeneratorVFXManager] 📊 Total objects in BaseOwnership:", count)
+
 		if not objectId then
-			warn("[GeneratorVFXManager] UpgradePrompt: Could not find objectId for model")
+			warn("[GeneratorVFXManager] ❌ Could not find objectId for model")
+			warn("[GeneratorVFXManager] Model name:", model.Name)
+			warn("[GeneratorVFXManager] Model parent:", model.Parent)
 			return
 		end
+
+		print("[GeneratorVFXManager] 🚀 Calling UpgradeService:UpgradeGenerator(", objectId, ",", player.UserId, ")")
 
 		-- Intentar upgradear
 		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
 
+		print("[GeneratorVFXManager] 📝 Upgrade result:", success)
+
 		if success then
+			print("[GeneratorVFXManager] ✅ Upgrade successful! Updating stats...")
 			-- Actualizar stats inmediatamente después del upgrade
 			updateStatsText()
+		else
+			warn("[GeneratorVFXManager] ❌ Upgrade failed")
 		end
 	end)
 
