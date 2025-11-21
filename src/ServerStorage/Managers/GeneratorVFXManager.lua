@@ -834,6 +834,25 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	textLabel.Text = "Loading stats..."
 	textLabel.Parent = frame
 
+	-- PHASE 4: Crear botón de upgrade ANTES de updateStatsText() para que esté en scope
+	local upgradeButton = Instance.new("TextButton")
+	upgradeButton.Name = "UpgradeButton"
+	upgradeButton.Size = UDim2.new(0.9, 0, 0.15, 0)
+	upgradeButton.Position = UDim2.new(0.05, 0, 0.82, 0)
+	upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+	upgradeButton.BorderSizePixel = 2
+	upgradeButton.BorderColor3 = Color3.fromRGB(100, 255, 100)
+	upgradeButton.TextColor3 = Color3.new(1, 1, 1)
+	upgradeButton.TextScaled = true
+	upgradeButton.Font = Enum.Font.GothamBold
+	upgradeButton.Text = "🚀 UPGRADE"
+	upgradeButton.Visible = false  -- Oculto por defecto
+	upgradeButton.Parent = frame
+
+	local upgradeCorner = Instance.new("UICorner")
+	upgradeCorner.CornerRadius = UDim.new(0, 8)
+	upgradeCorner.Parent = upgradeButton
+
 	-- FASE 3: Función para actualizar stats dinámicamente
 	local function updateStatsText()
 		-- Leer valores del modelo
@@ -897,27 +916,8 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	local updateLoop = nil
 	local statsVisible = false
 
-	-- PHASE 4: Crear botón de upgrade dentro del billboard (en lugar de ProximityPrompt U)
-	local upgradeButton = Instance.new("TextButton")
-	upgradeButton.Name = "UpgradeButton"
-	upgradeButton.Size = UDim2.new(0.9, 0, 0.15, 0)
-	upgradeButton.Position = UDim2.new(0.05, 0, 0.82, 0)
-	upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-	upgradeButton.BorderSizePixel = 2
-	upgradeButton.BorderColor3 = Color3.fromRGB(100, 255, 100)
-	upgradeButton.TextColor3 = Color3.new(1, 1, 1)
-	upgradeButton.TextScaled = true
-	upgradeButton.Font = Enum.Font.GothamBold
-	upgradeButton.Text = "🚀 UPGRADE"
-	upgradeButton.Visible = false  -- Oculto por defecto hasta updateStatsText()
-	upgradeButton.Parent = frame
-
-	local upgradeCorner = Instance.new("UICorner")
-	upgradeCorner.CornerRadius = UDim.new(0, 8)
-	upgradeCorner.Parent = upgradeButton
-
-	-- NOTA: El click del botón es manejado por un LocalScript permanente en StarterPlayerScripts
-	-- Ver: StarterPlayer/StarterPlayerScripts/UpgradeButtonHandler
+	-- NOTA: El botón de upgrade ya fue creado arriba (antes de updateStatsText)
+	-- El click del botón es manejado por: StarterPlayer/StarterPlayerScripts/UpgradeButtonHandler
 
 	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
@@ -947,13 +947,13 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	end)
 
 	-- PHASE 4: Manejar click del botón de upgrade (usando RemoteEvent desde cliente)
-	-- Crear/obtener RemoteEvent para upgrades
+	-- El RemoteEvent ya fue creado por UpgradeService en KnitStart
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local upgradeRemote = ReplicatedStorage:FindFirstChild("UpgradeGeneratorRemote")
+	local upgradeRemote = ReplicatedStorage:WaitForChild("UpgradeGeneratorRemote", 5)
+
 	if not upgradeRemote then
-		upgradeRemote = Instance.new("RemoteEvent")
-		upgradeRemote.Name = "UpgradeGeneratorRemote"
-		upgradeRemote.Parent = ReplicatedStorage
+		warn("[GeneratorVFXManager] ❌ UpgradeGeneratorRemote not found!")
+		return prompt
 	end
 
 	-- Evento del servidor: ejecutar upgrade cuando el cliente hace click
