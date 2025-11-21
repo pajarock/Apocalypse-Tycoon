@@ -916,37 +916,8 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	upgradeCorner.CornerRadius = UDim.new(0, 8)
 	upgradeCorner.Parent = upgradeButton
 
-	-- LocalScript para manejar click del botón (del lado del cliente)
-	local buttonScript = Instance.new("LocalScript")
-	buttonScript.Name = "UpgradeButtonHandler"
-	buttonScript.Source = [[
-		local button = script.Parent
-		local mainPart = button.Parent.Parent.Parent  -- button -> frame -> billboard -> mainPart
-		local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-		-- Esperar a que el RemoteEvent exista
-		local upgradeRemote = ReplicatedStorage:WaitForChild("UpgradeGeneratorRemote", 5)
-		if not upgradeRemote then
-			warn("[UpgradeButton] RemoteEvent not found!")
-			return
-		end
-
-		button.MouseButton1Click:Connect(function()
-			-- Obtener objectId del modelo
-			local objectIdValue = mainPart:FindFirstChild("ObjectId")
-			if not objectIdValue then
-				warn("[UpgradeButton] ObjectId not found in model!")
-				return
-			end
-
-			local objectId = objectIdValue.Value
-			print("[UpgradeButton] Firing upgrade request for:", objectId)
-
-			-- Llamar al servidor
-			upgradeRemote:FireServer(objectId)
-		end)
-	]]
-	buttonScript.Parent = upgradeButton
+	-- NOTA: El click del botón es manejado por un LocalScript permanente en StarterPlayerScripts
+	-- Ver: StarterPlayer/StarterPlayerScripts/UpgradeButtonHandler
 
 	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
