@@ -764,12 +764,22 @@ end
 	@param model - Modelo del generador
 	@param userId - ID del dueño
 	@param tier - Tier del generador
+	@param objectId - ID único del objeto (PHASE 4)
 	@return ProximityPrompt - El prompt creado
 ]]
-function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number): ProximityPrompt?
+function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number, objectId: string?): ProximityPrompt?
 	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
 	if not mainPart then
 		return nil
+	end
+
+	-- PHASE 4: Guardar objectId en el modelo para uso en upgrades
+	if objectId then
+		local objectIdValue = Instance.new("StringValue")
+		objectIdValue.Name = "ObjectId"
+		objectIdValue.Value = objectId
+		objectIdValue.Parent = mainPart
+		print("[GeneratorVFXManager] 💾 ObjectId saved in model:", objectId)
 	end
 
 	-- Verificar si ya existe
@@ -930,36 +940,20 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 	upgradePrompt.Triggered:Connect(function(player)
 		print("[GeneratorVFXManager] 🎯 UpgradePrompt TRIGGERED by:", player.Name)
 
+		-- PHASE 4: Leer objectId directamente del modelo
+		local objectIdValue = mainPart:FindFirstChild("ObjectId")
+		if not objectIdValue then
+			warn("[GeneratorVFXManager] ❌ ObjectId not found in model")
+			warn("[GeneratorVFXManager] This generator may have been created before Phase 4")
+			return
+		end
+
+		local objectId = objectIdValue.Value
+		print("[GeneratorVFXManager] 💾 ObjectId retrieved from model:", objectId)
+
 		-- Obtener UpgradeService
 		local Knit = require(game.ReplicatedStorage.Knit)
 		local UpgradeService = Knit.GetService("UpgradeService")
-
-		-- Encontrar el objectId desde BaseOwnershipService
-		local BaseOwnershipService = Knit.GetService("BaseOwnershipService")
-		local objectId = nil
-
-		print("[GeneratorVFXManager] 🔍 Searching for objectId in BaseOwnership...")
-
-		-- Buscar el objectId iterando sobre los objetos registrados
-		local allObjects = BaseOwnershipService:GetAllObjects()
-		local count = 0
-		for id, data in pairs(allObjects) do
-			count = count + 1
-			if data.Model == model then
-				objectId = id
-				print("[GeneratorVFXManager] ✅ Found objectId:", objectId)
-				break
-			end
-		end
-
-		print("[GeneratorVFXManager] 📊 Total objects in BaseOwnership:", count)
-
-		if not objectId then
-			warn("[GeneratorVFXManager] ❌ Could not find objectId for model")
-			warn("[GeneratorVFXManager] Model name:", model.Name)
-			warn("[GeneratorVFXManager] Model parent:", model.Parent)
-			return
-		end
 
 		print("[GeneratorVFXManager] 🚀 Calling UpgradeService:UpgradeGenerator(", objectId, ",", player.UserId, ")")
 
@@ -973,7 +967,7 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 			-- Actualizar stats inmediatamente después del upgrade
 			updateStatsText()
 		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed")
+			warn("[GeneratorVFXManager] ❌ Upgrade failed - check UpgradeService logs for details")
 		end
 	end)
 

@@ -125,7 +125,8 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 	end
 
 	-- FASE 2: Crear ProximityPrompt con stats
-	GeneratorVFXManager:CreateStatsPrompt(model, userId, tier)
+	-- PHASE 4: Pasar objectId para que se pueda usar en upgrades
+	GeneratorVFXManager:CreateStatsPrompt(model, userId, tier, objectId)
 
 	print(string.format(
 		"[UpgradeService] 💰 Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
