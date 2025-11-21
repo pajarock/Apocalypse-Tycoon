@@ -108,27 +108,50 @@ end
 
 ---
 
-## 🎯 **RECOMENDACIÓN**
+## 🎯 **ESTRATEGIA ADOPTADA: ARQUITECTURA HÍBRIDA**
 
-**Para que Generators produzcan dinero, usa Opción 2** (más rápido):
+**Fecha de decisión:** 2025-11-21
 
-1. Editar `UpgradeService.luau` línea ~470:
-```lua
--- ANTES:
-local success, result = pcall(function()
-    return Knit.GetService("PlayerDataService")
-end)
+### **Decisión:**
+Mantener arquitectura híbrida (Legacy + Knit) y migrar gradualmente:
+- ✅ **Features nuevas** → Desarrollar en Knit
+- ✅ **Sistema legacy** → Mantener funcionando, migrar paulatinamente
+- ✅ **PlayerDataService** → Wrapper temporal que conecta Knit con EconomyModule
 
--- DESPUÉS:
-local EconomyModule = require(game.ServerScriptService.MainServer.EconomyModule)
-PlayerDataService = {
-    AddMoney = function(userId, amount)
-        EconomyModule.AddCash(userId, amount)
-    end
-}
-```
+### **Razones:**
+1. **Velocidad de desarrollo**: Continuar creando features sin bloqueos
+2. **Riesgo reducido**: No romper sistemas que funcionan
+3. **Migración incremental**: Mover a Knit cuando sea necesario, no todo de golpe
+4. **Equipo pequeño**: 2 IAs + 1 persona sin experiencia técnica
 
-2. Ya está! Los Generators producirán dinero usando tu EconomyModule existente.
+### **Plan de migración:**
+
+#### **✅ YA EN KNIT (Completado)**
+- BaseSpawnerService
+- BasePlacementService
+- BaseOwnershipService
+- BaseDataService
+- UpgradeService (generators, turrets, repair stations)
+- PlayerDataService (wrapper temporal a EconomyModule)
+
+#### **📅 PRÓXIMAS FEATURES EN KNIT**
+1. **Phase 5**: TurretVFXManager + Testing de turrets con meteoros
+2. **Phase 6**: DashboardService (stats UI)
+3. **Phase 7**: TeamService (sistema de equipos)
+4. **Phase 8**: BlueprintService (guardar/cargar layouts)
+
+#### **⏳ MIGRAR A KNIT (Futuro)**
+1. **EconomyModule** → EconomyService (cuando sea crítico)
+2. **EventManager** → WaveService (para mejor integración con turrets)
+3. **PowerUpModule** → PowerUpService
+4. **Refactorizar Main.Server.lua** → Múltiples servicios pequeños
+
+### **Estado actual de integración:**
+- ✅ Generators producen dinero (via PlayerDataService wrapper)
+- ✅ Upgrades funcionan correctamente (T1→T2→T3)
+- ✅ ProximityPrompts para stats y upgrades
+- ⏳ Turrets necesitan testing con meteoros
+- ⏳ Dashboard de stats pendiente
 
 ---
 
@@ -158,15 +181,27 @@ PlayerDataService = {
 
 ---
 
-## ✅ **SIGUIENTE PASO**
+## ✅ **PRÓXIMOS PASOS** (Phase 5+)
 
-1. **Conectar economía** (Opción 2 recomendada)
-2. **Probar Generators produciendo dinero**
-3. **Integrar con sistema de waves** (Turrets disparan meteoros)
-4. **Agregar costs al placement** (descontar dinero)
-5. **Dashboard de stats** (mostrar income, objetos, etc)
+### **Inmediato (Sesión 1):**
+1. ✅ **Economía conectada** (PlayerDataService wrapper funcionando)
+2. 🔫 **Completar sistema de turrets**:
+   - Testing de turrets + meteoros
+   - Agregar TurretVFXManager (laser beams, impact effects)
+   - UI de stats para turrets (kills, DPS, etc.)
+
+### **Corto plazo (Sesiones 2-3):**
+3. 🔧 **RepairStationService** mejorado (mejor UX)
+4. 📊 **DashboardService** (panel de stats consolidado)
+5. 👥 **TeamService** (bases compartidas, permisos)
+
+### **Mediano plazo (Después):**
+6. 📐 **BlueprintService** (guardar/cargar layouts)
+7. 💰 **Migrar EconomyModule → EconomyService**
+8. 🌊 **Migrar EventManager → WaveService**
 
 ---
 
-**Última actualización**: 2025-11-20
-**Estado**: Base system ✅ | Economía ⏳ | Testing ✅
+**Última actualización**: 2025-11-21
+**Estado**: Base system ✅ | Economía ✅ (wrapper) | Phase 5 en progreso 🔫
+**Estrategia**: Arquitectura híbrida con migración gradual a Knit
