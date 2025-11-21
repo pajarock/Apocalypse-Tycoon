@@ -822,7 +822,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "StatsText"
-	textLabel.Size = UDim2.new(1, -20, 1, -20)
+	textLabel.Size = UDim2.new(1, -20, 0.75, -10)  -- Reducido para dejar espacio al botón
 	textLabel.Position = UDim2.new(0, 10, 0, 10)
 	textLabel.BackgroundTransparency = 1
 	textLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -870,14 +870,17 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
 		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
 
-		-- Actualizar texto con stats en tiempo real + info de upgrade
-		local upgradeText = ""
+		-- Actualizar botón de upgrade
 		if canUpgrade and upgradeCost then
 			local nextTier = currentTier + 1
-			upgradeText = string.format("\n✨ Press U to UPGRADE\n   → Tier %d ($%d)", nextTier, upgradeCost)
-		elseif currentTier >= 3 then
-			upgradeText = "\n🏆 MAX TIER REACHED"
+			upgradeButton.Text = string.format("🚀 UPGRADE TO TIER %d ($%d)", nextTier, upgradeCost)
+			upgradeButton.Visible = true
+		else
+			upgradeButton.Visible = false
 		end
+
+		-- Texto de stats sin info de upgrade (el botón maneja eso ahora)
+		local maxTierText = currentTier >= 3 and "\n🏆 MAX TIER REACHED" or ""
 
 		textLabel.Text = string.format([[
 ⚙️ %s
@@ -887,32 +890,68 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 ⏱️ Uptime: %dm %ds
 👤 Owner: %s
 ━━━━━━━━━━━━━━━━━
-Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, upgradeText)
+Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, maxTierText)
 	end
 
 	-- Loop de actualización dinámica (cada segundo)
 	local updateLoop = nil
 	local statsVisible = false
 
-	-- PHASE 4: Crear ProximityPrompt para UPGRADE (tecla U) ANTES del evento
-	local upgradePrompt = Instance.new("ProximityPrompt")
-	upgradePrompt.Name = "UpgradePrompt"
-	upgradePrompt.ActionText = "Upgrade Generator"
-	upgradePrompt.ObjectText = ""
-	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.U
-	upgradePrompt.MaxActivationDistance = 10
-	upgradePrompt.HoldDuration = 0
-	upgradePrompt.RequiresLineOfSight = false
-	upgradePrompt.Enabled = false  -- Solo activado cuando stats están visibles
-	upgradePrompt.Parent = mainPart
+	-- PHASE 4: Crear botón de upgrade dentro del billboard (en lugar de ProximityPrompt U)
+	local upgradeButton = Instance.new("TextButton")
+	upgradeButton.Name = "UpgradeButton"
+	upgradeButton.Size = UDim2.new(0.9, 0, 0.15, 0)
+	upgradeButton.Position = UDim2.new(0.05, 0, 0.82, 0)
+	upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+	upgradeButton.BorderSizePixel = 2
+	upgradeButton.BorderColor3 = Color3.fromRGB(100, 255, 100)
+	upgradeButton.TextColor3 = Color3.new(1, 1, 1)
+	upgradeButton.TextScaled = true
+	upgradeButton.Font = Enum.Font.GothamBold
+	upgradeButton.Text = "🚀 UPGRADE"
+	upgradeButton.Visible = false  -- Oculto por defecto hasta updateStatsText()
+	upgradeButton.Parent = frame
+
+	local upgradeCorner = Instance.new("UICorner")
+	upgradeCorner.CornerRadius = UDim.new(0, 8)
+	upgradeCorner.Parent = upgradeButton
+
+	-- LocalScript para manejar click del botón (del lado del cliente)
+	local buttonScript = Instance.new("LocalScript")
+	buttonScript.Name = "UpgradeButtonHandler"
+	buttonScript.Source = [[
+		local button = script.Parent
+		local mainPart = button.Parent.Parent.Parent  -- button -> frame -> billboard -> mainPart
+		local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+		-- Esperar a que el RemoteEvent exista
+		local upgradeRemote = ReplicatedStorage:WaitForChild("UpgradeGeneratorRemote", 5)
+		if not upgradeRemote then
+			warn("[UpgradeButton] RemoteEvent not found!")
+			return
+		end
+
+		button.MouseButton1Click:Connect(function()
+			-- Obtener objectId del modelo
+			local objectIdValue = mainPart:FindFirstChild("ObjectId")
+			if not objectIdValue then
+				warn("[UpgradeButton] ObjectId not found in model!")
+				return
+			end
+
+			local objectId = objectIdValue.Value
+			print("[UpgradeButton] Firing upgrade request for:", objectId)
+
+			-- Llamar al servidor
+			upgradeRemote:FireServer(objectId)
+		end)
+	]]
+	buttonScript.Parent = upgradeButton
 
 	-- Evento para mostrar/ocultar stats
 	prompt.Triggered:Connect(function(player)
 		statsVisible = not statsVisible
 		statsBillboard.Enabled = statsVisible
-
-		-- PHASE 4: Habilitar/deshabilitar upgrade prompt
-		upgradePrompt.Enabled = statsVisible
 
 		if statsVisible then
 			-- Actualizar inmediatamente al abrir
@@ -936,39 +975,47 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 		end
 	end)
 
-	-- Manejar upgrade cuando se presiona U
-	upgradePrompt.Triggered:Connect(function(player)
-		print("[GeneratorVFXManager] 🎯 UpgradePrompt TRIGGERED by:", player.Name)
+	-- PHASE 4: Manejar click del botón de upgrade (usando RemoteEvent desde cliente)
+	-- Crear/obtener RemoteEvent para upgrades
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local upgradeRemote = ReplicatedStorage:FindFirstChild("UpgradeGeneratorRemote")
+	if not upgradeRemote then
+		upgradeRemote = Instance.new("RemoteEvent")
+		upgradeRemote.Name = "UpgradeGeneratorRemote"
+		upgradeRemote.Parent = ReplicatedStorage
+	end
 
-		-- PHASE 4: Leer objectId directamente del modelo
+	-- Evento del servidor: ejecutar upgrade cuando el cliente hace click
+	local connection = upgradeRemote.OnServerEvent:Connect(function(player, requestedObjectId)
+		-- Verificar que el objectId sea del generator correcto
 		local objectIdValue = mainPart:FindFirstChild("ObjectId")
-		if not objectIdValue then
-			warn("[GeneratorVFXManager] ❌ ObjectId not found in model")
-			warn("[GeneratorVFXManager] This generator may have been created before Phase 4")
+		if not objectIdValue or objectIdValue.Value ~= requestedObjectId then
+			warn("[GeneratorVFXManager] ❌ ObjectId mismatch or not found")
 			return
 		end
 
 		local objectId = objectIdValue.Value
-		print("[GeneratorVFXManager] 💾 ObjectId retrieved from model:", objectId)
+		print("[GeneratorVFXManager] 🎯 Upgrade button clicked by:", player.Name, "for", objectId)
 
 		-- Obtener UpgradeService
 		local Knit = require(game.ReplicatedStorage.Knit)
 		local UpgradeService = Knit.GetService("UpgradeService")
 
-		print("[GeneratorVFXManager] 🚀 Calling UpgradeService:UpgradeGenerator(", objectId, ",", player.UserId, ")")
-
 		-- Intentar upgradear
 		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
 
-		print("[GeneratorVFXManager] 📝 Upgrade result:", success)
-
 		if success then
-			print("[GeneratorVFXManager] ✅ Upgrade successful! Updating stats...")
-			-- Actualizar stats inmediatamente después del upgrade
+			print("[GeneratorVFXManager] ✅ Upgrade successful!")
+			-- Actualizar stats inmediatamente
 			updateStatsText()
 		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed - check UpgradeService logs for details")
+			warn("[GeneratorVFXManager] ❌ Upgrade failed - check UpgradeService logs")
 		end
+	end)
+
+	-- Limpiar conexión cuando el modelo se destruya
+	model.Destroying:Connect(function()
+		connection:Disconnect()
 	end)
 
 	if DEBUG_MODE then

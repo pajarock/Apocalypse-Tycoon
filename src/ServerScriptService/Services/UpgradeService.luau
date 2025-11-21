@@ -226,27 +226,21 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 	end
 
 	-- Validar dinero suficiente y deducir
-	if PlayerDataService then
-		print(string.format("[UpgradeService] 💰 Checking money for user %d (need $%d)", userId, upgradeCost))
-
-		-- PlayerDataService usa EconomyModule que no tiene HasMoney, solo AddMoney/RemoveMoney
-		-- Intentamos deducir directamente - si falla, es porque no tiene suficiente
-		local success, errorMsg = pcall(function()
-			PlayerDataService:RemoveMoney(userId, upgradeCost)
-		end)
-
-		if not success then
-			warn(string.format("[UpgradeService] ❌ UpgradeGenerator: Failed to remove money from user %d", userId))
-			warn(string.format("[UpgradeService] Error: %s", tostring(errorMsg)))
-			warn(string.format("[UpgradeService] User may not have enough money ($%d needed)", upgradeCost))
-			return false
-		end
-
-		print(string.format("[UpgradeService] ✅ Money deducted: $%d from user %d", upgradeCost, userId))
-	else
+	if not PlayerDataService then
 		warn("[UpgradeService] ❌ PlayerDataService not available")
 		return false
 	end
+
+	print(string.format("[UpgradeService] 💰 Checking money for user %d (need $%d)", userId, upgradeCost))
+
+	-- Intentar deducir dinero (DeductMoney verifica automáticamente si tiene suficiente)
+	local success = PlayerDataService:DeductMoney(userId, upgradeCost)
+	if not success then
+		warn(string.format("[UpgradeService] ❌ User %d doesn't have enough money ($%d needed)", userId, upgradeCost))
+		return false
+	end
+
+	print(string.format("[UpgradeService] ✅ Money deducted: $%d from user %d", upgradeCost, userId))
 
 	-- Obtener nueva definición
 	local nextDefinition = UpgradeDefinitions.GetDefinition(nextTierName)
