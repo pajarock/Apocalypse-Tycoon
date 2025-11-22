@@ -4,7 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-print("[1_REMOTES] Iniciando creacion de remotes...")
+print("[1_REMOTES] Iniciando creación de remotes...")
 
 -- Crear carpeta Remotes
 local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
@@ -50,4 +50,4 @@ for _, remote in ipairs(remotesList) do
 	end
 end
 
-print("[1_REMOTES] Todos los remotes creados exitosamente")
+print("[1_REMOTES] ? Todos los remotes creados exitosamente")

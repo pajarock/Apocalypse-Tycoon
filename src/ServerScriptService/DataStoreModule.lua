@@ -48,7 +48,7 @@ local function migrateData(data:any): SaveBlob
 	local b = table.clone(data) :: any
 	local version = tonumber(b.DataVersion) or 0
 
-	-- v0 -> v1: booleans a n√∫meros, rellenar campos
+	-- v0 -> v1: booleans a n˙meros, rellenar campos
 	if version == 0 then
 		if b.OwnedUpgrades then
 			for id, val in pairs(b.OwnedUpgrades) do
@@ -110,7 +110,7 @@ function DataStoreModule:LoadAsync(userId:number): SaveBlob
 			freshBlob.__fresh = true
 			return freshBlob
 		end
-		-- El resto del c√≥digo normal contin√∫a...
+		-- El resto del cÛdigo normal contin˙a...
 	local key = "u_" .. tostring(userId)
 	
 
@@ -161,7 +161,7 @@ function DataStoreModule:LoadAsync(userId:number): SaveBlob
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CR√çTICO load uid=%d -> defaults"):format(userId))
+	warn(("[DATASTORE] FALLO CRÕTICO load uid=%d -> defaults"):format(userId))
 	return sanitizeBlob(self:DefaultBlob())
 end
 
@@ -190,7 +190,7 @@ function DataStoreModule:SaveAsync(userId:number, blob:SaveBlob): boolean
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CR√çTICO save uid=%d"):format(userId))
+	warn(("[DATASTORE] FALLO CRÕTICO save uid=%d"):format(userId))
 	return false
 end
 
@@ -228,7 +228,7 @@ function DataStoreModule:SaveAsyncSafe(userId:number, blob:SaveBlob): boolean
 		end
 	end
 
-	warn(("[DATASTORE] FALLO CR√çTICO save(SAFE) uid=%d"):format(userId))
+	warn(("[DATASTORE] FALLO CRÕTICO save(SAFE) uid=%d"):format(userId))
 	return false
 end
 
@@ -242,9 +242,9 @@ function DataStoreModule:DeleteAsync(userId:number): boolean
 	end
 end
 
--- No disponible en DataStore est√°ndar
+-- No disponible en DataStore est·ndar
 function DataStoreModule:ListKeysAsync(_prefix:string?, _limit:number?): {string}
-	warn("[DATASTORE] ListKeysAsync no disponible en DataStore est√°ndar.")
+	warn("[DATASTORE] ListKeysAsync no disponible en DataStore est·ndar.")
 	return {}
 end
 
@@ -274,7 +274,7 @@ function DataStoreModule:GetStats(): {[string]: any}
 end
 
 if DEBUG then
-	print("[DATASTORE] m√≥dulo cargado")
+	print("[DATASTORE] mÛdulo cargado")
 	print(("[DATASTORE] store=%s  version=%d"):format(DS_NAME, DATA_VERSION))
 end
 

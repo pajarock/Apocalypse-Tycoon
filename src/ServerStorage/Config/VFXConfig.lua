@@ -4,22 +4,22 @@
 	-----------------------------------------------------------------------
 
 	Data-driven effect templates para el VFXManager.
-	Modifica estos valores para ajustar efectos sin tocar c贸digo.
+	Modifica estos valores para ajustar efectos sin tocar c骴igo.
 
 	ESTRUCTURA:
 	{
 		EffectName = {
-			Particles = {configuraci贸n de part铆culas},
-			Sound = {configuraci贸n de audio},
-			Light = {configuraci贸n de luz},
+			Particles = {configuraci髇 de part韈ulas},
+			Sound = {configuraci髇 de audio},
+			Light = {configuraci髇 de luz},
 			Duration = tiempo total del efecto
 		}
 	}
 
 	PERFORMANCE:
-	- M谩ximo 100 part铆culas activas simult谩neamente
-	- Duraci贸n: 0.5-2 segundos (cortas y punchy)
-	- Emission: Burst r谩pidos, no continuos
+	- M醲imo 100 part韈ulas activas simult醤eamente
+	- Duraci髇: 0.5-2 segundos (cortas y punchy)
+	- Emission: Burst r醦idos, no continuos
 ]]
 
 local VFXConfig = {}

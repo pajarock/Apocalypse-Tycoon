@@ -3,8 +3,8 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
 local DAMAGE_COLOR = Color3.fromRGB(255, 70, 70)
-local CRIT_COLOR = Color3.fromRGB(255, 220, 80) -- Dorado m√°s vibrante
-local CRIT_THRESHOLD = 50 -- Da√±o cr√≠tico
+local CRIT_COLOR = Color3.fromRGB(255, 220, 80) -- Dorado m·s vibrante
+local CRIT_THRESHOLD = 50 -- DaÒo crÌtico
 
 game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage)
 	local basePart = workspace.Bases:FindFirstChild(player.Name .. "_Base")
@@ -24,7 +24,7 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 	frame.Size = UDim2.new(1, 0, 1, 0)
 	frame.Parent = billboard
 
-	-- Texto principal con estilo seg√∫n da√±o
+	-- Texto principal con estilo seg˙n daÒo
 	local label = Instance.new("TextLabel")
 	label.AnchorPoint = Vector2.new(0.5, 0.5)
 	label.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -33,14 +33,14 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 
 	local isCrit = damage >= CRIT_THRESHOLD
 
-	-- Estilo grafiti para cr√≠ticos
+	-- Estilo grafiti para crÌticos
 	if isCrit then
 		label.Font = Enum.Font.LuckiestGuy -- GRAFITI
 		label.Text = "-" .. tostring(damage) .. "!"
 		label.TextColor3 = CRIT_COLOR
-		label.TextStrokeTransparency = 0.1 -- Borde m√°s fuerte
+		label.TextStrokeTransparency = 0.1 -- Borde m·s fuerte
 		label.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
-		label.Rotation = math.random(-8, 8) -- Rotaci√≥n random grafiti
+		label.Rotation = math.random(-8, 8) -- RotaciÛn random grafiti
 	else
 		label.Font = Enum.Font.GothamBlack
 		label.Text = "-" .. tostring(damage)
@@ -53,7 +53,7 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 	label.TextScaled = true
 	label.Parent = frame
 
-	-- Efecto inicial - bounce m√°s dram√°tico para crits
+	-- Efecto inicial - bounce m·s dram·tico para crits
 	label.TextTransparency = 0
 	label.TextSize = isCrit and 50 or 60
 	label.TextScaled = false
@@ -89,7 +89,7 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 		billboard:Destroy()
 	end)
 
-	-- Efecto extra para cr√≠ticos: flash dorado
+	-- Efecto extra para crÌticos: flash dorado
 	if isCrit then
 		local flash = Instance.new("Frame")
 		flash.Size = UDim2.fromScale(1.5, 1.5)

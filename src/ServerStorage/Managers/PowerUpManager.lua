@@ -4,13 +4,13 @@
 	POWERUP MANAGER ADAPTER - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	?? ESTE ES UN ADAPTER/WRAPPER PARA COMPATIBILIDAD CON CÃ“DIGO VIEJO
+	?? ESTE ES UN ADAPTER/WRAPPER PARA COMPATIBILIDAD CON CÓDIGO VIEJO
 
-	El sistema real de powerups estÃ¡ en:
+	El sistema real de powerups está en:
 	- ServerScriptService.PowerUpModule (sistema principal)
-	- ServerStorage.Config.PowerUpConfig (configuraciÃ³n)
+	- ServerStorage.Config.PowerUpConfig (configuración)
 
-	Este archivo solo existe para mantener compatibilidad con cÃ³digo que
+	Este archivo solo existe para mantener compatibilidad con código que
 	espera ServerStorage.Managers.PowerUpManager
 
 	-----------------------------------------------------------------------
@@ -48,12 +48,12 @@ local function getPowerUpConfig()
 end
 
 -- -----------------------------------------------------------------------
--- ADAPTER API (Para compatibilidad con cÃ³digo viejo)
+-- ADAPTER API (Para compatibilidad con código viejo)
 -- -----------------------------------------------------------------------
 
 local PowerUpManager = {}
 
--- ? MÃ‰TODO QUE EL CÃ“DIGO VIEJO ESPERA
+-- ? MÉTODO QUE EL CÓDIGO VIEJO ESPERA
 function PowerUpManager:GetRandomPowerUp(waveType: string?): string?
 	local config = getPowerUpConfig()
 	if not config then
@@ -61,7 +61,7 @@ function PowerUpManager:GetRandomPowerUp(waveType: string?): string?
 		return nil
 	end
 
-	-- Determinar rarity segÃºn wave type
+	-- Determinar rarity según wave type
 	local waveTypeStr = waveType or "Normal"
 	local rarity = config.GetRandomRarity(waveTypeStr)
 
@@ -73,12 +73,12 @@ end
 
 -- Spawnear powerup aleatorio cerca de un jugador
 function PowerUpManager:SpawnRandomPowerUp(userId: number, waveType: string?)
-	-- ? VALIDACIÃ“N: Verificar que userId sea un nÃºmero
+	-- ? VALIDACIÓN: Verificar que userId sea un número
 	if type(userId) ~= "number" then
-		warn(("[PowerUpManager] ? SpawnRandomPowerUp recibiÃ³ userId invÃ¡lido: %s (tipo: %s)"):format(
+		warn(("[PowerUpManager] ? SpawnRandomPowerUp recibió userId inválido: %s (tipo: %s)"):format(
 			tostring(userId), type(userId)
 			))
-		warn("[PowerUpManager] ?? Tip: AsegÃºrate de pasar player.UserId, no player o position")
+		warn("[PowerUpManager] ?? Tip: Asegúrate de pasar player.UserId, no player o position")
 		return
 	end
 
@@ -88,11 +88,11 @@ function PowerUpManager:SpawnRandomPowerUp(userId: number, waveType: string?)
 		return
 	end
 
-	-- Delegar al mÃ³dulo real
+	-- Delegar al módulo real
 	module.SpawnPowerUpForPlayer(userId, waveType or "Normal")
 end
 
--- Spawnear powerup especÃ­fico
+-- Spawnear powerup específico
 function PowerUpManager:SpawnPowerUp(userId: number, powerUpId: string, position: Vector3?)
 	local module = getPowerUpModule()
 	if not module then
@@ -101,10 +101,10 @@ function PowerUpManager:SpawnPowerUp(userId: number, powerUpId: string, position
 	end
 
 	if position then
-		-- Spawn en posiciÃ³n especÃ­fica
+		-- Spawn en posición específica
 		module.SpawnPowerUpInWorld(powerUpId, position)
 	else
-		-- Activar directamente (sin spawn fÃ­sico)
+		-- Activar directamente (sin spawn físico)
 		module.ActivatePowerUp(userId, powerUpId)
 	end
 end
@@ -115,18 +115,18 @@ function PowerUpManager:HasActivePowerUp(userId: number, powerUpId: string): boo
 	if not module then return false end
 
 	-- Esto requiere acceso al estado interno, por ahora retornar false
-	-- El mÃ³dulo real maneja esto internamente
+	-- El módulo real maneja esto internamente
 	return false
 end
 
 -- Obtener todos los powerups activos de un jugador
 function PowerUpManager:GetActivePowerUps(userId: number): {string}
-	-- El mÃ³dulo real maneja esto internamente
+	-- El módulo real maneja esto internamente
 	return {}
 end
 
 -- -----------------------------------------------------------------------
--- MÃ‰TODOS ADICIONALES PARA EL NUEVO SISTEMA
+-- MÉTODOS ADICIONALES PARA EL NUEVO SISTEMA
 -- -----------------------------------------------------------------------
 
 -- Inicializar jugador
@@ -161,7 +161,7 @@ function PowerUpManager:GetAvailablePowerUps(): {string}
 	return list
 end
 
--- Obtener definiciÃ³n de powerup
+-- Obtener definición de powerup
 function PowerUpManager:GetPowerUpDefinition(powerUpId: string): any?
 	local config = getPowerUpConfig()
 	if not config then return nil end

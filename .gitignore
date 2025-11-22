@@ -1,29 +1,38 @@
-# Project place file
-/Apocalypse-Tycoon.rbxlx
-/Apocalypse-Tycoon.rbxl
+# ============================
+# ROBLOX + ROJO IGNORE FILE
+# ============================
 
-# Roblox Studio lock files
-/*.rbxlx.lock
-/*.rbxl.lock
-
-# Rojo build output
-/build/
+# Roblox place files (NUNCA subirlos)
 *.rbxl
 *.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
 
-# Rojo plugin
-/rojo-*.rbxm
+# Build output de Rojo
+/build/
 
-# Wally packages (if using Wally package manager)
+# Plugins de Rojo
+rojo-*.rbxm
+
+# Wally packages
 /Packages/
 /DevPackages/
 wally.lock
 
-# OS files
+# Archivos temporales y de sistema
 .DS_Store
 Thumbs.db
 
-# Editor files
+# Archivos de editor
 *.swp
 *.swo
 *~
+
+# Carpetas de trabajo locales que NO van a GitHub
+.vscode/
+.idea/
+.sublime-project
+.sublime-workspace
+
+# Archivos que generan conflictos invisibles en Windows/macOS
+desktop.ini
