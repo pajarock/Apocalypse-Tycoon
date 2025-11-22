@@ -117,7 +117,7 @@ function KnitClient.Start()
 		end
 	end
 
-	print("[Knit] ✅ Started successfully on client")
+	print("[Knit] Ã¢ÂÂ Started successfully on client")
 end
 
 return KnitClient

@@ -3,15 +3,15 @@
 	BUILD EFFECTS MANAGER - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Maneja animaciones y efectos visuales durante la construcción de upgrades.
+	Maneja animaciones y efectos visuales durante la construcciÃÂ³n de upgrades.
 
 	FEATURES:
 	? Fade in + Scale from 0 ? 1
-	? Partículas de construcción (chispas, humo)
-	? Sonidos de construcción
+	? PartÃÂ­culas de construcciÃÂ³n (chispas, humo)
+	? Sonidos de construcciÃÂ³n
 	? Ghost preview (transparente)
 	? Billboard temporal "CONSTRUIDO"
-	? Integración con VFXManager
+	? IntegraciÃÂ³n con VFXManager
 
 	USAGE:
 		local BuildEffectsManager = require(game.ServerStorage.Managers.BuildEffectsManager)
@@ -23,7 +23,7 @@
 		local ghost = BuildEffectsManager:CreateGhostPreview(model)
 
 	API:
-		:PlayBuildEffect(model, duration) - Animación completa
+		:PlayBuildEffect(model, duration) - AnimaciÃÂ³n completa
 		:CreateGhostPreview(model) - Preview transparente
 		:ShowBuiltNotification(position, text) - Billboard temporal
 ]]
@@ -37,7 +37,7 @@ local Debris = game:GetService("Debris")
 
 local DEBUG_MODE = false
 
--- Configuración de animación
+-- ConfiguraciÃÂ³n de animaciÃÂ³n
 local BUILD_ANIMATION_CONFIG = {
 	FadeDuration = 0.5,
 	ScaleDuration = 0.5,
@@ -46,9 +46,9 @@ local BUILD_ANIMATION_CONFIG = {
 	EasingDirection = Enum.EasingDirection.Out,
 }
 
--- Configuración de partículas
+-- ConfiguraciÃÂ³n de partÃÂ­culas
 local PARTICLE_CONFIG = {
-	-- Chispas de construcción
+	-- Chispas de construcciÃÂ³n
 	Sparks = {
 		Rate = 40,
 		Lifetime = NumberRange.new(0.3, 0.6),
@@ -70,7 +70,7 @@ local PARTICLE_CONFIG = {
 		Acceleration = Vector3.new(0, -20, 0),
 	},
 
-	-- Humo de construcción
+	-- Humo de construcciÃÂ³n
 	Smoke = {
 		Rate = 20,
 		Lifetime = NumberRange.new(1, 1.5),
@@ -215,9 +215,9 @@ end
 --[[
 	Muestra un billboard temporal con mensaje.
 
-	@param position Vector3 - Posición donde mostrar
+	@param position Vector3 - PosiciÃÂ³n donde mostrar
 	@param text string - Texto a mostrar
-	@param duration number? - Duración en segundos (default: 2)
+	@param duration number? - DuraciÃÂ³n en segundos (default: 2)
 ]]
 function BuildEffectsManager:ShowBuiltNotification(position: Vector3, text: string, duration: number?)
 	duration = duration or 2
@@ -280,10 +280,10 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Reproduce el efecto completo de construcción.
+	Reproduce el efecto completo de construcciÃÂ³n.
 
-	@param model Model - El modelo que se está construyendo
-	@param duration number? - Duración total (default: 1.0)
+	@param model Model - El modelo que se estÃÂ¡ construyendo
+	@param duration number? - DuraciÃÂ³n total (default: 1.0)
 ]]
 function BuildEffectsManager:PlayBuildEffect(model: Model, duration: number?)
 	duration = duration or BUILD_ANIMATION_CONFIG.TotalDuration
@@ -389,10 +389,10 @@ function BuildEffectsManager:PlayBuildEffect(model: Model, duration: number?)
 end
 
 --[[
-	Versión simplificada solo con fade (sin scale, para performance).
+	VersiÃÂ³n simplificada solo con fade (sin scale, para performance).
 
 	@param model Model - El modelo
-	@param duration number? - Duración (default: 0.5)
+	@param duration number? - DuraciÃÂ³n (default: 0.5)
 ]]
 function BuildEffectsManager:PlaySimpleBuildEffect(model: Model, duration: number?)
 	duration = duration or 0.5
@@ -425,10 +425,10 @@ function BuildEffectsManager:PlaySimpleBuildEffect(model: Model, duration: numbe
 end
 
 --[[
-	Efecto de "deconstrucción" (al vender).
+	Efecto de "deconstrucciÃÂ³n" (al vender).
 
 	@param model Model - El modelo a deconstruir
-	@param duration number? - Duración (default: 0.5)
+	@param duration number? - DuraciÃÂ³n (default: 0.5)
 ]]
 function BuildEffectsManager:PlayDeconstructEffect(model: Model, duration: number?)
 	duration = duration or 0.5

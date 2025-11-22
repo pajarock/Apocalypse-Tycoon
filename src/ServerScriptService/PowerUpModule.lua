@@ -5,11 +5,11 @@
 	-----------------------------------------------------------------------
 
 	Sistema completo de power-ups con:
-	? Gestión de powerups activos por jugador
+	? GestiÃÂ³n de powerups activos por jugador
 	? Spawning de powerups en el mundo
 	? Sistema de pickup visual
 	? Efectos VFX para cada powerup
-	? Integración con BaseModule y EconomyModule
+	? IntegraciÃÂ³n con BaseModule y EconomyModule
 	? Sistema de stacking y cooldowns
 
 	-----------------------------------------------------------------------
@@ -21,11 +21,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
 
--- Módulos
+-- MÃÂ³dulos
 local PowerUpConfig = require(ServerStorage.Config.PowerUpConfig)
 local Config = require(ServerStorage.Config.Config)
 
--- Referencias a otros módulos (se inyectarán después)
+-- Referencias a otros mÃÂ³dulos (se inyectarÃÂ¡n despuÃÂ©s)
 local BaseModule = nil
 local EconomyModule = nil
 
@@ -39,7 +39,7 @@ export type ActivePowerUp = {
 	PowerUpId: string,
 	StartTime: number,
 	Duration: number,
-	Data: any?, -- Data específica del powerup
+	Data: any?, -- Data especÃÂ­fica del powerup
 }
 
 -- -----------------------------------------------------------------------
@@ -111,11 +111,11 @@ end
 -- SISTEMA DE SPAWNING DE POWERUPS
 -- -----------------------------------------------------------------------
 
--- Crear powerup físico en el mundo
+-- Crear powerup fÃÂ­sico en el mundo
 function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3): Model?
 	local def = PowerUpConfig.PowerUps[powerUpId]
 	if not def then
-		warn(("[PowerUpModule] PowerUp inválido: %s"):format(powerUpId))
+		warn(("[PowerUpModule] PowerUp invÃÂ¡lido: %s"):format(powerUpId))
 		return nil
 	end
 
@@ -124,7 +124,7 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 	powerUpModel.Name = "PowerUp_" .. powerUpId
 	powerUpModel:SetAttribute("PowerUpId", powerUpId)
 
-	-- Base del powerup (parte física)
+	-- Base del powerup (parte fÃÂ­sica)
 	local base = Instance.new("Part")
 	base.Name = "Base"
 	base.Size = Vector3.new(4, 4, 4)
@@ -168,7 +168,7 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 	nameLabel.Text = def.Name
 	nameLabel.Parent = billboard
 
-	-- Partículas
+	-- PartÃÂ­culas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Color = ColorSequence.new(def.Color)
 	particles.Size = NumberSequence.new({
@@ -194,15 +194,15 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 	light.Range = 20
 	light.Parent = base
 
-	-- Animación de flotación y rotación
+	-- AnimaciÃÂ³n de flotaciÃÂ³n y rotaciÃÂ³n
 	task.spawn(function()
 		local startY = position.Y
 		local t = 0
 		while base and base.Parent do
 			t += 0.016 -- ~60 FPS
-			local offset = math.sin(t * 2) * 1 -- Oscilación de 1 stud
+			local offset = math.sin(t * 2) * 1 -- OscilaciÃÂ³n de 1 stud
 			base.CFrame = CFrame.new(position.X, startY + offset, position.Z)
-				* CFrame.Angles(0, t, 0) -- Rotación continua
+				* CFrame.Angles(0, t, 0) -- RotaciÃÂ³n continua
 			task.wait(0.016)
 		end
 	end)
@@ -210,7 +210,7 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 	powerUpModel.PrimaryPart = base
 	powerUpModel.Parent = workspace
 
-	-- Detectar colisión con jugador
+	-- Detectar colisiÃÂ³n con jugador
 	base.Touched:Connect(function(hit)
 		local character = hit.Parent
 		if not character then return end
@@ -223,7 +223,7 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 		powerUpModel:Destroy()
 	end)
 
-	-- Auto-destruir después de 30 segundos
+	-- Auto-destruir despuÃÂ©s de 30 segundos
 	Debris:AddItem(powerUpModel, 30)
 
 	if DEBUG then
@@ -237,7 +237,7 @@ function PowerUpModule.SpawnPowerUpInWorld(powerUpId: string, position: Vector3)
 end
 
 -- -----------------------------------------------------------------------
--- SISTEMA DE COLECCIÓN Y ACTIVACIÓN
+-- SISTEMA DE COLECCIÃÂN Y ACTIVACIÃÂN
 -- -----------------------------------------------------------------------
 
 function PowerUpModule.CollectPowerUp(userId: number, powerUpId: string)
@@ -245,7 +245,7 @@ function PowerUpModule.CollectPowerUp(userId: number, powerUpId: string)
 
 	local def = PowerUpConfig.PowerUps[powerUpId]
 	if not def then
-		warn(("[PowerUpModule] PowerUp inválido: %s"):format(powerUpId))
+		warn(("[PowerUpModule] PowerUp invÃÂ¡lido: %s"):format(powerUpId))
 		return
 	end
 
@@ -302,7 +302,7 @@ function PowerUpModule.ActivatePowerUp(userId: number, powerUpId: string)
 
 	table.insert(PlayerPowerUps[userId].ActivePowerUps, activePowerUp)
 
-	-- Llamar función de activación específica
+	-- Llamar funciÃÂ³n de activaciÃÂ³n especÃÂ­fica
 	if def.OnActivate then
 		local activateFunc = PowerUpModule[def.OnActivate]
 		if activateFunc then
@@ -316,13 +316,13 @@ function PowerUpModule.ActivatePowerUp(userId: number, powerUpId: string)
 		PowerUpActivated:FireClient(player, powerUpId, duration)
 	end
 
-	-- Programar expiración
+	-- Programar expiraciÃÂ³n
 	if duration > 0 then
 		task.delay(duration, function()
 			PowerUpModule.ExpirePowerUp(userId, powerUpId)
 		end)
 	else
-		-- ? FIX: Powerups instantáneos (duration = 0) deben expirar inmediatamente
+		-- ? FIX: Powerups instantÃÂ¡neos (duration = 0) deben expirar inmediatamente
 		-- Damos 0.5s para que se vea el efecto visual, luego expiramos
 		task.delay(0.5, function()
 			PowerUpModule.ExpirePowerUp(userId, powerUpId)
@@ -330,7 +330,7 @@ function PowerUpModule.ActivatePowerUp(userId: number, powerUpId: string)
 	end
 
 	if DEBUG then
-		print(("[PowerUpModule] PowerUp activado: %s para userId %d (duración: %.1fs)"):format(
+		print(("[PowerUpModule] PowerUp activado: %s para userId %d (duraciÃÂ³n: %.1fs)"):format(
 			powerUpId, userId, duration
 			))
 	end
@@ -360,10 +360,10 @@ function PowerUpModule.ExpirePowerUp(userId: number, powerUpId: string)
 	end
 
 	if not found and DEBUG then
-		warn(("[PowerUpModule] ?? Intentó expirar powerup inexistente: %s para userId %d"):format(powerUpId, userId))
+		warn(("[PowerUpModule] ?? IntentÃÂ³ expirar powerup inexistente: %s para userId %d"):format(powerUpId, userId))
 	end
 
-	-- Llamar función de limpieza específica
+	-- Llamar funciÃÂ³n de limpieza especÃÂ­fica
 	local def = PowerUpConfig.PowerUps[powerUpId]
 	if def and def.OnDeactivate then
 		local deactivateFunc = PowerUpModule[def.OnDeactivate]
@@ -372,7 +372,7 @@ function PowerUpModule.ExpirePowerUp(userId: number, powerUpId: string)
 		end
 	end
 
-	-- Cleanup específico por powerup (asegurar limpieza completa)
+	-- Cleanup especÃÂ­fico por powerup (asegurar limpieza completa)
 	if powerUpId == "SuperDash" then
 		DashCooldownOverride[userId] = nil
 	elseif powerUpId == "IncomeBoost" then
@@ -416,7 +416,7 @@ function PowerUpModule.ExpirePowerUp(userId: number, powerUpId: string)
 end
 
 -- -----------------------------------------------------------------------
--- IMPLEMENTACIÓN DE POWERUPS ESPECÍFICOS
+-- IMPLEMENTACIÃÂN DE POWERUPS ESPECÃÂFICOS
 -- -----------------------------------------------------------------------
 
 -- ???????????????????????????????????????????????????????????????
@@ -437,7 +437,7 @@ end
 -- ???????????????????????????????????????????????????????????????
 function PowerUpModule.ActivateDoubleDamage(userId: number, powerUp: ActivePowerUp)
 	-- Este se maneja en el cliente/sistema de armas
-	-- Aquí solo guardamos que está activo
+	-- AquÃÂ­ solo guardamos que estÃÂ¡ activo
 	powerUp.Data.DamageMultiplier = 2.0
 
 	if DEBUG then
@@ -546,7 +546,7 @@ function PowerUpModule.ActivateMiniDrone(userId: number, powerUp: ActivePowerUp)
 		end
 	end)
 
-	-- Auto-destruir después de la duración
+	-- Auto-destruir despuÃÂ©s de la duraciÃÂ³n
 	task.delay(powerUp.Duration, function()
 		if drone and drone.Parent then
 			drone:Destroy()
@@ -573,7 +573,7 @@ function PowerUpModule.ActivateSpeedBoost(userId: number, powerUp: ActivePowerUp
 
 	powerUp.Data.OriginalSpeed = originalSpeed
 
-	-- Restaurar después de la duración
+	-- Restaurar despuÃÂ©s de la duraciÃÂ³n
 	task.delay(powerUp.Duration, function()
 		if humanoid and humanoid.Parent then
 			humanoid.WalkSpeed = originalSpeed
@@ -619,7 +619,7 @@ function PowerUpModule.ActivateDefensiveBurst(userId: number, powerUp: ActivePow
 
 	local position = humanoidRootPart.Position
 
-	-- Crear explosión visual
+	-- Crear explosiÃÂ³n visual
 	local explosion = Instance.new("Explosion")
 	explosion.Position = position
 	explosion.BlastRadius = 100
@@ -707,10 +707,10 @@ function PowerUpModule.ActivateIncomeBoost(userId: number, powerUp: ActivePowerU
 end
 
 -- -----------------------------------------------------------------------
--- GETTERS PARA OTROS MÓDULOS
+-- GETTERS PARA OTROS MÃÂDULOS
 -- -----------------------------------------------------------------------
 
--- Verificar si SuperDash está activo (para sistema de dash)
+-- Verificar si SuperDash estÃÂ¡ activo (para sistema de dash)
 function PowerUpModule.IsSuperDashActive(userId: number): boolean
 	return DashCooldownOverride[userId] == true
 end
@@ -720,7 +720,7 @@ function PowerUpModule.GetIncomeMultiplier(userId: number): number
 	return IncomeBoostMultipliers[userId] or 1.0
 end
 
--- Verificar si BaseShield puede bloquear daño
+-- Verificar si BaseShield puede bloquear daÃÂ±o
 function PowerUpModule.TryUseBaseShield(userId: number): boolean
 	if BaseShieldActive[userId] then
 		BaseShieldActive[userId] = nil -- Consumir shield
@@ -736,7 +736,7 @@ function PowerUpModule.TryUseCriticalParry(userId: number, meteorPosition: Vecto
 		CriticalParryActive[userId] = nil
 		PowerUpModule.ExpirePowerUp(userId, "CriticalParry")
 
-		-- Crear explosión en la posición del meteorito
+		-- Crear explosiÃÂ³n en la posiciÃÂ³n del meteorito
 		local explosion = Instance.new("Explosion")
 		explosion.Position = meteorPosition
 		explosion.BlastRadius = 80
@@ -758,7 +758,7 @@ function PowerUpModule.TryUseCriticalParry(userId: number, meteorPosition: Vecto
 	return false
 end
 
--- Verificar si Meteor Jammer está activo
+-- Verificar si Meteor Jammer estÃÂ¡ activo
 function PowerUpModule.IsMeteorJammerActive(userId: number): boolean
 	local endTime = MeteorJammerActive[userId]
 	if endTime and tick() < endTime then
@@ -776,7 +776,7 @@ function PowerUpModule.TryDroneIntercept(userId: number): boolean
 			powerUp.Data.InterceptsRemaining -= 1
 
 			if DEBUG then
-				print(("[PowerUpModule] Dron interceptó meteorito para userId %d (quedan %d)"):format(
+				print(("[PowerUpModule] Dron interceptÃÂ³ meteorito para userId %d (quedan %d)"):format(
 					userId, powerUp.Data.InterceptsRemaining
 					))
 			end
@@ -797,18 +797,18 @@ function PowerUpModule.TryDroneIntercept(userId: number): boolean
 end
 
 -- -----------------------------------------------------------------------
--- SISTEMA DE SPAWN AUTOMÁTICO
+-- SISTEMA DE SPAWN AUTOMÃÂTICO
 -- -----------------------------------------------------------------------
 
--- Spawnear powerup para un jugador que completó una wave
+-- Spawnear powerup para un jugador que completÃÂ³ una wave
 function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, waveNumber: number?)
-	-- ? VALIDACIÓN: Verificar que userId sea un número
+	-- ? VALIDACIÃÂN: Verificar que userId sea un nÃÂºmero
 	if type(userId) ~= "number" then
-		warn(("[PowerUpModule] ? SpawnPowerUpForPlayer recibió userId inválido: %s (tipo: %s)"):format(
+		warn(("[PowerUpModule] ? SpawnPowerUpForPlayer recibiÃÂ³ userId invÃÂ¡lido: %s (tipo: %s)"):format(
 			tostring(userId), type(userId)
 			))
-		warn("[PowerUpModule] Stack trace - Esto se llamó desde EventManager probablemente")
-		warn("[PowerUpModule] ?? SOLUCIÓN: En EventManager.lua línea ~349, cambia a:")
+		warn("[PowerUpModule] Stack trace - Esto se llamÃÂ³ desde EventManager probablemente")
+		warn("[PowerUpModule] ?? SOLUCIÃÂN: En EventManager.lua lÃÂ­nea ~349, cambia a:")
 		warn("    PowerUpManager:SpawnRandomPowerUp(userId, 'Normal')")
 		warn("    NO pases meteorPosition o player, solo player.UserId")
 		return
@@ -820,11 +820,11 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, wave
 	local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
 	if not humanoidRootPart then return end
 
-	-- ? SISTEMA HÍBRIDO: Determinístico + Probabilístico
+	-- ? SISTEMA HÃÂBRIDO: DeterminÃÂ­stico + ProbabilÃÂ­stico
 	local powerUpId: string? = nil
 	local wave = waveNumber or 0
 
-	-- WAVE 3: Siempre FullHeal (introducción amigable)
+	-- WAVE 3: Siempre FullHeal (introducciÃÂ³n amigable)
 	if wave == 3 then
 		powerUpId = "FullHeal"
 		if DEBUG then
@@ -836,7 +836,7 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, wave
 		local epicPowerups = {"GodShield", "UltraCharge"}
 		powerUpId = epicPowerups[math.random(1, #epicPowerups)]
 		if DEBUG then
-			print(("[PowerUpModule] ?? Boss Wave %d - Spawneando %s épico"):format(wave, powerUpId))
+			print(("[PowerUpModule] ?? Boss Wave %d - Spawneando %s ÃÂ©pico"):format(wave, powerUpId))
 		end
 
 		-- WAVE 5, 15, 25... (MiniBoss): Random Uncommon
@@ -846,7 +846,7 @@ function PowerUpModule.SpawnPowerUpForPlayer(userId: any, waveType: string, wave
 			print(("[PowerUpModule] ?? MiniBoss Wave %d - Spawneando Uncommon: %s"):format(wave, powerUpId or "nil"))
 		end
 
-		-- OTRAS WAVES: Random según probabilidad de waveType
+		-- OTRAS WAVES: Random segÃÂºn probabilidad de waveType
 	else
 		local rarity = PowerUpConfig.GetRandomRarity(waveType)
 		powerUpId = PowerUpConfig.GetRandomPowerUpByRarity(rarity)
@@ -903,7 +903,7 @@ end
 
 	@param userId number
 	@param powerUpId string
-	@return boolean - true si se agregó exitosamente
+	@return boolean - true si se agregÃÂ³ exitosamente
 	@return string? - mensaje de error
 ]]
 function PowerUpModule.AddToInventory(userId: number, powerUpId: string): (boolean, string?)
@@ -915,7 +915,7 @@ function PowerUpModule.AddToInventory(userId: number, powerUpId: string): (boole
 
 	-- Verificar si hay espacio
 	if #inventory >= MAX_INVENTORY_SLOTS then
-		return false, "Inventario lleno! (máx 5)"
+		return false, "Inventario lleno! (mÃÂ¡x 5)"
 	end
 
 	-- Agregar powerup
@@ -940,8 +940,8 @@ end
 	Usar powerup desde un slot del inventario.
 
 	@param userId number
-	@param slotIndex number - índice del slot (1-based)
-	@return boolean - true si se usó exitosamente
+	@param slotIndex number - ÃÂ­ndice del slot (1-based)
+	@return boolean - true si se usÃÂ³ exitosamente
 ]]
 function PowerUpModule.UseFromInventory(userId: number, slotIndex: number): boolean
 	if not PlayerInventories[userId] then
@@ -987,7 +987,7 @@ function PowerUpModule.GetInventory(userId: number): {string}
 end
 
 -- -----------------------------------------------------------------------
--- ?? SISTEMA DE MÁQUINA EXPENDEDORA
+-- ?? SISTEMA DE MÃÂQUINA EXPENDEDORA
 -- -----------------------------------------------------------------------
 
 -- Tracking de cooldown y primer uso por jugador
@@ -995,11 +995,11 @@ local VendingMachineCooldowns: {[number]: number} = {}
 local VendingMachineFirstUse: {[number]: boolean} = {}
 
 --[[
-	Comprar powerup desde la máquina expendedora.
+	Comprar powerup desde la mÃÂ¡quina expendedora.
 
 	@param userId number - ID del jugador
 	@return boolean - true si la compra fue exitosa
-	@return string? - Mensaje de error si falló
+	@return string? - Mensaje de error si fallÃÂ³
 ]]
 function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, string?)
 	local player = getPlayer(userId)
@@ -1026,7 +1026,7 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 		VendingMachineFirstUse[userId] = true
 
 		if DEBUG then
-			print(("[PowerUpModule] ?? Primer uso de máquina - IncomeBoost gratis garantizado para userId %d"):format(userId))
+			print(("[PowerUpModule] ?? Primer uso de mÃÂ¡quina - IncomeBoost gratis garantizado para userId %d"):format(userId))
 		end
 	else
 		-- ? Usos siguientes: Random por rareza
@@ -1035,7 +1035,7 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 		price = PowerUpConfig.VendingMachine.Prices[rarity] or 300
 
 		if DEBUG then
-			print(("[PowerUpModule] ?? Máquina expendedora - Rareza: %s, PowerUp: %s, Precio: $%d"):format(
+			print(("[PowerUpModule] ?? MÃÂ¡quina expendedora - Rareza: %s, PowerUp: %s, Precio: $%d"):format(
 				rarity, powerUpId, price
 				))
 		end
@@ -1077,7 +1077,7 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 	-- ? Agregar al inventario en vez de activar inmediatamente
 	local success, errorMsg = PowerUpModule.AddToInventory(userId, powerUpId)
 	if not success then
-		-- Revertir el cobro si el inventario está lleno
+		-- Revertir el cobro si el inventario estÃÂ¡ lleno
 		if EconomyModule then
 			local state = EconomyModule.GetState(userId)
 			if state then
@@ -1101,7 +1101,7 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 	VendingMachineCooldowns[userId] = now
 
 	if DEBUG then
-		print(("[PowerUpModule] ? Compra exitosa - userId %d recibió %s por $%d (agregado a inventario)"):format(
+		print(("[PowerUpModule] ? Compra exitosa - userId %d recibiÃÂ³ %s por $%d (agregado a inventario)"):format(
 			userId, powerUpId, price
 			))
 	end
@@ -1110,7 +1110,7 @@ function PowerUpModule.PurchaseFromVendingMachine(userId: number): (boolean, str
 	return true, powerUpId
 end
 
--- Obtener rareza random para máquina expendedora
+-- Obtener rareza random para mÃÂ¡quina expendedora
 function PowerUpModule.GetRandomVendingMachineRarity(): string
 	local roll = math.random(1, 100)
 	local rates = PowerUpConfig.VendingMachine.DropRates
@@ -1127,11 +1127,11 @@ function PowerUpModule.GetRandomVendingMachineRarity(): string
 end
 
 --[[
-	Spawnear chicle/pelota física de powerup que puede ser recogido.
+	Spawnear chicle/pelota fÃÂ­sica de powerup que puede ser recogido.
 
 	@param powerUpId string - ID del powerup
-	@param position Vector3 - Posición donde spawnearlo
-	@param userId number - ID del dueño (para que solo él lo pueda recoger)
+	@param position Vector3 - PosiciÃÂ³n donde spawnearlo
+	@param userId number - ID del dueÃÂ±o (para que solo ÃÂ©l lo pueda recoger)
 	@return Part - El chicle spawneado
 ]]
 function PowerUpModule.SpawnGumball(powerUpId: string, position: Vector3, userId: number): Part?
@@ -1158,7 +1158,7 @@ function PowerUpModule.SpawnGumball(powerUpId: string, position: Vector3, userId
 	light.Color = gumball.Color
 	light.Parent = gumball
 
-	-- Sparkles para efecto mágico
+	-- Sparkles para efecto mÃÂ¡gico
 	local sparkles = Instance.new("Sparkles")
 	sparkles.SparkleColor = gumball.Color
 	sparkles.Parent = gumball
@@ -1171,25 +1171,25 @@ function PowerUpModule.SpawnGumball(powerUpId: string, position: Vector3, userId
 		if not humanoid then return end
 
 		local player = game:GetService("Players"):GetPlayerFromCharacter(hit.Parent)
-		if not player or player.UserId ~= userId then return end -- Solo el dueño puede recogerlo
+		if not player or player.UserId ~= userId then return end -- Solo el dueÃÂ±o puede recogerlo
 
-		-- Ya está en el inventario (se agregó al comprar)
+		-- Ya estÃÂ¡ en el inventario (se agregÃÂ³ al comprar)
 		-- Solo destruir el visual
 		gumball:Destroy()
 
 		if DEBUG then
-			print(("[PowerUpModule] ?? Jugador %d recogió chicle de %s"):format(userId, powerUpId))
+			print(("[PowerUpModule] ?? Jugador %d recogiÃÂ³ chicle de %s"):format(userId, powerUpId))
 		end
 	end)
 
-	-- Auto-destruir después de 60 segundos si no se recoge
+	-- Auto-destruir despuÃÂ©s de 60 segundos si no se recoge
 	game:GetService("Debris"):AddItem(gumball, 60)
 
 	return gumball
 end
 
 -- -----------------------------------------------------------------------
--- SISTEMA DE INICIALIZACIÓN Y CLEANUP
+-- SISTEMA DE INICIALIZACIÃÂN Y CLEANUP
 -- -----------------------------------------------------------------------
 
 function PowerUpModule.InitPlayer(userId: number)

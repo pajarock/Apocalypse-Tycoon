@@ -154,17 +154,17 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Desliza un frame hacia adentro desde una dirección.
+	Desliza un frame hacia adentro desde una direcciÃÂ³n.
 
 	@param frame GuiObject - El frame a animar
 	@param direction string - "Left", "Right", "Up", "Down"
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 	@return Promise
 ]]
 function UIController:SlideIn(frame: GuiObject, direction: string, duration: number): any
 	local offset = SLIDE_OFFSETS[direction]
 	if not offset then
-		warn(("[UIController] Dirección inválida: %s"):format(direction))
+		warn(("[UIController] DirecciÃÂ³n invÃÂ¡lida: %s"):format(direction))
 		return createPromise(function(_, reject) reject("Invalid direction") end)
 	end
 
@@ -200,17 +200,17 @@ function UIController:SlideIn(frame: GuiObject, direction: string, duration: num
 end
 
 --[[
-	Desliza un frame hacia afuera en una dirección.
+	Desliza un frame hacia afuera en una direcciÃÂ³n.
 
 	@param frame GuiObject - El frame a animar
 	@param direction string - "Left", "Right", "Up", "Down"
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 	@return Promise
 ]]
 function UIController:SlideOut(frame: GuiObject, direction: string, duration: number): any
 	local offset = SLIDE_OFFSETS[direction]
 	if not offset then
-		warn(("[UIController] Dirección inválida: %s"):format(direction))
+		warn(("[UIController] DirecciÃÂ³n invÃÂ¡lida: %s"):format(direction))
 		return createPromise(function(_, reject) reject("Invalid direction") end)
 	end
 
@@ -237,7 +237,7 @@ end
 	Fade in (aparece gradualmente).
 
 	@param frame GuiObject - El frame a animar
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 	@return Promise
 ]]
 function UIController:FadeIn(frame: GuiObject, duration: number): any
@@ -273,7 +273,7 @@ end
 	Fade out (desaparece gradualmente).
 
 	@param frame GuiObject - El frame a animar
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 	@return Promise
 ]]
 function UIController:FadeOut(frame: GuiObject, duration: number): any
@@ -312,9 +312,9 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Agrega hover effect a un botón.
+	Agrega hover effect a un botÃÂ³n.
 
-	@param button GuiButton - El botón
+	@param button GuiButton - El botÃÂ³n
 	@param effectType string - "scale", "glow", "color", "scale+glow"
 ]]
 function UIController:AddHoverEffect(button: GuiButton, effectType: string)
@@ -418,7 +418,7 @@ function UIController:AddHoverEffect(button: GuiButton, effectType: string)
 				TweenService:Create(
 					button,
 					TweenInfo.new(HOVER_DURATION, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-					{Size = originalSize}  -- Este está bien
+					{Size = originalSize}  -- Este estÃÂ¡ bien
 				):Play()
 			end)
 		end
@@ -453,7 +453,7 @@ end
 --[[
 	Muestra feedback visual al comprar un upgrade.
 
-	@param button GuiButton - El botón que se clickeó
+	@param button GuiButton - El botÃÂ³n que se clickeÃÂ³
 ]]
 function UIController:PlayPurchaseEffect(button: GuiButton)
 	-- Bounce animation
@@ -485,7 +485,7 @@ end
 	Bounce effect (squash & stretch).
 
 	@param guiObject GuiObject - El objeto a animar
-	@param intensity number - Multiplicador de scale máximo
+	@param intensity number - Multiplicador de scale mÃÂ¡ximo
 ]]
 function UIController:Bounce(guiObject: GuiObject, intensity: number)
 	intensity = intensity or 1.15
@@ -516,7 +516,7 @@ function UIController:Bounce(guiObject: GuiObject, intensity: number)
 	local bounceUp = TweenService:Create(
 		guiObject,
 		TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Size = bounceSize}  -- ? Ahora sí usa UDim2 correcto
+		{Size = bounceSize}  -- ? Ahora sÃÂ­ usa UDim2 correcto
 	)
 
 	-- Bounce down
@@ -533,11 +533,11 @@ function UIController:Bounce(guiObject: GuiObject, intensity: number)
 end
 
 --[[
-	Crea un burst de partículas UI simples.
+	Crea un burst de partÃÂ­culas UI simples.
 
-	@param parent GuiObject - Parent donde crear partículas
-	@param color Color3 - Color de las partículas
-	@param count number - Cantidad de partículas
+	@param parent GuiObject - Parent donde crear partÃÂ­culas
+	@param color Color3 - Color de las partÃÂ­culas
+	@param count number - Cantidad de partÃÂ­culas
 ]]
 function UIController:CreateParticleBurst(parent: GuiObject, color: Color3, count: number)
 	for i = 1, count do
@@ -584,6 +584,6 @@ end
 -- INITIALIZATION
 -------------------------------------------------------------------------
 
-print("[UIController] ? Módulo cargado")
+print("[UIController] ? MÃÂ³dulo cargado")
 
 return UIController

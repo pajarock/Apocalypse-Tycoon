@@ -3,14 +3,14 @@
 	CAMERA CONTROLLER - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Maneja efectos de cámara como shake y flash para feedback visual.
+	Maneja efectos de cÃÂ¡mara como shake y flash para feedback visual.
 
 	FEATURES:
 	? Camera shake con intensidades configurables
 	? Screen flash con colores custom
-	? Mobile-safe (reduce intensidad automáticamente)
+	? Mobile-safe (reduce intensidad automÃÂ¡ticamente)
 	? Settings toggle (respeta preferencias del jugador)
-	? Thread-safe (múltiples shakes pueden ocurrir simultáneamente)
+	? Thread-safe (mÃÂºltiples shakes pueden ocurrir simultÃÂ¡neamente)
 
 	USAGE:
 		local CameraController = require(script.Parent.CameraController)
@@ -34,7 +34,7 @@
 
 	SETTINGS:
 	- Los jugadores pueden desactivar shake en settings
-	- Mobile automáticamente reduce intensidad 50%
+	- Mobile automÃÂ¡ticamente reduce intensidad 50%
 ]]
 
 local Players = game:GetService("Players")
@@ -126,25 +126,25 @@ end
 	Aplica camera shake con intensidad predefinida.
 
 	@param intensity string - "Light", "Medium", o "Heavy"
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 ]]
 function CameraController:Shake(intensity: string, duration: number)
 	print("[CameraController] Shake", intensity, duration)
 	local amp = SHAKE_INTENSITY[intensity] or 0.5
-	-- si ya tienes un RenderStepped, asegúrate de que se conecte
+	-- si ya tienes un RenderStepped, asegÃÂºrate de que se conecte
 	local rs = game:GetService("RunService")
 	local t0 = time()
 	local conn; conn = rs.RenderStepped:Connect(function()
 		local t = time() - t0
 		if t >= (duration or 0.6) then conn:Disconnect(); return end
 		if not camera then camera = workspace.CurrentCamera end
-		-- pequeño roll visible
+		-- pequeÃÂ±o roll visible
 		camera.CFrame = camera.CFrame * CFrame.Angles(0, 0, math.sin(t*40) * 0.03 * amp)
 	end)
 
 	local intensityValue = SHAKE_INTENSITY[intensity]
 	if not intensityValue then
-		warn(("[CameraController] Intensidad inválida: %s"):format(intensity))
+		warn(("[CameraController] Intensidad invÃÂ¡lida: %s"):format(intensity))
 		return
 	end
 
@@ -155,7 +155,7 @@ end
 	Aplica camera shake con intensidad custom.
 
 	@param intensity number - Valor de intensidad (0.0 - 1.0)
-	@param duration number - Duración en segundos
+	@param duration number - DuraciÃÂ³n en segundos
 ]]
 function CameraController:ShakeCustom(intensity: number, duration: number)
 	if not self.Enabled then
@@ -214,8 +214,8 @@ end
 	Aplica un flash de pantalla completa.
 
 	@param color Color3 - Color del flash
-	@param intensity number - Opacidad máxima (0.0 - 1.0)
-	@param duration number - Duración en segundos
+	@param intensity number - Opacidad mÃÂ¡xima (0.0 - 1.0)
+	@param duration number - DuraciÃÂ³n en segundos
 ]]
 function CameraController:Flash(color: Color3, intensity: number, duration: number)
 	if not self.Enabled then
@@ -263,7 +263,7 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Habilita/deshabilita efectos de cámara.
+	Habilita/deshabilita efectos de cÃÂ¡mara.
 
 	@param enabled boolean - true para habilitar, false para deshabilitar
 ]]
@@ -276,7 +276,7 @@ function CameraController:SetEnabled(enabled: boolean)
 end
 
 --[[
-	Retorna si los efectos están habilitados.
+	Retorna si los efectos estÃÂ¡n habilitados.
 
 	@return boolean - true si habilitado
 ]]
@@ -321,6 +321,6 @@ if DEBUG_MODE then
 	print("[CameraController] DEBUG: Press K para shake, L para flash")
 end
 
-print("[CameraController] ? Módulo cargado")
+print("[CameraController] ? MÃÂ³dulo cargado")
 
 return CameraController

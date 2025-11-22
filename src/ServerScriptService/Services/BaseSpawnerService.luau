@@ -1,18 +1,18 @@
 --!strict
 --[[
-	BaseSpawnerService - Sistema Avanzado de Generación de Bases
+	BaseSpawnerService - Sistema Avanzado de GeneraciÃÂ³n de Bases
 
-	CARACTERÍSTICAS:
-	- Algoritmo de distribución espacial tipo espiral de Arquímedes
-	- Object pooling para optimización de rendimiento
+	CARACTERÃÂSTICAS:
+	- Algoritmo de distribuciÃÂ³n espacial tipo espiral de ArquÃÂ­medes
+	- Object pooling para optimizaciÃÂ³n de rendimiento
 	- Sistema de zonas configurables (spawn, build, restricted)
 	- Anti-overlap con collision detection
 	- Event-driven architecture para updates reactivos
 
-	ALGORITMO MATEMÁTICO:
-	Spiral de Arquímedes: r = a + b * θ
-	- Distribuye bases en patrón espiral expansivo
-	- Garantiza distancia mínima entre bases
+	ALGORITMO MATEMÃÂTICO:
+	Spiral de ArquÃÂ­medes: r = a + b * ÃÂ¸
+	- Distribuye bases en patrÃÂ³n espiral expansivo
+	- Garantiza distancia mÃÂ­nima entre bases
 	- Escalable para N jugadores sin colisiones
 
 	AUTHOR: Epic Base System v1
@@ -23,9 +23,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Knit = require(ReplicatedStorage.Knit)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	TYPES & CONSTANTS
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 export type BaseData = {
 	UserId: number,
@@ -41,8 +41,8 @@ export type BaseData = {
 export type SpawnConfig = {
 	-- Spiral algorithm parameters
 	SpiralStart: number,           -- Radio inicial del espiral
-	SpiralSpacing: number,         -- Separación entre vueltas
-	SpiralRotation: number,        -- Rotación por vuelta (radianes)
+	SpiralSpacing: number,         -- SeparaciÃÂ³n entre vueltas
+	SpiralRotation: number,        -- RotaciÃÂ³n por vuelta (radianes)
 
 	-- Base dimensions
 	BasePlateSize: Vector3,
@@ -65,7 +65,7 @@ export type SpawnConfig = {
 local DEFAULT_CONFIG: SpawnConfig = {
 	SpiralStart = 50,
 	SpiralSpacing = 80,
-	SpiralRotation = math.pi * 0.8, -- ~144° por base (golden angle aproximado)
+	SpiralRotation = math.pi * 0.8, -- ~144ÃÂ° por base (golden angle aproximado)
 
 	BasePlateSize = Vector3.new(120, 4, 120),
 	BasePlateHeight = 5,
@@ -81,9 +81,9 @@ local DEFAULT_CONFIG: SpawnConfig = {
 	ShowSpawnZones = true,
 }
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	SERVICE DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 local BaseSpawnerService = Knit.CreateService({
 	Name = "BaseSpawnerService",
@@ -96,26 +96,26 @@ local baseCount = 0
 local config: SpawnConfig = DEFAULT_CONFIG
 local basesFolder: Folder = nil
 
---[[────────────────────────────────────────────────────────────────────────
-	SPIRAL ALGORITHM - Arquímedes Distribution
-────────────────────────────────────────────────────────────────────────]]
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+	SPIRAL ALGORITHM - ArquÃÂ­medes Distribution
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Calcula la posición óptima para una base usando espiral de Arquímedes.
+	Calcula la posiciÃÂ³n ÃÂ³ptima para una base usando espiral de ArquÃÂ­medes.
 
-	MATEMÁTICAS:
-	- r = a + b*θ  (ecuación polar del espiral)
-	- x = r * cos(θ)
-	- y = r * sin(θ)
+	MATEMÃÂTICAS:
+	- r = a + b*ÃÂ¸  (ecuaciÃÂ³n polar del espiral)
+	- x = r * cos(ÃÂ¸)
+	- y = r * sin(ÃÂ¸)
 
 	VENTAJAS:
-	- Distribución uniforme y predecible
-	- No requiere búsqueda de espacio libre
+	- DistribuciÃÂ³n uniforme y predecible
+	- No requiere bÃÂºsqueda de espacio libre
 	- Escalable linealmente O(1)
-	- Estéticamente agradable
+	- EstÃÂ©ticamente agradable
 
-	@param index - Índice de la base (0-indexed)
-	@return Vector3 - Posición en el mundo
+	@param index - ÃÂndice de la base (0-indexed)
+	@return Vector3 - PosiciÃÂ³n en el mundo
 ]]
 local function calculateSpiralPosition(index: number): Vector3
 	local theta = index * config.SpiralRotation
@@ -128,22 +128,22 @@ local function calculateSpiralPosition(index: number): Vector3
 	return Vector3.new(x, y, z)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	COLLISION DETECTION - Anti-Overlap System
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Verifica si una posición tiene suficiente espacio libre.
+	Verifica si una posiciÃÂ³n tiene suficiente espacio libre.
 
 	ALGORITMO:
 	- Itera todas las bases existentes
 	- Calcula distancia euclidiana
-	- Compara contra threshold mínimo
+	- Compara contra threshold mÃÂ­nimo
 
-	OPTIMIZACIÓN: Podría usar spatial hashing para O(1), pero con <50 bases
-	el O(n) lineal es aceptable y más simple.
+	OPTIMIZACIÃÂN: PodrÃÂ­a usar spatial hashing para O(1), pero con <50 bases
+	el O(n) lineal es aceptable y mÃÂ¡s simple.
 
-	@param position - Posición a verificar
+	@param position - PosiciÃÂ³n a verificar
 	@return boolean - true si hay espacio libre
 ]]
 local function hasSpaceClearance(position: Vector3): boolean
@@ -156,19 +156,19 @@ local function hasSpaceClearance(position: Vector3): boolean
 	return true
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	BASE CREATION - Physical Instance Generation
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Crea la estructura física de una base (plate + zones).
+	Crea la estructura fÃÂ­sica de una base (plate + zones).
 
 	COMPONENTES:
-	1. BasePlate - Plataforma sólida principal
-	2. BuildZone - Área transparente para colocar upgrades
+	1. BasePlate - Plataforma sÃÂ³lida principal
+	2. BuildZone - ÃÂrea transparente para colocar upgrades
 	3. SpawnZone - Punto de teleport del jugador
 
-	OPTIMIZACIÓN: Las zonas son opcionales (configurables)
+	OPTIMIZACIÃÂN: Las zonas son opcionales (configurables)
 ]]
 local function createBaseStructure(position: Vector3, userId: number, playerName: string): BaseData
 	-- 1. BASE PLATE (plataforma principal)
@@ -187,7 +187,7 @@ local function createBaseStructure(position: Vector3, userId: number, playerName
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
 
-	-- 2. BUILD ZONE (área de construcción - opcional)
+	-- 2. BUILD ZONE (ÃÂ¡rea de construcciÃÂ³n - opcional)
 	local buildZone: Model? = nil
 	if config.ShowBuildZones then
 		buildZone = Instance.new("Model")
@@ -244,24 +244,24 @@ local function createBaseStructure(position: Vector3, userId: number, playerName
 	}
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	PUBLIC API - Service Methods
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Genera una base para un jugador usando algoritmo spiral.
 
 	PROCESO:
-	1. Verificar límites (max bases, duplicados)
-	2. Calcular posición con spiral algorithm
+	1. Verificar lÃÂ­mites (max bases, duplicados)
+	2. Calcular posiciÃÂ³n con spiral algorithm
 	3. Verificar colisiones
-	4. Crear estructura física
+	4. Crear estructura fÃÂ­sica
 	5. Registrar en estado interno
 	6. Retornar datos de la base
 
 	@param userId - ID del jugador
 	@param playerName - Nombre del jugador
-	@return BaseData? - Datos de la base creada, o nil si falló
+	@return BaseData? - Datos de la base creada, o nil si fallÃÂ³
 ]]
 function BaseSpawnerService:SpawnBase(userId: number, playerName: string): BaseData?
 	-- Validaciones
@@ -275,16 +275,16 @@ function BaseSpawnerService:SpawnBase(userId: number, playerName: string): BaseD
 		return nil
 	end
 
-	-- Calcular posición con spiral algorithm
+	-- Calcular posiciÃÂ³n con spiral algorithm
 	local position = calculateSpiralPosition(baseCount)
 
-	-- Verificar clearance (safety check, aunque spiral debería garantizarlo)
+	-- Verificar clearance (safety check, aunque spiral deberÃÂ­a garantizarlo)
 	if not hasSpaceClearance(position) then
 		warn("[BaseSpawnerService] No space clearance at position:", position)
 		return nil
 	end
 
-	-- Crear base física
+	-- Crear base fÃÂ­sica
 	local baseData = createBaseStructure(position, userId, playerName)
 
 	-- Registrar en estado
@@ -292,7 +292,7 @@ function BaseSpawnerService:SpawnBase(userId: number, playerName: string): BaseD
 	baseCount += 1
 
 	print(string.format(
-		"[BaseSpawnerService] ✅ Base spawned for %s (ID: %d) at %s",
+		"[BaseSpawnerService] Ã¢ÂÂ Base spawned for %s (ID: %d) at %s",
 		playerName,
 		userId,
 		tostring(position)
@@ -305,7 +305,7 @@ end
 	Destruye una base de un jugador.
 
 	@param userId - ID del jugador
-	@return boolean - true si se eliminó exitosamente
+	@return boolean - true si se eliminÃÂ³ exitosamente
 ]]
 function BaseSpawnerService:DestroyBase(userId: number): boolean
 	local baseData = activeBases[userId]
@@ -313,7 +313,7 @@ function BaseSpawnerService:DestroyBase(userId: number): boolean
 		return false
 	end
 
-	-- Destruir objetos físicos
+	-- Destruir objetos fÃÂ­sicos
 	if baseData.BasePlate then baseData.BasePlate:Destroy() end
 	if baseData.BuildZone then baseData.BuildZone:Destroy() end
 	if baseData.SpawnZone then baseData.SpawnZone:Destroy() end
@@ -323,7 +323,7 @@ function BaseSpawnerService:DestroyBase(userId: number): boolean
 	baseCount -= 1
 
 	print(string.format(
-		"[BaseSpawnerService] 🗑️ Base destroyed for userId: %d",
+		"[BaseSpawnerService] Ã°ÂÂÂÃ¯Â¸Â Base destroyed for userId: %d",
 		userId
 	))
 
@@ -350,9 +350,9 @@ function BaseSpawnerService:GetAllBases(): { [number]: BaseData }
 end
 
 --[[
-	Actualiza la configuración del spawner.
+	Actualiza la configuraciÃÂ³n del spawner.
 
-	@param newConfig - Configuración parcial o completa
+	@param newConfig - ConfiguraciÃÂ³n parcial o completa
 ]]
 function BaseSpawnerService:UpdateConfig(newConfig: SpawnConfig?)
 	if newConfig then
@@ -364,15 +364,15 @@ function BaseSpawnerService:UpdateConfig(newConfig: SpawnConfig?)
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
-	CLIENT API - Métodos Expuestos al Cliente
-────────────────────────────────────────────────────────────────────────]]
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+	CLIENT API - MÃÂ©todos Expuestos al Cliente
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Solicita la creación de una base desde el cliente.
+	Solicita la creaciÃÂ³n de una base desde el cliente.
 
-	SEGURIDAD: Este método solo sirve como trigger, toda validación
-	está en el servidor.
+	SEGURIDAD: Este mÃÂ©todo solo sirve como trigger, toda validaciÃÂ³n
+	estÃÂ¡ en el servidor.
 ]]
 function BaseSpawnerService.Client:RequestBase(player: Player)
 	return self.Server:SpawnBase(player.UserId, player.Name)
@@ -385,9 +385,9 @@ function BaseSpawnerService.Client:GetMyBase(player: Player)
 	return self.Server:GetBaseData(player.UserId)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 function BaseSpawnerService:KnitInit()
 	-- Crear/obtener carpeta de bases en Workspace
@@ -398,11 +398,11 @@ function BaseSpawnerService:KnitInit()
 		basesFolder.Parent = workspace
 	end
 
-	print("[BaseSpawnerService] ⚙️ Initialized")
+	print("[BaseSpawnerService] Ã¢ÂÂÃ¯Â¸Â Initialized")
 end
 
 function BaseSpawnerService:KnitStart()
-	print("[BaseSpawnerService] ✅ Started - Spiral algorithm ready")
+	print("[BaseSpawnerService] Ã¢ÂÂ Started - Spiral algorithm ready")
 	print(string.format(
 		"[BaseSpawnerService] Config: Spiral(start=%.1f, spacing=%.1f), MaxBases=%d",
 		config.SpiralStart,

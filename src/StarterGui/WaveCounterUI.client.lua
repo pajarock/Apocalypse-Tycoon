@@ -1,17 +1,17 @@
 --!strict
 --[[
-	WAVE COUNTER UI - VERSIÓN ÉPICA
+	WAVE COUNTER UI - VERSIÃÂN ÃÂPICA
 	-----------------------------------------------------------------------
 
 	FEATURES:
 	- Wave counter en esquina superior IZQUIERDA (no tapado)
-	- Contador de dinero épico con animación
+	- Contador de dinero ÃÂ©pico con animaciÃÂ³n
 	- Mensaje "WAVE X COMPLETED!" en centro
-	- Diseño moderno y llamativo
+	- DiseÃÂ±o moderno y llamativo
 
-	INSTALACIÓN:
+	INSTALACIÃÂN:
 	1. Reemplazar WaveCounterUI.client.lua existente en StarterGui
-	2. O crear nuevo LocalScript con este código
+	2. O crear nuevo LocalScript con este cÃÂ³digo
 --]]
 
 local TweenService = game:GetService("TweenService")
@@ -43,12 +43,12 @@ screenGui.Parent = playerGui
 
 local waveFrame = Instance.new("Frame")
 waveFrame.Name = "WaveFrame"
-waveFrame.Size = UDim2.fromOffset(220, 80) -- Más grande
+waveFrame.Size = UDim2.fromOffset(220, 80) -- MÃÂ¡s grande
 waveFrame.Position = UDim2.new(0, 10, 0, 10) -- ? Superior IZQUIERDA
 waveFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 waveFrame.BackgroundTransparency = 0.05
 waveFrame.BorderSizePixel = 0
-waveFrame.Rotation = -1.5 -- Rotación sutil estilo urbano
+waveFrame.Rotation = -1.5 -- RotaciÃÂ³n sutil estilo urbano
 waveFrame.Parent = screenGui
 
 local waveCorner = Instance.new("UICorner")
@@ -57,7 +57,7 @@ waveCorner.Parent = waveFrame
 
 local waveStroke = Instance.new("UIStroke")
 waveStroke.Color = Color3.fromRGB(255, 170, 0)
-waveStroke.Thickness = 4 -- Más grueso
+waveStroke.Thickness = 4 -- MÃÂ¡s grueso
 waveStroke.Transparency = 0
 waveStroke.Parent = waveFrame
 
@@ -82,7 +82,7 @@ labelWave.Font = Enum.Font.GothamBlack
 labelWave.TextStrokeTransparency = 0.5
 labelWave.Parent = waveFrame
 
--- Label número en LuckiestGuy (ESTILO GRAFITI)
+-- Label nÃÂºmero en LuckiestGuy (ESTILO GRAFITI)
 local labelNumber = Instance.new("TextLabel")
 labelNumber.Name = "LabelNumber"
 labelNumber.Size = UDim2.fromScale(1, 0.42)
@@ -94,7 +94,7 @@ labelNumber.TextScaled = true
 labelNumber.Font = Enum.Font.LuckiestGuy -- GRAFITI
 labelNumber.TextStrokeTransparency = 0.3
 labelNumber.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-labelNumber.Rotation = -2 -- Inclinación grafiti
+labelNumber.Rotation = -2 -- InclinaciÃÂ³n grafiti
 labelNumber.Parent = waveFrame
 
 -- ? Label "Survived" (rondas sobrevividas)
@@ -158,7 +158,7 @@ completedText.TextScaled = true
 completedText.Font = Enum.Font.LuckiestGuy -- GRAFITI
 completedText.TextStrokeTransparency = 0
 completedText.TextStrokeColor3 = Color3.fromRGB(100, 50, 0)
-completedText.Rotation = -3 -- Inclinación grafiti
+completedText.Rotation = -3 -- InclinaciÃÂ³n grafiti
 completedText.Parent = completedFrame
 
 -- Subtexto
@@ -174,7 +174,7 @@ completedSubtext.Font = Enum.Font.Gotham
 completedSubtext.Parent = completedFrame
 
 -------------------------------------------------------------------------
--- FUNCIONES DE ANIMACIÓN
+-- FUNCIONES DE ANIMACIÃÂN
 -------------------------------------------------------------------------
 
 -- ? ELIMINADO: formatMoney y animateMoneyChange (ahora en CashIncomeWidget)
@@ -182,7 +182,7 @@ completedSubtext.Parent = completedFrame
 local function playWavePulse()
 	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, true)
 	TweenService:Create(waveFrame, tweenInfo, {
-		Size = UDim2.fromOffset(240, 90) -- Más grande el pulse
+		Size = UDim2.fromOffset(240, 90) -- MÃÂ¡s grande el pulse
 	}):Play()
 end
 
@@ -208,7 +208,7 @@ local function showWaveCompleted(waveNum: number)
 	completedText.TextTransparency = 1
 	completedSubtext.TextTransparency = 1
 
-	-- Animación de entrada
+	-- AnimaciÃÂ³n de entrada
 	local tweenIn = TweenService:Create(completedFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic), {
 		Size = UDim2.fromOffset(500, 150),
 		BackgroundTransparency = 0.3
@@ -262,13 +262,13 @@ local function updateWave(newWave: number)
 end
 
 -------------------------------------------------------------------------
--- ? ANIMACIONES ÉPICAS (VICTORIA / DERROTA)
+-- ? ANIMACIONES ÃÂPICAS (VICTORIA / DERROTA)
 -------------------------------------------------------------------------
 
 -- Sonido de victoria
 local function playVictorySound()
 	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://6895079853" -- Sonido épico de victoria
+	sound.SoundId = "rbxassetid://6895079853" -- Sonido ÃÂ©pico de victoria
 	sound.Volume = 0.7
 	sound.Parent = game.SoundService
 	sound:Play()
@@ -285,7 +285,7 @@ local function playDefeatSound()
 	game.Debris:AddItem(sound, 3)
 end
 
--- ? ANIMACIÓN ÉPICA DE VICTORIA
+-- ? ANIMACIÃÂN ÃÂPICA DE VICTORIA
 local function playVictoryAnimation(waveNum: number, survived: number)
 	if DEBUG then
 		print(("[WaveCounterUI] ? VICTORIA - Wave %d"):format(waveNum))
@@ -294,7 +294,7 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 	-- Sonido
 	playVictorySound()
 
-	-- Bounce épico del widget
+	-- Bounce ÃÂ©pico del widget
 	local originalSize = waveFrame.Size
 	local bounceTween = TweenService:Create(
 		waveFrame,
@@ -314,12 +314,12 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 	waveStroke.Color = Color3.fromRGB(255, 215, 0)
 	waveStroke.Thickness = 5
 
-	-- TweenInfo(tiempo, estilo, dirección, repeticiones, reversa)
+	-- TweenInfo(tiempo, estilo, direcciÃÂ³n, repeticiones, reversa)
 	local pulseInfo = TweenInfo.new(
-		0.25,  -- Duración por pulso
+		0.25,  -- DuraciÃÂ³n por pulso
 		Enum.EasingStyle.Quad,
 		Enum.EasingDirection.InOut,
-		2,  -- Repetir 2 veces (ida y vuelta = 1 pulso, así que 2 repeticiones = 3 pulsos totales)
+		2,  -- Repetir 2 veces (ida y vuelta = 1 pulso, asÃÂ­ que 2 repeticiones = 3 pulsos totales)
 		true  -- Reversa (ida y vuelta)
 	)
 
@@ -364,7 +364,7 @@ local function playVictoryAnimation(waveNum: number, survived: number)
 	end)
 end
 
--- ?? ANIMACIÓN ÉPICA DE DERROTA
+-- ?? ANIMACIÃÂN ÃÂPICA DE DERROTA
 local function playDefeatAnimation(waveNum: number)
 	if DEBUG then
 		print(("[WaveCounterUI] ?? DERROTA - Wave %d"):format(waveNum))
@@ -441,7 +441,7 @@ local function playDefeatAnimation(waveNum: number)
 end
 
 -------------------------------------------------------------------------
--- SINCRONIZACIÓN CON SERVIDOR
+-- SINCRONIZACIÃÂN CON SERVIDOR
 -------------------------------------------------------------------------
 
 -- Wave Counter
@@ -455,12 +455,12 @@ if currentWaveValue and currentWaveValue:IsA("IntValue") then
 	currentWaveValue:GetPropertyChangedSignal("Value"):Connect(function()
 		local newWave = currentWaveValue.Value
 
-		-- ? ARREGLADO: NO mostrar mensaje automático aquí
-		-- El servidor ya envía el mensaje a través de EventNotifier
-		-- Si mostramos aquí también, sale duplicado
+		-- ? ARREGLADO: NO mostrar mensaje automÃÂ¡tico aquÃÂ­
+		-- El servidor ya envÃÂ­a el mensaje a travÃÂ©s de EventNotifier
+		-- Si mostramos aquÃÂ­ tambiÃÂ©n, sale duplicado
 
 		--[[
-		-- CÓDIGO ANTIGUO (CAUSABA DUPLICADOS):
+		-- CÃÂDIGO ANTIGUO (CAUSABA DUPLICADOS):
 		if newWave > previousWave then
 			task.delay(0.5, function()
 				showWaveCompleted(previousWave)
@@ -476,7 +476,7 @@ if currentWaveValue and currentWaveValue:IsA("IntValue") then
 		print("[WaveCounterUI] ? Wave counter conectado")
 	end
 else
-	warn("[WaveCounterUI] ?? No se encontró CurrentWave")
+	warn("[WaveCounterUI] ?? No se encontrÃÂ³ CurrentWave")
 end
 
 -- ? ELIMINADO: Money Counter (ahora en CashIncomeWidget centralizado)
@@ -507,7 +507,7 @@ if stats then
 end
 
 -------------------------------------------------------------------------
--- ? ESCUCHAR RESULTADOS ÉPICOS DEL SERVIDOR
+-- ? ESCUCHAR RESULTADOS ÃÂPICOS DEL SERVIDOR
 -------------------------------------------------------------------------
 
 local remotes = ReplicatedStorage:WaitForChild("Remotes", 10)
@@ -533,8 +533,8 @@ if remotes then
 				))
 
 			if result == "victory" then
-				-- ? VICTORIA ÉPICA
-				print("[WaveCounterUI] ?? Reproduciendo animación de VICTORIA")
+				-- ? VICTORIA ÃÂPICA
+				print("[WaveCounterUI] ?? Reproduciendo animaciÃÂ³n de VICTORIA")
 				local success, err = pcall(function()
 					playVictoryAnimation(waveNum, survived)
 				end)
@@ -542,8 +542,8 @@ if remotes then
 					warn("[WaveCounterUI] ? Error en victoria animation:", err)
 				end
 			elseif result == "defeat" then
-				-- ?? DERROTA ÉPICA
-				print("[WaveCounterUI] ?? Reproduciendo animación de DERROTA")
+				-- ?? DERROTA ÃÂPICA
+				print("[WaveCounterUI] ?? Reproduciendo animaciÃÂ³n de DERROTA")
 				local success, err = pcall(function()
 					playDefeatAnimation(waveNum)
 				end)
@@ -556,15 +556,15 @@ if remotes then
 		end)
 
 		if DEBUG then
-			print("[WaveCounterUI] ? WaveResult remote conectado (mensajes épicos)")
+			print("[WaveCounterUI] ? WaveResult remote conectado (mensajes ÃÂ©picos)")
 		end
 	else
-		warn("[WaveCounterUI] ?? No se encontró WaveResult remote")
+		warn("[WaveCounterUI] ?? No se encontrÃÂ³ WaveResult remote")
 	end
 end
 
 -------------------------------------------------------------------------
 
 if DEBUG then
-	print("[WaveCounterUI] ? HUD Épico inicializado")
+	print("[WaveCounterUI] ? HUD ÃÂpico inicializado")
 end

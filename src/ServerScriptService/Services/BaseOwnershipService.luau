@@ -2,25 +2,25 @@
 --[[
 	BaseOwnershipService - Sistema Robusto de Permisos y Zonas
 
-	CARACTERÍSTICAS:
+	CARACTERÃÂSTICAS:
 	- Sistema de permisos multi-nivel (Owner, Team, Public)
-	- Zone validation con geometría 2D (point-in-circle)
-	- Anti-exploit: validación server-side de todos los placement
+	- Zone validation con geometrÃÂ­a 2D (point-in-circle)
+	- Anti-exploit: validaciÃÂ³n server-side de todos los placement
 	- Event-driven: notifica cambios de ownership
-	- Audit trail: registro de quién colocó qué
+	- Audit trail: registro de quiÃÂ©n colocÃÂ³ quÃÂ©
 
 	ARQUITECTURA DE PERMISOS:
-	┌─────────────────────────────────────────┐
-	│ OWNER      → Full control              │
-	│ TEAM       → Shared building (futuro)  │
-	│ PUBLIC     → Read-only visualization   │
-	└─────────────────────────────────────────┘
+	Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+	Ã¢ÂÂ OWNER      Ã¢ÂÂ Full control              Ã¢ÂÂ
+	Ã¢ÂÂ TEAM       Ã¢ÂÂ Shared building (futuro)  Ã¢ÂÂ
+	Ã¢ÂÂ PUBLIC     Ã¢ÂÂ Read-only visualization   Ã¢ÂÂ
+	Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
-	VALIDACIÓN ANTI-EXPLOIT:
-	1. ¿El jugador existe?
-	2. ¿Tiene una base spawneada?
-	3. ¿La posición está dentro de su BuildZone?
-	4. ¿No colisiona con objetos existentes?
+	VALIDACIÃÂN ANTI-EXPLOIT:
+	1. ÃÂ¿El jugador existe?
+	2. ÃÂ¿Tiene una base spawneada?
+	3. ÃÂ¿La posiciÃÂ³n estÃÂ¡ dentro de su BuildZone?
+	4. ÃÂ¿No colisiona con objetos existentes?
 
 	AUTHOR: Epic Ownership System v1
 	COMPLEXITY: O(1) ownership check, O(n) zone validation
@@ -30,23 +30,23 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Knit = require(ReplicatedStorage.Knit)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	TYPES & ENUMS
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 export type PermissionLevel = "Owner" | "Team" | "Public" | "None"
 
 export type ZoneType = "Build" | "Spawn" | "Restricted"
 
 export type PlacedObject = {
-	ObjectId: string,           -- GUID único del objeto
-	OwnerId: number,            -- UserId del dueño de la base
-	PlacedBy: number,           -- UserId de quien lo colocó
+	ObjectId: string,           -- GUID ÃÂºnico del objeto
+	OwnerId: number,            -- UserId del dueÃÂ±o de la base
+	PlacedBy: number,           -- UserId de quien lo colocÃÂ³
 	ObjectType: string,         -- Tipo de upgrade (ej: "Generator", "Turret")
 	Position: Vector3,
 	Rotation: number,
 	PlacedAt: number,           -- Timestamp
-	Instance: Instance?,        -- Referencia al objeto físico
+	Instance: Instance?,        -- Referencia al objeto fÃÂ­sico
 }
 
 export type ValidationResult = {
@@ -55,9 +55,9 @@ export type ValidationResult = {
 	ErrorCode: string?,
 }
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	SERVICE DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 local BaseOwnershipService = Knit.CreateService({
 	Name = "BaseOwnershipService",
@@ -67,22 +67,22 @@ local BaseOwnershipService = Knit.CreateService({
 -- Internal state
 local placedObjects: { [string]: PlacedObject } = {} -- Indexado por ObjectId
 local baseObjects: { [number]: { PlacedObject } } = {} -- Indexado por OwnerId (userId)
-local objectCounter = 0 -- Para generar IDs únicos
+local objectCounter = 0 -- Para generar IDs ÃÂºnicos
 
--- Dependencies (se obtendrán en KnitInit)
+-- Dependencies (se obtendrÃÂ¡n en KnitInit)
 local BaseSpawnerService
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	UTILITY - GUID Generation
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Genera un ID único para objetos colocados.
+	Genera un ID ÃÂºnico para objetos colocados.
 
 	FORMATO: OBJ_{timestamp}_{counter}_{random}
 	EJEMPLO: OBJ_1699999999_42_A3F7
 
-	@return string - ID único garantizado
+	@return string - ID ÃÂºnico garantizado
 ]]
 local function generateObjectId(): string
 	objectCounter += 1
@@ -91,24 +91,24 @@ local function generateObjectId(): string
 	return string.format("OBJ_%d_%d_%s", timestamp, objectCounter, random)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	GEOMETRY - Zone Validation
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Verifica si un punto está dentro de una zona circular (2D).
+	Verifica si un punto estÃÂ¡ dentro de una zona circular (2D).
 
-	MATEMÁTICAS:
+	MATEMÃÂTICAS:
 	- Ignora eje Y (solo plano XZ)
-	- Distancia euclidiana 2D: sqrt((x2-x1)² + (z2-z1)²)
-	- Punto está dentro si: distancia <= radio
+	- Distancia euclidiana 2D: sqrt((x2-x1)ÃÂ² + (z2-z1)ÃÂ²)
+	- Punto estÃÂ¡ dentro si: distancia <= radio
 
-	OPTIMIZACIÓN: Usa magnitud al cuadrado para evitar sqrt cuando sea posible
+	OPTIMIZACIÃÂN: Usa magnitud al cuadrado para evitar sqrt cuando sea posible
 
 	@param point - Punto a verificar (Vector3)
 	@param center - Centro de la zona (Vector3)
 	@param radius - Radio de la zona
-	@return boolean - true si está dentro
+	@return boolean - true si estÃÂ¡ dentro
 ]]
 local function isPointInZone(point: Vector3, center: Vector3, radius: number): boolean
 	-- Proyectar a plano XZ (ignorar altura Y)
@@ -122,16 +122,16 @@ local function isPointInZone(point: Vector3, center: Vector3, radius: number): b
 end
 
 --[[
-	Obtiene el tipo de zona en una posición para una base específica.
+	Obtiene el tipo de zona en una posiciÃÂ³n para una base especÃÂ­fica.
 
-	JERARQUÍA DE ZONAS (del más restrictivo al menos):
-	1. SpawnZone (radio pequeño) - Solo teleport
-	2. BuildZone (radio medio) - Construcción permitida
+	JERARQUÃÂA DE ZONAS (del mÃÂ¡s restrictivo al menos):
+	1. SpawnZone (radio pequeÃÂ±o) - Solo teleport
+	2. BuildZone (radio medio) - ConstrucciÃÂ³n permitida
 	3. Fuera de zonas - Prohibido
 
-	@param userId - Dueño de la base
-	@param position - Posición a verificar
-	@return ZoneType? - Tipo de zona, o nil si está fuera
+	@param userId - DueÃÂ±o de la base
+	@param position - PosiciÃÂ³n a verificar
+	@return ZoneType? - Tipo de zona, o nil si estÃÂ¡ fuera
 ]]
 local function getZoneTypeAtPosition(userId: number, position: Vector3): ZoneType?
 	local baseData = BaseSpawnerService:GetBaseData(userId)
@@ -141,11 +141,11 @@ local function getZoneTypeAtPosition(userId: number, position: Vector3): ZoneTyp
 
 	local baseCenter = baseData.Position
 
-	-- Obtener configuración de zonas (hardcodeado por ahora, podría venir de config)
+	-- Obtener configuraciÃÂ³n de zonas (hardcodeado por ahora, podrÃÂ­a venir de config)
 	local spawnRadius = 15  -- Radio del SpawnZone
 	local buildRadius = 60  -- Radio del BuildZone
 
-	-- Verificar SpawnZone primero (es más restrictivo)
+	-- Verificar SpawnZone primero (es mÃÂ¡s restrictivo)
 	if isPointInZone(position, baseCenter, spawnRadius) then
 		return "Spawn"
 	end
@@ -159,25 +159,25 @@ local function getZoneTypeAtPosition(userId: number, position: Vector3): ZoneTyp
 	return nil
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	PERMISSION SYSTEM - Access Control
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Determina el nivel de permisos de un jugador en una base.
 
 	NIVELES:
-	- "Owner"  → Dueño de la base (full control)
-	- "Team"   → Miembro del equipo (futuro: compartir bases)
-	- "Public" → Visitante (solo visualización)
-	- "None"   → Sin acceso (fuera de la base)
+	- "Owner"  Ã¢ÂÂ DueÃÂ±o de la base (full control)
+	- "Team"   Ã¢ÂÂ Miembro del equipo (futuro: compartir bases)
+	- "Public" Ã¢ÂÂ Visitante (solo visualizaciÃÂ³n)
+	- "None"   Ã¢ÂÂ Sin acceso (fuera de la base)
 
 	@param userId - ID del jugador
-	@param baseOwnerId - ID del dueño de la base
+	@param baseOwnerId - ID del dueÃÂ±o de la base
 	@return PermissionLevel - Nivel de permiso
 ]]
 local function getPermissionLevel(userId: number, baseOwnerId: number): PermissionLevel
-	-- Si es el dueño, tiene control total
+	-- Si es el dueÃÂ±o, tiene control total
 	if userId == baseOwnerId then
 		return "Owner"
 	end
@@ -189,21 +189,21 @@ local function getPermissionLevel(userId: number, baseOwnerId: number): Permissi
 	--     return "Team"
 	-- end
 
-	-- Por defecto, visitante público
+	-- Por defecto, visitante pÃÂºblico
 	return "Public"
 end
 
 --[[
-	Verifica si un jugador puede construir en una posición.
+	Verifica si un jugador puede construir en una posiciÃÂ³n.
 
 	VALIDACIONES:
 	1. Jugador debe tener base spawneada
-	2. Posición debe estar en BuildZone de su base
+	2. PosiciÃÂ³n debe estar en BuildZone de su base
 	3. No debe estar en SpawnZone (reservado)
 	4. Debe ser Owner o Team (Public no puede construir)
 
 	@param userId - ID del jugador
-	@param position - Posición donde quiere construir
+	@param position - PosiciÃÂ³n donde quiere construir
 	@return ValidationResult - Resultado con error si falla
 ]]
 local function canBuildAtPosition(userId: number, position: Vector3): ValidationResult
@@ -223,7 +223,7 @@ local function canBuildAtPosition(userId: number, position: Vector3): Validation
 	if not zoneType then
 		return {
 			IsValid = false,
-			ErrorMessage = "Posición fuera de tu zona de construcción",
+			ErrorMessage = "PosiciÃÂ³n fuera de tu zona de construcciÃÂ³n",
 			ErrorCode = "OUT_OF_BOUNDS",
 		}
 	end
@@ -242,7 +242,7 @@ local function canBuildAtPosition(userId: number, position: Vector3): Validation
 		if permission ~= "Owner" and permission ~= "Team" then
 			return {
 				IsValid = false,
-				ErrorMessage = "No tienes permisos para construir aquí",
+				ErrorMessage = "No tienes permisos para construir aquÃÂ­",
 				ErrorCode = "INSUFFICIENT_PERMISSIONS",
 			}
 		end
@@ -260,28 +260,28 @@ local function canBuildAtPosition(userId: number, position: Vector3): Validation
 	}
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	OBJECT MANAGEMENT - Placement Tracking
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Registra un objeto colocado en una base.
 
 	PROCESO:
-	1. Generar ID único
+	1. Generar ID ÃÂºnico
 	2. Crear registro en placedObjects
-	3. Agregar a índice de base (baseObjects)
+	3. Agregar a ÃÂ­ndice de base (baseObjects)
 	4. Retornar PlacedObject data
 
-	IMPORTANTE: Este método NO valida permisos, solo registra.
+	IMPORTANTE: Este mÃÂ©todo NO valida permisos, solo registra.
 	Llama a canBuildAtPosition() ANTES de llamar esto.
 
-	@param ownerId - Dueño de la base
-	@param placedBy - Quien colocó el objeto
+	@param ownerId - DueÃÂ±o de la base
+	@param placedBy - Quien colocÃÂ³ el objeto
 	@param objectType - Tipo de upgrade
-	@param position - Posición del objeto
-	@param rotation - Rotación (grados)
-	@param instance - Referencia física opcional
+	@param position - PosiciÃÂ³n del objeto
+	@param rotation - RotaciÃÂ³n (grados)
+	@param instance - Referencia fÃÂ­sica opcional
 	@return PlacedObject - Datos del objeto registrado
 ]]
 local function registerPlacedObject(
@@ -305,17 +305,17 @@ local function registerPlacedObject(
 		Instance = instance,
 	}
 
-	-- Registrar en índice global
+	-- Registrar en ÃÂ­ndice global
 	placedObjects[objectId] = placedObject
 
-	-- Registrar en índice por base
+	-- Registrar en ÃÂ­ndice por base
 	if not baseObjects[ownerId] then
 		baseObjects[ownerId] = {}
 	end
 	table.insert(baseObjects[ownerId], placedObject)
 
 	print(string.format(
-		"[BaseOwnershipService] 📦 Object registered: %s (Type: %s, Owner: %d, PlacedBy: %d)",
+		"[BaseOwnershipService] Ã°ÂÂÂ¦ Object registered: %s (Type: %s, Owner: %d, PlacedBy: %d)",
 		objectId,
 		objectType,
 		ownerId,
@@ -329,7 +329,7 @@ end
 	Elimina un objeto colocado.
 
 	@param objectId - ID del objeto a eliminar
-	@return boolean - true si se eliminó exitosamente
+	@return boolean - true si se eliminÃÂ³ exitosamente
 ]]
 local function unregisterPlacedObject(objectId: string): boolean
 	local placedObject = placedObjects[objectId]
@@ -341,15 +341,15 @@ local function unregisterPlacedObject(objectId: string): boolean
 	local UpgradeService = require(script.Parent.UpgradeService)
 	UpgradeService:UnregisterUpgrade(objectId, placedObject.ObjectType)
 
-	-- Destruir instancia física si existe
+	-- Destruir instancia fÃÂ­sica si existe
 	if placedObject.Instance then
 		placedObject.Instance:Destroy()
 	end
 
-	-- Eliminar de índice global
+	-- Eliminar de ÃÂ­ndice global
 	placedObjects[objectId] = nil
 
-	-- Eliminar de índice de base
+	-- Eliminar de ÃÂ­ndice de base
 	local baseObjectsList = baseObjects[placedObject.OwnerId]
 	if baseObjectsList then
 		for i, obj in ipairs(baseObjectsList) do
@@ -361,27 +361,27 @@ local function unregisterPlacedObject(objectId: string): boolean
 	end
 
 	print(string.format(
-		"[BaseOwnershipService] 🗑️ Object unregistered: %s",
+		"[BaseOwnershipService] Ã°ÂÂÂÃ¯Â¸Â Object unregistered: %s",
 		objectId
 	))
 
 	return true
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	PUBLIC API - Service Methods
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Valida si un jugador puede construir en una posición.
-	(Wrapper público del método interno)
+	Valida si un jugador puede construir en una posiciÃÂ³n.
+	(Wrapper pÃÂºblico del mÃÂ©todo interno)
 ]]
 function BaseOwnershipService:ValidatePlacement(userId: number, position: Vector3): ValidationResult
 	return canBuildAtPosition(userId, position)
 end
 
 --[[
-	Registra un objeto colocado tras validación exitosa.
+	Registra un objeto colocado tras validaciÃÂ³n exitosa.
 ]]
 function BaseOwnershipService:RegisterObject(
 	ownerId: number,
@@ -429,7 +429,7 @@ function BaseOwnershipService:GetBaseObjects(ownerId: number): { PlacedObject }
 end
 
 --[[
-	Obtiene los datos de un objeto específico.
+	Obtiene los datos de un objeto especÃÂ­fico.
 ]]
 function BaseOwnershipService:GetObjectData(objectId: string): PlacedObject?
 	return placedObjects[objectId]
@@ -457,11 +457,11 @@ function BaseOwnershipService:ClearBaseObjects(ownerId: number): number
 		unregisterPlacedObject(objectId)
 	end
 
-	-- Limpiar array (ya debería estar vacío, pero por seguridad)
+	-- Limpiar array (ya deberÃÂ­a estar vacÃÂ­o, pero por seguridad)
 	baseObjects[ownerId] = nil
 
 	print(string.format(
-		"[BaseOwnershipService] 🧹 Cleared %d objects from base (Owner: %d)",
+		"[BaseOwnershipService] Ã°ÂÂ§Â¹ Cleared %d objects from base (Owner: %d)",
 		count,
 		ownerId
 	))
@@ -470,7 +470,7 @@ function BaseOwnershipService:ClearBaseObjects(ownerId: number): number
 end
 
 --[[
-	Verifica si un jugador es dueño de una base.
+	Verifica si un jugador es dueÃÂ±o de una base.
 ]]
 function BaseOwnershipService:IsOwner(userId: number, baseOwnerId: number): boolean
 	return getPermissionLevel(userId, baseOwnerId) == "Owner"
@@ -483,14 +483,14 @@ function BaseOwnershipService:GetPermissionLevel(userId: number, baseOwnerId: nu
 	return getPermissionLevel(userId, baseOwnerId)
 end
 
---[[────────────────────────────────────────────────────────────────────────
-	CLIENT API - Métodos Expuestos al Cliente
-────────────────────────────────────────────────────────────────────────]]
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+	CLIENT API - MÃÂ©todos Expuestos al Cliente
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Valida desde el cliente si puede construir en una posición.
+	Valida desde el cliente si puede construir en una posiciÃÂ³n.
 
-	SEGURIDAD: Esta es solo preview - la validación REAL ocurre server-side
+	SEGURIDAD: Esta es solo preview - la validaciÃÂ³n REAL ocurre server-side
 	en RegisterObject(). Esto permite mostrar feedback visual al cliente.
 ]]
 function BaseOwnershipService.Client:CanBuild(player: Player, position: Vector3)
@@ -505,15 +505,15 @@ function BaseOwnershipService.Client:GetMyObjects(player: Player)
 end
 
 --[[
-	Coloca un objeto desde el cliente (con validación server-side).
+	Coloca un objeto desde el cliente (con validaciÃÂ³n server-side).
 
-	INTEGRACIÓN CON UPGRADES:
+	INTEGRACIÃÂN CON UPGRADES:
 	- Usa UpgradeDefinitions para crear modelos visuales
 	- Registra en UpgradeService para funcionalidad (generators, turrets, etc.)
 	- Valida placement server-side antes de crear
 ]]
 function BaseOwnershipService.Client:PlaceObject(player: Player, objectType: string, position: Vector3, rotation: number, size: Vector3)
-	-- Obtener definición del upgrade
+	-- Obtener definiciÃÂ³n del upgrade
 	local UpgradeDefinitions = require(script.Parent.UpgradeDefinitions)
 	local definition = UpgradeDefinitions.GetDefinition(objectType)
 
@@ -524,7 +524,7 @@ function BaseOwnershipService.Client:PlaceObject(player: Player, objectType: str
 		}
 	end
 
-	-- Usar tamaño de la definición (no el pasado por parámetro)
+	-- Usar tamaÃÂ±o de la definiciÃÂ³n (no el pasado por parÃÂ¡metro)
 	local actualSize = definition.Size
 
 	-- Validar placement en servidor
@@ -588,19 +588,19 @@ function BaseOwnershipService.Client:PlaceObject(player: Player, objectType: str
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 function BaseOwnershipService:KnitInit()
-	print("[BaseOwnershipService] ⚙️ Initialized")
+	print("[BaseOwnershipService] Ã¢ÂÂÃ¯Â¸Â Initialized")
 end
 
 function BaseOwnershipService:KnitStart()
 	-- Obtener dependencia de BaseSpawnerService
 	BaseSpawnerService = Knit.GetService("BaseSpawnerService")
 
-	print("[BaseOwnershipService] ✅ Started - Permission system ready")
+	print("[BaseOwnershipService] Ã¢ÂÂ Started - Permission system ready")
 	print("[BaseOwnershipService] Anti-exploit validation: ENABLED")
 end
 

@@ -4,21 +4,21 @@
 
 	RESPONSABILIDADES:
 	- Gestionar upgrades activos (generators, turrets, storage)
-	- Update loop para generators (producción de dinero)
+	- Update loop para generators (producciÃÂ³n de dinero)
 	- Update loop para turrets (targeting y disparo)
-	- Cálculo de capacidad total de storage
+	- CÃÂ¡lculo de capacidad total de storage
 	- Repair station interaction
 
 	ARQUITECTURA:
 	- Knit Service (servidor-side)
 	- Integra con BaseOwnershipService para tracking de objetos
 	- Integra con PlayerDataService para dar dinero
-	- Update loops separados para cada categoría de upgrade
+	- Update loops separados para cada categorÃÂ­a de upgrade
 
-	OPTIMIZACIÓN:
+	OPTIMIZACIÃÂN:
 	- Generators: Update cada segundo (batch processing)
 	- Turrets: Update cada frame solo para turrets activos
-	- Storage: Cálculo on-demand (no loop)
+	- Storage: CÃÂ¡lculo on-demand (no loop)
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,9 +30,9 @@ local Knit = require(ReplicatedStorage.Knit)
 local UpgradeDefinitions = require(script.Parent.UpgradeDefinitions)
 local GeneratorVFXManager = require(ServerStorage.Managers.GeneratorVFXManager)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	SERVICE DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 local UpgradeService = Knit.CreateService({
 	Name = "UpgradeService",
@@ -47,15 +47,15 @@ local repairStations = {}    -- {[objectId] = {UserId, Model}}
 local BaseOwnershipService
 local PlayerDataService
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	GENERATOR SYSTEM - Passive Money Production
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Registra un generator para producción automática.
+	Registra un generator para producciÃÂ³n automÃÂ¡tica.
 
 	@param objectId - ID del objeto
-	@param userId - Dueño del generator
+	@param userId - DueÃÂ±o del generator
 	@param model - Modelo 3D del generator
 	@param objectType - Tipo de generator (Generator, GeneratorT2, GeneratorT3)
 ]]
@@ -69,7 +69,7 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		return
 	end
 
-	-- FASE 3: Detectar tier automáticamente basado en el tipo
+	-- FASE 3: Detectar tier automÃÂ¡ticamente basado en el tipo
 	local tier = 1
 	if generatorType == "GeneratorT2" then
 		tier = 2
@@ -87,10 +87,10 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		SpawnTime = os.time(), -- FASE 2: Tiempo de spawn para calcular uptime
 	}
 
-	-- FASE 3: Almacenar stats en el modelo para acceso dinámico desde ProximityPrompt
+	-- FASE 3: Almacenar stats en el modelo para acceso dinÃÂ¡mico desde ProximityPrompt
 	local mainPart = model:FindFirstChild("MainPart")
 	if mainPart then
-		-- Crear valores para tracking dinámico
+		-- Crear valores para tracking dinÃÂ¡mico
 		local totalProducedValue = Instance.new("NumberValue")
 		totalProducedValue.Name = "TotalProduced"
 		totalProducedValue.Value = 0
@@ -112,7 +112,7 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		tierValue.Parent = mainPart
 	end
 
-	-- FASE 2: Animación de construcción (incluye efectos visuales)
+	-- FASE 2: AnimaciÃÂ³n de construcciÃÂ³n (incluye efectos visuales)
 	local mainPart = model:FindFirstChild("MainPart") or model:FindFirstChild("HumanoidRootPart")
 	if mainPart then
 		local finalPosition = mainPart.Position
@@ -129,7 +129,7 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 	GeneratorVFXManager:CreateStatsPrompt(model, userId, tier, objectId)
 
 	print(string.format(
-		"[UpgradeService] 💰 Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
+		"[UpgradeService] Ã°ÂÂÂ° Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
 		objectId,
 		userId,
 		definition.Stats.MoneyPerSecond or 0,
@@ -165,7 +165,7 @@ function UpgradeService:UnregisterGenerator(objectId: string)
 					prompt:Destroy()
 				end
 
-				-- Eliminar billboard de estadísticas (si está visible)
+				-- Eliminar billboard de estadÃÂ­sticas (si estÃÂ¡ visible)
 				local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
 				if statsBillboard then
 					statsBillboard:Destroy()
@@ -179,20 +179,20 @@ function UpgradeService:UnregisterGenerator(objectId: string)
 end
 
 --[[
-	PHASE 4: Upgradea un generator al siguiente tier (T1→T2→T3).
+	PHASE 4: Upgradea un generator al siguiente tier (T1Ã¢ÂÂT2Ã¢ÂÂT3).
 
 	PROCESO:
-	1. Validar que el jugador es el dueño
-	2. Validar que puede upgradear (no está en tier máximo)
+	1. Validar que el jugador es el dueÃÂ±o
+	2. Validar que puede upgradear (no estÃÂ¡ en tier mÃÂ¡ximo)
 	3. Calcular costo y validar dinero suficiente
 	4. Deducir dinero del jugador
-	5. Actualizar el modelo en workspace (tamaño, color, efectos)
+	5. Actualizar el modelo en workspace (tamaÃÂ±o, color, efectos)
 	6. Actualizar stats en activeGenerators
 	7. Mostrar efectos visuales de upgrade
 
 	@param objectId - ID del generator
 	@param userId - ID del jugador que intenta upgradear
-	@return boolean - true si el upgrade fue exitoso, false si falló
+	@return boolean - true si el upgrade fue exitoso, false si fallÃÂ³
 ]]
 function UpgradeService:UpgradeGenerator(objectId: string, userId: number): boolean
 	local data = activeGenerators[objectId]
@@ -227,22 +227,22 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 
 	-- Validar dinero suficiente y deducir
 	if not PlayerDataService then
-		warn("[UpgradeService] ❌ PlayerDataService not available")
+		warn("[UpgradeService] Ã¢ÂÂ PlayerDataService not available")
 		return false
 	end
 
-	print(string.format("[UpgradeService] 💰 Checking money for user %d (need $%d)", userId, upgradeCost))
+	print(string.format("[UpgradeService] Ã°ÂÂÂ° Checking money for user %d (need $%d)", userId, upgradeCost))
 
-	-- Intentar deducir dinero (DeductMoney verifica automáticamente si tiene suficiente)
+	-- Intentar deducir dinero (DeductMoney verifica automÃÂ¡ticamente si tiene suficiente)
 	local success = PlayerDataService:DeductMoney(userId, upgradeCost)
 	if not success then
-		warn(string.format("[UpgradeService] ❌ User %d doesn't have enough money ($%d needed)", userId, upgradeCost))
+		warn(string.format("[UpgradeService] Ã¢ÂÂ User %d doesn't have enough money ($%d needed)", userId, upgradeCost))
 		return false
 	end
 
-	print(string.format("[UpgradeService] ✅ Money deducted: $%d from user %d", upgradeCost, userId))
+	print(string.format("[UpgradeService] Ã¢ÂÂ Money deducted: $%d from user %d", upgradeCost, userId))
 
-	-- Obtener nueva definición
+	-- Obtener nueva definiciÃÂ³n
 	local nextDefinition = UpgradeDefinitions.GetDefinition(nextTierName)
 	if not nextDefinition then
 		warn(string.format("[UpgradeService] UpgradeGenerator: Definition not found for %s", nextTierName))
@@ -267,7 +267,7 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 	if data.Model then
 		local mainPart = data.Model:FindFirstChild("MainPart")
 		if mainPart then
-			-- Actualizar propiedades físicas
+			-- Actualizar propiedades fÃÂ­sicas
 			mainPart.Size = nextDefinition.Size
 			mainPart.Color = nextDefinition.Color
 			mainPart.Material = nextDefinition.Material
@@ -278,7 +278,7 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 				highlight.FillColor = nextDefinition.Color
 			end
 
-			-- Actualizar valores en MainPart para stats dinámicos
+			-- Actualizar valores en MainPart para stats dinÃÂ¡micos
 			local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec") :: NumberValue?
 			if moneyPerSecValue then
 				moneyPerSecValue.Value = nextDefinition.Stats.MoneyPerSecond or 0
@@ -304,19 +304,19 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 			-- FASE 4: Mostrar efectos visuales de upgrade
 			GeneratorVFXManager:ShowUpgradeEffect(data.Model, oldTier, newTier)
 
-			-- Recrear partículas y sonido ambiental para el nuevo tier
-			GeneratorVFXManager:RemoveEffects(data.Model)  -- Ahora preserva StatsBillboard ✅
+			-- Recrear partÃÂ­culas y sonido ambiental para el nuevo tier
+			GeneratorVFXManager:RemoveEffects(data.Model)  -- Ahora preserva StatsBillboard Ã¢ÂÂ
 			GeneratorVFXManager:ApplyGlowPulse(data.Model, newTier)
 			GeneratorVFXManager:CreateParticles(data.Model, newTier)
 			GeneratorVFXManager:CreateAmbientSound(data.Model)
 
-			-- CRÍTICO: Refrescar prompts después del upgrade para asegurar que todo funciona
+			-- CRÃÂTICO: Refrescar prompts despuÃÂ©s del upgrade para asegurar que todo funciona
 			GeneratorVFXManager:RefreshPromptsAfterUpgrade(data.Model, newTier)
 		end
 	end
 
 	print(string.format(
-		"[UpgradeService] ✨ Generator upgraded: %s (T%d → T%d, Cost: $%d, New Rate: $%d/s)",
+		"[UpgradeService] Ã¢ÂÂ¨ Generator upgraded: %s (T%d Ã¢ÂÂ T%d, Cost: $%d, New Rate: $%d/s)",
 		objectId,
 		oldTier,
 		newTier,
@@ -332,7 +332,7 @@ end
 
 	PROCESO:
 	1. Iterar sobre todos los generators activos
-	2. Calcular dinero producido desde última actualización
+	2. Calcular dinero producido desde ÃÂºltima actualizaciÃÂ³n
 	3. Dar dinero al jugador (via PlayerDataService)
 	4. Actualizar timestamp
 ]]
@@ -352,10 +352,10 @@ local function updateGenerators()
 				end)
 
 				if success then
-					-- FASE 2: Actualizar estadísticas de producción
+					-- FASE 2: Actualizar estadÃÂ­sticas de producciÃÂ³n
 					data.TotalProduced = data.TotalProduced + moneyToGive
 
-					-- FASE 3: Actualizar valor en el modelo para stats dinámicos
+					-- FASE 3: Actualizar valor en el modelo para stats dinÃÂ¡micos
 					if data.Model then
 						local mainPart = data.Model:FindFirstChild("MainPart")
 						if mainPart then
@@ -380,15 +380,15 @@ local function updateGenerators()
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	TURRET SYSTEM - Auto-targeting Defense
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Registra una turret para targeting automático.
+	Registra una turret para targeting automÃÂ¡tico.
 
 	@param objectId - ID del objeto
-	@param userId - Dueño de la turret
+	@param userId - DueÃÂ±o de la turret
 	@param model - Modelo 3D de la turret
 ]]
 function UpgradeService:RegisterTurret(objectId: string, userId: number, model: Model)
@@ -405,7 +405,7 @@ function UpgradeService:RegisterTurret(objectId: string, userId: number, model: 
 	}
 
 	print(string.format(
-		"[UpgradeService] 🔫 Turret registered: %s (Owner: %d, Range: %.1f)",
+		"[UpgradeService] Ã°ÂÂÂ« Turret registered: %s (Owner: %d, Range: %.1f)",
 		objectId,
 		userId,
 		definition.Stats.Range or 0
@@ -425,11 +425,11 @@ function UpgradeService:UnregisterTurret(objectId: string)
 end
 
 --[[
-	Encuentra el meteoro/enemigo más cercano a la turret.
+	Encuentra el meteoro/enemigo mÃÂ¡s cercano a la turret.
 
-	@param turretPosition - Posición de la turret
-	@param range - Rango de detección
-	@return Model? - Meteoro/enemigo más cercano, o nil
+	@param turretPosition - PosiciÃÂ³n de la turret
+	@param range - Rango de detecciÃÂ³n
+	@return Model? - Meteoro/enemigo mÃÂ¡s cercano, o nil
 ]]
 local function findNearestTarget(turretPosition: Vector3, range: number): Model?
 	-- TODO: Integrar con sistema de meteoros cuando exista
@@ -459,7 +459,7 @@ end
 
 	@param turretModel - Modelo de la turret
 	@param target - Objetivo a disparar
-	@param damage - Daño del proyectil
+	@param damage - DaÃÂ±o del proyectil
 ]]
 local function shootProjectile(turretModel: Model, target: Model, damage: number)
 	local mainPart = turretModel:FindFirstChild("MainPart") :: BasePart?
@@ -491,13 +491,13 @@ local function shootProjectile(turretModel: Model, target: Model, damage: number
 	bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 	bodyVelocity.Parent = projectile
 
-	-- Detectar colisión (destruir proyectil y dañar objetivo)
+	-- Detectar colisiÃÂ³n (destruir proyectil y daÃÂ±ar objetivo)
 	projectile.Touched:Connect(function(hit)
 		if hit:IsDescendantOf(target) then
-			-- TODO: Aplicar daño al objetivo
-			print(string.format("[UpgradeService] 💥 Hit target: %s (Damage: %d)", target.Name, damage))
+			-- TODO: Aplicar daÃÂ±o al objetivo
+			print(string.format("[UpgradeService] Ã°ÂÂÂ¥ Hit target: %s (Damage: %d)", target.Name, damage))
 
-			-- Destruir objetivo (temporal - debería tener HP system)
+			-- Destruir objetivo (temporal - deberÃÂ­a tener HP system)
 			target:Destroy()
 
 			-- Destruir proyectil
@@ -505,7 +505,7 @@ local function shootProjectile(turretModel: Model, target: Model, damage: number
 		end
 	end)
 
-	-- Destruir proyectil después de 5 segundos (si no impacta)
+	-- Destruir proyectil despuÃÂ©s de 5 segundos (si no impacta)
 	task.delay(5, function()
 		if projectile.Parent then
 			projectile:Destroy()
@@ -518,9 +518,9 @@ end
 
 	PROCESO:
 	1. Iterar sobre todas las turrets activas
-	2. Buscar objetivo más cercano en rango
+	2. Buscar objetivo mÃÂ¡s cercano en rango
 	3. Si hay objetivo y fireRate permite, disparar
-	4. Actualizar orientación de la turret hacia el objetivo
+	4. Actualizar orientaciÃÂ³n de la turret hacia el objetivo
 ]]
 local function updateTurrets(deltaTime: number)
 	local currentTime = tick()
@@ -556,9 +556,9 @@ local function updateTurrets(deltaTime: number)
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	STORAGE SYSTEM - Money Capacity
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Calcula la capacidad total de storage para un jugador.
@@ -586,15 +586,15 @@ function UpgradeService:GetTotalStorageCapacity(userId: number): number
 	return totalCapacity
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	REPAIR STATION SYSTEM - Mobile-Friendly Base Repair
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Registra una repair station y conecta su ProximityPrompt.
 
 	@param objectId - ID del objeto
-	@param userId - Dueño de la repair station
+	@param userId - DueÃÂ±o de la repair station
 	@param model - Modelo 3D de la repair station
 ]]
 function UpgradeService:RegisterRepairStation(objectId: string, userId: number, model: Model)
@@ -614,9 +614,9 @@ function UpgradeService:RegisterRepairStation(objectId: string, userId: number, 
 		local prompt = mainPart:FindFirstChild("RepairPrompt") :: ProximityPrompt?
 		if prompt then
 			prompt.Triggered:Connect(function(player)
-				-- Verificar que el jugador sea el dueño
+				-- Verificar que el jugador sea el dueÃÂ±o
 				if player.UserId ~= userId then
-					print(string.format("[UpgradeService] ❌ %s tried to use another player's repair station", player.Name))
+					print(string.format("[UpgradeService] Ã¢ÂÂ %s tried to use another player's repair station", player.Name))
 					return
 				end
 
@@ -631,7 +631,7 @@ function UpgradeService:RegisterRepairStation(objectId: string, userId: number, 
 					if currentMoney >= repairCost then
 						PlayerDataService:RemoveMoney(userId, repairCost)
 						print(string.format(
-							"[UpgradeService] 🔧 %s repaired base: -%d money, +%d HP",
+							"[UpgradeService] Ã°ÂÂÂ§ %s repaired base: -%d money, +%d HP",
 							player.Name,
 							repairCost,
 							repairAmount
@@ -639,7 +639,7 @@ function UpgradeService:RegisterRepairStation(objectId: string, userId: number, 
 
 						-- TODO: Actualizar HP de la base
 					else
-						print(string.format("[UpgradeService] ❌ %s doesn't have enough money to repair", player.Name))
+						print(string.format("[UpgradeService] Ã¢ÂÂ %s doesn't have enough money to repair", player.Name))
 					end
 				end
 			end)
@@ -647,7 +647,7 @@ function UpgradeService:RegisterRepairStation(objectId: string, userId: number, 
 	end
 
 	print(string.format(
-		"[UpgradeService] 🔧 Repair Station registered: %s (Owner: %d)",
+		"[UpgradeService] Ã°ÂÂÂ§ Repair Station registered: %s (Owner: %d)",
 		objectId,
 		userId
 	))
@@ -665,15 +665,15 @@ function UpgradeService:UnregisterRepairStation(objectId: string)
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	PUBLIC API - Registration
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
 	Registra un upgrade en el sistema correspondiente.
 
 	@param objectId - ID del objeto
-	@param userId - Dueño del objeto
+	@param userId - DueÃÂ±o del objeto
 	@param objectType - Tipo de upgrade
 	@param model - Modelo 3D
 ]]
@@ -705,17 +705,17 @@ function UpgradeService:UnregisterUpgrade(objectId: string, objectType: string)
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	DEBUG / MONITORING API
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 --[[
-	Obtiene información de debugging sobre todos los upgrades activos.
+	Obtiene informaciÃÂ³n de debugging sobre todos los upgrades activos.
 
-	IMPORTANTE: Este método es para debugging/monitoring.
+	IMPORTANTE: Este mÃÂ©todo es para debugging/monitoring.
 	Retorna copias de datos, no referencias directas.
 
-	@return DebugInfo - Tabla con información de todos los upgrades
+	@return DebugInfo - Tabla con informaciÃÂ³n de todos los upgrades
 ]]
 export type DebugInfo = {
 	GeneratorCount: number,
@@ -796,7 +796,7 @@ function UpgradeService:GetDebugInfo(): DebugInfo
 end
 
 --[[
-	Obtiene conteo rápido de upgrades activos (lightweight).
+	Obtiene conteo rÃÂ¡pido de upgrades activos (lightweight).
 
 	@return counts - Tabla con conteos {Generators, Turrets, RepairStations}
 ]]
@@ -824,26 +824,26 @@ function UpgradeService:GetActiveUpgradeCounts(): {Generators: number, Turrets: 
 	}
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ]]
 
 function UpgradeService:KnitInit()
-	print("[UpgradeService] ⚙️ Initialized")
+	print("[UpgradeService] Ã¢ÂÂÃ¯Â¸Â Initialized")
 end
 
 function UpgradeService:KnitStart()
 	-- Obtener servicios
 	BaseOwnershipService = Knit.GetService("BaseOwnershipService")
 
-	-- PlayerDataService es opcional (puede no existir aún)
+	-- PlayerDataService es opcional (puede no existir aÃÂºn)
 	local success, result = pcall(function()
 		return Knit.GetService("PlayerDataService")
 	end)
 	if success then
 		PlayerDataService = result
 	else
-		warn("[UpgradeService] PlayerDataService no encontrado - generators no darán dinero")
+		warn("[UpgradeService] PlayerDataService no encontrado - generators no darÃÂ¡n dinero")
 	end
 
 	-- Iniciar update loops
@@ -860,7 +860,7 @@ function UpgradeService:KnitStart()
 		updateTurrets(deltaTime)
 	end)
 
-	print("[UpgradeService] ✅ Started - Update loops running")
+	print("[UpgradeService] Ã¢ÂÂ Started - Update loops running")
 	print(string.format("[UpgradeService] Generators: %d | Turrets: %d | Repair Stations: %d",
 		0, 0, 0  -- Start empty
 	))

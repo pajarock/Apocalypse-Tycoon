@@ -8,7 +8,7 @@
 	? Powerups activos con temporizador
 	? Efectos visuales en el jugador (auras, trails, etc.)
 	? Notificaciones al recoger powerups
-	? HUD épico y tóxico
+	? HUD ÃÂ©pico y tÃÂ³xico
 
 	-----------------------------------------------------------------------
 --]]
@@ -154,7 +154,7 @@ local function createPowerUpFrame(powerUpId: string, duration: number, icon: str
 	timerLabel.Text = string.format("%.1fs", duration)
 	timerLabel.Parent = frame
 
-	-- Animación de entrada (slide in desde la derecha)
+	-- AnimaciÃÂ³n de entrada (slide in desde la derecha)
 	frame.Position = UDim2.new(1, 0, 0, 0) -- Start off-screen
 	frame.Parent = powerUpContainer
 
@@ -202,12 +202,12 @@ local function createGodShieldEffect(): {Instance}
 	aura.Color = Color3.fromRGB(100, 200, 255)
 	aura.Parent = character
 
-	-- Mesh esférico
+	-- Mesh esfÃÂ©rico
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = aura
 
-	-- Partículas
+	-- PartÃÂ­culas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
@@ -249,7 +249,7 @@ end
 local function createSpeedBoostEffect(): {Instance}
 	local effects = {}
 
-	-- Trail detrás del jugador
+	-- Trail detrÃÂ¡s del jugador
 	local attachment0 = Instance.new("Attachment")
 	attachment0.Name = "TrailAttachment0"
 	attachment0.Position = Vector3.new(0, -2, 0)
@@ -317,7 +317,7 @@ local function createBaseShieldEffect(): {Instance}
 	local effects = {}
 
 	-- Dome/esfera protectora en la base del jugador
-	-- (Esto iría en la base física, pero podemos hacer un indicador visual)
+	-- (Esto irÃÂ­a en la base fÃÂ­sica, pero podemos hacer un indicador visual)
 
 	local indicator = Instance.new("Part")
 	indicator.Name = "BaseShieldIndicator"
@@ -330,7 +330,7 @@ local function createBaseShieldEffect(): {Instance}
 	indicator.CFrame = humanoidRootPart.CFrame
 	indicator.Parent = workspace
 
-	-- Mesh cilíndrico
+	-- Mesh cilÃÂ­ndrico
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Cylinder
 	mesh.Parent = indicator
@@ -368,7 +368,7 @@ local function createCriticalParryEffect(): {Instance}
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = chargeAura
 
-	-- Partículas eléctricas
+	-- PartÃÂ­culas elÃÂ©ctricas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	particles.Color = ColorSequence.new(Color3.fromRGB(255, 0, 200))
@@ -420,7 +420,7 @@ local function createSuperDashEffect(): {Instance}
 	trail.LightEmission = 1
 	trail.Parent = humanoidRootPart
 
-	-- Partículas de velocidad
+	-- PartÃÂ­culas de velocidad
 	local speedParticles = Instance.new("ParticleEmitter")
 	speedParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
 	speedParticles.Color = ColorSequence.new(Color3.fromRGB(255, 255, 150))
@@ -443,7 +443,7 @@ end
 local function createFullHealEffect(): {Instance}
 	local effects = {}
 
-	-- Burst de partículas verdes curativas
+	-- Burst de partÃÂ­culas verdes curativas
 	local healBurst = Instance.new("ParticleEmitter")
 	healBurst.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	healBurst.Color = ColorSequence.new(Color3.fromRGB(0, 255, 100))
@@ -458,7 +458,7 @@ local function createFullHealEffect(): {Instance}
 	healBurst.LightEmission = 1
 	healBurst.Parent = humanoidRootPart
 
-	-- Desactivar después del burst inicial
+	-- Desactivar despuÃÂ©s del burst inicial
 	task.delay(0.5, function()
 		if healBurst and healBurst.Parent then
 			healBurst.Enabled = false
@@ -481,7 +481,7 @@ local function createFullHealEffect(): {Instance}
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = healAura
 
-	-- Animar expansión
+	-- Animar expansiÃÂ³n
 	task.spawn(function()
 		for i = 1, 10 do
 			if healAura and healAura.Parent then
@@ -521,7 +521,7 @@ local function createMiniDroneEffect(): {Instance}
 	light.Color = Color3.fromRGB(150, 150, 255)
 	light.Parent = drone
 
-	-- Partículas tech
+	-- PartÃÂ­culas tech
 	local particles = Instance.new("ParticleEmitter")
 	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
@@ -555,8 +555,8 @@ end
 local function createMeteorJammerEffect(): {Instance}
 	local effects = {}
 
-	-- ?? PULSOS ELECTROMAGNÉTICOS EXPANDIÉNDOSE (sin burbuja)
-	-- Crear múltiples anillos que se expanden desde el jugador
+	-- ?? PULSOS ELECTROMAGNÃÂTICOS EXPANDIÃÂNDOSE (sin burbuja)
+	-- Crear mÃÂºltiples anillos que se expanden desde el jugador
 	local function createPulseRing()
 		local ring = Instance.new("Part")
 		ring.Name = "JammerRing"
@@ -593,7 +593,7 @@ local function createMeteorJammerEffect(): {Instance}
 		return ring
 	end
 
-	-- Partículas eléctricas moradas
+	-- PartÃÂ­culas elÃÂ©ctricas moradas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	particles.Color = ColorSequence.new(Color3.fromRGB(200, 100, 255))
@@ -640,7 +640,7 @@ end
 local function createDefensiveBurstEffect(): {Instance}
 	local effects = {}
 
-	-- Explosión naranja masiva
+	-- ExplosiÃÂ³n naranja masiva
 	local burst = Instance.new("Part")
 	burst.Name = "DefensiveBurst"
 	burst.Size = Vector3.new(5, 5, 5)
@@ -656,7 +656,7 @@ local function createDefensiveBurstEffect(): {Instance}
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = burst
 
-	-- Expandir explosión
+	-- Expandir explosiÃÂ³n
 	task.spawn(function()
 		for i = 1, 20 do
 			if burst and burst.Parent then
@@ -678,7 +678,7 @@ end
 local function createUltraChargeEffect(): {Instance}
 	local effects = {}
 
-	-- ? EXPLOSIÓN MASIVA DE RAYOS ELÉCTRICOS
+	-- ? EXPLOSIÃÂN MASIVA DE RAYOS ELÃÂCTRICOS
 	local lightning = Instance.new("ParticleEmitter")
 	lightning.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	lightning.Color = ColorSequence.new({
@@ -698,7 +698,7 @@ local function createUltraChargeEffect(): {Instance}
 	lightning.LightEmission = 1
 	lightning.Parent = humanoidRootPart
 
-	-- Múltiples anillos de energía girando
+	-- MÃÂºltiples anillos de energÃÂ­a girando
 	local rings = {}
 	for i = 1, 3 do
 		local ring = Instance.new("Part")
@@ -747,7 +747,7 @@ local function createUltraChargeEffect(): {Instance}
 				end
 			end
 
-			-- Pulsar light dramáticamente
+			-- Pulsar light dramÃÂ¡ticamente
 			light.Brightness = 4 + math.sin(t * 10) * 2
 
 			task.wait(0.05)
@@ -764,12 +764,12 @@ end
 local function createEggCatalystEffect(): {Instance}
 	local effects = {}
 
-	-- ?? EXPLOSIÓN DORADA MÁGICA
+	-- ?? EXPLOSIÃÂN DORADA MÃÂGICA
 	local sparkles = Instance.new("Sparkles")
 	sparkles.SparkleColor = Color3.fromRGB(255, 220, 100)
 	sparkles.Parent = humanoidRootPart
 
-	-- Partículas masivas doradas
+	-- PartÃÂ­culas masivas doradas
 	local eggParticles = Instance.new("ParticleEmitter")
 	eggParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	eggParticles.Color = ColorSequence.new({
@@ -807,7 +807,7 @@ local function createEggCatalystEffect(): {Instance}
 	mesh.Scale = Vector3.new(0.2, 1, 1)
 	mesh.Parent = ring
 
-	-- PointLight cálida
+	-- PointLight cÃÂ¡lida
 	local light = Instance.new("PointLight")
 	light.Brightness = 3
 	light.Range = 18
@@ -842,7 +842,7 @@ end
 local function createIncomeBoostEffect(): {Instance}
 	local effects = {}
 
-	-- ?? EXPLOSIÓN MASIVA DE MONEDAS
+	-- ?? EXPLOSIÃÂN MASIVA DE MONEDAS
 	local coinBurst = Instance.new("ParticleEmitter")
 	coinBurst.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	coinBurst.Color = ColorSequence.new({
@@ -881,7 +881,7 @@ local function createIncomeBoostEffect(): {Instance}
 	ringMesh.Scale = Vector3.new(0.2, 1, 1)
 	ringMesh.Parent = ring
 
-	-- Segundo anillo más grande
+	-- Segundo anillo mÃÂ¡s grande
 	local ring2 = ring:Clone()
 	ring2.Size = Vector3.new(0.5, 0.5, 12)
 	ring2.Transparency = 0.5
@@ -924,7 +924,7 @@ local function createIncomeBoostEffect(): {Instance}
 end
 
 -- -----------------------------------------------------------------------
--- MENSAJES ÉPICOS DE ACTIVACIÓN
+-- MENSAJES ÃÂPICOS DE ACTIVACIÃÂN
 -- -----------------------------------------------------------------------
 
 local PowerUpMessages = {
@@ -1004,7 +1004,7 @@ local function showEpicPowerUpMessage(powerUpId: string, color: Color3)
 	mainText.TextSize = 80
 	mainText.Font = Enum.Font.LuckiestGuy -- ?? GRAFITI FONT
 	mainText.TextScaled = true
-	mainText.Rotation = -5 -- Inclinación urbana
+	mainText.Rotation = -5 -- InclinaciÃÂ³n urbana
 	mainText.Parent = gui
 
 	-- Stroke GRUESO para el texto
@@ -1033,8 +1033,8 @@ local function showEpicPowerUpMessage(powerUpId: string, color: Color3)
 	subStroke.Transparency = 1
 	subStroke.Parent = subText
 
-	-- ?? ANIMACIÓN ÉPICA DE BOUNCE
-	-- Empezar pequeño
+	-- ?? ANIMACIÃÂN ÃÂPICA DE BOUNCE
+	-- Empezar pequeÃÂ±o
 	mainText.TextTransparency = 1
 	mainText.Size = UDim2.new(0.4, 0, 0.15, 0)
 
@@ -1044,7 +1044,7 @@ local function showEpicPowerUpMessage(powerUpId: string, color: Color3)
 		TextTransparency = 0
 	}):Play()
 
-	-- Aparecer subtexto después
+	-- Aparecer subtexto despuÃÂ©s
 	task.delay(0.15, function()
 		TweenService:Create(subText, TweenInfo.new(0.2), {
 			TextTransparency = 0
@@ -1134,9 +1134,9 @@ local PowerUpIcons = {
 
 -- Activar powerup
 PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: number)
-	print(("[PowerUpUI] ?? Activando powerup: %s (duración: %.1fs)"):format(powerUpId, duration or 0))
+	print(("[PowerUpUI] ?? Activando powerup: %s (duraciÃÂ³n: %.1fs)"):format(powerUpId, duration or 0))
 
-	-- ? LIMPIAR powerup existente si ya está activo
+	-- ? LIMPIAR powerup existente si ya estÃÂ¡ activo
 	if ActivePowerUpFrames[powerUpId] then
 		print(("[PowerUpUI] ?? Ya existe powerup activo: %s - Limpiando..."):format(powerUpId))
 
@@ -1176,7 +1176,7 @@ PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: num
 		print(("[PowerUpUI] ? Efectos visuales creados para: %s"):format(powerUpId))
 	end
 
-	-- ?? MOSTRAR MENSAJE ÉPICO ESTILO GRAFITI
+	-- ?? MOSTRAR MENSAJE ÃÂPICO ESTILO GRAFITI
 	task.spawn(function()
 		showEpicPowerUpMessage(powerUpId, color)
 	end)
@@ -1190,7 +1190,7 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 	if ActivePowerUpFrames[powerUpId] then
 		local data = ActivePowerUpFrames[powerUpId]
 		if data.Frame and data.Frame.Parent then
-			-- Animación de salida (fade out)
+			-- AnimaciÃÂ³n de salida (fade out)
 			local tweenOut = TweenService:Create(data.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 				Position = UDim2.new(1, 0, 0, 0)
 			})
@@ -1201,7 +1201,7 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 		ActivePowerUpFrames[powerUpId] = nil
 		print(("[PowerUpUI] ? Frame de UI removido: %s"):format(powerUpId))
 	else
-		print(("[PowerUpUI] ?? No se encontró frame activo para: %s"):format(powerUpId))
+		print(("[PowerUpUI] ?? No se encontrÃÂ³ frame activo para: %s"):format(powerUpId))
 	end
 
 	-- Remover efectos visuales
@@ -1216,9 +1216,9 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 	end
 end)
 
--- Powerup recogido (feedback instantáneo)
+-- Powerup recogido (feedback instantÃÂ¡neo)
 PowerUpCollected.OnClientEvent:Connect(function(powerUpId: string)
-	-- Sonido de pickup (puedes agregar un SoundService aquí)
+	-- Sonido de pickup (puedes agregar un SoundService aquÃÂ­)
 	-- Por ahora solo print
 	print(("[PowerUpUI] PowerUp recogido: %s"):format(powerUpId))
 end)

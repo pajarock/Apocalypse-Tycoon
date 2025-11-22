@@ -22,7 +22,7 @@ game.ReplicatedStorage.Remotes.BaseDamaged.OnClientEvent:Connect(function(damage
 	billboard.Parent = basePart
 	label.Parent = billboard
 
-	-- Animación
+	-- AnimaciÃÂ³n
 	task.spawn(function()
 		for i = 1, 20 do
 			billboard.StudsOffset += Vector3.new(0, 0.2, 0)

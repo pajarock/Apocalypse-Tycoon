@@ -19,7 +19,7 @@ frame.Position = UDim2.new(1, -340, 1, -80)
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
-frame.Rotation = -1.5 -- Rotación sutil estilo urbano
+frame.Rotation = -1.5 -- RotaciÃÂ³n sutil estilo urbano
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
 -- Sombra pronunciada
@@ -66,7 +66,7 @@ barGradient.Color = ColorSequence.new({
 })
 barGradient.Rotation = 90
 
--- Label "BASE HP" pequeño arriba
+-- Label "BASE HP" pequeÃÂ±o arriba
 local hpTitle = Instance.new("TextLabel", frame)
 hpTitle.Size = UDim2.new(0.5, 0, 0, 18)
 hpTitle.Position = UDim2.fromOffset(8, 4)
@@ -79,7 +79,7 @@ hpTitle.Text = "BASE HP"
 hpTitle.TextStrokeTransparency = 0.7
 hpTitle.ZIndex = 3
 
--- Label de números en LuckiestGuy (GRANDE)
+-- Label de nÃÂºmeros en LuckiestGuy (GRANDE)
 local label = Instance.new("TextLabel", frame)
 label.Size = UDim2.new(0.5, 0, 0, 24)
 label.Position = UDim2.new(1, -8, 0, 2)
@@ -93,7 +93,7 @@ label.Text = "100/100"
 label.TextStrokeTransparency = 0.3
 label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 label.ZIndex = 3
-label.Rotation = -2 -- Inclinación grafiti
+label.Rotation = -2 -- InclinaciÃÂ³n grafiti
 
 local repairBtn = Instance.new("TextButton", sg)
 repairBtn.Size = UDim2.new(0, 100, 0, 50)
@@ -110,13 +110,13 @@ repairBtn.ZIndex = 1
 
 Instance.new("UICorner", repairBtn).CornerRadius = UDim.new(0, 10)
 
--- Borde del botón
+-- Borde del botÃÂ³n
 local repairStroke = Instance.new("UIStroke", repairBtn)
 repairStroke.Thickness = 3
 repairStroke.Color = Color3.fromRGB(0, 255, 100)
 repairStroke.Transparency = 0
 
--- Sombra del botón
+-- Sombra del botÃÂ³n
 local repairShadow = Instance.new("Frame", sg)
 repairShadow.Size = UDim2.new(0, 106, 0, 56)
 repairShadow.Position = UDim2.new(1, -363, 1, -142)
@@ -136,7 +136,7 @@ repairPadding.PaddingBottom = UDim.new(0, 4)
 
 -- ? Contador de waves sobrevividas ELIMINADO (ahora solo en WaveCounterUI)
 
--- ? FIX: Definir función update() ANTES de usarla
+-- ? FIX: Definir funciÃÂ³n update() ANTES de usarla
 local function update()
 	local state = RequestBaseState:InvokeServer()
 	if not state then return end
@@ -147,7 +147,7 @@ local function update()
 
 	bar:TweenSize(UDim2.new(pct, -10, 1, -10), "Out", "Quad", 0.3, true)
 
-	-- Colores vibrantes según HP
+	-- Colores vibrantes segÃÂºn HP
 	local color1, color2, strokeColor
 	if pct > 0.7 then
 		color1 = Color3.fromRGB(0, 255, 100)
@@ -213,7 +213,7 @@ local function updateRepairButton()
 		-- ? Mostrar streak si es > 0 (sistema escalable activo)
 		local streakText = ""
 		if preview.streak > 0 then
-			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque será el próximo
+			streakText = string.format(" (x%d)", preview.streak + 1) -- +1 porque serÃÂ¡ el prÃÂ³ximo
 		end
 
 		repairBtn.Text = string.format("REPAIR%s\n$%d", streakText, preview.cost)
@@ -222,7 +222,7 @@ local function updateRepairButton()
 	end
 end
 
--- ? FIX: Click en botón de reparación
+-- ? FIX: Click en botÃÂ³n de reparaciÃÂ³n
 repairBtn.MouseButton1Click:Connect(function()
 	ReplicatedStorage.Remotes.RequestRepair:FireServer(10)
 	task.wait(0.1)
@@ -247,10 +247,10 @@ BaseStateChanged.OnClientEvent:Connect(update)
 task.spawn(function()
 	while true do
 		update()
-		updateRepairButton() -- ? FIX: Actualizar botón de reparación cada 2 segundos
+		updateRepairButton() -- ? FIX: Actualizar botÃÂ³n de reparaciÃÂ³n cada 2 segundos
 		task.wait(2)
 	end
 end)
 
 update()
-updateRepairButton() -- ? FIX: Actualizar botón al inicio
+updateRepairButton() -- ? FIX: Actualizar botÃÂ³n al inicio

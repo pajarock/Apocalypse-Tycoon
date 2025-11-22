@@ -3,23 +3,23 @@
 	BASE MODULE - Apocalypse Tycoon (ARREGLADO)
 	-----------------------------------------------------------------------
 
-	? ARREGLOS EN ESTA VERSIÓN:
-	1. Eliminada dependencia circular con EventManager (línea 28 removida)
-	2. Eliminado código de shake duplicado (líneas 272-276 removidas)
+	? ARREGLOS EN ESTA VERSIÃÂN:
+	1. Eliminada dependencia circular con EventManager (lÃÂ­nea 28 removida)
+	2. Eliminado cÃÂ³digo de shake duplicado (lÃÂ­neas 272-276 removidas)
 	3. El shake ahora se maneja completamente en EventManager
 
-	CAMBIOS RESPECTO A LA VERSIÓN ANTERIOR:
-	- Línea 28: ELIMINADA - No require EventManager
-	- Líneas 271-276: ELIMINADAS - No llama a EventManager.ShakePlayer
-	- Todo lo demás funciona igual
+	CAMBIOS RESPECTO A LA VERSIÃÂN ANTERIOR:
+	- LÃÂ­nea 28: ELIMINADA - No require EventManager
+	- LÃÂ­neas 271-276: ELIMINADAS - No llama a EventManager.ShakePlayer
+	- Todo lo demÃÂ¡s funciona igual
 
 	Gestiona la salud y estado de las bases de los jugadores.
 
 	FEATURES:
 	? Sistema de HP por jugador
-	? Daño con reducción por shields
+	? DaÃÂ±o con reducciÃÂ³n por shields
 	? Invulnerabilidad temporal
-	? Regeneración automática
+	? RegeneraciÃÂ³n automÃÂ¡tica
 	? Eventos de estado (damaged, destroyed, healed)
 	? Sistema de meteoros sobrevividos
 
@@ -54,7 +54,7 @@ local function getPowerUpModule()
 end
 
 -------------------------------------------------------------------------
--- CONFIGURACIÓN
+-- CONFIGURACIÃÂN
 -------------------------------------------------------------------------
 
 -- Intentar cargar Config, si no existe usar defaults
@@ -94,13 +94,13 @@ local PendingMoneyReductions = {} -- [userId] = {targetAmount, timestamp}
 local ActiveGuardianTasks = {} -- [userId] = task thread
 
 -------------------------------------------------------------------------
--- MÓDULO
+-- MÃÂDULO
 -------------------------------------------------------------------------
 
 local BaseModule = {}
 
 -------------------------------------------------------------------------
--- INICIALIZACIÓN
+-- INICIALIZACIÃÂN
 -------------------------------------------------------------------------
 
 function BaseModule.InitPlayer(userId: number)
@@ -223,7 +223,7 @@ local function createBaseBillboard(plate: BasePart, playerName: string, userId: 
 	hpLabel.Text = string.format("HP: %d/%d", BaseModule.GetHP(userId), Config.BASE_MAX_HP)
 	hpLabel.Parent = frame
 
-	-- Actualizar HP label periódicamente
+	-- Actualizar HP label periÃÂ³dicamente
 	task.spawn(function()
 		while plate and plate.Parent and Players:GetPlayerByUserId(userId) do
 			local hp = BaseModule.GetHP(userId)
@@ -298,13 +298,13 @@ function BaseModule.SetMaxHP(userId: number, newMaxHP: number)
 	local oldMaxHP = BaseState[userId].MaxHP
 	BaseState[userId].MaxHP = newMaxHP
 
-	-- Si el HP actual era el mÃ¡ximo, aumentarlo tambiÃ©n
+	-- Si el HP actual era el mÃÂÃÂ¡ximo, aumentarlo tambiÃÂÃÂ©n
 	if BaseState[userId].HP == oldMaxHP then
 		BaseState[userId].HP = newMaxHP
 	end
 
 	if DEBUG then
-		print(("[BaseModule] SetMaxHP userId %d: %d â %d"):format(userId, oldMaxHP, newMaxHP))
+		print(("[BaseModule] SetMaxHP userId %d: %d ÃÂ¢ÃÂÃÂ %d"):format(userId, oldMaxHP, newMaxHP))
 	end
 end
 
@@ -351,7 +351,7 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 	if state.IsInvulnerable then
 		state.LastDamageTime = now
 
-		-- ? NUEVO: Notificar al cliente que evadió daño exitosamente
+		-- ? NUEVO: Notificar al cliente que evadiÃÂ³ daÃÂ±o exitosamente
 		local player = Players:GetPlayerByUserId(userId)
 		if player then
 			local Remotes = game.ReplicatedStorage:FindFirstChild("Remotes")
@@ -360,7 +360,7 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 				if DashEvaded and DashEvaded:IsA("RemoteEvent") then
 					DashEvaded:FireClient(player, rawDamage)
 					if DEBUG then
-						print(("[BaseModule] ??? EVADIDO! userId %d evadió %d de daño"):format(userId, rawDamage))
+						print(("[BaseModule] ??? EVADIDO! userId %d evadiÃÂ³ %d de daÃÂ±o"):format(userId, rawDamage))
 					end
 				end
 			end
@@ -369,31 +369,31 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 		return 0
 	end
 
-	-- ? POWERUP: Mini Drone - Verificar si puede interceptar el daño
+	-- ? POWERUP: Mini Drone - Verificar si puede interceptar el daÃÂ±o
 	local pum = getPowerUpModule()
 	if pum and pum.TryDroneIntercept and pum.TryDroneIntercept(userId) then
 		state.LastDamageTime = now
 		if DEBUG then
-			print(("[BaseModule] ?? DRON INTERCEPTÓ! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+			print(("[BaseModule] ?? DRON INTERCEPTÃÂ! userId %d - daÃÂ±o bloqueado: %d"):format(userId, rawDamage))
 		end
 		return 0
 	end
 
-	-- ? POWERUP: Base Shield - Verificar si puede bloquear el daño
+	-- ? POWERUP: Base Shield - Verificar si puede bloquear el daÃÂ±o
 	if pum and pum.TryUseBaseShield and pum.TryUseBaseShield(userId) then
 		state.LastDamageTime = now
 		if DEBUG then
-			print(("[BaseModule] ??? BASE SHIELD! userId %d - daño bloqueado: %d"):format(userId, rawDamage))
+			print(("[BaseModule] ??? BASE SHIELD! userId %d - daÃÂ±o bloqueado: %d"):format(userId, rawDamage))
 		end
 		return 0
 	end
 
-	-- ? POWERUP: Critical Parry - Marcar posición del meteorito para parry
+	-- ? POWERUP: Critical Parry - Marcar posiciÃÂ³n del meteorito para parry
 	local meteorPosition = nil
-	-- La posición del meteorito debería pasarse como parámetro, por ahora usamos nil
-	-- Esto se manejará cuando el meteorito impacte
+	-- La posiciÃÂ³n del meteorito deberÃÂ­a pasarse como parÃÂ¡metro, por ahora usamos nil
+	-- Esto se manejarÃÂ¡ cuando el meteorito impacte
 
-	-- Reducción por escudo
+	-- ReducciÃÂ³n por escudo
 	local shield = tonumber(state.ShieldLevel) or 0
 	local reduction = 1.0
 	if shield > 0 then
@@ -401,7 +401,7 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 		reduction = math.max(0.1, reduction)
 	end
 
-	-- Aplicar daño
+	-- Aplicar daÃÂ±o
 	local dmg = tonumber(rawDamage) or 0
 	local finalDamage = math.floor(dmg * reduction + 0.5)
 	local oldHP = tonumber(state.HP) or 0
@@ -413,9 +413,9 @@ function BaseModule.ApplyDamage(userId: number, rawDamage: number): number
 		BaseModule.OnBaseDead(userId)
 	end
 
-	-- ? ARREGLADO: Eliminado código de shake - ahora se maneja en EventManager
+	-- ? ARREGLADO: Eliminado cÃÂ³digo de shake - ahora se maneja en EventManager
 	-- El shake se activa directamente en EventManager cuando impacta un meteorito
-	-- No es necesario duplicar la lógica aquí
+	-- No es necesario duplicar la lÃÂ³gica aquÃÂ­
 
 	if DEBUG then
 		print(("[BaseModule] ApplyDamage userId %d: -%d HP (%d ? %d)"):format(
@@ -430,14 +430,14 @@ end
 -- SISTEMA DE PENALIZACIONES POR MUERTE DE BASE
 -------------------------------------------------------------------------
 
--- ? ARREGLADO: Removidas declaraciones duplicadas - usar las de línea 79-80
+-- ? ARREGLADO: Removidas declaraciones duplicadas - usar las de lÃÂ­nea 79-80
 
 function BaseModule.OnBaseDead(userId: number)
 	if DEBUG then
 		print(("[BaseModule] ?? BASE DESTRUIDA - userId %d"):format(userId))
 	end
 
-	-- ? MARCAR QUE MURIÓ DURANTE ESTA WAVE
+	-- ? MARCAR QUE MURIÃÂ DURANTE ESTA WAVE
 	if BaseState[userId] then
 		BaseState[userId].DiedDuringWave = true
 		if DEBUG then
@@ -472,12 +472,12 @@ function BaseModule.OnBaseDead(userId: number)
 		print(("[BaseModule] ?? ANTES - Dinero: $%d"):format(currentMoney))
 	end
 
-	-- 2?? CALCULAR PENALIZACIÓN (25% del dinero actual)
+	-- 2?? CALCULAR PENALIZACIÃÂN (25% del dinero actual)
 	local moneyLost = math.floor(currentMoney * 0.25)
 	local newAmount = math.max(0, currentMoney - moneyLost)
 
 	if DEBUG then
-		print(("[BaseModule] ?? Pérdida calculada: $%d (25%%)"):format(moneyLost))
+		print(("[BaseModule] ?? PÃÂ©rdida calculada: $%d (25%%)"):format(moneyLost))
 		print(("[BaseModule] ?? NUEVO valor: $%d"):format(newAmount))
 	end
 
@@ -503,7 +503,7 @@ function BaseModule.OnBaseDead(userId: number)
 		end
 	end
 
-	-- 4?? ACTIVAR GUARDIAN (protección por 120 segundos)
+	-- 4?? ACTIVAR GUARDIAN (protecciÃÂ³n por 120 segundos)
 	PendingMoneyReductions[userId] = {
 		TargetAmount = newAmount,
 		StartTime = tick(),
@@ -538,7 +538,7 @@ function BaseModule.OnBaseDead(userId: number)
 			local protection = PendingMoneyReductions[userId]
 			if not protection then
 				if DEBUG then
-					print(("[BaseModule] ?? Guardian: Protección eliminada externamente"):format())
+					print(("[BaseModule] ?? Guardian: ProtecciÃÂ³n eliminada externamente"):format())
 				end
 				break
 			end
@@ -562,11 +562,11 @@ function BaseModule.OnBaseDead(userId: number)
 				break
 			end
 
-			-- ? ARREGLADO: Solo evitar que BAJE del mínimo, permitir que SUBA
+			-- ? ARREGLADO: Solo evitar que BAJE del mÃÂ­nimo, permitir que SUBA
 			if cash.Value < targetAmount then
 				local oldValue = cash.Value
 
-				-- Forzar al mínimo solo si bajó
+				-- Forzar al mÃÂ­nimo solo si bajÃÂ³
 				cash.Value = targetAmount
 
 				if Economy then
@@ -577,16 +577,16 @@ function BaseModule.OnBaseDead(userId: number)
 				end
 
 				if DEBUG then
-					print(("[BaseModule] ??? Guardian PROTEGIÓ: Dinero bajó de $%d a $%d"):format(
+					print(("[BaseModule] ??? Guardian PROTEGIÃÂ: Dinero bajÃÂ³ de $%d a $%d"):format(
 						targetAmount, oldValue
 						))
-					print(("[BaseModule] ??? Guardian RESTAURÓ: $%d ? $%d"):format(
+					print(("[BaseModule] ??? Guardian RESTAURÃÂ: $%d ? $%d"):format(
 						oldValue, targetAmount
 						))
 				end
 			elseif DEBUG and cash.Value > targetAmount then
 				-- Income normal funcionando, no hacer nada
-				print(("[BaseModule] ? Guardian: Income OK ($%d, mínimo protegido: $%d)"):format(
+				print(("[BaseModule] ? Guardian: Income OK ($%d, mÃÂ­nimo protegido: $%d)"):format(
 					cash.Value, targetAmount
 					))
 			end
@@ -594,7 +594,7 @@ function BaseModule.OnBaseDead(userId: number)
 
 		ActiveGuardianTasks[userId] = nil
 		if DEBUG then
-			print(("[BaseModule] ? Guardian TERMINADO - Protección finalizada"):format())
+			print(("[BaseModule] ? Guardian TERMINADO - ProtecciÃÂ³n finalizada"):format())
 		end
 	end)
 
@@ -633,7 +633,7 @@ function BaseModule.OnBaseDead(userId: number)
 		})
 	end
 
-	-- Actualizar visuales (si BaseVisualsManager está disponible)
+	-- Actualizar visuales (si BaseVisualsManager estÃÂ¡ disponible)
 	local BaseVisualsManager = nil
 	pcall(function()
 		BaseVisualsManager = require(game.ServerStorage.Managers.BaseVisualsManager)
@@ -654,7 +654,7 @@ function BaseModule.SetShieldLevel(userId: number, level: number)
 	BaseState[userId].ShieldLevel = math.max(0, level)
 
 	if DEBUG then
-		print(("[BaseModule] Shield level userId %d: %d (reducción: %.0f%%)"):format(
+		print(("[BaseModule] Shield level userId %d: %d (reducciÃÂ³n: %.0f%%)"):format(
 			userId, level, Config.SHIELD_DAMAGE_REDUCTION * level * 100
 			))
 	end
@@ -701,14 +701,14 @@ end
 -- GUARDIAN SYSTEM
 -------------------------------------------------------------------------
 
--- ? NUEVA FUNCIÓN: Actualizar Guardian cuando se hace compra/reparación legítima
+-- ? NUEVA FUNCIÃÂN: Actualizar Guardian cuando se hace compra/reparaciÃÂ³n legÃÂ­tima
 function BaseModule.UpdateGuardianTarget(userId: number, newAmount: number)
 	-- Solo actualizar si hay un Guardian activo
 	if not PendingMoneyReductions[userId] then
 		return
 	end
 
-	-- Actualizar el target amount para que el Guardian no devuelva dinero en compras legítimas
+	-- Actualizar el target amount para que el Guardian no devuelva dinero en compras legÃÂ­timas
 	PendingMoneyReductions[userId].TargetAmount = newAmount
 
 	if DEBUG then
@@ -755,7 +755,7 @@ function BaseModule.IncrementMeteorsSurvived(userId: number)
 	BaseState[userId].MeteorsSurvived += 1
 
 	if DEBUG and BaseState[userId].MeteorsSurvived % 10 == 0 then
-		print(("[BaseModule] Usuario %d sobrevivió %d meteoritos!"):format(
+		print(("[BaseModule] Usuario %d sobreviviÃÂ³ %d meteoritos!"):format(
 			userId, BaseState[userId].MeteorsSurvived
 			))
 	end
@@ -781,7 +781,7 @@ function BaseModule.ResetWaveDeathFlag(userId: number)
 	end
 end
 
--- ? Verificar si murió durante la wave actual
+-- ? Verificar si muriÃÂ³ durante la wave actual
 function BaseModule.DiedDuringCurrentWave(userId: number): boolean
 	if not BaseState[userId] then return false end
 	return BaseState[userId].DiedDuringWave or false
@@ -809,7 +809,7 @@ function BaseModule.SetRegenEnabled(userId: number, enabled: boolean)
 	BaseState[userId].RegenEnabled = enabled
 end
 
--- Loop de regeneración (iniciar en el server)
+-- Loop de regeneraciÃÂ³n (iniciar en el server)
 task.spawn(function()
 	while true do
 		task.wait(1)
@@ -895,7 +895,7 @@ end)
 -------------------------------------------------------------------------
 
 if DEBUG then
-	print("[BaseModule ARREGLADO] ? Módulo cargado (sin dependencia circular)")
+	print("[BaseModule ARREGLADO] ? MÃÂ³dulo cargado (sin dependencia circular)")
 end
 
 --[[task.spawn(function()
@@ -912,7 +912,7 @@ end
 					local cashValue = leaderstats and leaderstats:FindFirstChild("Cash")
 
 					if cashValue and data.targetAmount then
-						-- Si el dinero está MAYOR al target, forzar reducción
+						-- Si el dinero estÃÂ¡ MAYOR al target, forzar reducciÃÂ³n
 						if cashValue.Value > data.targetAmount then
 							cashValue.Value = data.targetAmount
 
@@ -923,7 +923,7 @@ end
 							end
 						end
 
-						-- Después de 120 segundos (2 autosaves), dejar de forzar
+						-- DespuÃÂ©s de 120 segundos (2 autosaves), dejar de forzar
 						if data.timestamp and (tick() - data.timestamp > 120) then
 							PendingMoneyReductions[userId] = nil
 
@@ -937,7 +937,7 @@ end
 					PendingMoneyReductions[userId] = nil
 				end
 			else
-				-- Data inválida, limpiar
+				-- Data invÃÂ¡lida, limpiar
 				PendingMoneyReductions[userId] = nil
 			end
 		end
@@ -946,7 +946,7 @@ end)
 --]]
 
 -------------------------------------------------------------------------
--- ? ACTUALIZAR GUARDIAN DESPUÉS DE COMPRAS LEGÍTIMAS
+-- ? ACTUALIZAR GUARDIAN DESPUÃÂS DE COMPRAS LEGÃÂTIMAS
 -------------------------------------------------------------------------
 
 function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
@@ -963,7 +963,7 @@ function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 			}
 
 			if DEBUG then
-				print(("[BaseModule] ??? Guardian: Creada protección para compra legítima - Target: $%d"):format(newTarget))
+				print(("[BaseModule] ??? Guardian: Creada protecciÃÂ³n para compra legÃÂ­tima - Target: $%d"):format(newTarget))
 			end
 		else
 			if DEBUG then
@@ -978,7 +978,7 @@ function BaseModule.UpdateGuardianTarget(userId: number, newTarget: number)
 	protection.TargetAmount = newTarget
 
 	if DEBUG then
-		print(("[BaseModule] ??? Guardian: Target actualizado $%d ? $%d para userId %d (compra legítima)"):format(
+		print(("[BaseModule] ??? Guardian: Target actualizado $%d ? $%d para userId %d (compra legÃÂ­tima)"):format(
 			oldTarget, newTarget, userId
 			))
 	end

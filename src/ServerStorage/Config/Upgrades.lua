@@ -3,24 +3,24 @@
 	UPGRADES.LUA - Apocalypse Tycoon
 	Define todos los upgrades disponibles para comprar
 	
-	VERSIÓN: 2.0
+	VERSIÃÂN: 2.0
 	MEJORAS:
 	- Campo IncomePerSec corregido (era IncomeDelta)
-	- Más upgrades (10 total)
+	- MÃÂ¡s upgrades (10 total)
 	- Descripciones para UI
 	- Balance mejorado
-	- Categorías por tipo
+	- CategorÃÂ­as por tipo
 --]]
 
 export type UpgradeDef = {
 	Title: string,           -- Nombre mostrado en UI
-	Description: string,     -- Descripción para tooltip
+	Description: string,     -- DescripciÃÂ³n para tooltip
 	BasePrice: number,       -- Precio inicial
 	PriceGrowth: number,     -- Multiplicador de precio (era PriceMul)
 	IncomePerSec: number,    -- ?? CORREGIDO: era IncomeDelta
 	ModelName: string?,      -- Nombre del modelo en ServerStorage.Models
-	Repeatable: boolean,     -- Si se puede comprar múltiples veces
-	MaxCount: number?,       -- Límite de compras (nil = infinito)
+	Repeatable: boolean,     -- Si se puede comprar mÃÂºltiples veces
+	MaxCount: number?,       -- LÃÂ­mite de compras (nil = infinito)
 	Category: string?,       -- Para organizar UI (Income, Defense, Utility)
 }
 
@@ -31,7 +31,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 	-------------------------------------------------------------------------
 	Upgrade_1 = {
 		Title = "Solar Panel",
-		Description = "Genera energía del sol. +1$/s",
+		Description = "Genera energÃÂ­a del sol. +1$/s",
 		BasePrice = 50,
 		PriceGrowth = 5,
 		IncomePerSec = 1,
@@ -43,7 +43,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 
 	Upgrade_2 = {
 		Title = "Wind Turbine",
-		Description = "Aprovecha el viento apocalíptico. +3$/s",
+		Description = "Aprovecha el viento apocalÃÂ­ptico. +3$/s",
 		BasePrice = 150,
 		PriceGrowth = 5,
 		IncomePerSec = 3,
@@ -94,13 +94,13 @@ local Upgrades: {[string]: UpgradeDef} = {
 	-------------------------------------------------------------------------
 	Upgrade_6 = {
 		Title = "Shield Generator Mk1",
-		Description = "Reduce daño recibido en 20%",
+		Description = "Reduce daÃÂ±o recibido en 20%",
 		BasePrice = 500000,
 		PriceGrowth = 5.0,  -- Muy caro escalar
 		IncomePerSec = 0,
 		ModelName = "ShieldEmitter",
 		Repeatable = true,
-		MaxCount = 3,  -- Máximo 3 niveles = 60% reducción
+		MaxCount = 3,  -- MÃÂ¡ximo 3 niveles = 60% reducciÃÂ³n
 		Category = "Defense",
 	},
 	Upgrade_7 = {
@@ -116,13 +116,13 @@ local Upgrades: {[string]: UpgradeDef} = {
 	},
 	Upgrade_8 = {
 		Title = "Reinforced Walls",
-		Description = "Aumenta HP máximo de la base en +20",
+		Description = "Aumenta HP mÃÂ¡ximo de la base en +20",
 		BasePrice = 1000000,
 		PriceGrowth = 3,
 		IncomePerSec = 0,
-		ModelName = "ReinforcedWalls", -- ? Placeholder discreto (se mejorará visualmente después)
+		ModelName = "ReinforcedWalls", -- ? Placeholder discreto (se mejorarÃÂ¡ visualmente despuÃÂ©s)
 		Repeatable = true,
-		MaxCount = 5,  -- +100 HP máximo
+		MaxCount = 5,  -- +100 HP mÃÂ¡ximo
 		Category = "Defense",
 	},
 
@@ -131,7 +131,7 @@ local Upgrades: {[string]: UpgradeDef} = {
 	-------------------------------------------------------------------------
 	Upgrade_11 = {
 		Title = "Auto-Repair System",
-		Description = "Repara base automáticamente. +2 HP/s",
+		Description = "Repara base automÃÂ¡ticamente. +2 HP/s",
 		BasePrice = 2000000,
 		PriceGrowth = 1.5,
 		IncomePerSec = 0,

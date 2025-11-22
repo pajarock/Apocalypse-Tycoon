@@ -9,7 +9,7 @@ local SoundManager = {}
 -- Cache de sonidos
 local soundCache: {[string]: Sound} = {}
 
--- ?? Función para reproducir sonidos de forma robusta
+-- ?? FunciÃÂ³n para reproducir sonidos de forma robusta
 function SoundManager.Play(soundId: string, volume: number?)
 	local vol = volume or 0.5
 
@@ -35,7 +35,7 @@ function SoundManager.Play(soundId: string, volume: number?)
 		sound:Destroy()
 	end)
 
-	-- Fallback: destruir después de 3 segundos
+	-- Fallback: destruir despuÃÂ©s de 3 segundos
 	task.delay(3, function()
 		if sound and sound.Parent then
 			sound:Destroy()
