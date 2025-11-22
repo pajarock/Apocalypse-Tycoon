@@ -2,10 +2,10 @@
 --[[
 	BaseDataService - Sistema de Persistencia y DataStore
 
-	CARACTERÍSTICAS:
-	- Serialización/Deserialización de bases y objetos
-	- Integración con DataStoreService
-	- Auto-save periódico (cada N minutos)
+	CARACTER�STICAS:
+	- Serializaci�n/Deserializaci�n de bases y objetos
+	- Integraci�n con DataStoreService
+	- Auto-save peri�dico (cada N minutos)
 	- Schema versioning para migraciones
 	- Error handling robusto (retries, fallbacks)
 	- Backup temporal en memoria (anti data loss)
@@ -39,9 +39,9 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Knit = require(ReplicatedStorage.Knit)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	TYPES & CONSTANTS
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 export type SerializedVector3 = {
 	X: number,
@@ -77,9 +77,9 @@ local AUTO_SAVE_INTERVAL = 300 -- 5 minutos
 local MAX_RETRY_ATTEMPTS = 3
 local RETRY_DELAY = 2 -- segundos
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	SERVICE DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 local BaseDataService = Knit.CreateService({
 	Name = "BaseDataService",
@@ -96,16 +96,16 @@ local lastSaveTimes: { [number]: number } = {} -- Para rate limiting
 local BaseSpawnerService
 local BaseOwnershipService
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	SERIALIZATION - Data Conversion
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Serializa un Vector3 a tabla.
 
 	FORMATO: {X = x, Y = y, Z = z}
 
-	Por qué: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
+	Por qu�: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
 	Debemos convertir a tipos primitivos (number, string, table).
 
 	@param vec - Vector3 a serializar
@@ -136,7 +136,7 @@ end
 	4. Construir estructura BaseLayout
 	5. Agregar metadata (version, timestamp)
 
-	@param userId - ID del jugador/dueño
+	@param userId - ID del jugador/due�o
 	@return BaseLayout? - Layout serializado, o nil si no hay base
 ]]
 local function serializeBaseLayout(userId: number): BaseLayout?
@@ -177,33 +177,33 @@ end
 	Deserializa un layout y reconstruye la base.
 
 	PROCESO:
-	1. Validar schema version (migración si es necesario)
+	1. Validar schema version (migraci�n si es necesario)
 	2. Verificar integridad de datos
-	3. Reconstruir base física (via BaseSpawnerService)
+	3. Reconstruir base f�sica (via BaseSpawnerService)
 	4. Reconstruir objetos (via BaseOwnershipService)
 
-	NOTA: Esta función NO crea los objetos físicos automáticamente,
-	solo retorna los datos. El caller decide cómo instanciarlos.
+	NOTA: Esta funci�n NO crea los objetos f�sicos autom�ticamente,
+	solo retorna los datos. El caller decide c�mo instanciarlos.
 
 	@param layout - Layout serializado
-	@return boolean, string? - true si es válido, error si no
+	@return boolean, string? - true si es v�lido, error si no
 ]]
 local function validateLayout(layout: any): (boolean, string?)
-	-- Type checking básico
+	-- Type checking b�sico
 	if type(layout) ~= "table" then
 		return false, "Layout no es una tabla"
 	end
 
 	if type(layout.Version) ~= "string" then
-		return false, "Version faltante o inválida"
+		return false, "Version faltante o inv�lida"
 	end
 
 	if type(layout.OwnerId) ~= "number" then
-		return false, "OwnerId faltante o inválido"
+		return false, "OwnerId faltante o inv�lido"
 	end
 
 	if type(layout.Objects) ~= "table" then
-		return false, "Objects faltante o inválido"
+		return false, "Objects faltante o inv�lido"
 	end
 
 	-- Schema version check
@@ -212,16 +212,16 @@ local function validateLayout(layout: any): (boolean, string?)
 			"[BaseDataService] Schema mismatch: saved=%s, current=%s (migration needed)",
 			layout.Version,
 			SCHEMA_VERSION
-		))
-		-- Aquí podrías implementar migración de schemas
+			))
+		-- Aqu� podr�as implementar migraci�n de schemas
 	end
 
 	return true
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	DATASTORE OPERATIONS - Persistence Layer
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Genera la key para el DataStore de un usuario.
@@ -249,7 +249,7 @@ end
 
 	@param userId - ID del usuario
 	@param layout - Layout a guardar
-	@return SaveResult - Resultado de la operación
+	@return SaveResult - Resultado de la operaci�n
 ]]
 local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 	if not baseDataStore then
@@ -271,29 +271,29 @@ local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 		end)
 
 		if success then
-			-- ✅ GUARDADO EXITOSO
+			-- ? GUARDADO EXITOSO
 			lastSaveTimes[userId] = os.time()
-			inMemoryBackup[userId] = layout -- También guardar en backup
+			inMemoryBackup[userId] = layout -- Tambi�n guardar en backup
 
 			print(string.format(
-				"[BaseDataService] 💾 Saved base for userId=%d (Objects: %d, Attempt: %d)",
+				"[BaseDataService] ?? Saved base for userId=%d (Objects: %d, Attempt: %d)",
 				userId,
 				#layout.Objects,
 				attempts
-			))
+				))
 
 			return {
 				Success = true,
 			}
 		else
-			-- ❌ ERROR
+			-- ? ERROR
 			warn(string.format(
 				"[BaseDataService] Save failed for userId=%d (Attempt %d/%d): %s",
 				userId,
 				attempts,
 				MAX_RETRY_ATTEMPTS,
 				tostring(err)
-			))
+				))
 
 			if attempts < MAX_RETRY_ATTEMPTS then
 				task.wait(RETRY_DELAY)
@@ -340,12 +340,12 @@ local function loadFromDataStore(userId: number): BaseLayout?
 		if success then
 			if result then
 				print(string.format(
-					"[BaseDataService] 📂 Loaded base for userId=%d (Objects: %d)",
+					"[BaseDataService] ?? Loaded base for userId=%d (Objects: %d)",
 					userId,
 					result.Objects and #result.Objects or 0
-				))
+					))
 
-				-- Guardar en backup también
+				-- Guardar en backup tambi�n
 				inMemoryBackup[userId] = result
 				return result
 			else
@@ -359,7 +359,7 @@ local function loadFromDataStore(userId: number): BaseLayout?
 				attempts,
 				MAX_RETRY_ATTEMPTS,
 				tostring(result)
-			))
+				))
 
 			if attempts < MAX_RETRY_ATTEMPTS then
 				task.wait(RETRY_DELAY)
@@ -372,9 +372,9 @@ local function loadFromDataStore(userId: number): BaseLayout?
 	return inMemoryBackup[userId]
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	PUBLIC API - Service Methods
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Guarda la base de un jugador.
@@ -385,7 +385,7 @@ function BaseDataService:SaveBase(userId: number): SaveResult
 	if not layout then
 		return {
 			Success = false,
-			ErrorMessage = "No se encontró base para serializar",
+			ErrorMessage = "No se encontr� base para serializar",
 		}
 	end
 
@@ -416,10 +416,10 @@ end
 	PROCESO:
 	1. Cargar layout desde DataStore
 	2. Validar datos
-	3. Crear objetos físicos (esto requiere acceso a templates/assets)
+	3. Crear objetos f�sicos (esto requiere acceso a templates/assets)
 
-	NOTA: Por ahora solo retorna el layout. La restauración física
-	se implementará cuando tengamos los assets de los upgrades.
+	NOTA: Por ahora solo retorna el layout. La restauraci�n f�sica
+	se implementar� cuando tengamos los assets de los upgrades.
 ]]
 function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 	local layout = self:LoadBase(userId)
@@ -428,14 +428,14 @@ function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 		return false, "No hay datos guardados para este usuario"
 	end
 
-	-- Aquí iría la lógica de instanciar los objetos físicos
+	-- Aqu� ir�a la l�gica de instanciar los objetos f�sicos
 	-- Por ahora solo cargamos los datos
 
 	print(string.format(
 		"[BaseDataService] Layout cargado para userId=%d (%d objetos)",
 		userId,
 		#layout.Objects
-	))
+		))
 
 	return true, nil
 end
@@ -455,10 +455,10 @@ function BaseDataService:SaveAllBases(): number
 	end
 
 	print(string.format(
-		"[BaseDataService] 💾 Auto-save completed: %d/%d bases saved",
+		"[BaseDataService] ?? Auto-save completed: %d/%d bases saved",
 		savedCount,
 		table.maxn(allBases)
-	))
+		))
 
 	return savedCount
 end
@@ -471,12 +471,12 @@ function BaseDataService:SetAutoSave(enabled: boolean)
 	print(string.format(
 		"[BaseDataService] Auto-save %s",
 		enabled and "ENABLED" or "DISABLED"
-	))
+		))
 end
 
---[[────────────────────────────────────────────────────────────────────────
-	CLIENT API - Métodos Expuestos al Cliente
-────────────────────────────────────────────────────────────────────────]]
+--[[------------------------------------------------------------------------
+	CLIENT API - M�todos Expuestos al Cliente
+------------------------------------------------------------------------]]
 
 --[[
 	Solicita guardar la base desde el cliente.
@@ -485,9 +485,9 @@ function BaseDataService.Client:SaveMyBase(player: Player)
 	return self.Server:SaveBase(player.UserId)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	AUTO-SAVE SYSTEM
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Loop de auto-save (ejecuta cada AUTO_SAVE_INTERVAL segundos).
@@ -504,9 +504,9 @@ local function startAutoSaveLoop()
 	end)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	PLAYER LIFECYCLE - Save on Leave
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Guarda la base de un jugador cuando se desconecta.
@@ -515,22 +515,22 @@ local function onPlayerRemoving(player: Player)
 	print(string.format(
 		"[BaseDataService] Player leaving, saving base for: %s",
 		player.Name
-	))
+		))
 
 	local result = BaseDataService:SaveBase(player.UserId)
 
 	if not result.Success then
 		warn(string.format(
-			"[BaseDataService] ⚠️ Failed to save base for %s: %s",
+			"[BaseDataService] ?? Failed to save base for %s: %s",
 			player.Name,
 			result.ErrorMessage or "Unknown error"
-		))
+			))
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 function BaseDataService:KnitInit()
 	-- Inicializar DataStore (solo en servidor real, no en Studio local)
@@ -550,7 +550,7 @@ function BaseDataService:KnitInit()
 		warn("[BaseDataService] Will use in-memory backup only")
 	end
 
-	print("[BaseDataService] ⚙️ Initialized")
+	print("[BaseDataService] ?? Initialized")
 end
 
 function BaseDataService:KnitStart()
@@ -564,12 +564,12 @@ function BaseDataService:KnitStart()
 	-- Iniciar auto-save loop
 	startAutoSaveLoop()
 
-	print("[BaseDataService] ✅ Started - Persistence system ready")
+	print("[BaseDataService] ? Started - Persistence system ready")
 	print(string.format(
 		"[BaseDataService] Auto-save: %s (Interval: %d seconds)",
 		autoSaveEnabled and "ENABLED" or "DISABLED",
 		AUTO_SAVE_INTERVAL
-	))
+		))
 end
 
 return BaseDataService

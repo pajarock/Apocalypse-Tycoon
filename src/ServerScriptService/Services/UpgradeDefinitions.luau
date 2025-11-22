@@ -1,24 +1,24 @@
 --!strict
 --[[
-	UpgradeDefinitions - Stats y configuración de todos los upgrades
+	UpgradeDefinitions - Stats y configuraci�n de todos los upgrades
 
 	Define las propiedades de cada tipo de upgrade:
-	- Visual (modelo, tamaño, color)
-	- Stats (producción, daño, capacidad)
+	- Visual (modelo, tama�o, color)
+	- Stats (producci�n, da�o, capacidad)
 	- Costos (dinero para colocar)
-	- Comportamiento (funcionalidad específica)
+	- Comportamiento (funcionalidad espec�fica)
 
 	UPGRADES DISPONIBLES:
 	1. Generator (T1) - Produce $5/s pasivamente
-	2. GeneratorT2 (T2) - Produce $15/s pasivamente (meteórico)
+	2. GeneratorT2 (T2) - Produce $15/s pasivamente (mete�rico)
 	3. GeneratorT3 (T3) - Produce $50/s pasivamente (avanzado)
 	4. Turret - Dispara a meteoros/enemigos
 	5. Storage - Aumenta capacidad de dinero
-	6. RepairStation - Estación física para reparar base (mobile-friendly)
+	6. RepairStation - Estaci�n f�sica para reparar base (mobile-friendly)
 ]]
 
 export type UpgradeDefinition = {
-	-- Identificación
+	-- Identificaci�n
 	Name: string,
 	DisplayName: string,
 	Description: string,
@@ -28,10 +28,10 @@ export type UpgradeDefinition = {
 	Color: Color3,
 	Material: Enum.Material,
 
-	-- Económico
+	-- Econ�mico
 	Cost: number,
 
-	-- Stats (varía por tipo)
+	-- Stats (var�a por tipo)
 	Stats: {
 		-- Generator
 		MoneyPerSecond: number?,
@@ -54,16 +54,16 @@ export type UpgradeDefinition = {
 	IsPlaceable: boolean,
 }
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	UPGRADE DEFINITIONS
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 local UpgradeDefinitions = {}
 
 -- GENERATOR - Produce dinero pasivamente
 UpgradeDefinitions.Generator = {
 	Name = "Generator",
-	DisplayName = "💰 Generator",
+	DisplayName = "?? Generator",
 	Description = "Produces money passively over time",
 
 	Size = Vector3.new(8, 6, 8),
@@ -80,40 +80,40 @@ UpgradeDefinitions.Generator = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- GENERATOR TIER 2 - Meteórico (Producción media)
+-- GENERATOR TIER 2 - Mete�rico (Producci�n media)
 UpgradeDefinitions.GeneratorT2 = {
 	Name = "GeneratorT2",
-	DisplayName = "⚡ Generator Meteórico",
+	DisplayName = "? Generator Mete�rico",
 	Description = "Advanced generator with crystal-powered production",
 
-	Size = Vector3.new(10, 8, 10),  -- Más grande que T1
-	Color = Color3.fromRGB(150, 50, 200),  -- Púrpura
+	Size = Vector3.new(10, 8, 10),  -- M�s grande que T1
+	Color = Color3.fromRGB(150, 50, 200),  -- P�rpura
 	Material = Enum.Material.Neon,
 
-	Cost = 500,  -- 5x más caro que T1
+	Cost = 500,  -- 5x m�s caro que T1
 
 	Stats = {
-		MoneyPerSecond = 15,  -- 3x producción de T1
+		MoneyPerSecond = 15,  -- 3x producci�n de T1
 	},
 
 	Category = "Production",
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- GENERATOR TIER 3 - Avanzado (Producción alta)
+-- GENERATOR TIER 3 - Avanzado (Producci�n alta)
 UpgradeDefinitions.GeneratorT3 = {
 	Name = "GeneratorT3",
-	DisplayName = "🔮 Generator Avanzado",
+	DisplayName = "?? Generator Avanzado",
 	Description = "Elite energy generator with maximum efficiency",
 
-	Size = Vector3.new(12, 10, 12),  -- Más grande que T2
+	Size = Vector3.new(12, 10, 12),  -- M�s grande que T2
 	Color = Color3.fromRGB(0, 255, 255),  -- Cyan brillante
 	Material = Enum.Material.Neon,
 
-	Cost = 2000,  -- 20x más caro que T1
+	Cost = 2000,  -- 20x m�s caro que T1
 
 	Stats = {
-		MoneyPerSecond = 50,  -- 10x producción de T1
+		MoneyPerSecond = 50,  -- 10x producci�n de T1
 	},
 
 	Category = "Production",
@@ -123,7 +123,7 @@ UpgradeDefinitions.GeneratorT3 = {
 -- TURRET - Dispara a meteoros/enemigos
 UpgradeDefinitions.Turret = {
 	Name = "Turret",
-	DisplayName = "🔫 Turret",
+	DisplayName = "?? Turret",
 	Description = "Shoots meteors and enemies automatically",
 
 	Size = Vector3.new(6, 8, 6),
@@ -145,7 +145,7 @@ UpgradeDefinitions.Turret = {
 -- STORAGE - Aumenta capacidad de dinero
 UpgradeDefinitions.Storage = {
 	Name = "Storage",
-	DisplayName = "📦 Storage",
+	DisplayName = "?? Storage",
 	Description = "Increases your money storage capacity",
 
 	Size = Vector3.new(10, 8, 10),
@@ -162,10 +162,10 @@ UpgradeDefinitions.Storage = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- REPAIR STATION - Estación física para reparar (mobile-friendly)
+-- REPAIR STATION - Estaci�n f�sica para reparar (mobile-friendly)
 UpgradeDefinitions.RepairStation = {
 	Name = "RepairStation",
-	DisplayName = "🔧 Repair Station",
+	DisplayName = "?? Repair Station",
 	Description = "Interact to repair your base (mobile-friendly)",
 
 	Size = Vector3.new(8, 6, 8),
@@ -183,15 +183,15 @@ UpgradeDefinitions.RepairStation = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	HELPER FUNCTIONS
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
-	Obtiene la definición de un upgrade por nombre.
+	Obtiene la definici�n de un upgrade por nombre.
 
 	@param upgradeName - Nombre del upgrade (ej: "Generator")
-	@return UpgradeDefinition? - Definición del upgrade, o nil si no existe
+	@return UpgradeDefinition? - Definici�n del upgrade, o nil si no existe
 ]]
 function UpgradeDefinitions.GetDefinition(upgradeName: string): UpgradeDefinition?
 	return UpgradeDefinitions[upgradeName]
@@ -215,13 +215,13 @@ function UpgradeDefinitions.GetAllPlaceable(): {UpgradeDefinition}
 end
 
 --[[
-	Crea un modelo físico 3D basado en la definición.
+	Crea un modelo f�sico 3D basado en la definici�n.
 
-	NOTA: Por ahora usa geometría simple (cubos). En el futuro
-	esto podría cargar meshes o modelos de ServerStorage.
+	NOTA: Por ahora usa geometr�a simple (cubos). En el futuro
+	esto podr�a cargar meshes o modelos de ServerStorage.
 
 	@param upgradeName - Nombre del upgrade
-	@return Model? - Modelo creado, o nil si no existe la definición
+	@return Model? - Modelo creado, o nil si no existe la definici�n
 ]]
 function UpgradeDefinitions.CreateModel(upgradeName: string): Model?
 	local definition = UpgradeDefinitions.GetDefinition(upgradeName)
@@ -285,15 +285,15 @@ function UpgradeDefinitions.CreateModel(upgradeName: string): Model?
 	return model
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[------------------------------------------------------------------------
 	PHASE 4: GENERATOR UPGRADE SYSTEM
-────────────────────────────────────────────────────────────────────────]]
+------------------------------------------------------------------------]]
 
 --[[
 	Obtiene el nombre del siguiente tier para un generador.
 
 	@param currentTierName - Nombre del tier actual ("Generator", "GeneratorT2", "GeneratorT3")
-	@return string? - Nombre del siguiente tier, o nil si ya está en tier máximo
+	@return string? - Nombre del siguiente tier, o nil si ya est� en tier m�ximo
 ]]
 function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
 	if currentTierName == "Generator" then
@@ -301,7 +301,7 @@ function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
 	elseif currentTierName == "GeneratorT2" then
 		return "GeneratorT3"
 	elseif currentTierName == "GeneratorT3" then
-		return nil  -- Ya está en tier máximo
+		return nil  -- Ya est� en tier m�ximo
 	end
 
 	return nil
@@ -311,7 +311,7 @@ end
 	Calcula el costo de upgrade para un generador.
 
 	El costo es la diferencia entre el costo del siguiente tier y el tier actual.
-	Por ejemplo: T1→T2 cuesta $400 ($500 - $100)
+	Por ejemplo: T1?T2 cuesta $400 ($500 - $100)
 
 	@param currentTierName - Nombre del tier actual
 	@return number? - Costo de upgrade, o nil si no puede upgradear
@@ -337,7 +337,7 @@ end
 	Verifica si un generador puede ser upgradeado.
 
 	@param tierName - Nombre del tier a verificar
-	@return boolean - true si puede ser upgradeado, false si ya está en tier máximo
+	@return boolean - true si puede ser upgradeado, false si ya est� en tier m�ximo
 ]]
 function UpgradeDefinitions.CanUpgrade(tierName: string): boolean
 	return UpgradeDefinitions.GetNextTier(tierName) ~= nil
