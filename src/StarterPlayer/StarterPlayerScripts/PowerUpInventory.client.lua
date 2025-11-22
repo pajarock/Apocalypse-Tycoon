@@ -4,12 +4,12 @@
 	POWERUP INVENTORY UI CLIENT
 	-----------------------------------------------------------------------
 
-	Sistema de inventario para powerups comprados en la m醧uina expendedora.
+	Sistema de inventario para powerups comprados en la m谩quina expendedora.
 
 	FEATURES:
 	? 5 slots de inventario
 	? Click para usar powerups
-	? Sincronizaci髇 autom醫ica con servidor
+	? Sincronizaci贸n autom谩tica con servidor
 	? Iconos y nombres de powerups
 
 	-----------------------------------------------------------------------
@@ -28,7 +28,7 @@ local UpdateInventory = Remotes:WaitForChild("UpdateInventory", 10) :: RemoteEve
 local UseFromInventory = Remotes:WaitForChild("UseFromInventory", 10) :: RemoteEvent?
 
 -- -----------------------------------------------------------------------
--- POWERUP DISPLAY CONFIG (solo info de UI, no l骻ica de juego)
+-- POWERUP DISPLAY CONFIG (solo info de UI, no l贸gica de juego)
 -- -----------------------------------------------------------------------
 local PowerUpDisplayInfo = {
 	GodShield = {
@@ -121,15 +121,15 @@ local function createInventoryGUI(): ScreenGui
 	container.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 	container.BackgroundTransparency = 0.1
 	container.BorderSizePixel = 0
-	container.Rotation = -1 -- Leve inclinaci髇 urbana
+	container.Rotation = -1 -- Leve inclinaci贸n urbana
 	container.Parent = screenGui
 
-	-- UICorner m醩 redondeado
+	-- UICorner m谩s redondeado
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 20)
 	containerCorner.Parent = container
 
-	-- ?? STROKE NE覰 蒔ICO
+	-- ?? STROKE NE脫N 脡PICO
 	local containerStroke = Instance.new("UIStroke")
 	containerStroke.Color = Color3.fromRGB(0, 255, 200)
 	containerStroke.Thickness = 4
@@ -146,7 +146,7 @@ local function createInventoryGUI(): ScreenGui
 	glow.Rotation = 90
 	glow.Parent = containerStroke
 
-	-- ?? T蚑ULO 蒔ICO ESTILO GRAFITI
+	-- ?? T脥TULO 脡PICO ESTILO GRAFITI
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(1, 0, 0, 30)
@@ -159,7 +159,7 @@ local function createInventoryGUI(): ScreenGui
 	title.Rotation = -2
 	title.Parent = container
 
-	-- Stroke para el t韙ulo
+	-- Stroke para el t铆tulo
 	local titleStroke = Instance.new("UIStroke")
 	titleStroke.Color = Color3.fromRGB(0, 0, 0)
 	titleStroke.Thickness = 3
@@ -181,7 +181,7 @@ local function createInventoryGUI(): ScreenGui
 	listLayout.Padding = UDim.new(0, 15)
 	listLayout.Parent = slotsFrame
 
-	-- ?? Crear 5 slots 蒔ICOS
+	-- ?? Crear 5 slots 脡PICOS
 	for i = 1, 5 do
 		local slot = Instance.new("TextButton")
 		slot.Name = "Slot" .. i
@@ -191,15 +191,15 @@ local function createInventoryGUI(): ScreenGui
 		slot.Text = ""
 		slot.AutoButtonColor = false
 		slot:SetAttribute("SlotIndex", i)
-		slot.Rotation = math.random(-3, 3) -- Rotaci髇 random para look urbano
+		slot.Rotation = math.random(-3, 3) -- Rotaci贸n random para look urbano
 		slot.Parent = slotsFrame
 
-		-- UICorner m醩 redondeado
+		-- UICorner m谩s redondeado
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 15)
 		corner.Parent = slot
 
-		-- ?? STROKE NE覰 GRUESO
+		-- ?? STROKE NE脫N GRUESO
 		local stroke = Instance.new("UIStroke")
 		stroke.Color = Color3.fromRGB(60, 60, 100)
 		stroke.Thickness = 4
@@ -207,14 +207,14 @@ local function createInventoryGUI(): ScreenGui
 		stroke.Name = "Stroke"
 		stroke.Parent = slot
 
-		-- Icon Label (emoji del powerup) - M罶 GRANDE
+		-- Icon Label (emoji del powerup) - M脕S GRANDE
 		local icon = Instance.new("TextLabel")
 		icon.Name = "Icon"
 		icon.Size = UDim2.new(1, 0, 0.6, 0)
 		icon.Position = UDim2.new(0, 0, 0, 0)
 		icon.BackgroundTransparency = 1
 		icon.Text = "?"
-		icon.TextSize = 32 -- M罶 GRANDE
+		icon.TextSize = 32 -- M脕S GRANDE
 		icon.Font = Enum.Font.GothamBold
 		icon.TextColor3 = Color3.fromRGB(150, 150, 150)
 		icon.Parent = slot
@@ -244,12 +244,12 @@ local function createInventoryGUI(): ScreenGui
 		nameStroke.Thickness = 2
 		nameStroke.Parent = nameLabel
 
-		-- ?? Click handler con ANIMACI覰 蒔ICA
+		-- ?? Click handler con ANIMACI脫N 脡PICA
 		slot.MouseButton1Click:Connect(function()
 			if UseFromInventory then
 				UseFromInventory:FireServer(i)
 
-				-- ?? BOUNCE 蒔ICO
+				-- ?? BOUNCE 脡PICO
 				local originalSize = slot.Size
 				TweenService:Create(slot, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 					Size = UDim2.new(0, 85, 0, 75)
@@ -263,10 +263,10 @@ local function createInventoryGUI(): ScreenGui
 			end
 		end)
 
-		-- ?? Hover effects 蒔ICOS
+		-- ?? Hover effects 脡PICOS
 		slot.MouseEnter:Connect(function()
 			if CurrentInventory[i] then
-				-- Glow ne髇
+				-- Glow ne贸n
 				TweenService:Create(stroke, TweenInfo.new(0.2), {
 					Transparency = 0,
 					Color = Color3.fromRGB(0, 255, 200),
@@ -293,7 +293,7 @@ local function createInventoryGUI(): ScreenGui
 		end)
 	end
 
-	-- ?? Animaci髇 de entrada 閜ica
+	-- ?? Animaci贸n de entrada 茅pica
 	container.Position = UDim2.new(0.5, -250, 1, 50)
 	TweenService:Create(container, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Position = UDim2.new(0.5, -250, 1, -140)
@@ -328,9 +328,9 @@ local function updateSlots(inventory: {string})
 				local info = PowerUpDisplayInfo[powerUpId]
 				local isNewItem = (oldPowerUpId ~= powerUpId)
 
-				-- ?? ANIMACI覰 蒔ICA SI ES NUEVO ITEM
+				-- ?? ANIMACI脫N 脡PICA SI ES NUEVO ITEM
 				if isNewItem then
-					-- Bounce 閜ico
+					-- Bounce 茅pico
 					local originalSize = slot.Size
 					slot.Size = UDim2.new(0, 50, 0, 50)
 					TweenService:Create(slot, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
@@ -367,7 +367,7 @@ local function updateSlots(inventory: {string})
 					stroke.Color = info.Color
 				end
 			else
-				-- Slot vac韔
+				-- Slot vac铆o
 				if icon then
 					icon.Text = "?"
 					icon.TextColor3 = Color3.fromRGB(100, 100, 100)
@@ -392,7 +392,7 @@ local function updateSlots(inventory: {string})
 end
 
 -------------------------------------------------------------------------
--- INICIALIZACI覰
+-- INICIALIZACI脫N
 -------------------------------------------------------------------------
 
 -- Crear GUI
@@ -406,7 +406,7 @@ if UpdateInventory then
 	end)
 end
 
--- Inicializar con inventario vac韔
+-- Inicializar con inventario vac铆o
 updateSlots({})
 
 print("[PowerUpInventory] ? Sistema de inventario inicializado")

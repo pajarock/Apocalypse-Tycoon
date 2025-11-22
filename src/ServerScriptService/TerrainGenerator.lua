@@ -1,7 +1,7 @@
 --!strict
 --[[
-	TERRAIN GENERATOR - Apocalypse Tycoon (VERSIÓN CORREGIDA)
-	Genera un mapa apocalíptico prehispánico con lava y montañas
+	TERRAIN GENERATOR - Apocalypse Tycoon (VERSIÃ“N CORREGIDA)
+	Genera un mapa apocalÃ­ptico prehispÃ¡nico con lava y montaÃ±as
 ]]
 
 local TerrainGenerator = {}
@@ -10,7 +10,7 @@ local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 
 -------------------------------------------------------------------------
--- CONFIGURACIÓN DEL MAPA
+-- CONFIGURACIÃ“N DEL MAPA
 -------------------------------------------------------------------------
 
 local MAP_CONFIG = {
@@ -75,7 +75,7 @@ local function perlinNoise(x: number, z: number, scale: number): number
 end
 
 -------------------------------------------------------------------------
--- GENERACIÓN DE MONTAÑAS
+-- GENERACIÃ“N DE MONTAÃ‘AS
 -------------------------------------------------------------------------
 
 local function createMountain(position: Vector3, height: number, radius: number, mapFolder: Folder)
@@ -208,7 +208,7 @@ local function createLavaOcean(mapFolder: Folder)
 		end
 	end
 
-	print("[TERRAIN] Océano de lava creado")
+	print("[TERRAIN] OcÃ©ano de lava creado")
 end
 
 -------------------------------------------------------------------------
@@ -308,7 +308,7 @@ local function createBasePlatform(position: Vector3, playerName: string, mapFold
 end
 
 -------------------------------------------------------------------------
--- DECORACIÓN PREHISPÁNICA
+-- DECORACIÃ“N PREHISPÃNICA
 -------------------------------------------------------------------------
 
 local function createRuins(mapFolder: Folder)
@@ -388,7 +388,7 @@ local function createPillars(mapFolder: Folder)
 end
 
 -------------------------------------------------------------------------
--- ILUMINACIÓN Y ATMÓSFERA
+-- ILUMINACIÃ“N Y ATMÃ“SFERA
 -------------------------------------------------------------------------
 
 local function setupLighting()
@@ -419,11 +419,11 @@ local function setupLighting()
 	Lighting.TimeOfDay = "17:00:00"
 	Lighting.GeographicLatitude = 0
 
-	print("[TERRAIN] Iluminación configurada")
+	print("[TERRAIN] IluminaciÃ³n configurada")
 end
 
 -------------------------------------------------------------------------
--- API PÚBLICA
+-- API PÃšBLICA
 -------------------------------------------------------------------------
 
 function TerrainGenerator.GenerateMap(): Folder
@@ -436,11 +436,11 @@ function TerrainGenerator.GenerateMap(): Folder
 	mapFolder.Name = "ApocalypticMap"
 	mapFolder.Parent = workspace
 
-	print("[TERRAIN] Iniciando generación del mapa...")
+	print("[TERRAIN] Iniciando generaciÃ³n del mapa...")
 
 	createLavaOcean(mapFolder)
 
-	print("[TERRAIN] Generando montañas...")
+	print("[TERRAIN] Generando montaÃ±as...")
 	local mountainsFolder = Instance.new("Folder")
 	mountainsFolder.Name = "Mountains"
 	mountainsFolder.Parent = mapFolder

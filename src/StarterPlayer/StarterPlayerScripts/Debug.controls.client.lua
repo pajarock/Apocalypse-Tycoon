@@ -10,19 +10,19 @@
 	- N: Skip al siguiente wave
 	- Shift+N: Saltar +5 waves
 	- Y: Reset a Wave 1
-	- 1-9: Saltar a wave especÌfico (x10): 10, 20, 30... 90
+	- 1-9: Saltar a wave espec√≠fico (x10): 10, 20, 30... 90
 	- 0: Saltar a wave 100
 
 	BOSS/MINI-BOSS:
-	- B: Spawn Boss instant·neo (4 fases completas)
-	- V: Spawn Mini-Boss instant·neo (1 fase aleatoria)
+	- B: Spawn Boss instant√°neo (4 fases completas)
+	- V: Spawn Mini-Boss instant√°neo (1 fase aleatoria)
 
-	ECONOMÕA:
-	- C: AÒadir $10,000
-	- Shift+C: AÒadir $100,000
+	ECONOM√çA:
+	- C: A√±adir $10,000
+	- Shift+C: A√±adir $100,000
 
 	SUPERVIVENCIA:
-	- J: Toggle Invencibilidad (no recibes daÒo)
+	- J: Toggle Invencibilidad (no recibes da√±o)
 
 	OTROS:
 	- M: Spawn meteorito aleatorio
@@ -132,9 +132,9 @@ local function createHelpUI()
 		{key = "B", desc = "Spawn Boss (4 fases)"},
 		{key = "V", desc = "Spawn Mini-Boss (1 fase)"},
 
-		{section = "ECONOMÕA", color = Color3.fromRGB(100, 255, 100)},
-		{key = "C", desc = "AÒadir $10,000"},
-		{key = "Shift+C", desc = "AÒadir $100,000"},
+		{section = "ECONOM√çA", color = Color3.fromRGB(100, 255, 100)},
+		{key = "C", desc = "A√±adir $10,000"},
+		{key = "Shift+C", desc = "A√±adir $100,000"},
 
 		{section = "SUPERVIVENCIA", color = Color3.fromRGB(255, 215, 0)},
 		{key = "J", desc = "Toggle Invencibilidad"},
@@ -148,7 +148,7 @@ local function createHelpUI()
 
 	for i, cmd in ipairs(commands) do
 		if cmd.section then
-			-- SecciÛn
+			-- Secci√≥n
 			local sectionLabel = Instance.new("TextLabel")
 			sectionLabel.Name = "Section" .. i
 			sectionLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -243,7 +243,7 @@ local function showFeedback(message: string, color: Color3?)
 	stroke.Thickness = 2
 	stroke.Parent = label
 
-	-- AnimaciÛn de fade out
+	-- Animaci√≥n de fade out
 	task.spawn(function()
 		task.wait(1.5)
 		for i = 0, 1, 0.05 do
@@ -309,7 +309,7 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	elseif input.KeyCode == Enum.KeyCode.H then
 		toggleHelp()
 
-		-- SALTAR A WAVE ESPECÕFICO (1-9, 0)
+		-- SALTAR A WAVE ESPEC√çFICO (1-9, 0)
 	elseif input.KeyCode == Enum.KeyCode.One then
 		DebugJumpToWave:FireServer(10)
 		showFeedback("?? Jumping to Wave 10", Color3.fromRGB(100, 200, 255))
@@ -353,7 +353,7 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 		-- TOGGLE INVINCIBILITY
 	elseif input.KeyCode == Enum.KeyCode.J then
 		DebugToggleInvincibility:FireServer()
-		-- El feedback se mostrar· cuando el servidor confirme el cambio
+		-- El feedback se mostrar√° cuando el servidor confirme el cambio
 	end
 end)
 
@@ -438,7 +438,7 @@ local function createInvincibilityOverlay()
 	labelStroke.Thickness = 2
 	labelStroke.Parent = label
 
-	-- AnimaciÛn de pulso
+	-- Animaci√≥n de pulso
 	task.spawn(function()
 		while screenGui.Enabled do
 			for i = 0, 1, 0.05 do

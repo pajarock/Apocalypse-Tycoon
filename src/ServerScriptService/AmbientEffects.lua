@@ -1,6 +1,6 @@
 --!strict
 --[[
-	AMBIENT EFFECTS - Apocalypse Tycoon (VERSI”N CORREGIDA)
+	AMBIENT EFFECTS - Apocalypse Tycoon (VERSI√ìN CORREGIDA)
 	Efectos visuales optimizados sin errores de audio
 ]]
 
@@ -11,7 +11,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 -------------------------------------------------------------------------
--- PARTÕCULAS GLOBALES
+-- PART√çCULAS GLOBALES
 -------------------------------------------------------------------------
 
 local function createGlobalAsh()
@@ -90,7 +90,7 @@ local function createGroundFog()
 		fog.Parent = fogPart
 	end
 
-	print("[EFFECTS] Niebla tÛxica creada")
+	print("[EFFECTS] Niebla t√≥xica creada")
 end
 
 -------------------------------------------------------------------------
@@ -140,7 +140,7 @@ local function createHeatWaves()
 end
 
 -------------------------------------------------------------------------
--- REL¡MPAGOS APOCALÕPTICOS
+-- REL√ÅMPAGOS APOCAL√çPTICOS
 -------------------------------------------------------------------------
 
 local function createLightning()
@@ -182,11 +182,11 @@ local function createLightning()
 		end
 	end)
 
-	print("[EFFECTS] Sistema de rel·mpagos iniciado")
+	print("[EFFECTS] Sistema de rel√°mpagos iniciado")
 end
 
 -------------------------------------------------------------------------
--- CRISTALES MÕSTICOS
+-- CRISTALES M√çSTICOS
 -------------------------------------------------------------------------
 
 local function createFloatingCrystals()
@@ -246,7 +246,7 @@ local function createFloatingCrystals()
 		sparkles.Parent = crystal
 	end
 
-	print("[EFFECTS] Cristales mÌsticos creados")
+	print("[EFFECTS] Cristales m√≠sticos creados")
 end
 
 -------------------------------------------------------------------------
@@ -341,7 +341,7 @@ local function setupPostProcessing()
 end
 
 -------------------------------------------------------------------------
--- API P⁄BLICA
+-- API P√öBLICA
 -------------------------------------------------------------------------
 
 function AmbientEffects.EnableAll()
