@@ -1,6 +1,6 @@
 -- ============================================================================
--- APOCALYPSE NOTIFIER ó Limpio pero INTENSO
--- Colores de fuego, urgencia real, sin saturaciÛn visual
+-- APOCALYPSE NOTIFIER ¬ó Limpio pero INTENSO
+-- Colores de fuego, urgencia real, sin saturaci√≥n visual
 -- ============================================================================
 
 --!strict
@@ -15,14 +15,14 @@ local Debris = game:GetService("Debris")
 local player = Players.LocalPlayer
 
 -- ============================================================================
--- CONFIG ó Paleta ApocalÌptica + POSICI”N EN PANTALLA
+-- CONFIG ¬ó Paleta Apocal√≠ptica + POSICI√ìN EN PANTALLA
 -- ============================================================================
 
 local CONFIG = {
 	COLORS = {
 		WARNING  = Color3.fromRGB(255, 140,  30),  -- Naranja fuego
 		CRITICAL = Color3.fromRGB(220,  30,  30),  -- Rojo lava
-		SUCCESS  = Color3.fromRGB(120, 220,  50),  -- Verde ·cido/tÛxico
+		SUCCESS  = Color3.fromRGB(120, 220,  50),  -- Verde √°cido/t√≥xico
 		INFO     = Color3.fromRGB(255, 200,  50),  -- Amarillo advertencia
 		EPIC     = Color3.fromRGB(255, 170,  20),  -- Naranja dorado intenso
 	},
@@ -34,16 +34,16 @@ local CONFIG = {
 		EPIC     = "rbxassetid://6895079853",
 	},
 	DEFAULT_TYPE = "WARNING",
-	DEFAULT_DURATION = 2.0,  -- M·s r·pido
+	DEFAULT_DURATION = 2.0,  -- M√°s r√°pido
 	PARTICLE_COUNT = 12,
 	SHAKE_INTENSITY = 6,
-	MAX_QUEUE_SIZE = 2,  -- M·ximo 2 notificaciones en cola
+	MAX_QUEUE_SIZE = 2,  -- M√°ximo 2 notificaciones en cola
 
-	-- UI: AQUÕ CONTROLAS POSICI”N Y TAMA—O DEL NOTIFIER
+	-- UI: AQU√ç CONTROLAS POSICI√ìN Y TAMA√ëO DEL NOTIFIER
 	UI = {
 		-- ANCHOR_Y controla la altura en pantalla (0 = arriba, 1 = abajo).
-		-- Si tapa algo, s˙belo/b·jalo aquÌ.
-		ANCHOR_Y = 0.18, -- ANTES ~0.08. M·s abajo para no tapar tu widget.
+		-- Si tapa algo, s√∫belo/b√°jalo aqu√≠.
+		ANCHOR_Y = 0.18, -- ANTES ~0.08. M√°s abajo para no tapar tu widget.
 
 		WIDTH = 800,
 		HEIGHT = 110,
@@ -67,7 +67,7 @@ local function getSoundFor(typeTag: string?): string?
 	return CONFIG.SOUNDS[key] or CONFIG.SOUNDS[CONFIG.DEFAULT_TYPE]
 end
 
--- Un pequeÒo boost de shake para cosas Èpicas/crÌticas
+-- Un peque√±o boost de shake para cosas √©picas/cr√≠ticas
 local function getShakeIntensity(typeTag: string?): number
 	typeTag = typeTag and string.upper(typeTag) or CONFIG.DEFAULT_TYPE
 	if typeTag == "EPIC" or typeTag == "CRITICAL" then
@@ -92,20 +92,20 @@ local mainContainer = Instance.new("Frame")
 mainContainer.Name = "MainContainer"
 mainContainer.AnchorPoint = Vector2.new(0.5, 0)
 
--- POSICI”N DEL NOTIFIER EN PANTALLA
+-- POSICI√ìN DEL NOTIFIER EN PANTALLA
 -- X = 0.5 (centrado)
 -- Y = CONFIG.UI.ANCHOR_Y (ajusta esto si tapa algo)
 mainContainer.Position = UDim2.new(0.5, 0, CONFIG.UI.ANCHOR_Y, 0)
 
--- TamaÒo inicial pequeÒo (se expande con animaciÛn)
+-- Tama√±o inicial peque√±o (se expande con animaci√≥n)
 mainContainer.Size = UDim2.fromOffset(CONFIG.UI.MIN_WIDTH, CONFIG.UI.HEIGHT)
 
 mainContainer.BackgroundTransparency = 1
 mainContainer.Visible = false
-mainContainer.Rotation = -2 -- InclinaciÛn grafiti
+mainContainer.Rotation = -2 -- Inclinaci√≥n grafiti
 mainContainer.Parent = screenGui
 
--- Sombra dura (no suave - m·s apocalÌptica)
+-- Sombra dura (no suave - m√°s apocal√≠ptica)
 local shadow = Instance.new("Frame")
 shadow.Name = "Shadow"
 shadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -121,7 +121,7 @@ local shadowCorner = Instance.new("UICorner")
 shadowCorner.CornerRadius = UDim.new(0, 8)
 shadowCorner.Parent = shadow
 
--- Frame principal - m·s oscuro para contraste
+-- Frame principal - m√°s oscuro para contraste
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -172,12 +172,12 @@ local leftCorner = Instance.new("UICorner")
 leftCorner.CornerRadius = UDim.new(0, 8)
 leftCorner.Parent = leftBar
 
--- Icono de advertencia (M¡S GRANDE Y DRAM¡TICO)
+-- Icono de advertencia (M√ÅS GRANDE Y DRAM√ÅTICO)
 local iconContainer = Instance.new("Frame")
 iconContainer.Name = "IconContainer"
 iconContainer.Position = UDim2.new(0, 25, 0.5, 0)
 iconContainer.AnchorPoint = Vector2.new(0, 0.5)
-iconContainer.Size = UDim2.fromOffset(70, 70) -- M·s grande
+iconContainer.Size = UDim2.fromOffset(70, 70) -- M√°s grande
 iconContainer.BackgroundTransparency = 1
 iconContainer.ZIndex = 4
 iconContainer.Parent = mainFrame
@@ -199,7 +199,7 @@ iconLabel.Rotation = -5
 iconLabel.Parent = iconContainer
 
 -- ============================================================================
--- TEXTO ó Mensaje directo y urgente
+-- TEXTO ¬ó Mensaje directo y urgente
 -- ============================================================================
 
 local textContainer = Instance.new("Frame")
@@ -230,7 +230,7 @@ messageLabel.Rotation = -3
 messageLabel.Parent = textContainer
 
 -- ============================================================================
--- EFECTOS DE CALOR/PARTÕCULAS
+-- EFECTOS DE CALOR/PART√çCULAS
 -- ============================================================================
 
 local particlesContainer = Instance.new("Frame")
@@ -268,7 +268,7 @@ end
 
 local activeAnimations: {RBXScriptConnection} = {}
 
--- PartÌculas de calor/ceniza ascendente
+-- Part√≠culas de calor/ceniza ascendente
 local function createParticle(color: Color3): Frame
 	local p = Instance.new("Frame")
 	p.Size = UDim2.fromOffset(math.random(2, 5), math.random(8, 16))
@@ -288,7 +288,7 @@ local function createParticle(color: Color3): Frame
 	return p
 end
 
--- Gradiente rotando r·pido (efecto de calor)
+-- Gradiente rotando r√°pido (efecto de calor)
 local function animateGradient()
 	local conn: RBXScriptConnection
 	conn = RunService.RenderStepped:Connect(function(dt)
@@ -301,13 +301,13 @@ local function animateGradient()
 	table.insert(activeAnimations, conn)
 end
 
--- Pulso R¡PIDO del borde (urgencia)
+-- Pulso R√ÅPIDO del borde (urgencia)
 local function pulseBorder()
 	local conn: RBXScriptConnection
 	local t = 0
 	conn = RunService.RenderStepped:Connect(function(dt)
 		if mainContainer.Visible then
-			t += dt * 4  -- M·s r·pido
+			t += dt * 4  -- M√°s r√°pido
 			stroke.Transparency = 0.15 + math.sin(t) * 0.2
 			stroke.Thickness = 2.5 + math.sin(t) * 0.8
 		else
@@ -332,7 +332,7 @@ local function pulseLeftBar()
 	table.insert(activeAnimations, conn)
 end
 
--- PartÌculas de ceniza/chispas subiendo
+-- Part√≠culas de ceniza/chispas subiendo
 local function animateParticles(duration: number, color: Color3)
 	for i = 1, CONFIG.PARTICLE_COUNT do
 		local p = createParticle(color)
@@ -411,7 +411,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 	-- Cola limitada para no atrasar notis
 	if busy then
 		if #queue >= CONFIG.MAX_QUEUE_SIZE then
-			table.remove(queue, 1) -- Saca la m·s vieja
+			table.remove(queue, 1) -- Saca la m√°s vieja
 		end
 		table.insert(queue, {message, typeTag, duration})
 		return
@@ -420,7 +420,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 
 	clearActive()
 
-	-- Color apocalÌptico
+	-- Color apocal√≠ptico
 	local color = getColorFor(typeTag)
 
 	-- Aplicar tema
@@ -441,12 +441,12 @@ local function showNotification(message: string, typeTag: string?, duration: num
 		CRITICAL = "?",
 		SUCCESS = "?",
 		INFO = "?",
-		EPIC = "?", -- RadiaciÛn para Èpico
+		EPIC = "?", -- Radiaci√≥n para √©pico
 	}
 	iconLabel.Text = icons[string.upper(typeTag)] or "?"
 	iconLabel.TextColor3 = color
 
-	-- Mensaje en may˙sculas (m·s urgente)
+	-- Mensaje en may√∫sculas (m√°s urgente)
 	messageLabel.Text = string.upper(message)
 
 	-- Reset visual
@@ -467,7 +467,7 @@ local function showNotification(message: string, typeTag: string?, duration: num
 		Debris:AddItem(s, 4)
 	end
 
-	-- ===== ENTRADA R¡PIDA =====
+	-- ===== ENTRADA R√ÅPIDA =====
 
 	local expandTween = TweenService:Create(
 		mainContainer,
@@ -584,7 +584,7 @@ else
 				return
 			end
 
-			-- Modo cl·sico: mensaje, tipo?, duraciÛn?
+			-- Modo cl√°sico: mensaje, tipo?, duraci√≥n?
 			-- ej: FireClient(plr, "Wave 1 incoming", "EPIC", 3)
 			if typeof(a) == "string" then
 				local msg = a
@@ -597,5 +597,5 @@ else
 	end
 end
 
-print("? Apocalypse Notifier cargado ó RUSH MODE")
+print("? Apocalypse Notifier cargado ¬ó RUSH MODE")
 
