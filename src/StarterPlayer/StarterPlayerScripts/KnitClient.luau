@@ -5,8 +5,8 @@
 	Este script inicializa Knit en el cliente y registra todos los Knit controllers.
 
 	ESTRUCTURA:
-	- Controllers/       → Controllers antiguos (no Knit) - siguen funcionando normalmente
-	- KnitControllers/   → Controllers de Knit - se cargan automáticamente aquí
+	- Controllers/       â Controllers antiguos (no Knit) - siguen funcionando normalmente
+	- KnitControllers/   â Controllers de Knit - se cargan automÃ¡ticamente aquÃ­
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,36 +22,36 @@ print("[KnitClient] Buscando KnitControllers en:", playerScripts:GetFullName())
 local knitControllersFolder = playerScripts:FindFirstChild("KnitControllers")
 
 if knitControllersFolder then
-	print("[KnitClient] ✅ Carpeta KnitControllers encontrada")
+	print("[KnitClient] â Carpeta KnitControllers encontrada")
 	local controllerCount = 0
 	for _, moduleScript in knitControllersFolder:GetChildren() do
 		if moduleScript:IsA("ModuleScript") then
-			print("🔵 [KnitClient] Cargando controller:", moduleScript.Name)
+			print("ðµ [KnitClient] Cargando controller:", moduleScript.Name)
 			local success, err = pcall(function()
 				require(moduleScript)
 			end)
 			if success then
 				controllerCount += 1
-				print("✅ [KnitClient] Controller cargado:", moduleScript.Name)
+				print("â [KnitClient] Controller cargado:", moduleScript.Name)
 			else
-				warn("❌ [KnitClient] Error cargando", moduleScript.Name, ":", err)
+				warn("â [KnitClient] Error cargando", moduleScript.Name, ":", err)
 			end
 		end
 	end
 	print(string.format("[KnitClient] Total controllers cargados: %d", controllerCount))
 else
-	warn("❌ [KnitClient] No se encontró carpeta 'KnitControllers'")
+	warn("â [KnitClient] No se encontrÃ³ carpeta 'KnitControllers'")
 	warn("[KnitClient] Estructura actual de PlayerScripts:")
 	for _, child in playerScripts:GetChildren() do
 		warn("  - " .. child.Name .. " (" .. child.ClassName .. ")")
 	end
 end
 
--- Iniciar Knit (versión simplificada sin Promises)
+-- Iniciar Knit (versiÃ³n simplificada sin Promises)
 local success, err = pcall(function()
 	Knit.Start()
 end)
 
 if not success then
-	warn("❌ [KnitClient] Error during startup:", err)
+	warn("â [KnitClient] Error during startup:", err)
 end

@@ -1,18 +1,18 @@
 --!strict
 --[[
-	BaseSpawnerService - Sistema Avanzado de GeneraciÛn de Bases
+	BaseSpawnerService - Sistema Avanzado de Generaci√≥n de Bases
 
-	CARACTERÕSTICAS:
-	- Algoritmo de distribuciÛn espacial tipo espiral de ArquÌmedes
-	- Object pooling para optimizaciÛn de rendimiento
+	CARACTER√çSTICAS:
+	- Algoritmo de distribuci√≥n espacial tipo espiral de Arqu√≠medes
+	- Object pooling para optimizaci√≥n de rendimiento
 	- Sistema de zonas configurables (spawn, build, restricted)
 	- Anti-overlap con collision detection
 	- Event-driven architecture para updates reactivos
 
-	ALGORITMO MATEM¡TICO:
-	Spiral de ArquÌmedes: r = a + b * ?
-	- Distribuye bases en patrÛn espiral expansivo
-	- Garantiza distancia mÌnima entre bases
+	ALGORITMO MATEM√ÅTICO:
+	Spiral de Arqu√≠medes: r = a + b * ?
+	- Distribuye bases en patr√≥n espiral expansivo
+	- Garantiza distancia m√≠nima entre bases
 	- Escalable para N jugadores sin colisiones
 
 	AUTHOR: Epic Base System v1
@@ -41,8 +41,8 @@ export type BaseData = {
 export type SpawnConfig = {
 	-- Spiral algorithm parameters
 	SpiralStart: number,           -- Radio inicial del espiral
-	SpiralSpacing: number,         -- SeparaciÛn entre vueltas
-	SpiralRotation: number,        -- RotaciÛn por vuelta (radianes)
+	SpiralSpacing: number,         -- Separaci√≥n entre vueltas
+	SpiralRotation: number,        -- Rotaci√≥n por vuelta (radianes)
 
 	-- Base dimensions
 	BasePlateSize: Vector3,
@@ -65,7 +65,7 @@ export type SpawnConfig = {
 local DEFAULT_CONFIG: SpawnConfig = {
 	SpiralStart = 50,
 	SpiralSpacing = 80,
-	SpiralRotation = math.pi * 0.8, -- ~144∞ por base (golden angle aproximado)
+	SpiralRotation = math.pi * 0.8, -- ~144¬∞ por base (golden angle aproximado)
 
 	BasePlateSize = Vector3.new(120, 4, 120),
 	BasePlateHeight = 5,
@@ -97,25 +97,25 @@ local config: SpawnConfig = DEFAULT_CONFIG
 local basesFolder: Folder = nil
 
 --[[------------------------------------------------------------------------
-	SPIRAL ALGORITHM - ArquÌmedes Distribution
+	SPIRAL ALGORITHM - Arqu√≠medes Distribution
 ------------------------------------------------------------------------]]
 
 --[[
-	Calcula la posiciÛn Ûptima para una base usando espiral de ArquÌmedes.
+	Calcula la posici√≥n √≥ptima para una base usando espiral de Arqu√≠medes.
 
-	MATEM¡TICAS:
-	- r = a + b*?  (ecuaciÛn polar del espiral)
+	MATEM√ÅTICAS:
+	- r = a + b*?  (ecuaci√≥n polar del espiral)
 	- x = r * cos(?)
 	- y = r * sin(?)
 
 	VENTAJAS:
-	- DistribuciÛn uniforme y predecible
-	- No requiere b˙squeda de espacio libre
+	- Distribuci√≥n uniforme y predecible
+	- No requiere b√∫squeda de espacio libre
 	- Escalable linealmente O(1)
-	- EstÈticamente agradable
+	- Est√©ticamente agradable
 
-	@param index - Õndice de la base (0-indexed)
-	@return Vector3 - PosiciÛn en el mundo
+	@param index - √çndice de la base (0-indexed)
+	@return Vector3 - Posici√≥n en el mundo
 ]]
 local function calculateSpiralPosition(index: number): Vector3
 	local theta = index * config.SpiralRotation
@@ -133,17 +133,17 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Verifica si una posiciÛn tiene suficiente espacio libre.
+	Verifica si una posici√≥n tiene suficiente espacio libre.
 
 	ALGORITMO:
 	- Itera todas las bases existentes
 	- Calcula distancia euclidiana
-	- Compara contra threshold mÌnimo
+	- Compara contra threshold m√≠nimo
 
-	OPTIMIZACI”N: PodrÌa usar spatial hashing para O(1), pero con <50 bases
-	el O(n) lineal es aceptable y m·s simple.
+	OPTIMIZACI√ìN: Podr√≠a usar spatial hashing para O(1), pero con <50 bases
+	el O(n) lineal es aceptable y m√°s simple.
 
-	@param position - PosiciÛn a verificar
+	@param position - Posici√≥n a verificar
 	@return boolean - true si hay espacio libre
 ]]
 local function hasSpaceClearance(position: Vector3): boolean
@@ -161,14 +161,14 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Crea la estructura fÌsica de una base (plate + zones).
+	Crea la estructura f√≠sica de una base (plate + zones).
 
 	COMPONENTES:
-	1. BasePlate - Plataforma sÛlida principal
-	2. BuildZone - ¡rea transparente para colocar upgrades
+	1. BasePlate - Plataforma s√≥lida principal
+	2. BuildZone - √Årea transparente para colocar upgrades
 	3. SpawnZone - Punto de teleport del jugador
 
-	OPTIMIZACI”N: Las zonas son opcionales (configurables)
+	OPTIMIZACI√ìN: Las zonas son opcionales (configurables)
 ]]
 local function createBaseStructure(position: Vector3, userId: number, playerName: string): BaseData
 	-- 1. BASE PLATE (plataforma principal)
@@ -187,7 +187,7 @@ local function createBaseStructure(position: Vector3, userId: number, playerName
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
 
-	-- 2. BUILD ZONE (·rea de construcciÛn - opcional)
+	-- 2. BUILD ZONE (√°rea de construcci√≥n - opcional)
 	local buildZone: Model? = nil
 	if config.ShowBuildZones then
 		buildZone = Instance.new("Model")
@@ -252,16 +252,16 @@ end
 	Genera una base para un jugador usando algoritmo spiral.
 
 	PROCESO:
-	1. Verificar lÌmites (max bases, duplicados)
-	2. Calcular posiciÛn con spiral algorithm
+	1. Verificar l√≠mites (max bases, duplicados)
+	2. Calcular posici√≥n con spiral algorithm
 	3. Verificar colisiones
-	4. Crear estructura fÌsica
+	4. Crear estructura f√≠sica
 	5. Registrar en estado interno
 	6. Retornar datos de la base
 
 	@param userId - ID del jugador
 	@param playerName - Nombre del jugador
-	@return BaseData? - Datos de la base creada, o nil si fallÛ
+	@return BaseData? - Datos de la base creada, o nil si fall√≥
 ]]
 function BaseSpawnerService:SpawnBase(userId: number, playerName: string): BaseData?
 	-- Validaciones
@@ -275,16 +275,16 @@ function BaseSpawnerService:SpawnBase(userId: number, playerName: string): BaseD
 		return nil
 	end
 
-	-- Calcular posiciÛn con spiral algorithm
+	-- Calcular posici√≥n con spiral algorithm
 	local position = calculateSpiralPosition(baseCount)
 
-	-- Verificar clearance (safety check, aunque spiral deberÌa garantizarlo)
+	-- Verificar clearance (safety check, aunque spiral deber√≠a garantizarlo)
 	if not hasSpaceClearance(position) then
 		warn("[BaseSpawnerService] No space clearance at position:", position)
 		return nil
 	end
 
-	-- Crear base fÌsica
+	-- Crear base f√≠sica
 	local baseData = createBaseStructure(position, userId, playerName)
 
 	-- Registrar en estado
@@ -305,7 +305,7 @@ end
 	Destruye una base de un jugador.
 
 	@param userId - ID del jugador
-	@return boolean - true si se eliminÛ exitosamente
+	@return boolean - true si se elimin√≥ exitosamente
 ]]
 function BaseSpawnerService:DestroyBase(userId: number): boolean
 	local baseData = activeBases[userId]
@@ -313,7 +313,7 @@ function BaseSpawnerService:DestroyBase(userId: number): boolean
 		return false
 	end
 
-	-- Destruir objetos fÌsicos
+	-- Destruir objetos f√≠sicos
 	if baseData.BasePlate then baseData.BasePlate:Destroy() end
 	if baseData.BuildZone then baseData.BuildZone:Destroy() end
 	if baseData.SpawnZone then baseData.SpawnZone:Destroy() end
@@ -350,9 +350,9 @@ function BaseSpawnerService:GetAllBases(): { [number]: BaseData }
 end
 
 --[[
-	Actualiza la configuraciÛn del spawner.
+	Actualiza la configuraci√≥n del spawner.
 
-	@param newConfig - ConfiguraciÛn parcial o completa
+	@param newConfig - Configuraci√≥n parcial o completa
 ]]
 function BaseSpawnerService:UpdateConfig(newConfig: SpawnConfig?)
 	if newConfig then
@@ -365,14 +365,14 @@ function BaseSpawnerService:UpdateConfig(newConfig: SpawnConfig?)
 end
 
 --[[------------------------------------------------------------------------
-	CLIENT API - MÈtodos Expuestos al Cliente
+	CLIENT API - M√©todos Expuestos al Cliente
 ------------------------------------------------------------------------]]
 
 --[[
-	Solicita la creaciÛn de una base desde el cliente.
+	Solicita la creaci√≥n de una base desde el cliente.
 
-	SEGURIDAD: Este mÈtodo solo sirve como trigger, toda validaciÛn
-	est· en el servidor.
+	SEGURIDAD: Este m√©todo solo sirve como trigger, toda validaci√≥n
+	est√° en el servidor.
 ]]
 function BaseSpawnerService.Client:RequestBase(player: Player)
 	return self.Server:SpawnBase(player.UserId, player.Name)

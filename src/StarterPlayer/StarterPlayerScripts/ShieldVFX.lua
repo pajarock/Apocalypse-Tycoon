@@ -1,6 +1,6 @@
 --!strict
 -- ShieldVFX.client.lua  (StarterPlayerScripts)
--- Muestra un Highlight en la base según ShieldLevel del jugador
+-- Muestra un Highlight en la base segÃºn ShieldLevel del jugador
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -40,12 +40,12 @@ local function applyShieldVFX(level: number)
 	highlight.FillColor = col
 	highlight.OutlineColor = col
 
-	-- pequeño “pulso” al cambiar
+	-- pequeÃ±o Â“pulsoÂ” al cambiar
 	highlight.FillTransparency = 0.9
 	TweenService:Create(highlight, TweenInfo.new(0.25), { FillTransparency = 0.7 }):Play()
 end
 
--- Cuando aparezca el character, asegúrate de crear el efecto
+-- Cuando aparezca el character, asegÃºrate de crear el efecto
 local function onCharacter()
 	task.delay(0.2, function()
 		applyShieldVFX(LOCAL:GetAttribute("ShieldLevel") or 0)

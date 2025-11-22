@@ -7,13 +7,13 @@
 	CONTROLES:
 	- N: Skip al siguiente wave
 	- Shift+N: Saltar +5 waves
-	- B: Spawn Boss instantáneo
-	- V: Spawn Mini-Boss instantáneo
-	- C: Añadir $10,000
-	- Shift+C: Añadir $100,000
+	- B: Spawn Boss instantÃ¡neo
+	- V: Spawn Mini-Boss instantÃ¡neo
+	- C: AÃ±adir $10,000
+	- Shift+C: AÃ±adir $100,000
 	- Y: Reset a Wave 1
 	- G: Toggle Invencibilidad (God Mode)
-	- 1-9: Saltar a wave específico (10, 20, 30, etc.)
+	- 1-9: Saltar a wave especÃ­fico (10, 20, 30, etc.)
 
 	-----------------------------------------------------------------------
 --]]
@@ -35,11 +35,11 @@ print("[DEBUG MANAGER] ??? Iniciando sistema de debug...")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local CurrentWaveValue = ReplicatedStorage:WaitForChild("CurrentWave", 10)
 
--- Módulos
+-- MÃ³dulos
 local Config = require(ServerStorage.Config.Config)
 local Events = require(ServerScriptService.EventManager)
 
--- Esperar a que Economy y DataStore estén cargados
+-- Esperar a que Economy y DataStore estÃ©n cargados
 task.wait(2)
 local Economy = require(ServerScriptService.EconomyModule)
 local DataStore = require(ServerScriptService.DataStoreModule)
@@ -127,15 +127,15 @@ DebugSkipWave.OnServerEvent:Connect(function(player: Player, skipAmount: number?
 		notify(player, string.format("? Saltando a Wave %d", newWave))
 	end
 
-	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, newWave, bossType and (" (" .. bossType .. ")") or ""))
+	print(string.format("[DEBUG] %s saltÃ³ al wave %d%s", player.Name, newWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
--- JUMP TO WAVE: Salta a un wave específico
+-- JUMP TO WAVE: Salta a un wave especÃ­fico
 DebugJumpToWave.OnServerEvent:Connect(function(player: Player, targetWave: number)
 	if not checkCooldown(player.UserId) then return end
 
 	if not targetWave or targetWave < 1 then
-		notify(player, "? Wave inválido")
+		notify(player, "? Wave invÃ¡lido")
 		return
 	end
 
@@ -149,7 +149,7 @@ DebugJumpToWave.OnServerEvent:Connect(function(player: Player, targetWave: numbe
 		notify(player, string.format("?? Saltando a Wave %d", targetWave))
 	end
 
-	print(string.format("[DEBUG] %s saltó al wave %d%s", player.Name, targetWave, bossType and (" (" .. bossType .. ")") or ""))
+	print(string.format("[DEBUG] %s saltÃ³ al wave %d%s", player.Name, targetWave, bossType and (" (" .. bossType .. ")") or ""))
 end)
 
 -- SPAWN BOSS: Spawnea un boss completo (4 fases)
@@ -158,7 +158,7 @@ DebugSpawnBoss.OnServerEvent:Connect(function(player: Player)
 
 	notify(player, "?? SPAWNING BOSS...")
 
-	-- Usar el wave actual o un múltiplo de 10
+	-- Usar el wave actual o un mÃºltiplo de 10
 	local waveNum = CurrentWaveValue.Value
 	if waveNum % 10 ~= 0 then
 		waveNum = math.ceil(waveNum / 10) * 10
@@ -169,7 +169,7 @@ DebugSpawnBoss.OnServerEvent:Connect(function(player: Player)
 		Events:BossMeteor(waveNum, true)
 	end)
 
-	print(string.format("[DEBUG] %s spawneó un BOSS (wave %d)", player.Name, waveNum))
+	print(string.format("[DEBUG] %s spawneÃ³ un BOSS (wave %d)", player.Name, waveNum))
 end)
 
 -- SPAWN MINI-BOSS: Spawnea un mini-boss (1 fase aleatoria)
@@ -178,7 +178,7 @@ DebugSpawnMiniBoss.OnServerEvent:Connect(function(player: Player)
 
 	notify(player, "?? SPAWNING MINI-BOSS...")
 
-	-- Usar el wave actual o un múltiplo de 5
+	-- Usar el wave actual o un mÃºltiplo de 5
 	local waveNum = CurrentWaveValue.Value
 	if waveNum % 5 ~= 0 then
 		waveNum = math.ceil(waveNum / 5) * 5
@@ -189,10 +189,10 @@ DebugSpawnMiniBoss.OnServerEvent:Connect(function(player: Player)
 		Events:BossMeteor(waveNum, false)
 	end)
 
-	print(string.format("[DEBUG] %s spawneó un MINI-BOSS (wave %d)", player.Name, waveNum))
+	print(string.format("[DEBUG] %s spawneÃ³ un MINI-BOSS (wave %d)", player.Name, waveNum))
 end)
 
--- ADD CASH: Añade dinero al jugador
+-- ADD CASH: AÃ±ade dinero al jugador
 DebugAddCash.OnServerEvent:Connect(function(player: Player, amount: number?)
 	if not checkCooldown(player.UserId) then return end
 
@@ -210,7 +210,7 @@ DebugAddCash.OnServerEvent:Connect(function(player: Player, amount: number?)
 	end)
 
 	if success then
-		-- Formatear el número para mostrar (simple)
+		-- Formatear el nÃºmero para mostrar (simple)
 		local formattedCash = tostring(cashToAdd)
 		if cashToAdd >= 1000000 then
 			formattedCash = string.format("%.1fM", cashToAdd / 1000000)
@@ -219,10 +219,10 @@ DebugAddCash.OnServerEvent:Connect(function(player: Player, amount: number?)
 		end
 
 		notify(player, string.format("?? +$%s", formattedCash))
-		print(string.format("[DEBUG] %s añadió $%d", player.Name, cashToAdd))
+		print(string.format("[DEBUG] %s aÃ±adiÃ³ $%d", player.Name, cashToAdd))
 	else
-		notify(player, "? Error añadiendo dinero: " .. tostring(errorMsg))
-		warn(string.format("[DEBUG] Error añadiendo cash a %s: %s", player.Name, tostring(errorMsg)))
+		notify(player, "? Error aÃ±adiendo dinero: " .. tostring(errorMsg))
+		warn(string.format("[DEBUG] Error aÃ±adiendo cash a %s: %s", player.Name, tostring(errorMsg)))
 	end
 end)
 
@@ -233,7 +233,7 @@ DebugResetWave.OnServerEvent:Connect(function(player: Player)
 	CurrentWaveValue.Value = 1
 	notify(player, "?? Wave reseteado a 1")
 
-	print(string.format("[DEBUG] %s reseteó el wave a 1", player.Name))
+	print(string.format("[DEBUG] %s reseteÃ³ el wave a 1", player.Name))
 end)
 
 -- TOGGLE INVINCIBILITY: Activa/desactiva invencibilidad
@@ -258,7 +258,7 @@ DebugToggleInvincibility.OnServerEvent:Connect(function(player: Player)
 
 	print(string.format("[DEBUG] %s %s la invencibilidad",
 		player.Name,
-		newInvincible and "activó" or "desactivó"))
+		newInvincible and "activÃ³" or "desactivÃ³"))
 end)
 
 print("[DEBUG MANAGER] ? Sistema de debug cargado")

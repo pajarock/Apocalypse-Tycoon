@@ -3,18 +3,18 @@
 	BASE DEATH UI - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Muestra pantalla roja dram·tica cuando tu base es destruida.
+	Muestra pantalla roja dram√°tica cuando tu base es destruida.
 
-	CARACTERÕSTICAS:
+	CARACTER√çSTICAS:
 	? Pantalla roja completa con texto grande
-	? Muestra cu·nto dinero perdiste
+	? Muestra cu√°nto dinero perdiste
 	? Cooldown visible para respawn
-	? AnimaciÛn de fade in/out
-	? Audio de explosiÛn (opcional)
+	? Animaci√≥n de fade in/out
+	? Audio de explosi√≥n (opcional)
 
-	INSTALACI”N:
+	INSTALACI√ìN:
 	1. Copia este script a StarterGui como LocalScript
-	2. Aseg˙rate que existe ReplicatedStorage.Remotes.BaseDead
+	2. Aseg√∫rate que existe ReplicatedStorage.Remotes.BaseDead
 
 	USO DESDE SERVIDOR (BaseModule):
 		local BaseDead = ReplicatedStorage.Remotes.BaseDead
@@ -79,7 +79,7 @@ titleLabel.Font = Enum.Font.LuckiestGuy -- GRAFITI
 titleLabel.TextScaled = true
 titleLabel.TextStrokeTransparency = 0
 titleLabel.TextStrokeColor3 = Color3.fromRGB(80, 0, 0)
-titleLabel.Rotation = -3 -- InclinaciÛn grafiti
+titleLabel.Rotation = -3 -- Inclinaci√≥n grafiti
 titleLabel.ZIndex = 3
 titleLabel.Parent = screenGui
 
@@ -93,7 +93,7 @@ gradient.Color = ColorSequence.new({
 gradient.Rotation = 90
 gradient.Parent = titleLabel
 
--- SubtÌtulo "Money Lost" m·s dram·tico
+-- Subt√≠tulo "Money Lost" m√°s dram√°tico
 local moneyLostLabel = Instance.new("TextLabel")
 moneyLostLabel.Name = "MoneyLost"
 moneyLostLabel.Size = UDim2.new(1, 0, 0.18, 0)
@@ -106,11 +106,11 @@ moneyLostLabel.Font = Enum.Font.LuckiestGuy
 moneyLostLabel.TextScaled = true
 moneyLostLabel.TextStrokeTransparency = 0.2
 moneyLostLabel.TextStrokeColor3 = Color3.fromRGB(80, 40, 0)
-moneyLostLabel.Rotation = 2 -- RotaciÛn opuesta para contraste
+moneyLostLabel.Rotation = 2 -- Rotaci√≥n opuesta para contraste
 moneyLostLabel.ZIndex = 3
 moneyLostLabel.Parent = screenGui
 
--- Countdown "Respawning in..." m·s visible
+-- Countdown "Respawning in..." m√°s visible
 local countdownLabel = Instance.new("TextLabel")
 countdownLabel.Name = "Countdown"
 countdownLabel.Size = UDim2.new(1, 0, 0.15, 0)
@@ -131,7 +131,7 @@ countdownLabel.Parent = screenGui
 -------------------------------------------------------------------------
 
 local function pulseAnimation()
-	-- Hacer que el tÌtulo pulse y rote
+	-- Hacer que el t√≠tulo pulse y rote
 	local baseRotation = -3
 
 	while screenGui.Enabled do
@@ -192,7 +192,7 @@ end
 
 BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 
-	-- ? ARREGLADO: Forzar reset si el UI est· activo
+	-- ? ARREGLADO: Forzar reset si el UI est√° activo
 	if screenGui.Enabled then
 		screenGui.Enabled = false
 		task.wait(0.1)
@@ -212,7 +212,7 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	moneyLost = moneyLost or 0
 	respawnTime = respawnTime or 10
 
-	-- Update text con formato m·s dram·tico
+	-- Update text con formato m√°s dram√°tico
 	moneyLostLabel.Text = string.format("?? LOST $%s! ??",
 		tostring(math.floor(moneyLost)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 	)
@@ -224,12 +224,12 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	task.spawn(pulseAnimation)
 	task.spawn(shakeBackground)
 
-	-- Countdown con animaciÛn
+	-- Countdown con animaci√≥n
 	local countdown = respawnTime
 	while countdown > 0 do
 		countdownLabel.Text = string.format("? RESPAWN: %ds", countdown)
 
-		-- Flash r·pido en cada segundo
+		-- Flash r√°pido en cada segundo
 		countdownLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 		TweenService:Create(countdownLabel, TweenInfo.new(0.3), {
 			TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -252,7 +252,7 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	-- Hide UI
 	screenGui.Enabled = false
 
-	-- Reset transparencies para la prÛxima vez
+	-- Reset transparencies para la pr√≥xima vez
 	background.BackgroundTransparency = 0.3
 	titleLabel.TextTransparency = 0
 	titleLabel.TextStrokeTransparency = 0

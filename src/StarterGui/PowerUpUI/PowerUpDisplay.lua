@@ -8,7 +8,7 @@
 	? Powerups activos con temporizador
 	? Efectos visuales en el jugador (auras, trails, etc.)
 	? Notificaciones al recoger powerups
-	? HUD Èpico y tÛxico
+	? HUD √©pico y t√≥xico
 
 	-----------------------------------------------------------------------
 --]]
@@ -154,7 +154,7 @@ local function createPowerUpFrame(powerUpId: string, duration: number, icon: str
 	timerLabel.Text = string.format("%.1fs", duration)
 	timerLabel.Parent = frame
 
-	-- AnimaciÛn de entrada (slide in desde la derecha)
+	-- Animaci√≥n de entrada (slide in desde la derecha)
 	frame.Position = UDim2.new(1, 0, 0, 0) -- Start off-screen
 	frame.Parent = powerUpContainer
 
@@ -202,12 +202,12 @@ local function createGodShieldEffect(): {Instance}
 	aura.Color = Color3.fromRGB(100, 200, 255)
 	aura.Parent = character
 
-	-- Mesh esfÈrico
+	-- Mesh esf√©rico
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = aura
 
-	-- PartÌculas
+	-- Part√≠culas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
@@ -249,7 +249,7 @@ end
 local function createSpeedBoostEffect(): {Instance}
 	local effects = {}
 
-	-- Trail detr·s del jugador
+	-- Trail detr√°s del jugador
 	local attachment0 = Instance.new("Attachment")
 	attachment0.Name = "TrailAttachment0"
 	attachment0.Position = Vector3.new(0, -2, 0)
@@ -317,7 +317,7 @@ local function createBaseShieldEffect(): {Instance}
 	local effects = {}
 
 	-- Dome/esfera protectora en la base del jugador
-	-- (Esto irÌa en la base fÌsica, pero podemos hacer un indicador visual)
+	-- (Esto ir√≠a en la base f√≠sica, pero podemos hacer un indicador visual)
 
 	local indicator = Instance.new("Part")
 	indicator.Name = "BaseShieldIndicator"
@@ -330,7 +330,7 @@ local function createBaseShieldEffect(): {Instance}
 	indicator.CFrame = humanoidRootPart.CFrame
 	indicator.Parent = workspace
 
-	-- Mesh cilÌndrico
+	-- Mesh cil√≠ndrico
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Cylinder
 	mesh.Parent = indicator
@@ -368,7 +368,7 @@ local function createCriticalParryEffect(): {Instance}
 	mesh.MeshType = Enum.MeshType.Sphere
 	mesh.Parent = chargeAura
 
-	-- PartÌculas elÈctricas
+	-- Part√≠culas el√©ctricas
 	local particles = Instance.new("ParticleEmitter")
 	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	particles.Color = ColorSequence.new(Color3.fromRGB(255, 0, 200))
@@ -461,7 +461,7 @@ PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: num
 		ActiveEffects[powerUpId] = effects
 	end
 
-	-- ?? MOSTRAR MENSAJE …PICO ESTILO GRAFITI
+	-- ?? MOSTRAR MENSAJE √âPICO ESTILO GRAFITI
 	task.spawn(function()
 		showEpicPowerUpMessage(powerUpId, color)
 	end)
@@ -473,7 +473,7 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 	if ActivePowerUpFrames[powerUpId] then
 		local data = ActivePowerUpFrames[powerUpId]
 		if data.Frame and data.Frame.Parent then
-			-- AnimaciÛn de salida (fade out)
+			-- Animaci√≥n de salida (fade out)
 			local tweenOut = TweenService:Create(data.Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 				Position = UDim2.new(1, 0, 0, 0)
 			})
@@ -495,9 +495,9 @@ PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 	end
 end)
 
--- Powerup recogido (feedback instant·neo)
+-- Powerup recogido (feedback instant√°neo)
 PowerUpCollected.OnClientEvent:Connect(function(powerUpId: string)
-	-- Sonido de pickup (puedes agregar un SoundService aquÌ)
+	-- Sonido de pickup (puedes agregar un SoundService aqu√≠)
 	-- Por ahora solo print
 	print(("[PowerUpUI] PowerUp recogido: %s"):format(powerUpId))
 end)

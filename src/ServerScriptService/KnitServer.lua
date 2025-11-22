@@ -3,7 +3,7 @@
 	KnitServer Bootstrap
 
 	Este script inicializa Knit en el servidor y registra todos los servicios.
-	NO modifica la lógica actual del juego, solo prepara la infraestructura de Knit.
+	NO modifica la lÃ³gica actual del juego, solo prepara la infraestructura de Knit.
 
 	FASE 1: Setup inicial - Knit corre en paralelo con tus scripts actuales.
 ]]
@@ -23,10 +23,10 @@ if servicesFolder then
 		end
 	end
 else
-	warn("[KnitServer] No se encontró carpeta 'Services'")
+	warn("[KnitServer] No se encontrÃ³ carpeta 'Services'")
 end
 
--- Iniciar Knit (versión simplificada sin Promises)
+-- Iniciar Knit (versiÃ³n simplificada sin Promises)
 local success, err = pcall(function()
 	Knit.Start()
 end)

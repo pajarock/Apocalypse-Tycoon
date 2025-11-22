@@ -1,18 +1,18 @@
 --[[
 	TEST SCRIPT - Base System
 
-	Este script demuestra cÛmo usar el nuevo sistema de bases.
-	CÛpialo a ServerScriptService para probarlo.
+	Este script demuestra c√≥mo usar el nuevo sistema de bases.
+	C√≥pialo a ServerScriptService para probarlo.
 
-	IMPORTANTE: Esto es SOLO para testing. NO es para producciÛn.
+	IMPORTANTE: Esto es SOLO para testing. NO es para producci√≥n.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
-print("[TEST] ?? Esperando a que Knit estÈ listo...")
+print("[TEST] ?? Esperando a que Knit est√© listo...")
 
--- Esperar a que Knit estÈ listo (aumentado a 5 segundos para estar seguro)
+-- Esperar a que Knit est√© listo (aumentado a 5 segundos para estar seguro)
 task.wait(5)
 
 local Knit = require(ReplicatedStorage.Knit)
@@ -31,7 +31,7 @@ print(string.format("[TEST] ? Servicios cargados: Spawner=%s, Ownership=%s, Plac
 	BasePlacementService and "OK" or "FAIL"
 	))
 
--- Test 1: Spawnear base autom·ticamente cuando un jugador se une
+-- Test 1: Spawnear base autom√°ticamente cuando un jugador se une
 Players.PlayerAdded:Connect(function(player)
 	-- Esperar a que el character se cargue
 	player.CharacterAdded:Wait()
@@ -42,7 +42,7 @@ Players.PlayerAdded:Connect(function(player)
 	local baseData = BaseSpawnerService:SpawnBase(player.UserId, player.Name)
 
 	if baseData then
-		print(string.format("[TEST] ? Base spawneada exitosamente en posiciÛn: %s", tostring(baseData.Position)))
+		print(string.format("[TEST] ? Base spawneada exitosamente en posici√≥n: %s", tostring(baseData.Position)))
 		print(string.format("[TEST] BuildZone radio: %.1f studs", 60))
 		print(string.format("[TEST] SpawnZone radio: %.1f studs", 15))
 
@@ -121,7 +121,7 @@ Players.PlayerAdded:Connect(function(player)
 
 			print(string.format("[TEST] Base encontrada en: %s", tostring(baseData.Position)))
 
-			-- Calcular posiciÛn de prueba (lejos del spawn zone)
+			-- Calcular posici√≥n de prueba (lejos del spawn zone)
 			local testPosition = baseData.Position + Vector3.new(40, 2, 20)
 			local testRotation = 0
 			local testSize = Vector3.new(10, 5, 10)
@@ -136,10 +136,10 @@ Players.PlayerAdded:Connect(function(player)
 				testSize
 			)
 
-			print(string.format("[TEST] Resultado de validaciÛn: IsValid=%s", tostring(result.IsValid)))
+			print(string.format("[TEST] Resultado de validaci√≥n: IsValid=%s", tostring(result.IsValid)))
 
 			if result.IsValid then
-				print("[TEST] ? PosiciÛn v·lida:", result.Position)
+				print("[TEST] ? Posici√≥n v√°lida:", result.Position)
 
 				-- Crear objeto visual de prueba
 				local testPart = Instance.new("Part")
@@ -165,7 +165,7 @@ Players.PlayerAdded:Connect(function(player)
 					print("[TEST] ?? Objeto registrado:", placedObject.ObjectId)
 				end
 			else
-				print("[TEST] ? PosiciÛn inv·lida:", result.ErrorMessage)
+				print("[TEST] ? Posici√≥n inv√°lida:", result.ErrorMessage)
 			end
 		end
 
@@ -188,7 +188,7 @@ print("   /clearobjects - Limpiar objetos de tu base")
 print("   Z (tecla)     - Abrir build menu (cliente)")
 print("???????????????????????????????????????????????????")
 
--- Conectar a jugadores que ya est·n en el juego
+-- Conectar a jugadores que ya est√°n en el juego
 for _, player in Players:GetPlayers() do
 	print(string.format("[TEST] ?? Conectando comandos para jugador existente: %s", player.Name))
 
@@ -241,7 +241,7 @@ for _, player in Players:GetPlayers() do
 
 			print(string.format("[TEST] Base encontrada en: %s", tostring(baseData.Position)))
 
-			-- Calcular posiciÛn de prueba (lejos del spawn zone)
+			-- Calcular posici√≥n de prueba (lejos del spawn zone)
 			local testPosition = baseData.Position + Vector3.new(40, 2, 20)
 			local testRotation = 0
 			local testSize = Vector3.new(10, 5, 10)
@@ -256,10 +256,10 @@ for _, player in Players:GetPlayers() do
 				testSize
 			)
 
-			print(string.format("[TEST] Resultado de validaciÛn: IsValid=%s", tostring(result.IsValid)))
+			print(string.format("[TEST] Resultado de validaci√≥n: IsValid=%s", tostring(result.IsValid)))
 
 			if result.IsValid then
-				print("[TEST] ? PosiciÛn v·lida:", result.Position)
+				print("[TEST] ? Posici√≥n v√°lida:", result.Position)
 
 				-- Crear objeto visual de prueba
 				local testPart = Instance.new("Part")
@@ -285,7 +285,7 @@ for _, player in Players:GetPlayers() do
 					print("[TEST] ?? Objeto registrado:", placedObject.ObjectId)
 				end
 			else
-				print("[TEST] ? PosiciÛn inv·lida:", result.ErrorMessage)
+				print("[TEST] ? Posici√≥n inv√°lida:", result.ErrorMessage)
 			end
 		elseif command == "/clearobjects" then
 			local count = BaseOwnershipService:ClearBaseObjects(player.UserId)

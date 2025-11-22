@@ -2,10 +2,10 @@
 --[[
 	BaseDataService - Sistema de Persistencia y DataStore
 
-	CARACTERÕSTICAS:
-	- SerializaciÛn/DeserializaciÛn de bases y objetos
-	- IntegraciÛn con DataStoreService
-	- Auto-save periÛdico (cada N minutos)
+	CARACTER√çSTICAS:
+	- Serializaci√≥n/Deserializaci√≥n de bases y objetos
+	- Integraci√≥n con DataStoreService
+	- Auto-save peri√≥dico (cada N minutos)
 	- Schema versioning para migraciones
 	- Error handling robusto (retries, fallbacks)
 	- Backup temporal en memoria (anti data loss)
@@ -105,7 +105,7 @@ local BaseOwnershipService
 
 	FORMATO: {X = x, Y = y, Z = z}
 
-	Por quÈ: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
+	Por qu√©: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
 	Debemos convertir a tipos primitivos (number, string, table).
 
 	@param vec - Vector3 a serializar
@@ -136,7 +136,7 @@ end
 	4. Construir estructura BaseLayout
 	5. Agregar metadata (version, timestamp)
 
-	@param userId - ID del jugador/dueÒo
+	@param userId - ID del jugador/due√±o
 	@return BaseLayout? - Layout serializado, o nil si no hay base
 ]]
 local function serializeBaseLayout(userId: number): BaseLayout?
@@ -177,33 +177,33 @@ end
 	Deserializa un layout y reconstruye la base.
 
 	PROCESO:
-	1. Validar schema version (migraciÛn si es necesario)
+	1. Validar schema version (migraci√≥n si es necesario)
 	2. Verificar integridad de datos
-	3. Reconstruir base fÌsica (via BaseSpawnerService)
+	3. Reconstruir base f√≠sica (via BaseSpawnerService)
 	4. Reconstruir objetos (via BaseOwnershipService)
 
-	NOTA: Esta funciÛn NO crea los objetos fÌsicos autom·ticamente,
-	solo retorna los datos. El caller decide cÛmo instanciarlos.
+	NOTA: Esta funci√≥n NO crea los objetos f√≠sicos autom√°ticamente,
+	solo retorna los datos. El caller decide c√≥mo instanciarlos.
 
 	@param layout - Layout serializado
-	@return boolean, string? - true si es v·lido, error si no
+	@return boolean, string? - true si es v√°lido, error si no
 ]]
 local function validateLayout(layout: any): (boolean, string?)
-	-- Type checking b·sico
+	-- Type checking b√°sico
 	if type(layout) ~= "table" then
 		return false, "Layout no es una tabla"
 	end
 
 	if type(layout.Version) ~= "string" then
-		return false, "Version faltante o inv·lida"
+		return false, "Version faltante o inv√°lida"
 	end
 
 	if type(layout.OwnerId) ~= "number" then
-		return false, "OwnerId faltante o inv·lido"
+		return false, "OwnerId faltante o inv√°lido"
 	end
 
 	if type(layout.Objects) ~= "table" then
-		return false, "Objects faltante o inv·lido"
+		return false, "Objects faltante o inv√°lido"
 	end
 
 	-- Schema version check
@@ -213,7 +213,7 @@ local function validateLayout(layout: any): (boolean, string?)
 			layout.Version,
 			SCHEMA_VERSION
 			))
-		-- AquÌ podrÌas implementar migraciÛn de schemas
+		-- Aqu√≠ podr√≠as implementar migraci√≥n de schemas
 	end
 
 	return true
@@ -249,7 +249,7 @@ end
 
 	@param userId - ID del usuario
 	@param layout - Layout a guardar
-	@return SaveResult - Resultado de la operaciÛn
+	@return SaveResult - Resultado de la operaci√≥n
 ]]
 local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 	if not baseDataStore then
@@ -273,7 +273,7 @@ local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 		if success then
 			-- ? GUARDADO EXITOSO
 			lastSaveTimes[userId] = os.time()
-			inMemoryBackup[userId] = layout -- TambiÈn guardar en backup
+			inMemoryBackup[userId] = layout -- Tambi√©n guardar en backup
 
 			print(string.format(
 				"[BaseDataService] ?? Saved base for userId=%d (Objects: %d, Attempt: %d)",
@@ -345,7 +345,7 @@ local function loadFromDataStore(userId: number): BaseLayout?
 					result.Objects and #result.Objects or 0
 					))
 
-				-- Guardar en backup tambiÈn
+				-- Guardar en backup tambi√©n
 				inMemoryBackup[userId] = result
 				return result
 			else
@@ -385,7 +385,7 @@ function BaseDataService:SaveBase(userId: number): SaveResult
 	if not layout then
 		return {
 			Success = false,
-			ErrorMessage = "No se encontrÛ base para serializar",
+			ErrorMessage = "No se encontr√≥ base para serializar",
 		}
 	end
 
@@ -416,10 +416,10 @@ end
 	PROCESO:
 	1. Cargar layout desde DataStore
 	2. Validar datos
-	3. Crear objetos fÌsicos (esto requiere acceso a templates/assets)
+	3. Crear objetos f√≠sicos (esto requiere acceso a templates/assets)
 
-	NOTA: Por ahora solo retorna el layout. La restauraciÛn fÌsica
-	se implementar· cuando tengamos los assets de los upgrades.
+	NOTA: Por ahora solo retorna el layout. La restauraci√≥n f√≠sica
+	se implementar√° cuando tengamos los assets de los upgrades.
 ]]
 function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 	local layout = self:LoadBase(userId)
@@ -428,7 +428,7 @@ function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 		return false, "No hay datos guardados para este usuario"
 	end
 
-	-- AquÌ irÌa la lÛgica de instanciar los objetos fÌsicos
+	-- Aqu√≠ ir√≠a la l√≥gica de instanciar los objetos f√≠sicos
 	-- Por ahora solo cargamos los datos
 
 	print(string.format(
@@ -475,7 +475,7 @@ function BaseDataService:SetAutoSave(enabled: boolean)
 end
 
 --[[------------------------------------------------------------------------
-	CLIENT API - MÈtodos Expuestos al Cliente
+	CLIENT API - M√©todos Expuestos al Cliente
 ------------------------------------------------------------------------]]
 
 --[[

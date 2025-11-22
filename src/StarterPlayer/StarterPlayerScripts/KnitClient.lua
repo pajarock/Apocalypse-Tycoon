@@ -6,7 +6,7 @@
 
 	ESTRUCTURA:
 	- Controllers/       ? Controllers antiguos (no Knit) - siguen funcionando normalmente
-	- KnitControllers/   ? Controllers de Knit - se cargan autom·ticamente aquÌ
+	- KnitControllers/   ? Controllers de Knit - se cargan autom√°ticamente aqu√≠
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -40,14 +40,14 @@ if knitControllersFolder then
 	end
 	print(string.format("[KnitClient] Total controllers cargados: %d", controllerCount))
 else
-	warn("? [KnitClient] No se encontrÛ carpeta 'KnitControllers'")
+	warn("? [KnitClient] No se encontr√≥ carpeta 'KnitControllers'")
 	warn("[KnitClient] Estructura actual de PlayerScripts:")
 	for _, child in playerScripts:GetChildren() do
 		warn("  - " .. child.Name .. " (" .. child.ClassName .. ")")
 	end
 end
 
--- Iniciar Knit (versiÛn simplificada sin Promises)
+-- Iniciar Knit (versi√≥n simplificada sin Promises)
 local success, err = pcall(function()
 	Knit.Start()
 end)

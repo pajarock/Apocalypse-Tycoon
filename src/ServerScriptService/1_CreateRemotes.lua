@@ -4,7 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-print("[1_REMOTES] Iniciando creación de remotes...")
+print("[1_REMOTES] Iniciando creaciÃ³n de remotes...")
 
 -- Crear carpeta Remotes
 local Remotes = ReplicatedStorage:FindFirstChild("Remotes")

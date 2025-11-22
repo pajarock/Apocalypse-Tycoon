@@ -2,14 +2,14 @@
 --[[
 	BasePlacementService - Sistema Avanzado de Grid Snapping y Placement
 
-	CARACTERÕSTICAS:
+	CARACTER√çSTICAS:
 	- Grid snapping configurable (1, 2, 5, 10 studs)
 	- AABB collision detection (Axis-Aligned Bounding Boxes)
-	- Rotation snapping (90∞ increments)
+	- Rotation snapping (90¬∞ increments)
 	- Surface detection (auto-height adjustment)
 	- Preview position calculation para ghost objects
 
-	ALGORITMOS MATEM¡TICOS:
+	ALGORITMOS MATEM√ÅTICOS:
 
 	1. GRID SNAPPING:
 	   snapped = round(value / gridSize) * gridSize
@@ -43,27 +43,27 @@ export type BoundingBox = {
 }
 
 export type PlacementConfig = {
-	GridSize: number,              -- TamaÒo de la cuadrÌcula (studs)
-	RotationIncrement: number,     -- Incremento de rotaciÛn (grados)
+	GridSize: number,              -- Tama√±o de la cuadr√≠cula (studs)
+	RotationIncrement: number,     -- Incremento de rotaci√≥n (grados)
 	EnableSnapping: boolean,       -- Habilitar snapping
 	EnableCollision: boolean,      -- Habilitar collision detection
 	CollisionPadding: number,      -- Padding extra para colisiones (studs)
-	MaxPlacementHeight: number,    -- Altura m·xima sobre la base
-	MinPlacementHeight: number,    -- Altura mÌnima (sobre baseplate)
+	MaxPlacementHeight: number,    -- Altura m√°xima sobre la base
+	MinPlacementHeight: number,    -- Altura m√≠nima (sobre baseplate)
 }
 
 export type PlacementResult = {
 	IsValid: boolean,
-	Position: Vector3?,            -- PosiciÛn final (snapped)
-	Rotation: number?,             -- RotaciÛn final (snapped)
+	Position: Vector3?,            -- Posici√≥n final (snapped)
+	Rotation: number?,             -- Rotaci√≥n final (snapped)
 	ErrorMessage: string?,
 	ErrorCode: string?,
 }
 
--- ConfiguraciÛn por defecto
+-- Configuraci√≥n por defecto
 local DEFAULT_CONFIG: PlacementConfig = {
 	GridSize = 5,                  -- Grid de 5x5 studs
-	RotationIncrement = 90,        -- RotaciÛn en incrementos de 90∞
+	RotationIncrement = 90,        -- Rotaci√≥n en incrementos de 90¬∞
 	EnableSnapping = true,
 	EnableCollision = true,
 	CollisionPadding = 0.5,        -- Medio stud de padding
@@ -92,11 +92,11 @@ local BaseOwnershipService
 ------------------------------------------------------------------------]]
 
 --[[
-	Snap un valor a la cuadrÌcula m·s cercana.
+	Snap un valor a la cuadr√≠cula m√°s cercana.
 
-	MATEM¡TICAS:
+	MATEM√ÅTICAS:
 	- Dividir por gridSize
-	- Redondear al entero m·s cercano
+	- Redondear al entero m√°s cercano
 	- Multiplicar por gridSize
 
 	EJEMPLO (gridSize = 5):
@@ -104,7 +104,7 @@ local BaseOwnershipService
 	  Input: 12.8 ? 12.8/5 = 2.56 ? round(2.56) = 3 ? 3*5 = 15
 
 	@param value - Valor a snapear
-	@param gridSize - TamaÒo de la cuadrÌcula
+	@param gridSize - Tama√±o de la cuadr√≠cula
 	@return number - Valor snapped
 ]]
 local function snapToGrid(value: number, gridSize: number): number
@@ -112,16 +112,16 @@ local function snapToGrid(value: number, gridSize: number): number
 end
 
 --[[
-	Snap una posiciÛn 3D al grid (eje X y Z, Y se calcula por altura).
+	Snap una posici√≥n 3D al grid (eje X y Z, Y se calcula por altura).
 
 	PROCESO:
 	1. Snap X y Z al grid
-	2. Mantener Y original (o ajustar seg˙n superficie)
+	2. Mantener Y original (o ajustar seg√∫n superficie)
 	3. Retornar Vector3 snapped
 
-	@param position - PosiciÛn original
-	@param gridSize - TamaÒo de la cuadrÌcula
-	@return Vector3 - PosiciÛn snapped
+	@param position - Posici√≥n original
+	@param gridSize - Tama√±o de la cuadr√≠cula
+	@return Vector3 - Posici√≥n snapped
 ]]
 local function snapPositionToGrid(position: Vector3, gridSize: number): Vector3
 	return Vector3.new(
@@ -132,20 +132,20 @@ local function snapPositionToGrid(position: Vector3, gridSize: number): Vector3
 end
 
 --[[
-	Snap un ·ngulo a incrementos especÌficos.
+	Snap un √°ngulo a incrementos espec√≠ficos.
 
-	MATEM¡TICAS:
-	- Normalizar ·ngulo a rango [0, 360)
-	- Snap al incremento m·s cercano
+	MATEM√ÅTICAS:
+	- Normalizar √°ngulo a rango [0, 360)
+	- Snap al incremento m√°s cercano
 	- Re-normalizar si es necesario
 
 	EJEMPLO (increment = 90):
-	  Input: 47∞  ? round(47/90) = 1 ? 1*90 = 90∞
-	  Input: 135∞ ? round(135/90) = 2 ? 2*90 = 180∞
+	  Input: 47¬∞  ? round(47/90) = 1 ? 1*90 = 90¬∞
+	  Input: 135¬∞ ? round(135/90) = 2 ? 2*90 = 180¬∞
 
-	@param angle - ¡ngulo en grados
-	@param increment - Incremento de rotaciÛn
-	@return number - ¡ngulo snapped
+	@param angle - √Ångulo en grados
+	@param increment - Incremento de rotaci√≥n
+	@return number - √Ångulo snapped
 ]]
 local function snapRotation(angle: number, increment: number): number
 	-- Normalizar a [0, 360)
@@ -166,19 +166,19 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Calcula el bounding box (AABB) de un objeto en una posiciÛn.
+	Calcula el bounding box (AABB) de un objeto en una posici√≥n.
 
 	PROCESO:
-	1. Obtener tamaÒo del objeto
-	2. Calcular mitad del tamaÒo (extents)
+	1. Obtener tama√±o del objeto
+	2. Calcular mitad del tama√±o (extents)
 	3. Min = Center - Extents
 	4. Max = Center + Extents
 
-	NOTA: Asume que el objeto est· aligned con los ejes (no rotado).
-	Para objetos rotados, se necesitarÌa OBB (Oriented Bounding Box).
+	NOTA: Asume que el objeto est√° aligned con los ejes (no rotado).
+	Para objetos rotados, se necesitar√≠a OBB (Oriented Bounding Box).
 
 	@param center - Centro del objeto
-	@param size - TamaÒo del objeto (Vector3)
+	@param size - Tama√±o del objeto (Vector3)
 	@return BoundingBox - AABB del objeto
 ]]
 local function calculateBoundingBox(center: Vector3, size: Vector3): BoundingBox
@@ -196,13 +196,13 @@ end
 	Verifica si dos bounding boxes colisionan (AABB vs AABB).
 
 	ALGORITMO (Separating Axis Theorem simplificado):
-	Dos AABB NO colisionan si existe al menos un eje donde est·n separadas.
+	Dos AABB NO colisionan si existe al menos un eje donde est√°n separadas.
 	Colisionan si se solapan en TODOS los ejes (X, Y, Z).
 
-	CONDICI”N DE COLISI”N (por eje):
+	CONDICI√ìN DE COLISI√ìN (por eje):
 	  min1 <= max2 && max1 >= min2
 
-	OPTIMIZACI”N: Early exit en cuanto un eje no colisiona.
+	OPTIMIZACI√ìN: Early exit en cuanto un eje no colisiona.
 
 	@param box1 - Primer bounding box
 	@param box2 - Segundo bounding box
@@ -231,26 +231,26 @@ local function aabbCollision(box1: BoundingBox, box2: BoundingBox, padding: numb
 		return false -- Separadas en Z
 	end
 
-	-- Se solapan en todos los ejes ? COLISI”N
+	-- Se solapan en todos los ejes ? COLISI√ìN
 	return true
 end
 
 --[[
-	Obtiene el tamaÒo de un objeto (BasePart, Model, etc).
+	Obtiene el tama√±o de un objeto (BasePart, Model, etc).
 
 	PROCESO:
 	- Si es BasePart: usar Size directamente
 	- Si es Model: calcular GetExtentsSize()
-	- Si es otro: retornar tamaÒo default
+	- Si es otro: retornar tama√±o default
 
 	@param object - Instancia del objeto
-	@return Vector3 - TamaÒo del objeto
+	@return Vector3 - Tama√±o del objeto
 ]]
 local function getObjectSize(object: Instance): Vector3
 	if object:IsA("BasePart") then
 		return object.Size
 	elseif object:IsA("Model") then
-		-- GetExtentsSize() retorna el tamaÒo del bounding box del modelo
+		-- GetExtentsSize() retorna el tama√±o del bounding box del modelo
 		local _, size = object:GetBoundingBox()
 		return size
 	else
@@ -264,22 +264,22 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Valida la altura de colocaciÛn relativa a la base.
+	Valida la altura de colocaci√≥n relativa a la base.
 
 	VALIDACIONES:
 	- No demasiado bajo (por debajo del baseplate)
-	- No demasiado alto (lÌmite de construcciÛn)
+	- No demasiado alto (l√≠mite de construcci√≥n)
 
-	@param basePosition - PosiciÛn de la base (Vector3)
-	@param objectPosition - PosiciÛn del objeto (Vector3)
-	@return boolean, string? - true si es v·lida, error message si no
+	@param basePosition - Posici√≥n de la base (Vector3)
+	@param objectPosition - Posici√≥n del objeto (Vector3)
+	@return boolean, string? - true si es v√°lida, error message si no
 ]]
 local function validatePlacementHeight(basePosition: Vector3, objectPosition: Vector3): (boolean, string?)
 	local relativeHeight = objectPosition.Y - basePosition.Y
 
 	if relativeHeight < config.MinPlacementHeight then
 		return false, string.format(
-			"Muy bajo (%.1f studs). MÌnimo: %.1f studs sobre la base",
+			"Muy bajo (%.1f studs). M√≠nimo: %.1f studs sobre la base",
 			relativeHeight,
 			config.MinPlacementHeight
 		)
@@ -287,7 +287,7 @@ local function validatePlacementHeight(basePosition: Vector3, objectPosition: Ve
 
 	if relativeHeight > config.MaxPlacementHeight then
 		return false, string.format(
-			"Muy alto (%.1f studs). M·ximo: %.1f studs sobre la base",
+			"Muy alto (%.1f studs). M√°ximo: %.1f studs sobre la base",
 			relativeHeight,
 			config.MaxPlacementHeight
 		)
@@ -297,20 +297,20 @@ local function validatePlacementHeight(basePosition: Vector3, objectPosition: Ve
 end
 
 --[[
-	Valida colisiÛn con objetos ya colocados en la base.
+	Valida colisi√≥n con objetos ya colocados en la base.
 
 	ALGORITMO:
 	1. Obtener todos los objetos de la base
 	2. Calcular bounding box del nuevo objeto
 	3. Iterar objetos existentes
 	4. Verificar AABB collision con cada uno
-	5. Si hay colisiÛn ? INV¡LIDO
+	5. Si hay colisi√≥n ? INV√ÅLIDO
 
-	OPTIMIZACI”N: Early exit en la primera colisiÛn detectada.
+	OPTIMIZACI√ìN: Early exit en la primera colisi√≥n detectada.
 
-	@param ownerId - DueÒo de la base
-	@param position - PosiciÛn del nuevo objeto
-	@param size - TamaÒo del nuevo objeto
+	@param ownerId - Due√±o de la base
+	@param position - Posici√≥n del nuevo objeto
+	@param size - Tama√±o del nuevo objeto
 	@return boolean, string? - true si no colisiona
 ]]
 local function validateNoCollision(ownerId: number, position: Vector3, size: Vector3): (boolean, string?)
@@ -324,7 +324,7 @@ local function validateNoCollision(ownerId: number, position: Vector3, size: Vec
 	-- Calcular bounding box del nuevo objeto
 	local newBox = calculateBoundingBox(position, size)
 
-	-- Verificar colisiÛn con cada objeto existente
+	-- Verificar colisi√≥n con cada objeto existente
 	for _, placedObject in ipairs(existingObjects) do
 		if placedObject.Instance then
 			local existingSize = getObjectSize(placedObject.Instance)
@@ -348,20 +348,20 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Calcula una posiciÛn v·lida para colocar un objeto (con snapping y validaciÛn).
+	Calcula una posici√≥n v√°lida para colocar un objeto (con snapping y validaci√≥n).
 
 	PROCESO COMPLETO:
-	1. Snap posiciÛn al grid (si est· habilitado)
-	2. Snap rotaciÛn (si est· habilitado)
+	1. Snap posici√≥n al grid (si est√° habilitado)
+	2. Snap rotaci√≥n (si est√° habilitado)
 	3. Validar permisos (via BaseOwnershipService)
 	4. Validar altura
-	5. Validar colisiÛn
+	5. Validar colisi√≥n
 
 	@param userId - ID del jugador
-	@param rawPosition - PosiciÛn raw (sin snap)
-	@param rawRotation - RotaciÛn raw (grados)
-	@param objectSize - TamaÒo del objeto a colocar
-	@return PlacementResult - Resultado con posiciÛn final o error
+	@param rawPosition - Posici√≥n raw (sin snap)
+	@param rawRotation - Rotaci√≥n raw (grados)
+	@param objectSize - Tama√±o del objeto a colocar
+	@return PlacementResult - Resultado con posici√≥n final o error
 ]]
 function BasePlacementService:CalculatePlacement(
 	userId: number,
@@ -375,7 +375,7 @@ function BasePlacementService:CalculatePlacement(
 		position = snapPositionToGrid(rawPosition, config.GridSize)
 	end
 
-	-- 2. SNAP ROTACI”N
+	-- 2. SNAP ROTACI√ìN
 	local rotation = rawRotation
 	if config.EnableSnapping then
 		rotation = snapRotation(rawRotation, config.RotationIncrement)
@@ -396,7 +396,7 @@ function BasePlacementService:CalculatePlacement(
 	if not baseData then
 		return {
 			IsValid = false,
-			ErrorMessage = "No se encontrÛ la base del jugador",
+			ErrorMessage = "No se encontr√≥ la base del jugador",
 			ErrorCode = "BASE_NOT_FOUND",
 		}
 	end
@@ -410,7 +410,7 @@ function BasePlacementService:CalculatePlacement(
 		}
 	end
 
-	-- 5. VALIDAR COLISI”N
+	-- 5. VALIDAR COLISI√ìN
 	local collisionValid, collisionError = validateNoCollision(userId, position, objectSize)
 	if not collisionValid then
 		return {
@@ -420,7 +420,7 @@ function BasePlacementService:CalculatePlacement(
 		}
 	end
 
-	-- ? TODO V¡LIDO
+	-- ? TODO V√ÅLIDO
 	return {
 		IsValid = true,
 		Position = position,
@@ -429,7 +429,7 @@ function BasePlacementService:CalculatePlacement(
 end
 
 --[[
-	Snap una posiciÛn al grid (utilidad p˙blica).
+	Snap una posici√≥n al grid (utilidad p√∫blica).
 ]]
 function BasePlacementService:SnapPosition(position: Vector3): Vector3
 	if config.EnableSnapping then
@@ -439,7 +439,7 @@ function BasePlacementService:SnapPosition(position: Vector3): Vector3
 end
 
 --[[
-	Snap una rotaciÛn (utilidad p˙blica).
+	Snap una rotaci√≥n (utilidad p√∫blica).
 ]]
 function BasePlacementService:SnapRotation(rotation: number): number
 	if config.EnableSnapping then
@@ -449,7 +449,7 @@ function BasePlacementService:SnapRotation(rotation: number): number
 end
 
 --[[
-	Actualiza la configuraciÛn del placement system.
+	Actualiza la configuraci√≥n del placement system.
 ]]
 function BasePlacementService:UpdateConfig(newConfig: PlacementConfig?)
 	if newConfig then
@@ -461,14 +461,14 @@ function BasePlacementService:UpdateConfig(newConfig: PlacementConfig?)
 end
 
 --[[
-	Obtiene la configuraciÛn actual.
+	Obtiene la configuraci√≥n actual.
 ]]
 function BasePlacementService:GetConfig(): PlacementConfig
 	return config
 end
 
 --[[------------------------------------------------------------------------
-	CLIENT API - MÈtodos Expuestos al Cliente
+	CLIENT API - M√©todos Expuestos al Cliente
 ------------------------------------------------------------------------]]
 
 --[[
@@ -508,7 +508,7 @@ function BasePlacementService:KnitStart()
 
 	print("[BasePlacementService] ? Started - Grid snapping system ready")
 	print(string.format(
-		"[BasePlacementService] Config: GridSize=%.1f, Rotation=%d∞, Collision=%s",
+		"[BasePlacementService] Config: GridSize=%.1f, Rotation=%d¬∞, Collision=%s",
 		config.GridSize,
 		config.RotationIncrement,
 		config.EnableCollision and "ENABLED" or "DISABLED"

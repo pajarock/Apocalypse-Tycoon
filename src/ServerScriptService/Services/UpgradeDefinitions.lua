@@ -1,24 +1,24 @@
 --!strict
 --[[
-	UpgradeDefinitions - Stats y configuraciÛn de todos los upgrades
+	UpgradeDefinitions - Stats y configuraci√≥n de todos los upgrades
 
 	Define las propiedades de cada tipo de upgrade:
-	- Visual (modelo, tamaÒo, color)
-	- Stats (producciÛn, daÒo, capacidad)
+	- Visual (modelo, tama√±o, color)
+	- Stats (producci√≥n, da√±o, capacidad)
 	- Costos (dinero para colocar)
-	- Comportamiento (funcionalidad especÌfica)
+	- Comportamiento (funcionalidad espec√≠fica)
 
 	UPGRADES DISPONIBLES:
 	1. Generator (T1) - Produce $5/s pasivamente
-	2. GeneratorT2 (T2) - Produce $15/s pasivamente (meteÛrico)
+	2. GeneratorT2 (T2) - Produce $15/s pasivamente (mete√≥rico)
 	3. GeneratorT3 (T3) - Produce $50/s pasivamente (avanzado)
 	4. Turret - Dispara a meteoros/enemigos
 	5. Storage - Aumenta capacidad de dinero
-	6. RepairStation - EstaciÛn fÌsica para reparar base (mobile-friendly)
+	6. RepairStation - Estaci√≥n f√≠sica para reparar base (mobile-friendly)
 ]]
 
 export type UpgradeDefinition = {
-	-- IdentificaciÛn
+	-- Identificaci√≥n
 	Name: string,
 	DisplayName: string,
 	Description: string,
@@ -28,10 +28,10 @@ export type UpgradeDefinition = {
 	Color: Color3,
 	Material: Enum.Material,
 
-	-- EconÛmico
+	-- Econ√≥mico
 	Cost: number,
 
-	-- Stats (varÌa por tipo)
+	-- Stats (var√≠a por tipo)
 	Stats: {
 		-- Generator
 		MoneyPerSecond: number?,
@@ -80,40 +80,40 @@ UpgradeDefinitions.Generator = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- GENERATOR TIER 2 - MeteÛrico (ProducciÛn media)
+-- GENERATOR TIER 2 - Mete√≥rico (Producci√≥n media)
 UpgradeDefinitions.GeneratorT2 = {
 	Name = "GeneratorT2",
-	DisplayName = "? Generator MeteÛrico",
+	DisplayName = "? Generator Mete√≥rico",
 	Description = "Advanced generator with crystal-powered production",
 
-	Size = Vector3.new(10, 8, 10),  -- M·s grande que T1
-	Color = Color3.fromRGB(150, 50, 200),  -- P˙rpura
+	Size = Vector3.new(10, 8, 10),  -- M√°s grande que T1
+	Color = Color3.fromRGB(150, 50, 200),  -- P√∫rpura
 	Material = Enum.Material.Neon,
 
-	Cost = 500,  -- 5x m·s caro que T1
+	Cost = 500,  -- 5x m√°s caro que T1
 
 	Stats = {
-		MoneyPerSecond = 15,  -- 3x producciÛn de T1
+		MoneyPerSecond = 15,  -- 3x producci√≥n de T1
 	},
 
 	Category = "Production",
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- GENERATOR TIER 3 - Avanzado (ProducciÛn alta)
+-- GENERATOR TIER 3 - Avanzado (Producci√≥n alta)
 UpgradeDefinitions.GeneratorT3 = {
 	Name = "GeneratorT3",
 	DisplayName = "?? Generator Avanzado",
 	Description = "Elite energy generator with maximum efficiency",
 
-	Size = Vector3.new(12, 10, 12),  -- M·s grande que T2
+	Size = Vector3.new(12, 10, 12),  -- M√°s grande que T2
 	Color = Color3.fromRGB(0, 255, 255),  -- Cyan brillante
 	Material = Enum.Material.Neon,
 
-	Cost = 2000,  -- 20x m·s caro que T1
+	Cost = 2000,  -- 20x m√°s caro que T1
 
 	Stats = {
-		MoneyPerSecond = 50,  -- 10x producciÛn de T1
+		MoneyPerSecond = 50,  -- 10x producci√≥n de T1
 	},
 
 	Category = "Production",
@@ -162,7 +162,7 @@ UpgradeDefinitions.Storage = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
--- REPAIR STATION - EstaciÛn fÌsica para reparar (mobile-friendly)
+-- REPAIR STATION - Estaci√≥n f√≠sica para reparar (mobile-friendly)
 UpgradeDefinitions.RepairStation = {
 	Name = "RepairStation",
 	DisplayName = "?? Repair Station",
@@ -188,10 +188,10 @@ UpgradeDefinitions.RepairStation = {
 ------------------------------------------------------------------------]]
 
 --[[
-	Obtiene la definiciÛn de un upgrade por nombre.
+	Obtiene la definici√≥n de un upgrade por nombre.
 
 	@param upgradeName - Nombre del upgrade (ej: "Generator")
-	@return UpgradeDefinition? - DefiniciÛn del upgrade, o nil si no existe
+	@return UpgradeDefinition? - Definici√≥n del upgrade, o nil si no existe
 ]]
 function UpgradeDefinitions.GetDefinition(upgradeName: string): UpgradeDefinition?
 	return UpgradeDefinitions[upgradeName]
@@ -215,13 +215,13 @@ function UpgradeDefinitions.GetAllPlaceable(): {UpgradeDefinition}
 end
 
 --[[
-	Crea un modelo fÌsico 3D basado en la definiciÛn.
+	Crea un modelo f√≠sico 3D basado en la definici√≥n.
 
-	NOTA: Por ahora usa geometrÌa simple (cubos). En el futuro
-	esto podrÌa cargar meshes o modelos de ServerStorage.
+	NOTA: Por ahora usa geometr√≠a simple (cubos). En el futuro
+	esto podr√≠a cargar meshes o modelos de ServerStorage.
 
 	@param upgradeName - Nombre del upgrade
-	@return Model? - Modelo creado, o nil si no existe la definiciÛn
+	@return Model? - Modelo creado, o nil si no existe la definici√≥n
 ]]
 function UpgradeDefinitions.CreateModel(upgradeName: string): Model?
 	local definition = UpgradeDefinitions.GetDefinition(upgradeName)
@@ -293,7 +293,7 @@ end
 	Obtiene el nombre del siguiente tier para un generador.
 
 	@param currentTierName - Nombre del tier actual ("Generator", "GeneratorT2", "GeneratorT3")
-	@return string? - Nombre del siguiente tier, o nil si ya est· en tier m·ximo
+	@return string? - Nombre del siguiente tier, o nil si ya est√° en tier m√°ximo
 ]]
 function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
 	if currentTierName == "Generator" then
@@ -301,7 +301,7 @@ function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
 	elseif currentTierName == "GeneratorT2" then
 		return "GeneratorT3"
 	elseif currentTierName == "GeneratorT3" then
-		return nil  -- Ya est· en tier m·ximo
+		return nil  -- Ya est√° en tier m√°ximo
 	end
 
 	return nil
@@ -337,7 +337,7 @@ end
 	Verifica si un generador puede ser upgradeado.
 
 	@param tierName - Nombre del tier a verificar
-	@return boolean - true si puede ser upgradeado, false si ya est· en tier m·ximo
+	@return boolean - true si puede ser upgradeado, false si ya est√° en tier m√°ximo
 ]]
 function UpgradeDefinitions.CanUpgrade(tierName: string): boolean
 	return UpgradeDefinitions.GetNextTier(tierName) ~= nil
