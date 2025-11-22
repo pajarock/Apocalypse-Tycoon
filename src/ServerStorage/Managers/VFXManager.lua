@@ -6,8 +6,8 @@
 	Sistema centralizado de efectos visuales con object pooling.
 
 	FEATURES:
-	? Object pooling automático (máx 50 por tipo)
-	? Auto-cleanup después de duración del efecto
+	? Object pooling automÃ¡tico (mÃ¡x 50 por tipo)
+	? Auto-cleanup despuÃ©s de duraciÃ³n del efecto
 	? Data-driven via VFXConfig
 	? Performance-optimized (reutiliza parts)
 	? Drop-in module (sin dependencias)
@@ -28,9 +28,9 @@
 
 	PERFORMANCE:
 	- Usa pooling para evitar instancing lag
-	- Auto-retorna efectos al pool después de Duration
-	- Máximo 50 instancias por tipo de efecto
-	- Cleanup automático de efectos viejos
+	- Auto-retorna efectos al pool despuÃ©s de Duration
+	- MÃ¡ximo 50 instancias por tipo de efecto
+	- Cleanup automÃ¡tico de efectos viejos
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -278,10 +278,10 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Spawnea un efecto visual en una posición.
+	Spawnea un efecto visual en una posiciÃ³n.
 
 	@param effectName string - Nombre del efecto (debe existir en VFXConfig)
-	@param position Vector3 - Posición 3D donde spawnear el efecto
+	@param position Vector3 - PosiciÃ³n 3D donde spawnear el efecto
 	@param parent Instance? - Parent custom (default: workspace.Effects)
 	@return Part? - El part del efecto, o nil si no se pudo crear
 ]]
@@ -370,7 +370,7 @@ function VFXManager:PlayEffect(effectName: string, position: Vector3, parent: In
 end
 
 --[[
-	Obtiene estadísticas del pool de efectos.
+	Obtiene estadÃ­sticas del pool de efectos.
 
 	@return {[string]: PoolStats} - Stats por cada tipo de efecto
 ]]
@@ -388,7 +388,7 @@ function VFXManager:GetPoolStats(): {[string]: PoolStats}
 end
 
 --[[
-	Limpia el pool de un efecto específico o todos.
+	Limpia el pool de un efecto especÃ­fico o todos.
 
 	@param effectName string? - Nombre del efecto (nil = limpiar todo)
 ]]
@@ -479,6 +479,6 @@ task.spawn(function()
 	end
 end)
 
-print("[VFXManager] ? Módulo cargado con object pooling")
+print("[VFXManager] ? MÃ³dulo cargado con object pooling")
 
 return VFXManager

@@ -6,25 +6,25 @@
 	Escucha el RemoteEvent "ScreenFlash" del servidor y aplica flashes
 	de pantalla completa usando CameraController.
 
-	CARACTERÍSTICAS:
-	? Soporte para múltiples colores (Red, Green, Yellow, White)
-	? Integración con CameraController
-	? Mobile-safe (reduce intensidad automáticamente)
-	? Validación de parámetros
+	CARACTERÃSTICAS:
+	? Soporte para mÃºltiples colores (Red, Green, Yellow, White)
+	? IntegraciÃ³n con CameraController
+	? Mobile-safe (reduce intensidad automÃ¡ticamente)
+	? ValidaciÃ³n de parÃ¡metros
 
-	INSTALACIÓN:
+	INSTALACIÃN:
 	1. Copia este script a StarterPlayer.StarterPlayerScripts
-	2. Asegúrate que CameraController.lua existe en Controllers/
-	3. El RemoteEvent "ScreenFlash" se crea automáticamente en EventManager
+	2. AsegÃºrate que CameraController.lua existe en Controllers/
+	3. El RemoteEvent "ScreenFlash" se crea automÃ¡ticamente en EventManager
 
 	USO DESDE SERVIDOR:
 		local ScreenFlash = ReplicatedStorage.Remotes.ScreenFlash
 		ScreenFlash:FireClient(player, "Red", 0.4, 0.3)
 
-		Parámetros:
+		ParÃ¡metros:
 		- colorName: "Red", "Green", "Yellow", "White", "Blue"
-		- intensity: 0.0 - 1.0 (opacidad máxima)
-		- duration: segundos (total de la animación)
+		- intensity: 0.0 - 1.0 (opacidad mÃ¡xima)
+		- duration: segundos (total de la animaciÃ³n)
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

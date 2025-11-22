@@ -7,7 +7,7 @@
 	Muestra:
 	- Dinero actual
 	- Income por segundo
-	- MULTIPLIER cuando IncomeBoost está activo (2X)
+	- MULTIPLIER cuando IncomeBoost estÃ¡ activo (2X)
 
 	-----------------------------------------------------------------------
 --]]
@@ -29,7 +29,7 @@ local IncomeBoostActive = false
 local BaseIncomePerSecond = 8
 
 -------------------------------------------------------------------------
--- DETECTAR CUANDO INCOMEBOOST ESTÁ ACTIVO
+-- DETECTAR CUANDO INCOMEBOOST ESTÃ ACTIVO
 -------------------------------------------------------------------------
 
 if PowerUpActivated then
@@ -58,7 +58,7 @@ end
 
 function updateIncomeDisplay()
 	-- Buscar el widget existente (si existe en PlayerGui)
-	-- Si no existe, esta función no hará nada
+	-- Si no existe, esta funciÃ³n no harÃ¡ nada
 
 	-- Buscar en todos los ScreenGuis
 	for _, gui in pairs(playerGui:GetChildren()) do
@@ -68,7 +68,7 @@ function updateIncomeDisplay()
 				if descendant:IsA("TextLabel") then
 					local text = descendant.Text
 
-					-- Detectar si es el label de income (busca por patrón)
+					-- Detectar si es el label de income (busca por patrÃ³n)
 					if text:match("%$.*sec") or text:match("Income") or descendant.Name:match("Income") then
 						print("[CashIncomeWidget] Found income label:", descendant:GetFullName())
 

@@ -1,10 +1,10 @@
 --!strict
 --[[
-	DECORACIONES PREHISPÁNICAS - Apocalypse Tycoon
+	DECORACIONES PREHISPÃNICAS - Apocalypse Tycoon
 	Estatuas, glifos, altares y elementos culturales
 	
-	INSPIRACIÓN:
-	- Cultura Maya: Pirámides, estelas, calendarios
+	INSPIRACIÃN:
+	- Cultura Maya: PirÃ¡mides, estelas, calendarios
 	- Cultura Azteca: Templos, guerreros, serpientes emplumadas
 	- Cultura Inca: Muros de piedra, terrazas
 ]]
@@ -15,7 +15,7 @@ local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
 
 -------------------------------------------------------------------------
--- CONFIGURACIÓN
+-- CONFIGURACIÃN
 -------------------------------------------------------------------------
 
 local DECO_CONFIG = {
@@ -72,7 +72,7 @@ local function createWarriorStatue(position: Vector3): Model
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.fromScale(1, 1)
 	text.BackgroundTransparency = 1
-	text.Text = "?? GUERRERO JAGUAR\n? ¦ ? ?"  -- Símbolos pseudo-maya
+	text.Text = "?? GUERRERO JAGUAR\n? Â¦ ? ?"  -- SÃ­mbolos pseudo-maya
 	text.TextColor3 = DECO_CONFIG.Colors.GoldAccent
 	text.TextScaled = true
 	text.Font = Enum.Font.Bodoni
@@ -98,7 +98,7 @@ local function createWarriorStatue(position: Vector3): Model
 	head.Color = DECO_CONFIG.Colors.Stone
 	head.Parent = statue
 
-	-- Casco/máscara (esfera dorada)
+	-- Casco/mÃ¡scara (esfera dorada)
 	local helmet = Instance.new("Part")
 	helmet.Name = "Helmet"
 	helmet.Size = Vector3.new(4, 3, 4)
@@ -109,7 +109,7 @@ local function createWarriorStatue(position: Vector3): Model
 	helmet.Color = DECO_CONFIG.Colors.GoldAccent
 	helmet.Parent = statue
 
-	-- Luz dramática
+	-- Luz dramÃ¡tica
 	local light = Instance.new("SpotLight")
 	light.Brightness = 5
 	light.Range = 40
@@ -123,7 +123,7 @@ local function createWarriorStatue(position: Vector3): Model
 end
 
 -------------------------------------------------------------------------
--- SERPIENTE EMPLUMADA (QUETZALCÓATL)
+-- SERPIENTE EMPLUMADA (QUETZALCÃATL)
 -------------------------------------------------------------------------
 
 local function createFeatheredSerpent(position: Vector3): Model
@@ -138,7 +138,7 @@ local function createFeatheredSerpent(position: Vector3): Model
 		segment.Size = Vector3.new(3, 3, 5)
 		segment.Shape = Enum.PartType.Cylinder
 
-		-- Posición ondulante
+		-- PosiciÃ³n ondulante
 		local angle = (i / segments) * math.pi
 		local height = math.sin(angle) * 10
 		segment.Position = position + Vector3.new(
@@ -153,7 +153,7 @@ local function createFeatheredSerpent(position: Vector3): Model
 		segment.Color = DECO_CONFIG.Colors.Jade
 		segment.Parent = serpent
 
-		-- Plumas (partículas)
+		-- Plumas (partÃ­culas)
 		if i % 2 == 0 then
 			local feathers = Instance.new("ParticleEmitter")
 			feathers.Texture = "rbxasset://textures/particles/sparkles_main.dds"
@@ -196,7 +196,7 @@ local function createFeatheredSerpent(position: Vector3): Model
 		light.Parent = eye
 	end
 
-	-- Animación de flotación
+	-- AnimaciÃ³n de flotaciÃ³n
 	task.spawn(function()
 		local startCF = serpent:GetPivot()
 		while serpent.Parent do
@@ -282,7 +282,7 @@ local function createSacrificeAltar(position: Vector3): Model
 		light.Parent = torch
 	end
 
-	-- Cráneo decorativo (símbolo de muerte)
+	-- CrÃ¡neo decorativo (sÃ­mbolo de muerte)
 	local skull = Instance.new("Part")
 	skull.Name = "Skull"
 	skull.Size = Vector3.new(2, 2, 2)
@@ -293,7 +293,7 @@ local function createSacrificeAltar(position: Vector3): Model
 	skull.Color = Color3.fromRGB(200, 200, 200)
 	skull.Parent = altar
 
-	-- Partículas místicas
+	-- PartÃ­culas mÃ­sticas
 	local mystic = Instance.new("ParticleEmitter")
 	mystic.Color = ColorSequence.new(Color3.fromRGB(150, 50, 200))
 	mystic.Size = NumberSequence.new(1, 0)
@@ -337,20 +337,20 @@ local function createGlyphStele(position: Vector3): Model
 	panel.Color = DECO_CONFIG.Colors.Stone
 	panel.Parent = stele
 
-	-- Añadir glifos usando SurfaceGui
+	-- AÃ±adir glifos usando SurfaceGui
 	local surface = Instance.new("SurfaceGui")
 	surface.Face = Enum.NormalId.Front
 	surface.Parent = panel
 
-	-- Crear cuadrícula de símbolos
+	-- Crear cuadrÃ­cula de sÃ­mbolos
 	local glyphText = [[
-		? ¤ ?
-		¦ ? ¦
+		? Â¤ ?
+		Â¦ ? Â¦
 		? ? ?
 		
-		¤ CALENDARIO ¤
+		Â¤ CALENDARIO Â¤
 		
-		?¦???
+		?Â¦???
 		
 		? ? ?
 	]]
@@ -374,7 +374,7 @@ local function createGlyphStele(position: Vector3): Model
 	base.Color = DECO_CONFIG.Colors.Obsidian
 	base.Parent = stele
 
-	-- Luz mística
+	-- Luz mÃ­stica
 	local light = Instance.new("PointLight")
 	light.Color = DECO_CONFIG.Colors.GoldAccent
 	light.Brightness = 3
@@ -440,7 +440,7 @@ local function createSolarCalendar(position: Vector3): Model
 		ray.Parent = calendar
 	end
 
-	-- Animación de rotación
+	-- AnimaciÃ³n de rotaciÃ³n
 	task.spawn(function()
 		while calendar.Parent do
 			disc.Orientation = disc.Orientation + Vector3.new(0, 0, 0.2)
@@ -463,7 +463,7 @@ local function createSolarCalendar(position: Vector3): Model
 end
 
 -------------------------------------------------------------------------
--- API PÚBLICA
+-- API PÃBLICA
 -------------------------------------------------------------------------
 
 function PreHispanicDecorations.PlaceAll(mapFolder: Folder)
@@ -471,9 +471,9 @@ function PreHispanicDecorations.PlaceAll(mapFolder: Folder)
 	decoFolder.Name = "PreHispanicDecorations"
 	decoFolder.Parent = mapFolder
 
-	print("[DECO] Colocando decoraciones prehispánicas...")
+	print("[DECO] Colocando decoraciones prehispÃ¡nicas...")
 
-	-- Distribuir estatuas en círculo
+	-- Distribuir estatuas en cÃ­rculo
 	for i = 1, 8 do
 		local angle = (i / 8) * math.pi * 2
 		local distance = 300
@@ -524,7 +524,7 @@ function PreHispanicDecorations.PlaceAll(mapFolder: Folder)
 	local calendar = createSolarCalendar(Vector3.new(0, 15, 0))
 	calendar.Parent = decoFolder
 
-	print("[DECO] ? Decoraciones prehispánicas colocadas")
+	print("[DECO] ? Decoraciones prehispÃ¡nicas colocadas")
 end
 
 function PreHispanicDecorations.Clear(mapFolder: Folder)

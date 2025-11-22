@@ -2,29 +2,29 @@
 --[[
 	BaseUIController - Sistema de UI para Bases
 
-	CARACTERÍSTICAS:
+	CARACTERÃSTICAS:
 	- Build menu para seleccionar upgrades
 	- Base stats display (info de la base)
-	- Hotkeys para abrir menús (B = Build menu)
+	- Hotkeys para abrir menÃºs (B = Build menu)
 	- Sistema de notificaciones (toasts)
-	- Integración con BasePlacementController
+	- IntegraciÃ³n con BasePlacementController
 
 	ARQUITECTURA DE UI:
-	┌──────────────────────────────────────┐
-	│ PlayerGui                            │
-	│  └── BaseUI (ScreenGui)              │
-	│      ├── BuildMenu (Frame)           │
-	│      │   └── UpgradeButtons          │
-	│      ├── BaseStats (Frame)           │
-	│      │   └── Labels (Owner, Objects) │
-	│      └── Notifications (Frame)       │
-	│          └── Toasts                  │
-	└──────────────────────────────────────┘
+	ââââââââââââââââââââââââââââââââââââââââ
+	â PlayerGui                            â
+	â  âââ BaseUI (ScreenGui)              â
+	â      âââ BuildMenu (Frame)           â
+	â      â   âââ UpgradeButtons          â
+	â      âââ BaseStats (Frame)           â
+	â      â   âââ Labels (Owner, Objects) â
+	â      âââ Notifications (Frame)       â
+	â          âââ Toasts                  â
+	ââââââââââââââââââââââââââââââââââââââââ
 
-	FLUJO DE INTERACCIÓN:
-	1. Usuario presiona B → Abrir BuildMenu
-	2. Usuario clickea "Generator" → Llamar BasePlacementController
-	3. Usuario coloca objeto → Notification "Generator placed!"
+	FLUJO DE INTERACCIÃN:
+	1. Usuario presiona B â Abrir BuildMenu
+	2. Usuario clickea "Generator" â Llamar BasePlacementController
+	3. Usuario coloca objeto â Notification "Generator placed!"
 	4. UI se actualiza con nuevo count de objetos
 
 	AUTHOR: Epic UI System v1
@@ -36,9 +36,9 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local Knit = require(ReplicatedStorage.Knit)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	TYPES & CONSTANTS
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 export type UpgradeDefinition = {
 	Type: string,
@@ -53,37 +53,37 @@ export type UpgradeDefinition = {
 local AVAILABLE_UPGRADES: { UpgradeDefinition } = {
 	{
 		Type = "Generator",
-		DisplayName = "💰 Generator",
+		DisplayName = "ð° Generator",
 		Description = "Produces money passively",
 		Size = Vector3.new(8, 6, 8),
 		Cost = 100,
 	},
 	{
 		Type = "Turret",
-		DisplayName = "🔫 Turret",
+		DisplayName = "ð« Turret",
 		Description = "Shoots meteors and enemies",
 		Size = Vector3.new(6, 8, 6),
 		Cost = 150,
 	},
 	{
 		Type = "Storage",
-		DisplayName = "📦 Storage",
+		DisplayName = "ð¦ Storage",
 		Description = "Increases money storage capacity",
 		Size = Vector3.new(10, 8, 10),
 		Cost = 75,
 	},
 	{
 		Type = "RepairStation",
-		DisplayName = "🔧 Repair Station",
+		DisplayName = "ð§ Repair Station",
 		Description = "Interact to repair base (mobile-friendly)",
 		Size = Vector3.new(8, 6, 8),
 		Cost = 50,
 	},
 }
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	CONTROLLER DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 local BaseUIController = Knit.CreateController({
 	Name = "BaseUIController",
@@ -104,9 +104,9 @@ local BasePlacementController
 local BaseSpawnerService
 local BaseOwnershipService
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	UI CREATION - Build Menu
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Crea el UI principal del sistema de bases.
@@ -200,7 +200,7 @@ local function createBuildMenu(): Frame
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 		nameLabel.Parent = button
 
-		-- Descripción
+		-- DescripciÃ³n
 		local descLabel = Instance.new("TextLabel")
 		descLabel.Size = UDim2.new(1, -10, 0, 20)
 		descLabel.Position = UDim2.new(0, 5, 0, 35)
@@ -234,7 +234,7 @@ local function createBuildMenu(): Frame
 			-- Activar placement mode
 			BasePlacementController:StartPlacement(upgrade.Type, upgrade.Size)
 
-			-- Notificación
+			-- NotificaciÃ³n
 			showNotification(string.format("Placing %s - Press ESC to cancel", upgrade.DisplayName))
 		end)
 
@@ -360,9 +360,9 @@ local function createNotifications(): Frame
 	return frame
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	UI LOGIC - Menu Toggling
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Toggle del build menu (abrir/cerrar).
@@ -377,15 +377,15 @@ function toggleBuildMenu()
 	))
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	NOTIFICATIONS - Toast System
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
-	Muestra una notificación toast.
+	Muestra una notificaciÃ³n toast.
 
 	@param message - Mensaje a mostrar
-	@param duration - Duración en segundos (default: 3)
+	@param duration - DuraciÃ³n en segundos (default: 3)
 ]]
 function showNotification(message: string, duration: number?)
 	duration = duration or 3
@@ -412,18 +412,18 @@ function showNotification(message: string, duration: number?)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = notification
 
-	-- Auto-destroy después de duration
+	-- Auto-destroy despuÃ©s de duration
 	task.delay(duration, function()
 		notification:Destroy()
 	end)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	UPDATE LOOP - Base Stats Refresh
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
-	Actualiza los stats de la base periódicamente.
+	Actualiza los stats de la base periÃ³dicamente.
 ]]
 local function startStatsUpdateLoop()
 	task.spawn(function()
@@ -444,9 +444,9 @@ local function startStatsUpdateLoop()
 	end)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	INPUT HANDLING - Hotkeys
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Configura los hotkeys del sistema.
@@ -457,7 +457,7 @@ local function setupHotkeys()
 
 		-- Z - Toggle build menu
 		if input.KeyCode == Enum.KeyCode.Z then
-			-- Solo abrir si no está en placement mode
+			-- Solo abrir si no estÃ¡ en placement mode
 			if not BasePlacementController:IsPlacing() then
 				toggleBuildMenu()
 			end
@@ -465,12 +465,12 @@ local function setupHotkeys()
 	end)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	PUBLIC API - Controller Methods
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
-	Muestra una notificación (callable desde otros controllers).
+	Muestra una notificaciÃ³n (callable desde otros controllers).
 ]]
 function BaseUIController:Notify(message: string, duration: number?)
 	showNotification(message, duration)
@@ -487,9 +487,9 @@ function BaseUIController:CloseBuildMenu()
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 function BaseUIController:KnitInit()
 	playerGui = player:WaitForChild("PlayerGui") :: PlayerGui
@@ -506,7 +506,7 @@ function BaseUIController:KnitInit()
 
 	baseUI.Parent = playerGui
 
-	print("[BaseUIController] ⚙️ Initialized")
+	print("[BaseUIController] âï¸ Initialized")
 end
 
 function BaseUIController:KnitStart()
@@ -521,10 +521,10 @@ function BaseUIController:KnitStart()
 	-- Start stats update loop
 	startStatsUpdateLoop()
 
-	print("[BaseUIController] ✅ Started - UI system ready")
+	print("[BaseUIController] â Started - UI system ready")
 	print("[BaseUIController] Hotkeys: Z = Build Menu")
 
-	-- Notificación de bienvenida
+	-- NotificaciÃ³n de bienvenida
 	task.delay(1, function()
 		showNotification("Welcome! Press Z to open build menu", 5)
 	end)

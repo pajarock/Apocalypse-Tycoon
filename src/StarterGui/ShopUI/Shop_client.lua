@@ -13,16 +13,16 @@ local RequestPurchase = Remotes:WaitForChild("RequestPurchase") :: RemoteEvent
 -- UI ROOT
 local gui = script.Parent :: ScreenGui
 
--- Panel principal con estilo urbano (tamaño original)
+-- Panel principal con estilo urbano (tamaÃ±o original)
 local frame = Instance.new("Frame")
 frame.Name = "ShopFrame"
 frame.AnchorPoint = Vector2.new(0, 0)
 frame.Position = UDim2.new(0, 20, 0, 100)
-frame.Size = UDim2.fromOffset(280, 360) -- ? Tamaño fijo que no desborda
+frame.Size = UDim2.fromOffset(280, 360) -- ? TamaÃ±o fijo que no desborda
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
-frame.Rotation = -1 -- Rotación sutil urbano
+frame.Rotation = -1 -- RotaciÃ³n sutil urbano
 frame.Parent = gui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
 
@@ -68,11 +68,11 @@ title.TextColor3 = Color3.fromRGB(255, 200, 80)
 title.Text = "SHOP"
 title.TextStrokeTransparency = 0.3
 title.TextStrokeColor3 = Color3.fromRGB(50, 25, 0)
-title.Rotation = -2 -- Inclinación grafiti
+title.Rotation = -2 -- InclinaciÃ³n grafiti
 title.ZIndex = 2
 title.Parent = frame
 
--- ? PESTAÑAS (TABS) - Contenedor horizontal
+-- ? PESTAÃAS (TABS) - Contenedor horizontal
 local tabsContainer = Instance.new("Frame")
 tabsContainer.Name = "TabsContainer"
 tabsContainer.Size = UDim2.new(1, -20, 0, 32)
@@ -92,7 +92,7 @@ tabsLayout.Parent = tabsContainer
 local list = Instance.new("ScrollingFrame")
 list.Name = "List"
 list.BackgroundTransparency = 1
-list.Position = UDim2.fromOffset(10, 76) -- Debajo de pestañas
+list.Position = UDim2.fromOffset(10, 76) -- Debajo de pestaÃ±as
 list.Size = UDim2.new(1, -20, 1, -86) -- Ajustado para no desbordar
 list.BorderSizePixel = 0
 list.ScrollBarThickness = 6
@@ -119,9 +119,9 @@ end
 local buttons: {[string]: TextButton} = {}
 local tabButtons: {[string]: TextButton} = {}
 local shieldLevel = 0
-local currentTab = "Income" -- ? Pestaña activa por defecto
+local currentTab = "Income" -- ? PestaÃ±a activa por defecto
 
--- Función para obtener estado del servidor
+-- FunciÃ³n para obtener estado del servidor
 local function fetchState()
 	local ok, st = pcall(function()
 		return RequestState:InvokeServer()
@@ -148,7 +148,7 @@ local function makeRow(upgId: string): TextButton
 	btn.Parent = list
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
-	-- Borde del botón
+	-- Borde del botÃ³n
 	local btnStroke = Instance.new("UIStroke")
 	btnStroke.Color = Color3.fromRGB(0, 255, 100)
 	btnStroke.Thickness = 2
@@ -175,7 +175,7 @@ local function makeRow(upgId: string): TextButton
 
 		-- Verificar MaxCount
 		if maxCount and count >= maxCount then
-			-- Sonido de límite alcanzado
+			-- Sonido de lÃ­mite alcanzado
 			local sound = Instance.new("Sound", workspace)
 			sound.SoundId = "rbxassetid://1847058585"
 			sound.Volume = 0.3
@@ -206,15 +206,15 @@ local function makeRow(upgId: string): TextButton
 	return btn
 end
 
--- ? NUEVO: Upgrades organizados por categoría con 4 pestañas
+-- ? NUEVO: Upgrades organizados por categorÃ­a con 4 pestaÃ±as
 local CATEGORIES = {
 	{ name = "Income", emoji = "??", upgrades = {"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5", "Upgrade_9"} },
 	{ name = "Defense", emoji = "???", upgrades = {"Upgrade_6", "Upgrade_7", "Upgrade_8"} },
 	{ name = "Utility", emoji = "??", upgrades = {"Upgrade_11", "Upgrade_10"} },
-	{ name = "Eggs", emoji = "??", upgrades = {} }, -- ? 4ta pestaña para gacha (vacía por ahora)
+	{ name = "Eggs", emoji = "??", upgrades = {} }, -- ? 4ta pestaÃ±a para gacha (vacÃ­a por ahora)
 }
 
--- ? Crear botón de pestaña
+-- ? Crear botÃ³n de pestaÃ±a
 local function makeTabButton(category: {name: string, emoji: string}): TextButton
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Name = "Tab_" .. category.name
@@ -247,7 +247,7 @@ local function makeTabButton(category: {name: string, emoji: string}): TextButto
 	return tabBtn
 end
 
--- Crear todas las pestañas
+-- Crear todas las pestaÃ±as
 for _, category in ipairs(CATEGORIES) do
 	makeTabButton(category)
 end
@@ -259,7 +259,7 @@ local function refreshAll()
 	local ips = tonumber(st.IncomePerSec) or 0
 	shieldLevel = st.ShieldLevel or 0
 
-	-- ? FIX: Mostrar reducción de daño del shield actual (18% por nivel - BALANCEADO)
+	-- ? FIX: Mostrar reducciÃ³n de daÃ±o del shield actual (18% por nivel - BALANCEADO)
 	local shieldReduction = shieldLevel * 18
 	if shieldLevel > 0 then
 		title.Text = string.format("SHOP | ??? L%d (-%d%%)", shieldLevel, shieldReduction)
@@ -267,7 +267,7 @@ local function refreshAll()
 		title.Text = "SHOP | ??? NO SHIELD"
 	end
 
-	-- ? Actualizar estilo de pestañas (activa vs inactiva)
+	-- ? Actualizar estilo de pestaÃ±as (activa vs inactiva)
 	for categoryName, tabBtn in pairs(tabButtons) do
 		if categoryName == currentTab then
 			tabBtn.BackgroundColor3 = Color3.fromRGB(80, 100, 60)
@@ -281,7 +281,7 @@ local function refreshAll()
 		end
 	end
 
-	-- ? Mostrar solo upgrades de la categoría activa
+	-- ? Mostrar solo upgrades de la categorÃ­a activa
 	local layoutOrder = 0
 	for _, category in ipairs(CATEGORIES) do
 		if category.name == currentTab then
@@ -316,7 +316,7 @@ local function refreshAll()
 				end
 			end
 		else
-			-- Ocultar botones de otras categorías
+			-- Ocultar botones de otras categorÃ­as
 			for _, upgId in ipairs(category.upgrades) do
 				if buttons[upgId] then
 					buttons[upgId].Visible = false

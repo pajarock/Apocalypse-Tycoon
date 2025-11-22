@@ -4,37 +4,37 @@
 	MASTER MAP GENERATOR - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 	
-	Este script genera autom·ticamente el mapa apocalÌptico prehisp·nico completo.
+	Este script genera autom√°ticamente el mapa apocal√≠ptico prehisp√°nico completo.
 	Solo necesitas ejecutar: MasterGenerator.Generate()
 	
-	CARACTERÕSTICAS COMPLETAS:
-	? OcÈano de lava peligrosa
-	? MontaÒas volc·nicas con altura variable
+	CARACTER√çSTICAS COMPLETAS:
+	? Oc√©ano de lava peligrosa
+	? Monta√±as volc√°nicas con altura variable
 	? Plataformas elevadas para bases de jugadores
-	? Ruinas y pir·mides prehisp·nicas
+	? Ruinas y pir√°mides prehisp√°nicas
 	? Estatuas de guerreros jaguares
-	? Serpientes emplumadas (QuetzalcÛatl)
+	? Serpientes emplumadas (Quetzalc√≥atl)
 	? Altares de sacrificio
 	? Estelas con glifos mayas/aztecas
 	? Calendario solar
-	? Cristales mÌsticos flotantes
+	? Cristales m√≠sticos flotantes
 	? Efectos de ceniza y niebla
-	? Rel·mpagos rojos apocalÌpticos
+	? Rel√°mpagos rojos apocal√≠pticos
 	? Ondas de calor
 	? Burbujas de lava
-	? Sonidos ambientales Èpicos
-	? IluminaciÛn cinematogr·fica
+	? Sonidos ambientales √©picos
+	? Iluminaci√≥n cinematogr√°fica
 	? Post-processing profesional
 	
 	AUTOR: Claude / Anthropic
-	VERSI”N: 1.0
+	VERSI√ìN: 1.0
 	-----------------------------------------------------------------------
 ]]
 
--- Requiere los mÛdulos necesarios
+-- Requiere los m√≥dulos necesarios
 local ServerStorage = game:GetService("ServerStorage")
 
--- Verificar que los mÛdulos existan (en tu juego deben estar en ServerScriptService)
+-- Verificar que los m√≥dulos existan (en tu juego deben estar en ServerScriptService)
 local TerrainGenerator = require(script.Parent:WaitForChild("TerrainGenerator"))
 local AmbientEffects = require(script.Parent:WaitForChild("AmbientEffects"))
 local PreHispanicDecorations = require(script.Parent:WaitForChild("PreHispanicDecorations"))
@@ -42,18 +42,18 @@ local PreHispanicDecorations = require(script.Parent:WaitForChild("PreHispanicDe
 local MasterGenerator = {}
 
 -------------------------------------------------------------------------
--- CONFIGURACI”N GENERAL
+-- CONFIGURACI√ìN GENERAL
 -------------------------------------------------------------------------
 
 MasterGenerator.Config = {
-	-- Modo de generaciÛn
+	-- Modo de generaci√≥n
 	GenerateTerrain = true,
 	GenerateDecorations = true,
 	EnableEffects = true,
 
 	-- Modos especiales
 	PerformanceMode = false,  -- Reduce efectos para mejor FPS
-	DevMode = false,          -- Muestra informaciÛn de debug
+	DevMode = false,          -- Muestra informaci√≥n de debug
 
 	-- Opciones visuales
 	EnableLightning = true,
@@ -63,18 +63,18 @@ MasterGenerator.Config = {
 
 	-- Opciones de gameplay
 	LavaDamage = 50,
-	SafeZoneRadius = 300,  -- Radio del ·rea segura central
+	SafeZoneRadius = 300,  -- Radio del √°rea segura central
 }
 
 -------------------------------------------------------------------------
--- GENERACI”N COMPLETA
+-- GENERACI√ìN COMPLETA
 -------------------------------------------------------------------------
 
 function MasterGenerator.Generate()
 	print("-----------------------------------------------------------")
 	print("  APOCALYPSE TYCOON - GENERADOR DE MAPA MAESTRO")
 	print("-----------------------------------------------------------")
-	print("[MASTER] Iniciando generaciÛn del mapa...")
+	print("[MASTER] Iniciando generaci√≥n del mapa...")
 	print("[MASTER] Esto puede tomar 10-30 segundos...")
 
 	local startTime = tick()
@@ -86,9 +86,9 @@ function MasterGenerator.Generate()
 
 	-- FASE 2: Generar terreno base
 	if MasterGenerator.Config.GenerateTerrain then
-		print("\n[FASE 2/4] Generando terreno apocalÌptico...")
-		print("  ? OcÈano de lava")
-		print("  ? MontaÒas volc·nicas")
+		print("\n[FASE 2/4] Generando terreno apocal√≠ptico...")
+		print("  ? Oc√©ano de lava")
+		print("  ? Monta√±as volc√°nicas")
 		print("  ? Plataformas de bases")
 		print("  ? Ruinas y pilares")
 
@@ -96,12 +96,12 @@ function MasterGenerator.Generate()
 
 		print("[FASE 2/4] ? Terreno generado")
 	else
-		print("\n[FASE 2/4] ? GeneraciÛn de terreno omitida")
+		print("\n[FASE 2/4] ? Generaci√≥n de terreno omitida")
 	end
 
-	-- FASE 3: Decoraciones prehisp·nicas
+	-- FASE 3: Decoraciones prehisp√°nicas
 	if MasterGenerator.Config.GenerateDecorations then
-		print("\n[FASE 3/4] Colocando decoraciones prehisp·nicas...")
+		print("\n[FASE 3/4] Colocando decoraciones prehisp√°nicas...")
 		print("  ? Estatuas de guerreros")
 		print("  ? Serpientes emplumadas")
 		print("  ? Altares de sacrificio")
@@ -122,15 +122,15 @@ function MasterGenerator.Generate()
 	if MasterGenerator.Config.EnableEffects then
 		print("\n[FASE 4/4] Activando efectos ambientales...")
 		print("  ? Ceniza flotante")
-		print("  ? Niebla tÛxica")
+		print("  ? Niebla t√≥xica")
 		print("  ? Ondas de calor")
 
 		if MasterGenerator.Config.EnableLightning then
-			print("  ? Rel·mpagos rojos")
+			print("  ? Rel√°mpagos rojos")
 		end
 
 		if MasterGenerator.Config.EnableFloatingCrystals then
-			print("  ? Cristales mÌsticos")
+			print("  ? Cristales m√≠sticos")
 		end
 
 		print("  ? Burbujas de lava")
@@ -152,16 +152,16 @@ function MasterGenerator.Generate()
 		print("\n[FASE 4/4] ? Efectos omitidos")
 	end
 
-	-- EstadÌsticas finales
+	-- Estad√≠sticas finales
 	local elapsed = tick() - startTime
 	print("\n-----------------------------------------------------------")
 	print(string.format("[MASTER] ? MAPA GENERADO EN %.1f SEGUNDOS", elapsed))
 	print("-----------------------------------------------------------")
 	print("\nCONTROLES:")
-	print("  ï /regenmap - Regenerar mapa completo")
-	print("  ï /clearmap - Limpiar todo el mapa")
-	print("  ï /perfmode - Activar modo performance")
-	print("\nESTADÕSTICAS DEL MAPA:")
+	print("  ¬ï /regenmap - Regenerar mapa completo")
+	print("  ¬ï /clearmap - Limpiar todo el mapa")
+	print("  ¬ï /perfmode - Activar modo performance")
+	print("\nESTAD√çSTICAS DEL MAPA:")
 
 	-- Contar objetos generados
 	local mapFolder = workspace:FindFirstChild("ApocalypticMap")
@@ -171,9 +171,9 @@ function MasterGenerator.Generate()
 		local decoFolder = mapFolder:FindFirstChild("PreHispanicDecorations")
 		local decorations = decoFolder and #decoFolder:GetChildren() or 0
 
-		print(string.format("  ï MontaÒas: %d", mountains))
-		print(string.format("  ï Ruinas: %d", ruins))
-		print(string.format("  ï Decoraciones: %d", decorations))
+		print(string.format("  ¬ï Monta√±as: %d", mountains))
+		print(string.format("  ¬ï Ruinas: %d", ruins))
+		print(string.format("  ¬ï Decoraciones: %d", decorations))
 	end
 
 	print("-----------------------------------------------------------\n")
@@ -207,11 +207,11 @@ function MasterGenerator.Clear()
 end
 
 -------------------------------------------------------------------------
--- REGENERACI”N R¡PIDA
+-- REGENERACI√ìN R√ÅPIDA
 -------------------------------------------------------------------------
 
 function MasterGenerator.QuickRegenerate()
-	print("[MASTER] RegeneraciÛn r·pida...")
+	print("[MASTER] Regeneraci√≥n r√°pida...")
 	MasterGenerator.Clear()
 	task.wait(1)
 	MasterGenerator.Generate()
@@ -230,7 +230,7 @@ function MasterGenerator.EnablePerformanceMode()
 	task.wait(0.5)
 	AmbientEffects.EnablePerformanceMode()
 
-	-- Reducir partÌculas globalmente
+	-- Reducir part√≠culas globalmente
 	for _, emitter in ipairs(workspace:GetDescendants()) do
 		if emitter:IsA("ParticleEmitter") then
 			emitter.Rate = math.max(1, math.floor(emitter.Rate * 0.3))
@@ -238,7 +238,7 @@ function MasterGenerator.EnablePerformanceMode()
 	end
 
 	print("[MASTER] ? Modo performance activado")
-	print("  ? FPS deberÌa mejorar significativamente")
+	print("  ? FPS deber√≠a mejorar significativamente")
 end
 
 -------------------------------------------------------------------------
@@ -258,28 +258,28 @@ function MasterGenerator.SetupAdminCommands()
 			if not isAdmin then return end
 
 			if lower == "/regenmap" then
-				print("[ADMIN] " .. plr.Name .. " est· regenerando el mapa...")
+				print("[ADMIN] " .. plr.Name .. " est√° regenerando el mapa...")
 				MasterGenerator.QuickRegenerate()
 
 			elseif lower == "/clearmap" then
-				print("[ADMIN] " .. plr.Name .. " est· limpiando el mapa...")
+				print("[ADMIN] " .. plr.Name .. " est√° limpiando el mapa...")
 				MasterGenerator.Clear()
 
 			elseif lower == "/perfmode" then
-				print("[ADMIN] " .. plr.Name .. " activÛ modo performance")
+				print("[ADMIN] " .. plr.Name .. " activ√≥ modo performance")
 				MasterGenerator.EnablePerformanceMode()
 
 			elseif lower == "/normalmode" then
-				print("[ADMIN] " .. plr.Name .. " activÛ modo normal")
+				print("[ADMIN] " .. plr.Name .. " activ√≥ modo normal")
 				MasterGenerator.Config.PerformanceMode = false
 				AmbientEffects.DisableAll()
 				task.wait(0.5)
 				AmbientEffects.EnableAll()
 
 			elseif lower == "/mapstats" then
-				-- Mostrar estadÌsticas del mapa
+				-- Mostrar estad√≠sticas del mapa
 				local stats = MasterGenerator.GetMapStats()
-				print("\n------- ESTADÕSTICAS DEL MAPA -------")
+				print("\n------- ESTAD√çSTICAS DEL MAPA -------")
 				for key, value in pairs(stats) do
 					print(string.format("  %s: %s", key, tostring(value)))
 				end
@@ -292,7 +292,7 @@ function MasterGenerator.SetupAdminCommands()
 end
 
 -------------------------------------------------------------------------
--- ESTADÕSTICAS
+-- ESTAD√çSTICAS
 -------------------------------------------------------------------------
 
 function MasterGenerator.GetMapStats()
@@ -324,7 +324,7 @@ function MasterGenerator.GetMapStats()
 		end
 	end
 
-	-- Contar especÌficos
+	-- Contar espec√≠ficos
 	local mountainsFolder = mapFolder:FindFirstChild("Mountains")
 	if mountainsFolder then
 		stats.Mountains = #mountainsFolder:GetChildren()
@@ -344,7 +344,7 @@ function MasterGenerator.GetMapStats()
 end
 
 -------------------------------------------------------------------------
--- INICIALIZACI”N AUTOM¡TICA (opcional)
+-- INICIALIZACI√ìN AUTOM√ÅTICA (opcional)
 -------------------------------------------------------------------------
 
 function MasterGenerator.Init(autoGenerate: boolean?)
@@ -353,7 +353,7 @@ function MasterGenerator.Init(autoGenerate: boolean?)
 	-- Configurar comandos
 	MasterGenerator.SetupAdminCommands()
 
-	-- Generar autom·ticamente si se especifica
+	-- Generar autom√°ticamente si se especifica
 	if autoGenerate then
 		task.spawn(function()
 			task.wait(3)  -- Esperar a que el juego cargue

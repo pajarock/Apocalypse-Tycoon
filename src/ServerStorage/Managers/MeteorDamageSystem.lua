@@ -3,12 +3,12 @@
 	METEOR DAMAGE SYSTEM - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Sistema de daño de meteoritos a jugadores con mecánica de evasión por salto.
+	Sistema de daÃ±o de meteoritos a jugadores con mecÃ¡nica de evasiÃ³n por salto.
 
 	FEATURES:
-	? Daño de área (AoE) al impactar
-	? Detección de salto para evadir daño
-	? Escalado de daño por distancia
+	? DaÃ±o de Ã¡rea (AoE) al impactar
+	? DetecciÃ³n de salto para evadir daÃ±o
+	? Escalado de daÃ±o por distancia
 	? Feedback visual (VFX, notificaciones, camera shake)
 	? Sistema de immunidad temporal
 	? Tracking de dodges/hits para achievements
@@ -25,7 +25,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 -------------------------------------------------------------------------
--- MÓDULOS
+-- MÃDULOS
 -------------------------------------------------------------------------
 
 local Config = require(ServerStorage.Config.Config)
@@ -45,7 +45,7 @@ local DEBUG = Config.DEBUG_MODE
 local DAMAGE_RADIUS = Config.METEOR_DAMAGE_RADIUS or 20
 local BASE_DAMAGE = Config.METEOR_PLAYER_DAMAGE or 25
 local JUMP_IMMUNITY_HEIGHT = Config.JUMP_IMMUNITY_HEIGHT or 5
-local IMMUNITY_DURATION = 0.5 -- segundos de immunity después de dodge
+local IMMUNITY_DURATION = 0.5 -- segundos de immunity despuÃ©s de dodge
 
 -------------------------------------------------------------------------
 -- ESTADO
@@ -65,7 +65,7 @@ local OnHit = Instance.new("BindableEvent")
 local OnDeath = Instance.new("BindableEvent")
 
 -------------------------------------------------------------------------
--- MÓDULO
+-- MÃDULO
 -------------------------------------------------------------------------
 
 local MeteorDamageSystem = {
@@ -75,7 +75,7 @@ local MeteorDamageSystem = {
 }
 
 -------------------------------------------------------------------------
--- INICIALIZACIÓN
+-- INICIALIZACIÃN
 -------------------------------------------------------------------------
 
 function MeteorDamageSystem:Initialize()
@@ -135,13 +135,13 @@ local function isPlayerJumping(character: Model): boolean
 		return false
 	end
 
-	-- Método 1: Verificar estado de Humanoid
+	-- MÃ©todo 1: Verificar estado de Humanoid
 	if humanoid:GetState() == Enum.HumanoidStateType.Jumping or
 		humanoid:GetState() == Enum.HumanoidStateType.Freefall then
 		return true
 	end
 
-	-- Método 2: Raycast hacia abajo
+	-- MÃ©todo 2: Raycast hacia abajo
 	local rayParams = RaycastParams.new()
 	rayParams.FilterDescendantsInstances = {character}
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -152,7 +152,7 @@ local function isPlayerJumping(character: Model): boolean
 		rayParams
 	)
 
-	-- Si no hay raycast hit, está en el aire
+	-- Si no hay raycast hit, estÃ¡ en el aire
 	return rayResult == nil
 end
 
@@ -163,7 +163,7 @@ local function showNotification(player: Player, message: string, color: Color3?)
 end
 
 -------------------------------------------------------------------------
--- DAÑO PRINCIPAL
+-- DAÃO PRINCIPAL
 -------------------------------------------------------------------------
 
 function MeteorDamageSystem:OnMeteorImpact(position: Vector3, basePart: BasePart, meteorType: string?)
@@ -206,11 +206,11 @@ function MeteorDamageSystem:OnMeteorImpact(position: Vector3, basePart: BasePart
 		return
 	end
 
-	-- Verificar si está saltando
+	-- Verificar si estÃ¡ saltando
 	local isJumping = isPlayerJumping(character)
 
 	if isJumping then
-		-- ? EVADIÓ EL DAÑO
+		-- ? EVADIÃ EL DAÃO
 		PlayerStats[userId].dodges += 1
 		PlayerStats[userId].lastDodgeTime = tick()
 
@@ -236,11 +236,11 @@ function MeteorDamageSystem:OnMeteorImpact(position: Vector3, basePart: BasePart
 		return
 	end
 
-	-- ? NO EVADIÓ - APLICAR DAÑO
+	-- ? NO EVADIÃ - APLICAR DAÃO
 
-	-- Escalar daño por distancia (más cerca = más daño)
+	-- Escalar daÃ±o por distancia (mÃ¡s cerca = mÃ¡s daÃ±o)
 	local damageScale = 1 - (distance / DAMAGE_RADIUS)
-	damageScale = math.max(0.3, damageScale) -- Mínimo 30% de daño
+	damageScale = math.max(0.3, damageScale) -- MÃ­nimo 30% de daÃ±o
 
 	-- Multiplicador por tipo de meteorito
 	local typeMultiplier = 1.0
@@ -254,7 +254,7 @@ function MeteorDamageSystem:OnMeteorImpact(position: Vector3, basePart: BasePart
 
 	local finalDamage = math.floor(BASE_DAMAGE * damageScale * typeMultiplier)
 
-	-- Aplicar daño
+	-- Aplicar daÃ±o
 	humanoid:TakeDamage(finalDamage)
 
 	-- Stats
@@ -281,14 +281,14 @@ function MeteorDamageSystem:OnMeteorImpact(position: Vector3, basePart: BasePart
 			))
 	end
 
-	-- Check si murió
+	-- Check si muriÃ³
 	if humanoid.Health <= 0 then
 		MeteorDamageSystem:OnPlayerDeath(player)
 	end
 end
 
 -------------------------------------------------------------------------
--- DAÑO AoE (OPCIONAL - Para explosiones grandes)
+-- DAÃO AoE (OPCIONAL - Para explosiones grandes)
 -------------------------------------------------------------------------
 
 function MeteorDamageSystem:ApplyAoEDamage(position: Vector3, radius: number, damage: number, excludeUserId: number?)
@@ -313,7 +313,7 @@ function MeteorDamageSystem:ApplyAoEDamage(position: Vector3, radius: number, da
 		end
 	end
 
-	-- Aplicar daño escalado
+	-- Aplicar daÃ±o escalado
 	for _, data in ipairs(playersHit) do
 		local player = data.player
 		local distance = data.distance
@@ -324,13 +324,13 @@ function MeteorDamageSystem:ApplyAoEDamage(position: Vector3, radius: number, da
 		local humanoid = character:FindFirstChild("Humanoid") :: Humanoid?
 		if not (humanoid and humanoid.Health > 0) then continue end
 
-		-- No aplicar si está saltando
+		-- No aplicar si estÃ¡ saltando
 		if isPlayerJumping(character) then
 			showNotification(player, "? DODGED AoE!", Color3.fromRGB(0, 255, 150))
 			continue
 		end
 
-		-- Escalar daño
+		-- Escalar daÃ±o
 		local scale = 1 - (distance / radius)
 		local finalDamage = math.floor(damage * scale)
 
@@ -362,10 +362,10 @@ function MeteorDamageSystem:OnPlayerDeath(player: Player)
 		print(("[MeteorDamageSystem] ?? Player %d died from meteor"):format(userId))
 	end
 
-	-- Aquí puedes agregar lógica de penalización
+	-- AquÃ­ puedes agregar lÃ³gica de penalizaciÃ³n
 	-- Por ejemplo: perder dinero, stats, etc.
 
-	-- Mensaje dramático
+	-- Mensaje dramÃ¡tico
 	task.delay(2, function()
 		if player and player.Parent then
 			showNotification(player, "?? You were crushed by a meteor!", Color3.fromRGB(200, 0, 0))
@@ -436,7 +436,7 @@ end)
 MeteorDamageSystem:Initialize()
 
 if DEBUG then
-	print("[MeteorDamageSystem] ? Módulo cargado")
+	print("[MeteorDamageSystem] ? MÃ³dulo cargado")
 end
 
 return MeteorDamageSystem

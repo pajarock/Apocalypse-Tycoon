@@ -6,10 +6,10 @@
 	Script cliente que escucha el RemoteEvent "CameraShake" del servidor
 	y aplica el efecto usando CameraController.
 
-	INSTALACIÓN:
+	INSTALACIÃN:
 	1. Copia este script a StarterPlayer.StarterPlayerScripts
 	2. Copia CameraController.lua a StarterPlayerScripts.Controllers
-	3. Asegúrate que existe ReplicatedStorage.Remotes.CameraShake
+	3. AsegÃºrate que existe ReplicatedStorage.Remotes.CameraShake
 
 	USO DESDE SERVIDOR:
 		local CameraShake = ReplicatedStorage.Remotes.CameraShake

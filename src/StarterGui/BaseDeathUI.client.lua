@@ -1,20 +1,20 @@
 --!strict
 --[[
 	BASE DEATH UI - Apocalypse Tycoon
-	═══════════════════════════════════════════════════════════════════════
+	âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
-	Muestra pantalla roja dramática cuando tu base es destruida.
+	Muestra pantalla roja dramÃ¡tica cuando tu base es destruida.
 
-	CARACTERÍSTICAS:
-	✅ Pantalla roja completa con texto grande
-	✅ Muestra cuánto dinero perdiste
-	✅ Cooldown visible para respawn
-	✅ Animación de fade in/out
-	✅ Audio de explosión (opcional)
+	CARACTERÃSTICAS:
+	â Pantalla roja completa con texto grande
+	â Muestra cuÃ¡nto dinero perdiste
+	â Cooldown visible para respawn
+	â AnimaciÃ³n de fade in/out
+	â Audio de explosiÃ³n (opcional)
 
-	INSTALACIÓN:
+	INSTALACIÃN:
 	1. Copia este script a StarterGui como LocalScript
-	2. Asegúrate que existe ReplicatedStorage.Remotes.BaseDead
+	2. AsegÃºrate que existe ReplicatedStorage.Remotes.BaseDead
 
 	USO DESDE SERVIDOR (BaseModule):
 		local BaseDead = ReplicatedStorage.Remotes.BaseDead
@@ -92,7 +92,7 @@ gradient.Color = ColorSequence.new({
 gradient.Rotation = 90
 gradient.Parent = titleLabel
 
--- Subtítulo "Money Lost"
+-- SubtÃ­tulo "Money Lost"
 local moneyLostLabel = Instance.new("TextLabel")
 moneyLostLabel.Name = "MoneyLost"
 moneyLostLabel.Size = UDim2.new(1, 0, 0.15, 0)
@@ -127,7 +127,7 @@ countdownLabel.Parent = screenGui
 -------------------------------------------------------------------------
 
 local function pulseAnimation()
-	-- Hacer que el título pulse
+	-- Hacer que el tÃ­tulo pulse
 	local originalSize = titleLabel.TextSize
 
 	while screenGui.Enabled do
@@ -205,7 +205,7 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 		countdown -= 1
 	end
 
-	-- ✅ ARREGLADO: Fade out (solo elementos visuales, NO screenGui)
+	-- â ARREGLADO: Fade out (solo elementos visuales, NO screenGui)
 	TweenService:Create(background, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(titleLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
 	TweenService:Create(moneyLostLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
@@ -217,7 +217,7 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	-- Hide UI
 	screenGui.Enabled = false
 
-	-- Reset transparencies para la próxima vez
+	-- Reset transparencies para la prÃ³xima vez
 	background.BackgroundTransparency = 0.3
 	titleLabel.TextTransparency = 0
 	titleLabel.TextStrokeTransparency = 0
@@ -230,4 +230,4 @@ BaseDead.OnClientEvent:Connect(function(moneyLost: number, respawnTime: number)
 	print("[BaseDeathUI] Respawn animation completed")
 end)
 
-print("[BaseDeathUI] ✓ Listening for base death events")
+print("[BaseDeathUI] â Listening for base death events")

@@ -3,12 +3,12 @@
 	ENVIRONMENT MANAGER - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Maneja ambiente apocalíptico, iluminación y partículas ambientales.
+	Maneja ambiente apocalÃ­ptico, iluminaciÃ³n y partÃ­culas ambientales.
 
 	FEATURES:
-	? Skybox apocalíptico (cielo rojo/naranja)
-	? Lighting atmosférico (tinte rojizo, neblina)
-	? Partículas ambientales (ceniza cayendo, humo)
+	? Skybox apocalÃ­ptico (cielo rojo/naranja)
+	? Lighting atmosfÃ©rico (tinte rojizo, neblina)
+	? PartÃ­culas ambientales (ceniza cayendo, humo)
 	? Efectos post-procesamiento (ColorCorrection, Bloom, Atmosphere)
 	? Performance-optimized (max 10 emitters)
 	? Day/night cycle opcional (desactivado por defecto)
@@ -20,7 +20,7 @@
 	API:
 		:Initialize() - Setup completo del ambiente
 		:SetTimeOfDay(hour: number) - Cambiar hora (opcional)
-		:EnableDayNightCycle(enabled: boolean) - Ciclo día/noche
+		:EnableDayNightCycle(enabled: boolean) - Ciclo dÃ­a/noche
 		:SetWeather(weatherType: string) - "clear", "fog", "storm"
 ]]
 
@@ -34,12 +34,12 @@ local RunService = game:GetService("RunService")
 
 local DEBUG_MODE = false
 
--- Configuración de lighting apocalíptico
+-- ConfiguraciÃ³n de lighting apocalÃ­ptico
 local LIGHTING_CONFIG = {
-	-- Hora del día (17 = atardecer cálido)
+	-- Hora del dÃ­a (17 = atardecer cÃ¡lido)
 	ClockTime = 17.5,
 
-	-- Brillo general (2 = más claro sin perder sombras)
+	-- Brillo general (2 = mÃ¡s claro sin perder sombras)
 	Brightness = 2.0,
 
 	-- Colores ambientales base (tono rojizo oscuro)
@@ -59,7 +59,7 @@ local LIGHTING_CONFIG = {
 	GlobalShadows = true,
 }
 
--- Configuración de atmosphere (niebla volumétrica)
+-- ConfiguraciÃ³n de atmosphere (niebla volumÃ©trica)
 local ATMOSPHERE_CONFIG = {
 	-- Densidad de la niebla (0.25 = visible pero no bloquea todo)
 	Density = 0.25,
@@ -67,20 +67,20 @@ local ATMOSPHERE_CONFIG = {
 	-- Altura donde empieza el efecto
 	Offset = 0.15,
 
-	-- Color base del aire (naranja volcánico)
+	-- Color base del aire (naranja volcÃ¡nico)
 	Color = Color3.fromRGB(255, 150, 100),
 
-	-- Degradado de color hacia el fondo (más claro)
+	-- Degradado de color hacia el fondo (mÃ¡s claro)
 	Decay = Color3.fromRGB(255, 210, 180),
 
-	-- Brillo difuso de partículas
+	-- Brillo difuso de partÃ­culas
 	Glare = 0.35,
 
-	-- Cantidad de dispersión (0.4 = bruma ligera)
+	-- Cantidad de dispersiÃ³n (0.4 = bruma ligera)
 	Haze = 0.4,
 }
 
--- Configuración de corrección de color
+-- ConfiguraciÃ³n de correcciÃ³n de color
 local COLOR_CORRECTION_CONFIG = {
 	-- Brillo adicional global
 	Brightness = 0.05,
@@ -88,14 +88,14 @@ local COLOR_CORRECTION_CONFIG = {
 	-- Contraste general (resalta luces/sombras)
 	Contrast = 0.12,
 
-	-- Saturación (-0.05 = tono ligeramente apagado)
+	-- SaturaciÃ³n (-0.05 = tono ligeramente apagado)
 	Saturation = -0.05,
 
-	-- Tinte cálido (naranja suave)
+	-- Tinte cÃ¡lido (naranja suave)
 	TintColor = Color3.fromRGB(255, 220, 200),
 }
 
--- Configuración de bloom (brillo en bordes de luz)
+-- ConfiguraciÃ³n de bloom (brillo en bordes de luz)
 local BLOOM_CONFIG = {
 	-- Activado
 	Enabled = true,
@@ -103,14 +103,14 @@ local BLOOM_CONFIG = {
 	-- Intensidad del resplandor
 	Intensity = 0.25,
 
-	-- Tamaño del halo de luz
+	-- TamaÃ±o del halo de luz
 	Size = 20,
 
-	-- Umbral (qué tan brillante debe ser algo para emitir halo)
+	-- Umbral (quÃ© tan brillante debe ser algo para emitir halo)
 	Threshold = 1.1,
 }
 
--- Configuración de rayos solares
+-- ConfiguraciÃ³n de rayos solares
 local SUNRAYS_CONFIG = {
 	-- Activado
 	Enabled = true,
@@ -118,17 +118,17 @@ local SUNRAYS_CONFIG = {
 	-- Intensidad de los rayos
 	Intensity = 0.08,
 
-	-- Dispersión de los rayos (0.65 = rayos amplios)
+	-- DispersiÃ³n de los rayos (0.65 = rayos amplios)
 	Spread = 0.65,
 }
 
 
--- Partículas ambientales
+-- PartÃ­culas ambientales
 local PARTICLE_CONFIG = {
 	-- Ceniza cayendo
 	Ash = {
 		Enabled = true,
-		Count = 5, -- Número de emitters
+		Count = 5, -- NÃºmero de emitters
 		Rate = 10,
 		Lifetime = NumberRange.new(8, 12),
 		Speed = NumberRange.new(2, 5),
@@ -209,7 +209,7 @@ end
 -------------------------------------------------------------------------
 
 local function setupLighting()
-	-- Aplicar configuración básica
+	-- Aplicar configuraciÃ³n bÃ¡sica
 	for property, value in pairs(LIGHTING_CONFIG) do
 		if typeof(Lighting[property]) == typeof(value) then
 			Lighting[property] = value
@@ -245,7 +245,7 @@ local function setupColorCorrection()
 	end
 
 	if DEBUG_MODE then
-		print("[ENV] ? ColorCorrection aplicado (Tinte cálido)")
+		print("[ENV] ? ColorCorrection aplicado (Tinte cÃ¡lido)")
 	end
 end
 
@@ -312,7 +312,7 @@ local function createParticleEmitter(config: any, position: Vector3): Part
 end
 
 local function spawnAmbientParticles()
-	-- Limpiar partículas existentes
+	-- Limpiar partÃ­culas existentes
 	for _, part in ipairs(ParticleEmitters) do
 		if part and part.Parent then
 			part:Destroy()
@@ -424,7 +424,7 @@ local function setWeather(weatherType: string)
 		Lighting.Brightness = 1.0
 
 	elseif weatherType == "storm" then
-		-- Tormenta (más oscuro, más niebla)
+		-- Tormenta (mÃ¡s oscuro, mÃ¡s niebla)
 		Lighting.FogEnd = 150
 		Lighting.Brightness = 0.8
 		Lighting.Ambient = Color3.fromRGB(80, 40, 30)
@@ -444,7 +444,7 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Inicializa el ambiente apocalíptico completo.
+	Inicializa el ambiente apocalÃ­ptico completo.
 ]]
 function EnvironmentManager:Initialize()
 	if DEBUG_MODE then
@@ -471,9 +471,9 @@ function EnvironmentManager:Initialize()
 end
 
 --[[
-	Cambia la hora del día (0-24).
+	Cambia la hora del dÃ­a (0-24).
 
-	@param hour number - Hora (0 = medianoche, 12 = mediodía, 18 = atardecer)
+	@param hour number - Hora (0 = medianoche, 12 = mediodÃ­a, 18 = atardecer)
 ]]
 function EnvironmentManager:SetTimeOfDay(hour: number)
 	hour = math.clamp(hour, 0, 24)
@@ -485,7 +485,7 @@ function EnvironmentManager:SetTimeOfDay(hour: number)
 end
 
 --[[
-	Habilita/deshabilita ciclo día/noche.
+	Habilita/deshabilita ciclo dÃ­a/noche.
 
 	@param enabled boolean - true para habilitar
 ]]
@@ -516,7 +516,7 @@ function EnvironmentManager:GetCurrentWeather(): string
 end
 
 --[[
-	Limpia todas las partículas ambientales.
+	Limpia todas las partÃ­culas ambientales.
 ]]
 function EnvironmentManager:CleanupParticles()
 	for _, part in ipairs(ParticleEmitters) do
@@ -532,7 +532,7 @@ function EnvironmentManager:CleanupParticles()
 end
 
 --[[
-	Recarga las partículas ambientales.
+	Recarga las partÃ­culas ambientales.
 ]]
 function EnvironmentManager:ReloadParticles()
 	self:CleanupParticles()

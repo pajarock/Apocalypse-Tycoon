@@ -3,13 +3,13 @@
 	BASE VISUALS MANAGER - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Maneja efectos visuales dinámicos de las bases según su HP.
+	Maneja efectos visuales dinÃ¡micos de las bases segÃºn su HP.
 
 	FEATURES:
-	? Efectos progresivos según HP (100% ? 0%)
+	? Efectos progresivos segÃºn HP (100% ? 0%)
 	? Humo cuando HP < 50%
 	? Fuego cuando HP < 25%
-	? Grietas y daño visual
+	? Grietas y daÃ±o visual
 	? Pulsating glow cuando invulnerable
 	? Decoraciones (muros, torres, billboards)
 	? Performance-optimized
@@ -20,7 +20,7 @@
 		-- Crear base con visuals
 		local base = BaseVisualsManager:CreateBase(userId, position, playerName)
 
-		-- Actualizar efectos según HP
+		-- Actualizar efectos segÃºn HP
 		BaseVisualsManager:UpdateBaseVisuals(userId, currentHP, maxHP)
 
 	API:
@@ -41,22 +41,22 @@ local DEBUG_MODE = false
 
 -- Umbrales de HP para efectos
 local HP_THRESHOLDS = {
-	PRISTINE = 0.70, -- 70-100%: Sin daño visible
+	PRISTINE = 0.70, -- 70-100%: Sin daÃ±o visible
 	DAMAGED = 0.40,  -- 40-69%: Grietas y decals
 	CRITICAL = 0.20, -- 20-39%: Humo saliendo
 	BURNING = 0.01,  -- 1-19%: Fuego activo
 }
 
--- Colores según estado
+-- Colores segÃºn estado
 local BASE_COLORS = {
 	Pristine = Color3.fromRGB(60, 60, 60),   -- Gris normal
-	Damaged = Color3.fromRGB(80, 60, 50),    -- Gris con tinte marrón
-	Critical = Color3.fromRGB(100, 70, 60),  -- Más marrón
+	Damaged = Color3.fromRGB(80, 60, 50),    -- Gris con tinte marrÃ³n
+	Critical = Color3.fromRGB(100, 70, 60),  -- MÃ¡s marrÃ³n
 	Burning = Color3.fromRGB(120, 80, 70),   -- Casi rojo
 	Invulnerable = Color3.fromRGB(100, 150, 255), -- Azul brillante
 }
 
--- Configuración de decoraciones
+-- ConfiguraciÃ³n de decoraciones
 local DECORATION_CONFIG = {
 	-- Muros perimetrales
 	Walls = {
@@ -423,9 +423,9 @@ end
 	Crea una base con todas las decoraciones visuales.
 
 	@param userId number - ID del jugador
-	@param position Vector3 - Posición donde spawnear
+	@param position Vector3 - PosiciÃ³n donde spawnear
 	@param playerName string - Nombre del jugador
-	@param baseSize Vector3? - Tamaño de la base (opcional)
+	@param baseSize Vector3? - TamaÃ±o de la base (opcional)
 	@return BasePart - La base creada
 ]]
 function BaseVisualsManager:CreateBase(userId: number, position: Vector3, playerName: string, baseSize: Vector3?): BasePart
@@ -467,11 +467,11 @@ function BaseVisualsManager:CreateBase(userId: number, position: Vector3, player
 end
 
 --[[
-	Actualiza los efectos visuales según el HP actual.
+	Actualiza los efectos visuales segÃºn el HP actual.
 
 	@param userId number - ID del jugador
 	@param currentHP number - HP actual
-	@param maxHP number - HP máximo
+	@param maxHP number - HP mÃ¡ximo
 ]]
 function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number, maxHP: number)
 	local data = BaseData[userId]
@@ -511,7 +511,7 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 				{Size = UDim2.fromScale(hpPercent, 1)}
 			):Play()
 
-			-- Color según HP
+			-- Color segÃºn HP
 			if hpPercent > 0.7 then
 				hpBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 			elseif hpPercent > 0.3 then
@@ -527,7 +527,7 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 		end
 	end
 
-	-- Efectos según estado
+	-- Efectos segÃºn estado
 	-- Limpiar efectos previos
 	for effectName, effect in pairs(data.effects) do
 		if effect and effect.Parent then
@@ -536,7 +536,7 @@ function BaseVisualsManager:UpdateBaseVisuals(userId: number, currentHP: number,
 		data.effects[effectName] = nil
 	end
 
-	-- Agregar efectos según HP
+	-- Agregar efectos segÃºn HP
 	if hpPercent < HP_THRESHOLDS.CRITICAL and not data.effects.Smoke then
 		data.effects.Smoke = createSmokeEffect(basePart)
 
@@ -605,7 +605,7 @@ function BaseVisualsManager:CleanupBase(userId: number)
 		data.decorations.billboard:Destroy()
 	end
 
-	-- Base se limpia automáticamente al remover jugador
+	-- Base se limpia automÃ¡ticamente al remover jugador
 	BaseData[userId] = nil
 
 	if DEBUG_MODE then

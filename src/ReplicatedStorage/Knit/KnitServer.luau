@@ -111,7 +111,7 @@ function KnitServer.Start()
 		end
 	end
 
-	print("[Knit] ✅ Started successfully")
+	print("[Knit] â Started successfully")
 end
 
 return KnitServer

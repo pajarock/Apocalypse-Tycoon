@@ -6,30 +6,30 @@
 	Sistema de efectos visuales para generadores con soporte multi-tier.
 
 	FEATURES:
-	✅ Billboard flotante animado (+$5, +$10, +$20)
-	✅ Sistema de partículas modular (lava, cristal, energía)
-	✅ Glow pulsante dinámico por tier
-	✅ Performance-optimized con object pooling
-	✅ Temática apocalíptica (3 tiers)
-	✅ Sistema de sonidos (cash register, ambient, placement) [FASE 2]
-	✅ Animación de construcción (tween desde abajo) [FASE 2]
-	✅ ProximityPrompt con estadísticas [FASE 2]
+	â Billboard flotante animado (+$5, +$10, +$20)
+	â Sistema de partÃ­culas modular (lava, cristal, energÃ­a)
+	â Glow pulsante dinÃ¡mico por tier
+	â Performance-optimized con object pooling
+	â TemÃ¡tica apocalÃ­ptica (3 tiers)
+	â Sistema de sonidos (cash register, ambient, placement) [FASE 2]
+	â AnimaciÃ³n de construcciÃ³n (tween desde abajo) [FASE 2]
+	â ProximityPrompt con estadÃ­sticas [FASE 2]
 
 	TIER SYSTEM:
-	- Tier 1 (Volcánico): Rojo/Naranja, partículas de lava
-	- Tier 2 (Meteórico): Púrpura, partículas de cristal
-	- Tier 3 (Avanzado): Cyan, partículas de energía
+	- Tier 1 (VolcÃ¡nico): Rojo/Naranja, partÃ­culas de lava
+	- Tier 2 (MeteÃ³rico): PÃºrpura, partÃ­culas de cristal
+	- Tier 3 (Avanzado): Cyan, partÃ­culas de energÃ­a
 
 	USAGE:
 		local GeneratorVFXManager = require(ServerStorage.Managers.GeneratorVFXManager)
 
-		-- Mostrar producción de dinero
+		-- Mostrar producciÃ³n de dinero
 		GeneratorVFXManager:ShowMoneyProduction(generatorModel, 5, 1) -- $5, Tier 1
 
 		-- Aplicar glow pulsante
 		GeneratorVFXManager:ApplyGlowPulse(generatorModel, 1) -- Tier 1
 
-		-- Crear partículas
+		-- Crear partÃ­culas
 		GeneratorVFXManager:CreateParticles(generatorModel, 1) -- Tier 1
 
 	API:
@@ -50,11 +50,11 @@ local Debris = game:GetService("Debris")
 local BILLBOARD_FLOAT_DURATION = 1.5 -- Segundos que flota el billboard
 local BILLBOARD_FLOAT_HEIGHT = 5 -- Studs que sube
 local GLOW_PULSE_SPEED = 1 -- Velocidad del pulso (segundos)
-local PARTICLE_RATE = 10 -- Partículas por segundo
+local PARTICLE_RATE = 10 -- PartÃ­culas por segundo
 local DEBUG_MODE = false
 
 -- FASE 2 Constants
-local CONSTRUCTION_DURATION = 1 -- Segundos de animación de construcción
+local CONSTRUCTION_DURATION = 1 -- Segundos de animaciÃ³n de construcciÃ³n
 local CONSTRUCTION_START_OFFSET = -10 -- Studs bajo tierra al inicio
 local CASH_REGISTER_SOUND_ID = "rbxassetid://1319346243" -- Sonido de cash register
 local AMBIENT_SOUND_ID = "rbxassetid://128457230683862" -- Sonido ambient loop
@@ -65,8 +65,8 @@ local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
 
 -- PHASE 4 Constants
 local UPGRADE_SOUND_ID = "rbxassetid://6895079853" -- Sonido de upgrade (reutilizando placement por ahora)
-local UPGRADE_ANIMATION_DURATION = 1.5 -- Duración de animación de upgrade
-local UPGRADE_PARTICLE_COUNT = 50 -- Cantidad de partículas de upgrade
+local UPGRADE_ANIMATION_DURATION = 1.5 -- DuraciÃ³n de animaciÃ³n de upgrade
+local UPGRADE_PARTICLE_COUNT = 50 -- Cantidad de partÃ­culas de upgrade
 
 -------------------------------------------------------------------------
 -- TYPES
@@ -86,39 +86,39 @@ export type TierConfig = {
 -------------------------------------------------------------------------
 
 local TIER_CONFIGS: {[number]: TierConfig} = {
-	-- Tier 1: Extractor Volcánico
+	-- Tier 1: Extractor VolcÃ¡nico
 	[1] = {
-		Name = "Volcánico",
+		Name = "VolcÃ¡nico",
 		Color = Color3.fromRGB(255, 100, 50),      -- Naranja ardiente
-		GlowColor = Color3.fromRGB(255, 80, 30),   -- Naranja más intenso
+		GlowColor = Color3.fromRGB(255, 80, 30),   -- Naranja mÃ¡s intenso
 		ParticleColor = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 150, 0)),   -- Naranja claro
 			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 0)),  -- Naranja medio
 			ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 50, 0)),    -- Rojo oscuro
 		}),
 		ParticleTexture = "rbxasset://textures/particles/smoke_main.dds",
-		MoneyColor = Color3.fromRGB(255, 180, 50), -- Dorado cálido
+		MoneyColor = Color3.fromRGB(255, 180, 50), -- Dorado cÃ¡lido
 	},
 
-	-- Tier 2: Recolector Meteórico
+	-- Tier 2: Recolector MeteÃ³rico
 	[2] = {
-		Name = "Meteórico",
-		Color = Color3.fromRGB(150, 50, 200),      -- Púrpura místico
-		GlowColor = Color3.fromRGB(180, 70, 255),  -- Púrpura brillante
+		Name = "MeteÃ³rico",
+		Color = Color3.fromRGB(150, 50, 200),      -- PÃºrpura mÃ­stico
+		GlowColor = Color3.fromRGB(180, 70, 255),  -- PÃºrpura brillante
 		ParticleColor = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 100, 255)), -- Púrpura claro
-			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 50, 200)), -- Púrpura medio
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 30, 150)),  -- Púrpura oscuro
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 100, 255)), -- PÃºrpura claro
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 50, 200)), -- PÃºrpura medio
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 30, 150)),  -- PÃºrpura oscuro
 		}),
 		ParticleTexture = "rbxasset://textures/particles/sparkles_main.dds",
-		MoneyColor = Color3.fromRGB(200, 100, 255), -- Púrpura luminoso
+		MoneyColor = Color3.fromRGB(200, 100, 255), -- PÃºrpura luminoso
 	},
 
 	-- Tier 3: Procesador Avanzado
 	[3] = {
 		Name = "Avanzado",
 		Color = Color3.fromRGB(0, 255, 255),       -- Cyan brillante
-		GlowColor = Color3.fromRGB(50, 255, 255),  -- Cyan eléctrico
+		GlowColor = Color3.fromRGB(50, 255, 255),  -- Cyan elÃ©ctrico
 		ParticleColor = ColorSequence.new({
 			ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 255, 255)), -- Cyan claro
 			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),  -- Cyan puro
@@ -232,11 +232,11 @@ function GeneratorVFXManager:ShowMoneyProduction(model: Model, amount: number, t
 		label.TextColor3 = tierConfig.MoneyColor
 	end
 
-	-- Animación de flotación
+	-- AnimaciÃ³n de flotaciÃ³n
 	local startOffset = Vector3.new(0, 3, 0)
 	local endOffset = Vector3.new(0, 3 + BILLBOARD_FLOAT_HEIGHT, 0)
 
-	-- Tween de posición
+	-- Tween de posiciÃ³n
 	local positionTween = TweenService:Create(
 		billboard,
 		TweenInfo.new(
@@ -257,7 +257,7 @@ function GeneratorVFXManager:ShowMoneyProduction(model: Model, amount: number, t
 				Enum.EasingDirection.Out,
 				0,
 				false,
-				BILLBOARD_FLOAT_DURATION * 0.4 -- Delay: empieza después del 40%
+				BILLBOARD_FLOAT_DURATION * 0.4 -- Delay: empieza despuÃ©s del 40%
 			),
 			{ TextTransparency = 1 }
 		)
@@ -267,9 +267,9 @@ function GeneratorVFXManager:ShowMoneyProduction(model: Model, amount: number, t
 
 	positionTween:Play()
 
-	-- Limpiar después de la animación
+	-- Limpiar despuÃ©s de la animaciÃ³n
 	task.delay(BILLBOARD_FLOAT_DURATION, function()
-		billboard.StudsOffset = startOffset -- Reset para próximo uso
+		billboard.StudsOffset = startOffset -- Reset para prÃ³ximo uso
 		returnBillboardToPool(billboard)
 	end)
 
@@ -311,7 +311,7 @@ function GeneratorVFXManager:ApplyGlowPulse(model: Model, tier: number)
 		pointLight.Range = 15
 		pointLight.Parent = mainPart
 
-		-- Animación de pulso infinita
+		-- AnimaciÃ³n de pulso infinita
 		local pulseTween = TweenService:Create(
 			pointLight,
 			TweenInfo.new(
@@ -337,7 +337,7 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Crea un sistema de partículas temático para el generador.
+	Crea un sistema de partÃ­culas temÃ¡tico para el generador.
 
 	@param model - Modelo del generador
 	@param tier - Tier del generador (1, 2, 3)
@@ -399,7 +399,7 @@ end
 	Remueve todos los efectos visuales de un generador.
 
 	IMPORTANTE: NO remueve el StatsBillboard ni los ProximityPrompts,
-	solo los efectos visuales temporales (luz, partículas, billboards de dinero).
+	solo los efectos visuales temporales (luz, partÃ­culas, billboards de dinero).
 
 	@param model - Modelo del generador
 ]]
@@ -415,13 +415,13 @@ function GeneratorVFXManager:RemoveEffects(model: Model)
 		light:Destroy()
 	end
 
-	-- Remover partículas
+	-- Remover partÃ­culas
 	local particles = mainPart:FindFirstChild("GeneratorParticles")
 	if particles then
 		particles:Destroy()
 	end
 
-	-- CRÍTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard
+	-- CRÃTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard
 	for _, child in mainPart:GetChildren() do
 		if child:IsA("BillboardGui") and child.Name ~= "StatsBillboard" then
 			child:Destroy()
@@ -434,10 +434,10 @@ function GeneratorVFXManager:RemoveEffects(model: Model)
 end
 
 --[[
-	Obtiene la configuración de un tier específico.
+	Obtiene la configuraciÃ³n de un tier especÃ­fico.
 
-	@param tier - Número de tier (1, 2, 3)
-	@return TierConfig - Configuración del tier
+	@param tier - NÃºmero de tier (1, 2, 3)
+	@return TierConfig - ConfiguraciÃ³n del tier
 ]]
 function GeneratorVFXManager:GetTierConfig(tier: number): TierConfig
 	return TIER_CONFIGS[tier] or TIER_CONFIGS[1]
@@ -464,7 +464,7 @@ function GeneratorVFXManager:PlayCashRegisterSound(model: Model)
 	sound.Parent = mainPart
 	sound:Play()
 
-	-- Limpiar después de reproducir
+	-- Limpiar despuÃ©s de reproducir
 	Debris:AddItem(sound, 2)
 end
 
@@ -521,10 +521,10 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Anima la construcción del generador (aparece desde abajo).
+	Anima la construcciÃ³n del generador (aparece desde abajo).
 
 	@param model - Modelo del generador
-	@param finalPosition - Posición final donde debe quedar
+	@param finalPosition - PosiciÃ³n final donde debe quedar
 	@param tier - Tier del generador
 ]]
 function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPosition: Vector3, tier: number)
@@ -535,10 +535,10 @@ function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPositi
 		return
 	end
 
-	-- Posición inicial (bajo tierra)
+	-- PosiciÃ³n inicial (bajo tierra)
 	local startPosition = finalPosition + Vector3.new(0, CONSTRUCTION_START_OFFSET, 0)
 
-	-- Mover a posición inicial
+	-- Mover a posiciÃ³n inicial
 	if model.PrimaryPart then
 		model:SetPrimaryPartCFrame(CFrame.new(startPosition))
 	else
@@ -548,7 +548,7 @@ function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPositi
 	-- Reproducir sonido de placement
 	self:PlayPlacementSound(model)
 
-	-- Crear partículas temporales de construcción
+	-- Crear partÃ­culas temporales de construcciÃ³n
 	local constructionParticles = Instance.new("ParticleEmitter")
 	constructionParticles.Name = "ConstructionParticles"
 	constructionParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
@@ -560,7 +560,7 @@ function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPositi
 	constructionParticles.EmissionDirection = Enum.NormalId.Top
 	constructionParticles.Parent = primaryPart
 
-	-- Tween de construcción
+	-- Tween de construcciÃ³n
 	local tweenInfo = TweenInfo.new(
 		CONSTRUCTION_DURATION,
 		Enum.EasingStyle.Back,
@@ -584,7 +584,7 @@ function GeneratorVFXManager:PlayConstructionAnimation(model: Model, finalPositi
 
 	tween:Play()
 
-	-- Limpiar partículas de construcción después de la animación
+	-- Limpiar partÃ­culas de construcciÃ³n despuÃ©s de la animaciÃ³n
 	task.delay(CONSTRUCTION_DURATION, function()
 		constructionParticles:Destroy()
 
@@ -615,10 +615,10 @@ end
 	Muestra efectos visuales espectaculares al upgradear un generator.
 
 	EFECTOS:
-	- Partículas doradas explosivas
+	- PartÃ­culas doradas explosivas
 	- Sonido de upgrade
 	- Flash de luz
-	- Tween suave de transformación
+	- Tween suave de transformaciÃ³n
 
 	@param model - Modelo del generator
 	@param fromTier - Tier anterior
@@ -654,7 +654,7 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	flashTween:Play()
 	Debris:AddItem(flashLight, UPGRADE_ANIMATION_DURATION + 1)
 
-	-- Crear partículas doradas explosivas
+	-- Crear partÃ­culas doradas explosivas
 	local upgradeParticles = Instance.new("ParticleEmitter")
 	upgradeParticles.Name = "UpgradeParticles"
 	upgradeParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
@@ -681,13 +681,13 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	})
 	upgradeParticles.Parent = mainPart
 
-	-- Burst de partículas
+	-- Burst de partÃ­culas
 	upgradeParticles:Emit(UPGRADE_PARTICLE_COUNT)
 
-	-- Limpiar partículas después
+	-- Limpiar partÃ­culas despuÃ©s
 	Debris:AddItem(upgradeParticles, 2)
 
-	-- Crear anillos de energía expandiéndose
+	-- Crear anillos de energÃ­a expandiÃ©ndose
 	for i = 1, 3 do
 		task.delay(i * 0.2, function()
 			local ring = Instance.new("Part")
@@ -726,7 +726,7 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	local upgradeLabel = Instance.new("TextLabel")
 	upgradeLabel.Size = UDim2.new(1, 0, 1, 0)
 	upgradeLabel.BackgroundTransparency = 1
-	upgradeLabel.Text = string.format("✨ UPGRADED TO TIER %d! ✨", toTier)
+	upgradeLabel.Text = string.format("â¨ UPGRADED TO TIER %d! â¨", toTier)
 	upgradeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 	upgradeLabel.TextStrokeTransparency = 0
 	upgradeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
@@ -734,7 +734,7 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	upgradeLabel.TextScaled = true
 	upgradeLabel.Parent = upgradeBillboard
 
-	-- Animar el texto flotando y desvaneciéndose
+	-- Animar el texto flotando y desvaneciÃ©ndose
 	local textTween = TweenService:Create(
 		upgradeBillboard,
 		TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
@@ -753,7 +753,7 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	Debris:AddItem(upgradeBillboard, 2.5)
 
 	if DEBUG_MODE then
-		print(string.format("[GeneratorVFXManager] Upgrade effect played: T%d → T%d", fromTier, toTier))
+		print(string.format("[GeneratorVFXManager] Upgrade effect played: T%d â T%d", fromTier, toTier))
 	end
 end
 
@@ -762,12 +762,12 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Crea un ProximityPrompt con estadísticas del generador.
+	Crea un ProximityPrompt con estadÃ­sticas del generador.
 
 	@param model - Modelo del generador
-	@param userId - ID del dueño
+	@param userId - ID del dueÃ±o
 	@param tier - Tier del generador
-	@param objectId - ID único del objeto (PHASE 4)
+	@param objectId - ID Ãºnico del objeto (PHASE 4)
 	@return ProximityPrompt - El prompt creado
 ]]
 function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number, objectId: string?): ProximityPrompt?
@@ -782,7 +782,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		objectIdValue.Name = "ObjectId"
 		objectIdValue.Value = objectId
 		objectIdValue.Parent = mainPart
-		print("[GeneratorVFXManager] 💾 ObjectId saved in model:", objectId)
+		print("[GeneratorVFXManager] ð¾ ObjectId saved in model:", objectId)
 	end
 
 	-- Verificar si ya existe
@@ -825,7 +825,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Name = "StatsText"
-	textLabel.Size = UDim2.new(1, -20, 0.75, -10)  -- Reducido para dejar espacio al botón
+	textLabel.Size = UDim2.new(1, -20, 0.75, -10)  -- Reducido para dejar espacio al botÃ³n
 	textLabel.Position = UDim2.new(0, 10, 0, 10)
 	textLabel.BackgroundTransparency = 1
 	textLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -849,7 +849,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	upgradePrompt.Enabled = false  -- Se activa cuando puede upgradear
 	upgradePrompt.Parent = mainPart
 
-	-- FASE 3: Función para actualizar stats dinámicamente
+	-- FASE 3: FunciÃ³n para actualizar stats dinÃ¡micamente
 	local function updateStatsText()
 		-- Leer valores del modelo
 		local totalProducedValue = mainPart:FindFirstChild("TotalProduced")
@@ -867,7 +867,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		local uptimeMinutes = math.floor(uptime / 60)
 		local uptimeSeconds = uptime % 60
 
-		-- Obtener configuración del tier
+		-- Obtener configuraciÃ³n del tier
 		local tierConfig = TIER_CONFIGS[currentTier] or TIER_CONFIGS[1]
 		local Players = game:GetService("Players")
 		local owner = Players:GetPlayerByUserId(userId)
@@ -898,23 +898,23 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 		local upgradeText = ""
 		if canUpgrade and upgradeCost then
 			local nextTier = currentTier + 1
-			upgradeText = string.format("\n✨ Press R to UPGRADE → Tier %d ($%d)", nextTier, upgradeCost)
+			upgradeText = string.format("\nâ¨ Press R to UPGRADE â Tier %d ($%d)", nextTier, upgradeCost)
 		elseif currentTier >= 3 then
-			upgradeText = "\n🏆 MAX TIER REACHED"
+			upgradeText = "\nð MAX TIER REACHED"
 		end
 
 		textLabel.Text = string.format([[
-⚙️ %s
-━━━━━━━━━━━━━━━━━
-💰 Rate: $%d/sec
-💵 Total: $%.0f
-⏱️ Uptime: %dm %ds
-👤 Owner: %s
-━━━━━━━━━━━━━━━━━
+âï¸ %s
+âââââââââââââââââ
+ð° Rate: $%d/sec
+ðµ Total: $%.0f
+â±ï¸ Uptime: %dm %ds
+ð¤ Owner: %s
+âââââââââââââââââ
 Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, upgradeText)
 	end
 
-	-- Loop de actualización dinámica (cada segundo)
+	-- Loop de actualizaciÃ³n dinÃ¡mica (cada segundo)
 	local updateLoop = nil
 	local statsVisible = false
 
@@ -927,7 +927,7 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 			-- Actualizar inmediatamente al abrir
 			updateStatsText()
 
-			-- Iniciar loop de actualización
+			-- Iniciar loop de actualizaciÃ³n
 			updateLoop = task.spawn(function()
 				while statsVisible and mainPart.Parent do
 					task.wait(1)
@@ -947,12 +947,12 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 
 	-- PHASE 4: Evento de upgrade (tecla R)
 	upgradePrompt.Triggered:Connect(function(player)
-		print("[GeneratorVFXManager] 🎯 Upgrade prompt triggered by:", player.Name)
+		print("[GeneratorVFXManager] ð¯ Upgrade prompt triggered by:", player.Name)
 
 		-- Obtener objectId
 		local objectIdValue = mainPart:FindFirstChild("ObjectId")
 		if not objectIdValue then
-			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
+			warn("[GeneratorVFXManager] â ObjectId not found!")
 			return
 		end
 
@@ -966,11 +966,11 @@ Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes
 		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
 
 		if success then
-			print("[GeneratorVFXManager] ✅ Upgrade successful!")
+			print("[GeneratorVFXManager] â Upgrade successful!")
 			-- Actualizar stats inmediatamente
 			updateStatsText()
 		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed")
+			warn("[GeneratorVFXManager] â Upgrade failed")
 		end
 	end)
 
@@ -986,13 +986,13 @@ end
 -------------------------------------------------------------------------
 
 --[[
-	Actualiza los ProximityPrompts después de un upgrade para reflejar el nuevo tier.
+	Actualiza los ProximityPrompts despuÃ©s de un upgrade para reflejar el nuevo tier.
 
-	CRÍTICO: Este método se llama después de que RemoveEffects() haya preservado
-	el StatsBillboard, para asegurar que los prompts están correctamente actualizados.
+	CRÃTICO: Este mÃ©todo se llama despuÃ©s de que RemoveEffects() haya preservado
+	el StatsBillboard, para asegurar que los prompts estÃ¡n correctamente actualizados.
 
 	@param model - Modelo del generador
-	@param newTier - Nuevo tier después del upgrade
+	@param newTier - Nuevo tier despuÃ©s del upgrade
 ]]
 function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: number)
 	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
@@ -1001,29 +1001,29 @@ function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: n
 		return
 	end
 
-	-- Verificar que el StatsPrompt existe (debería existir siempre)
+	-- Verificar que el StatsPrompt existe (deberÃ­a existir siempre)
 	local statsPrompt = mainPart:FindFirstChild("StatsPrompt")
 	if not statsPrompt then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsPrompt not found after upgrade! This shouldn't happen.")
+		warn("[GeneratorVFXManager] â ï¸  WARNING: StatsPrompt not found after upgrade! This shouldn't happen.")
 	end
 
 	-- Verificar que el UpgradePrompt existe
 	local upgradePrompt = mainPart:FindFirstChild("UpgradePrompt")
 	if not upgradePrompt then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: UpgradePrompt not found after upgrade!")
+		warn("[GeneratorVFXManager] â ï¸  WARNING: UpgradePrompt not found after upgrade!")
 	end
 
 	-- Verificar que el StatsBillboard existe
 	local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
 	if not statsBillboard then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsBillboard destroyed during upgrade! This is the bug we're trying to fix.")
+		warn("[GeneratorVFXManager] â ï¸  WARNING: StatsBillboard destroyed during upgrade! This is the bug we're trying to fix.")
 	else
 		if DEBUG_MODE then
-			print("[GeneratorVFXManager] ✅ StatsBillboard preserved after upgrade to Tier", newTier)
+			print("[GeneratorVFXManager] â StatsBillboard preserved after upgrade to Tier", newTier)
 		end
 	end
 
-	-- Actualizar el UpgradePrompt según el nuevo tier
+	-- Actualizar el UpgradePrompt segÃºn el nuevo tier
 	if upgradePrompt then
 		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
 		local tierName = "Generator"
@@ -1041,10 +1041,10 @@ function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: n
 			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
 			upgradePrompt.Enabled = true
 			if DEBUG_MODE then
-				print(string.format("[GeneratorVFXManager] UpgradePrompt updated: T%d → T%d ($%d)", newTier, nextTier, upgradeCost))
+				print(string.format("[GeneratorVFXManager] UpgradePrompt updated: T%d â T%d ($%d)", newTier, nextTier, upgradeCost))
 			end
 		else
-			-- Tier máximo alcanzado
+			-- Tier mÃ¡ximo alcanzado
 			upgradePrompt.Enabled = false
 			if DEBUG_MODE then
 				print("[GeneratorVFXManager] UpgradePrompt disabled (max tier reached)")
@@ -1062,7 +1062,7 @@ end
 -------------------------------------------------------------------------
 
 if DEBUG_MODE then
-	print("[GeneratorVFXManager] ✓ Module loaded with", #TIER_CONFIGS, "tiers")
+	print("[GeneratorVFXManager] â Module loaded with", #TIER_CONFIGS, "tiers")
 end
 
 return GeneratorVFXManager

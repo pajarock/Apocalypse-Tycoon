@@ -2,10 +2,10 @@
 --[[
 	BaseDataService - Sistema de Persistencia y DataStore
 
-	CARACTERÍSTICAS:
-	- Serialización/Deserialización de bases y objetos
-	- Integración con DataStoreService
-	- Auto-save periódico (cada N minutos)
+	CARACTERÃSTICAS:
+	- SerializaciÃ³n/DeserializaciÃ³n de bases y objetos
+	- IntegraciÃ³n con DataStoreService
+	- Auto-save periÃ³dico (cada N minutos)
 	- Schema versioning para migraciones
 	- Error handling robusto (retries, fallbacks)
 	- Backup temporal en memoria (anti data loss)
@@ -39,9 +39,9 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Knit = require(ReplicatedStorage.Knit)
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	TYPES & CONSTANTS
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 export type SerializedVector3 = {
 	X: number,
@@ -77,9 +77,9 @@ local AUTO_SAVE_INTERVAL = 300 -- 5 minutos
 local MAX_RETRY_ATTEMPTS = 3
 local RETRY_DELAY = 2 -- segundos
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	SERVICE DEFINITION
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 local BaseDataService = Knit.CreateService({
 	Name = "BaseDataService",
@@ -96,16 +96,16 @@ local lastSaveTimes: { [number]: number } = {} -- Para rate limiting
 local BaseSpawnerService
 local BaseOwnershipService
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	SERIALIZATION - Data Conversion
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Serializa un Vector3 a tabla.
 
 	FORMATO: {X = x, Y = y, Z = z}
 
-	Por qué: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
+	Por quÃ©: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
 	Debemos convertir a tipos primitivos (number, string, table).
 
 	@param vec - Vector3 a serializar
@@ -136,7 +136,7 @@ end
 	4. Construir estructura BaseLayout
 	5. Agregar metadata (version, timestamp)
 
-	@param userId - ID del jugador/dueño
+	@param userId - ID del jugador/dueÃ±o
 	@return BaseLayout? - Layout serializado, o nil si no hay base
 ]]
 local function serializeBaseLayout(userId: number): BaseLayout?
@@ -177,33 +177,33 @@ end
 	Deserializa un layout y reconstruye la base.
 
 	PROCESO:
-	1. Validar schema version (migración si es necesario)
+	1. Validar schema version (migraciÃ³n si es necesario)
 	2. Verificar integridad de datos
-	3. Reconstruir base física (via BaseSpawnerService)
+	3. Reconstruir base fÃ­sica (via BaseSpawnerService)
 	4. Reconstruir objetos (via BaseOwnershipService)
 
-	NOTA: Esta función NO crea los objetos físicos automáticamente,
-	solo retorna los datos. El caller decide cómo instanciarlos.
+	NOTA: Esta funciÃ³n NO crea los objetos fÃ­sicos automÃ¡ticamente,
+	solo retorna los datos. El caller decide cÃ³mo instanciarlos.
 
 	@param layout - Layout serializado
-	@return boolean, string? - true si es válido, error si no
+	@return boolean, string? - true si es vÃ¡lido, error si no
 ]]
 local function validateLayout(layout: any): (boolean, string?)
-	-- Type checking básico
+	-- Type checking bÃ¡sico
 	if type(layout) ~= "table" then
 		return false, "Layout no es una tabla"
 	end
 
 	if type(layout.Version) ~= "string" then
-		return false, "Version faltante o inválida"
+		return false, "Version faltante o invÃ¡lida"
 	end
 
 	if type(layout.OwnerId) ~= "number" then
-		return false, "OwnerId faltante o inválido"
+		return false, "OwnerId faltante o invÃ¡lido"
 	end
 
 	if type(layout.Objects) ~= "table" then
-		return false, "Objects faltante o inválido"
+		return false, "Objects faltante o invÃ¡lido"
 	end
 
 	-- Schema version check
@@ -213,15 +213,15 @@ local function validateLayout(layout: any): (boolean, string?)
 			layout.Version,
 			SCHEMA_VERSION
 		))
-		-- Aquí podrías implementar migración de schemas
+		-- AquÃ­ podrÃ­as implementar migraciÃ³n de schemas
 	end
 
 	return true
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	DATASTORE OPERATIONS - Persistence Layer
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Genera la key para el DataStore de un usuario.
@@ -249,7 +249,7 @@ end
 
 	@param userId - ID del usuario
 	@param layout - Layout a guardar
-	@return SaveResult - Resultado de la operación
+	@return SaveResult - Resultado de la operaciÃ³n
 ]]
 local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 	if not baseDataStore then
@@ -271,12 +271,12 @@ local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 		end)
 
 		if success then
-			-- ✅ GUARDADO EXITOSO
+			-- â GUARDADO EXITOSO
 			lastSaveTimes[userId] = os.time()
-			inMemoryBackup[userId] = layout -- También guardar en backup
+			inMemoryBackup[userId] = layout -- TambiÃ©n guardar en backup
 
 			print(string.format(
-				"[BaseDataService] 💾 Saved base for userId=%d (Objects: %d, Attempt: %d)",
+				"[BaseDataService] ð¾ Saved base for userId=%d (Objects: %d, Attempt: %d)",
 				userId,
 				#layout.Objects,
 				attempts
@@ -286,7 +286,7 @@ local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 				Success = true,
 			}
 		else
-			-- ❌ ERROR
+			-- â ERROR
 			warn(string.format(
 				"[BaseDataService] Save failed for userId=%d (Attempt %d/%d): %s",
 				userId,
@@ -340,12 +340,12 @@ local function loadFromDataStore(userId: number): BaseLayout?
 		if success then
 			if result then
 				print(string.format(
-					"[BaseDataService] 📂 Loaded base for userId=%d (Objects: %d)",
+					"[BaseDataService] ð Loaded base for userId=%d (Objects: %d)",
 					userId,
 					result.Objects and #result.Objects or 0
 				))
 
-				-- Guardar en backup también
+				-- Guardar en backup tambiÃ©n
 				inMemoryBackup[userId] = result
 				return result
 			else
@@ -372,9 +372,9 @@ local function loadFromDataStore(userId: number): BaseLayout?
 	return inMemoryBackup[userId]
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	PUBLIC API - Service Methods
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Guarda la base de un jugador.
@@ -385,7 +385,7 @@ function BaseDataService:SaveBase(userId: number): SaveResult
 	if not layout then
 		return {
 			Success = false,
-			ErrorMessage = "No se encontró base para serializar",
+			ErrorMessage = "No se encontrÃ³ base para serializar",
 		}
 	end
 
@@ -416,10 +416,10 @@ end
 	PROCESO:
 	1. Cargar layout desde DataStore
 	2. Validar datos
-	3. Crear objetos físicos (esto requiere acceso a templates/assets)
+	3. Crear objetos fÃ­sicos (esto requiere acceso a templates/assets)
 
-	NOTA: Por ahora solo retorna el layout. La restauración física
-	se implementará cuando tengamos los assets de los upgrades.
+	NOTA: Por ahora solo retorna el layout. La restauraciÃ³n fÃ­sica
+	se implementarÃ¡ cuando tengamos los assets de los upgrades.
 ]]
 function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 	local layout = self:LoadBase(userId)
@@ -428,7 +428,7 @@ function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 		return false, "No hay datos guardados para este usuario"
 	end
 
-	-- Aquí iría la lógica de instanciar los objetos físicos
+	-- AquÃ­ irÃ­a la lÃ³gica de instanciar los objetos fÃ­sicos
 	-- Por ahora solo cargamos los datos
 
 	print(string.format(
@@ -455,7 +455,7 @@ function BaseDataService:SaveAllBases(): number
 	end
 
 	print(string.format(
-		"[BaseDataService] 💾 Auto-save completed: %d/%d bases saved",
+		"[BaseDataService] ð¾ Auto-save completed: %d/%d bases saved",
 		savedCount,
 		table.maxn(allBases)
 	))
@@ -474,9 +474,9 @@ function BaseDataService:SetAutoSave(enabled: boolean)
 	))
 end
 
---[[────────────────────────────────────────────────────────────────────────
-	CLIENT API - Métodos Expuestos al Cliente
-────────────────────────────────────────────────────────────────────────]]
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+	CLIENT API - MÃ©todos Expuestos al Cliente
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Solicita guardar la base desde el cliente.
@@ -485,9 +485,9 @@ function BaseDataService.Client:SaveMyBase(player: Player)
 	return self.Server:SaveBase(player.UserId)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	AUTO-SAVE SYSTEM
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Loop de auto-save (ejecuta cada AUTO_SAVE_INTERVAL segundos).
@@ -504,9 +504,9 @@ local function startAutoSaveLoop()
 	end)
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	PLAYER LIFECYCLE - Save on Leave
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 --[[
 	Guarda la base de un jugador cuando se desconecta.
@@ -521,16 +521,16 @@ local function onPlayerRemoving(player: Player)
 
 	if not result.Success then
 		warn(string.format(
-			"[BaseDataService] ⚠️ Failed to save base for %s: %s",
+			"[BaseDataService] â ï¸ Failed to save base for %s: %s",
 			player.Name,
 			result.ErrorMessage or "Unknown error"
 		))
 	end
 end
 
---[[────────────────────────────────────────────────────────────────────────
+--[[ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 	LIFECYCLE HOOKS
-────────────────────────────────────────────────────────────────────────]]
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ]]
 
 function BaseDataService:KnitInit()
 	-- Inicializar DataStore (solo en servidor real, no en Studio local)
@@ -550,7 +550,7 @@ function BaseDataService:KnitInit()
 		warn("[BaseDataService] Will use in-memory backup only")
 	end
 
-	print("[BaseDataService] ⚙️ Initialized")
+	print("[BaseDataService] âï¸ Initialized")
 end
 
 function BaseDataService:KnitStart()
@@ -564,7 +564,7 @@ function BaseDataService:KnitStart()
 	-- Iniciar auto-save loop
 	startAutoSaveLoop()
 
-	print("[BaseDataService] ✅ Started - Persistence system ready")
+	print("[BaseDataService] â Started - Persistence system ready")
 	print(string.format(
 		"[BaseDataService] Auto-save: %s (Interval: %d seconds)",
 		autoSaveEnabled and "ENABLED" or "DISABLED",

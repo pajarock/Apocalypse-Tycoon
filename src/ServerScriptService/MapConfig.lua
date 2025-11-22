@@ -1,13 +1,13 @@
 --!strict
 --[[
 	-----------------------------------------------------------------------
-	CONFIGURACI”N R¡PIDA DEL MAPA
+	CONFIGURACI√ìN R√ÅPIDA DEL MAPA
 	-----------------------------------------------------------------------
 	
-	Modifica estos valores para personalizar tu mapa sin tocar el cÛdigo principal.
+	Modifica estos valores para personalizar tu mapa sin tocar el c√≥digo principal.
 	Todos los valores tienen explicaciones y valores recomendados.
 	
-	?? IMPORTANTE: DespuÈs de modificar, guarda y reinicia el servidor.
+	?? IMPORTANTE: Despu√©s de modificar, guarda y reinicia el servidor.
 ]]
 
 local MapConfig = {}
@@ -17,25 +17,25 @@ local MapConfig = {}
 -------------------------------------------------------------------------
 
 MapConfig.Terrain = {
-	-- TamaÒo total del mapa (en studs)
+	-- Tama√±o total del mapa (en studs)
 	-- Valor recomendado: 1500-2500
-	-- ?? M·s grande = m·s lag pero m·s espacio
+	-- ?? M√°s grande = m√°s lag pero m√°s espacio
 	MapSize = 2000,
 
-	-- Radio del ·rea segura central (donde aparecen las bases)
+	-- Radio del √°rea segura central (donde aparecen las bases)
 	-- Valor recomendado: 250-350
 	SafeZoneRadius = 300,
 
-	-- N˙mero de montaÒas volc·nicas
+	-- N√∫mero de monta√±as volc√°nicas
 	-- Valor recomendado: 15-30
-	-- ?? M·s montaÒas = m·s lag
+	-- ?? M√°s monta√±as = m√°s lag
 	MountainCount = 25,
 
-	-- Altura de las montaÒas (mÌnima y m·xima en studs)
+	-- Altura de las monta√±as (m√≠nima y m√°xima en studs)
 	MountainHeightMin = 80,
 	MountainHeightMax = 200,
 
-	-- TamaÒo de las montaÒas (radio base)
+	-- Tama√±o de las monta√±as (radio base)
 	MountainRadiusMin = 40,
 	MountainRadiusMax = 100,
 }
@@ -45,23 +45,23 @@ MapConfig.Terrain = {
 -------------------------------------------------------------------------
 
 MapConfig.Lava = {
-	-- Nivel del ocÈano de lava (altura Y)
+	-- Nivel del oc√©ano de lava (altura Y)
 	-- Valor recomendado: -10 a 0
 	Level = -5,
 
-	-- DaÒo que causa la lava al tocarla
+	-- Da√±o que causa la lava al tocarla
 	-- Valor recomendado: 30-100
-	-- ?? 100 = muerte instant·nea
+	-- ?? 100 = muerte instant√°nea
 	Damage = 50,
 
 	-- Color de la lava (RGB)
-	-- ?? Puedes cambiar el color aquÌ
+	-- ?? Puedes cambiar el color aqu√≠
 	Color = Color3.fromRGB(255, 80, 0),  -- Naranja brillante
 
 	-- Transparencia de la lava (0 = opaco, 1 = invisible)
 	Transparency = 0.3,
 
-	-- øCrear burbujas de lava que explotan?
+	-- ¬øCrear burbujas de lava que explotan?
 	EnableBubbles = true,
 
 	-- Frecuencia de burbujas (segundos entre cada una)
@@ -76,22 +76,22 @@ MapConfig.Platforms = {
 	-- Altura de las plataformas sobre el suelo
 	Height = 15,
 
-	-- Radio de cada plataforma (tamaÒo)
+	-- Radio de cada plataforma (tama√±o)
 	Radius = 70,
 
-	-- N˙mero de lados (m·s lados = m·s circular)
+	-- N√∫mero de lados (m√°s lados = m√°s circular)
 	-- Valor recomendado: 8-16
 	Sides = 12,
 
-	-- øAÒadir pilares con antorchas en las esquinas?
+	-- ¬øA√±adir pilares con antorchas en las esquinas?
 	IncludePillars = true,
 
-	-- øAÒadir rampa de acceso?
+	-- ¬øA√±adir rampa de acceso?
 	IncludeRamp = true,
 }
 
 -------------------------------------------------------------------------
--- ?? COLORES Y EST…TICA
+-- ?? COLORES Y EST√âTICA
 -------------------------------------------------------------------------
 
 MapConfig.Colors = {
@@ -106,31 +106,31 @@ MapConfig.Colors = {
 	Jade = Color3.fromRGB(50, 150, 100),
 	Turquoise = Color3.fromRGB(80, 200, 200),
 
-	-- Color del cielo (afecta la atmÛsfera)
+	-- Color del cielo (afecta la atm√≥sfera)
 	SkyAmbient = Color3.fromRGB(100, 50, 30),
 	SkyColor = Color3.fromRGB(255, 120, 80),
 }
 
 -------------------------------------------------------------------------
--- ??? DECORACIONES PREHISP¡NICAS
+-- ??? DECORACIONES PREHISP√ÅNICAS
 -------------------------------------------------------------------------
 
 MapConfig.Decorations = {
-	-- øHabilitar decoraciones prehisp·nicas?
+	-- ¬øHabilitar decoraciones prehisp√°nicas?
 	Enabled = true,
 
-	-- Cantidad de cada tipo de decoraciÛn
+	-- Cantidad de cada tipo de decoraci√≥n
 	WarriorStatues = 8,      -- Estatuas de guerreros
 	Serpents = 2,            -- Serpientes emplumadas
 	Altars = 4,              -- Altares de sacrificio
 	Steles = 12,             -- Estelas con glifos
 	SolarCalendars = 1,      -- Calendarios solares
 
-	-- øAÒadir ruinas piramidales?
+	-- ¬øA√±adir ruinas piramidales?
 	IncludeRuins = true,
 	RuinCount = 15,
 
-	-- øAÒadir pilares antiguos?
+	-- ¬øA√±adir pilares antiguos?
 	IncludePillars = true,
 	PillarCount = 30,
 }
@@ -142,13 +142,13 @@ MapConfig.Decorations = {
 MapConfig.Effects = {
 	-- ? Efectos habilitados (true/false)
 	EnableAsh = true,              -- Ceniza flotando
-	EnableFog = true,              -- Niebla tÛxica
+	EnableFog = true,              -- Niebla t√≥xica
 	EnableHeatWaves = true,        -- Ondas de calor
-	EnableLightning = true,        -- Rel·mpagos rojos
+	EnableLightning = true,        -- Rel√°mpagos rojos
 	EnableCrystals = true,         -- Cristales flotantes
 
 	-- ??? Intensidad de efectos (0-1)
-	-- 0 = sin efectos, 1 = m·xima intensidad
+	-- 0 = sin efectos, 1 = m√°xima intensidad
 	AshIntensity = 1.0,
 	FogIntensity = 0.8,
 	LightningFrequency = 0.5,      -- 0.5 = cada 15-30 segundos
@@ -158,24 +158,24 @@ MapConfig.Effects = {
 	PerformanceMode = false,
 
 	-- Si PerformanceMode = true, reduce efectos:
-	-- - Ceniza: 70% menos partÌculas
+	-- - Ceniza: 70% menos part√≠culas
 	-- - Niebla: desactivada
 	-- - Cristales: desactivados
-	-- - Rel·mpagos: 50% menos frecuentes
+	-- - Rel√°mpagos: 50% menos frecuentes
 }
 
 -------------------------------------------------------------------------
--- ?? SONIDOS Y M⁄SICA
+-- ?? SONIDOS Y M√öSICA
 -------------------------------------------------------------------------
 
 MapConfig.Audio = {
-	-- øHabilitar sonidos?
+	-- ¬øHabilitar sonidos?
 	Enabled = true,
 
 	-- Volumen general (0-1)
 	MasterVolume = 0.5,
 
-	-- Vol˙menes especÌficos
+	-- Vol√∫menes espec√≠ficos
 	BackgroundMusicVolume = 0.2,
 	WindVolume = 0.15,
 	LavaVolume = 0.25,
@@ -188,12 +188,12 @@ MapConfig.Audio = {
 }
 
 -------------------------------------------------------------------------
--- ?? ILUMINACI”N
+-- ?? ILUMINACI√ìN
 -------------------------------------------------------------------------
 
 MapConfig.Lighting = {
-	-- Hora del dÌa (0-24)
-	-- 17 = atardecer apocalÌptico
+	-- Hora del d√≠a (0-24)
+	-- 17 = atardecer apocal√≠ptico
 	TimeOfDay = 17,
 
 	-- Brillo general (1-3)
@@ -203,13 +203,13 @@ MapConfig.Lighting = {
 	AmbientColor = Color3.fromRGB(100, 50, 30),
 	OutdoorAmbientColor = Color3.fromRGB(120, 60, 40),
 
-	-- AtmÛsfera
+	-- Atm√≥sfera
 	AtmosphereDensity = 0.4,
 	AtmosphereHaze = 2,
 
 	-- Post-Processing
 	BloomIntensity = 0.5,
-	ColorSaturation = 0.1,  -- M·s bajo = m·s desaturado
+	ColorSaturation = 0.1,  -- M√°s bajo = m√°s desaturado
 	Contrast = 0.1,
 }
 
@@ -218,16 +218,16 @@ MapConfig.Lighting = {
 -------------------------------------------------------------------------
 
 MapConfig.Gameplay = {
-	-- øPermitir teleport entre plataformas?
+	-- ¬øPermitir teleport entre plataformas?
 	EnableTeleporters = false,
 
-	-- øAÒadir zonas de recursos especiales?
+	-- ¬øA√±adir zonas de recursos especiales?
 	EnableResourceZones = false,
 
-	-- øEventos aleatorios en ruinas?
+	-- ¬øEventos aleatorios en ruinas?
 	EnableRandomEvents = false,
 
-	-- øNPCs enemigos en montaÒas?
+	-- ¬øNPCs enemigos en monta√±as?
 	EnableEnemySpawns = false,
 }
 
@@ -239,10 +239,10 @@ MapConfig.Debug = {
 	-- Mostrar mensajes de debug en consola
 	Enabled = true,
 
-	-- Mostrar estadÌsticas en tiempo real
+	-- Mostrar estad√≠sticas en tiempo real
 	ShowStats = false,
 
-	-- Mostrar hitboxes de colisiÛn
+	-- Mostrar hitboxes de colisi√≥n
 	ShowHitboxes = false,
 
 	-- Permitir comandos de admin
@@ -250,13 +250,13 @@ MapConfig.Debug = {
 }
 
 -------------------------------------------------------------------------
--- ?? PRESETS R¡PIDOS
+-- ?? PRESETS R√ÅPIDOS
 -------------------------------------------------------------------------
 
--- FunciÛn para aplicar presets predefinidos
+-- Funci√≥n para aplicar presets predefinidos
 function MapConfig.ApplyPreset(presetName: string)
 	if presetName == "PERFORMANCE" then
-		-- M·ximo rendimiento, mÌnimos efectos
+		-- M√°ximo rendimiento, m√≠nimos efectos
 		MapConfig.Terrain.MountainCount = 15
 		MapConfig.Effects.PerformanceMode = true
 		MapConfig.Effects.EnableAsh = true
@@ -269,7 +269,7 @@ function MapConfig.ApplyPreset(presetName: string)
 		print("[PRESET] ? Modo PERFORMANCE aplicado")
 
 	elseif presetName == "EPIC" then
-		-- M·xima calidad visual
+		-- M√°xima calidad visual
 		MapConfig.Terrain.MountainCount = 30
 		MapConfig.Effects.PerformanceMode = false
 		MapConfig.Effects.EnableAsh = true
@@ -292,66 +292,66 @@ function MapConfig.ApplyPreset(presetName: string)
 end
 
 -------------------------------------------------------------------------
--- ?? VALIDACI”N DE CONFIGURACI”N
+-- ?? VALIDACI√ìN DE CONFIGURACI√ìN
 -------------------------------------------------------------------------
 
 function MapConfig.Validate()
 	local warnings = {}
 
-	-- Validar valores numÈricos
+	-- Validar valores num√©ricos
 	if MapConfig.Terrain.MapSize < 1000 then
-		table.insert(warnings, "MapSize muy pequeÒo (< 1000), puede quedar apretado")
+		table.insert(warnings, "MapSize muy peque√±o (< 1000), puede quedar apretado")
 	elseif MapConfig.Terrain.MapSize > 5000 then
 		table.insert(warnings, "MapSize muy grande (> 5000), puede causar lag")
 	end
 
 	if MapConfig.Lava.Damage > 100 then
-		table.insert(warnings, "DaÒo de lava muy alto (> 100), ser· muerte instant·nea")
+		table.insert(warnings, "Da√±o de lava muy alto (> 100), ser√° muerte instant√°nea")
 	end
 
 	if MapConfig.Terrain.MountainCount > 40 then
-		table.insert(warnings, "Demasiadas montaÒas (> 40), considera reducir para mejor rendimiento")
+		table.insert(warnings, "Demasiadas monta√±as (> 40), considera reducir para mejor rendimiento")
 	end
 
 	-- Mostrar advertencias
 	if #warnings > 0 then
-		warn("?? ADVERTENCIAS DE CONFIGURACI”N:")
+		warn("?? ADVERTENCIAS DE CONFIGURACI√ìN:")
 		for _, warning in ipairs(warnings) do
-			warn("  ï " .. warning)
+			warn("  ¬ï " .. warning)
 		end
 	else
-		print("? ConfiguraciÛn validada correctamente")
+		print("? Configuraci√≥n validada correctamente")
 	end
 
 	return #warnings == 0
 end
 
 -------------------------------------------------------------------------
--- ?? GUARDAR/CARGAR CONFIGURACI”N
+-- ?? GUARDAR/CARGAR CONFIGURACI√ìN
 -------------------------------------------------------------------------
 
 -- Para futuras implementaciones con DataStore
 function MapConfig.Save()
 	-- TODO: Implementar guardado en DataStore
-	warn("?? FunciÛn Save() no implementada a˙n")
+	warn("?? Funci√≥n Save() no implementada a√∫n")
 end
 
 function MapConfig.Load()
 	-- TODO: Implementar carga desde DataStore
-	warn("?? FunciÛn Load() no implementada a˙n")
+	warn("?? Funci√≥n Load() no implementada a√∫n")
 end
 
 -------------------------------------------------------------------------
--- ?? RESUMEN DE CONFIGURACI”N
+-- ?? RESUMEN DE CONFIGURACI√ìN
 -------------------------------------------------------------------------
 
 function MapConfig.PrintSummary()
 	print("\n-----------------------------------------------------------")
-	print("  RESUMEN DE CONFIGURACI”N DEL MAPA")
+	print("  RESUMEN DE CONFIGURACI√ìN DEL MAPA")
 	print("-----------------------------------------------------------")
-	print(string.format("  TamaÒo del mapa: %d studs", MapConfig.Terrain.MapSize))
-	print(string.format("  MontaÒas: %d", MapConfig.Terrain.MountainCount))
-	print(string.format("  DaÒo de lava: %d HP", MapConfig.Lava.Damage))
+	print(string.format("  Tama√±o del mapa: %d studs", MapConfig.Terrain.MapSize))
+	print(string.format("  Monta√±as: %d", MapConfig.Terrain.MountainCount))
+	print(string.format("  Da√±o de lava: %d HP", MapConfig.Lava.Damage))
 	print(string.format("  Decoraciones: %s", MapConfig.Decorations.Enabled and "Activadas" or "Desactivadas"))
 	print(string.format("  Efectos: %s", MapConfig.Effects.PerformanceMode and "Modo Performance" or "Modo Normal"))
 	print(string.format("  Audio: %s", MapConfig.Audio.Enabled and "Activado" or "Desactivado"))
@@ -362,7 +362,7 @@ end
 -- ?? EXPORTAR
 -------------------------------------------------------------------------
 
--- Validar configuraciÛn al cargar
+-- Validar configuraci√≥n al cargar
 MapConfig.Validate()
 
 -- Mostrar resumen

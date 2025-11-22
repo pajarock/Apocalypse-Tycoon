@@ -722,7 +722,7 @@ local function createWaterPump(): Model
 end
 
 -- -----------------------------------------------------------------------
--- ?? POWERUP VENDING MACHINE (Máquina Expendedora de PowerUps)
+-- ?? POWERUP VENDING MACHINE (MÃ¡quina Expendedora de PowerUps)
 -- -----------------------------------------------------------------------
 local function createPowerUpVendingMachine(): Model
 	local model = Instance.new("Model")
@@ -736,7 +736,7 @@ local function createPowerUpVendingMachine(): Model
 		Glass = Color3.fromRGB(150, 220, 255),     -- Azul cristal
 	}
 
-	-- Base de la máquina
+	-- Base de la mÃ¡quina
 	local base = Instance.new("Part")
 	base.Name = "Base"
 	base.Size = Vector3.new(5, 1, 4)
@@ -767,7 +767,7 @@ local function createPowerUpVendingMachine(): Model
 	globe.CFrame = body.CFrame * CFrame.new(0, 2, 0)
 	globe.Parent = model
 
-	-- PowerUp visual dentro de la esfera (pequeña esfera brillante)
+	-- PowerUp visual dentro de la esfera (pequeÃ±a esfera brillante)
 	local powerUpSample = Instance.new("Part")
 	powerUpSample.Name = "PowerUpSample"
 	powerUpSample.Shape = Enum.PartType.Ball
@@ -778,7 +778,7 @@ local function createPowerUpVendingMachine(): Model
 	powerUpSample.CFrame = globe.CFrame
 	powerUpSample.Parent = model
 
-	-- Botón de compra (grande y obvio)
+	-- BotÃ³n de compra (grande y obvio)
 	local button = Instance.new("Part")
 	button.Name = "Button"
 	button.Shape = Enum.PartType.Cylinder
@@ -826,7 +826,7 @@ local function createPowerUpVendingMachine(): Model
 
 	-- Animaciones
 	addRotationAnimation(powerUpSample, 2) -- Rotar la muestra de powerup
-	addPulseAnimation(button, 0.15, 1.2) -- Pulsar el botón para llamar atención
+	addPulseAnimation(button, 0.15, 1.2) -- Pulsar el botÃ³n para llamar atenciÃ³n
 	addFloatAnimation(powerUpSample, 0.3, 2) -- Flotar dentro de la esfera
 
 	model.PrimaryPart = base
