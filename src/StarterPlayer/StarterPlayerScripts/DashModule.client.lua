@@ -12,7 +12,7 @@
 	- Sonido de dash
 
 	CONTROLS:
-	- Shift + W/A/S/D: Dash en direcciÛn de movimiento
+	- Shift + W/A/S/D: Dash en direcci√≥n de movimiento
 	- Solo Shift (sin WASD): Dash hacia adelante
 	-----------------------------------------------------------------------
 ]]
@@ -40,7 +40,7 @@ assert(DashEvaded, "[DashModule] Falta DashEvaded remote")
 
 -- Config
 local DEBUG = true
-local DASH_COOLDOWN = 2.5 -- ? Reducido de 4s para acciÛn m·s r·pida
+local DASH_COOLDOWN = 2.5 -- ? Reducido de 4s para acci√≥n m√°s r√°pida
 local DASH_INVULN_DURATION = 0.3
 
 -- Estado
@@ -128,7 +128,7 @@ local function getCameraRelativeDirection(): Vector3
 	-- Obtener input de movimiento
 	local moveVector = Vector3.new(0, 0, 0)
 
-	-- ? ARREGLADO: Valores correctos para direcciÛn de c·mara
+	-- ? ARREGLADO: Valores correctos para direcci√≥n de c√°mara
 	if UserInputService:IsKeyDown(Enum.KeyCode.W) then
 		moveVector += Vector3.new(0, 0, 1)  -- Forward (positivo)
 	end
@@ -147,7 +147,7 @@ local function getCameraRelativeDirection(): Vector3
 		moveVector = Vector3.new(0, 0, 1)  -- Forward
 	end
 
-	-- Convertir a direcciÛn relativa a la c·mara
+	-- Convertir a direcci√≥n relativa a la c√°mara
 	local cameraCFrame = camera.CFrame
 	local direction = (cameraCFrame.RightVector * moveVector.X) + (cameraCFrame.LookVector * moveVector.Z)
 
@@ -167,7 +167,7 @@ local function canDash(): boolean
 end
 
 local function playDashVFX()
-	-- ? Trail azul brillante detr·s del personaje
+	-- ? Trail azul brillante detr√°s del personaje
 	local attachment0 = Instance.new("Attachment")
 	attachment0.Name = "DashTrailStart"
 	attachment0.Parent = humanoidRootPart
@@ -200,7 +200,7 @@ local function playDashVFX()
 	trail.LightEmission = 1
 	trail.Parent = humanoidRootPart
 
-	-- Limpiar despuÈs
+	-- Limpiar despu√©s
 	task.delay(1, function()
 		trail:Destroy()
 		attachment0:Destroy()
@@ -224,7 +224,7 @@ local function playDashVFX()
 		flash:Destroy()
 	end)
 
-	-- ? PartÌculas de velocidad
+	-- ? Part√≠culas de velocidad
 	local particles = Instance.new("ParticleEmitter")
 	particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
 	particles.Color = ColorSequence.new(Color3.fromRGB(100, 200, 255))
@@ -279,18 +279,18 @@ local function applyGhostEffect()
 			part.Transparency = GHOST_TRANSPARENCY
 		end
 
-		-- TambiÈn hacer transparentes los accesorios
+		-- Tambi√©n hacer transparentes los accesorios
 		if part:IsA("Decal") or part:IsA("Texture") then
 			originalTransparencies[part] = part.Transparency
 			part.Transparency = GHOST_TRANSPARENCY
 		end
 	end
 
-	-- Restaurar despuÈs del dash
+	-- Restaurar despu√©s del dash
 	task.delay(DASH_INVULN_DURATION, function()
 		for part, originalTransparency in pairs(originalTransparencies) do
 			if part and part.Parent then
-				-- Tween suave de regreso para efecto Èpico
+				-- Tween suave de regreso para efecto √©pico
 				if part:IsA("BasePart") or part:IsA("MeshPart") or part:IsA("Part") or part:IsA("Decal") or part:IsA("Texture") then
 					TweenService:Create(part, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 						Transparency = originalTransparency
@@ -318,11 +318,11 @@ local function executeDash()
 		return
 	end
 
-	-- Calcular direcciÛn
+	-- Calcular direcci√≥n
 	local direction = getCameraRelativeDirection()
 
 	if DEBUG then
-		print(("[DASH] Ejecutando dash en direcciÛn: %s"):format(tostring(direction)))
+		print(("[DASH] Ejecutando dash en direcci√≥n: %s"):format(tostring(direction)))
 	end
 
 	-- Enviar al servidor
@@ -340,7 +340,7 @@ local function executeDash()
 	-- Actualizar UI
 	updateCooldownUI()
 
-	-- Restaurar estado despuÈs de la invulnerabilidad
+	-- Restaurar estado despu√©s de la invulnerabilidad
 	task.delay(DASH_INVULN_DURATION, function()
 		isDashing = false
 	end)
@@ -396,7 +396,7 @@ local function showEvasionFeedback(damageEvaded: number)
 		print(("[DASH] ??? showEvasionFeedback llamado con damage: %d"):format(damageEvaded))
 	end
 
-	-- Verificar que tenemos referencias v·lidas
+	-- Verificar que tenemos referencias v√°lidas
 	if not character or not humanoidRootPart then
 		warn("[DASH] No se puede mostrar feedback - character o HRP no disponible")
 		return
@@ -431,13 +431,13 @@ local function showEvasionFeedback(damageEvaded: number)
 	evadedLabel.TextSize = 80
 	evadedLabel.TextColor3 = Color3.fromRGB(255, 230, 100) -- Amarillo dorado
 	evadedLabel.TextStrokeTransparency = 0
-	evadedLabel.TextStrokeColor3 = Color3.fromRGB(50, 30, 0) -- Borde cafÈ oscuro
+	evadedLabel.TextStrokeColor3 = Color3.fromRGB(50, 30, 0) -- Borde caf√© oscuro
 	evadedLabel.TextTransparency = 0
 	evadedLabel.ZIndex = 101
-	evadedLabel.Rotation = -5 -- Ligera inclinaciÛn estilo grafiti
+	evadedLabel.Rotation = -5 -- Ligera inclinaci√≥n estilo grafiti
 	evadedLabel.Parent = screenGui
 
-	-- Damage evadido (texto pequeÒo debajo)
+	-- Damage evadido (texto peque√±o debajo)
 	local damageLabel = Instance.new("TextLabel")
 	damageLabel.Name = "DamageText"
 	damageLabel.Size = UDim2.fromOffset(400, 60)
@@ -454,7 +454,7 @@ local function showEvasionFeedback(damageEvaded: number)
 	damageLabel.ZIndex = 101
 	damageLabel.Parent = screenGui
 
-	-- AnimaciÛn: aparecer con bounce
+	-- Animaci√≥n: aparecer con bounce
 	evadedLabel.Size = UDim2.fromOffset(0, 0)
 	damageLabel.TextTransparency = 1
 	damageLabel.TextStrokeTransparency = 1
@@ -485,7 +485,7 @@ local function showEvasionFeedback(damageEvaded: number)
 		end
 	end)
 
-	-- Desaparecer despuÈs de 1.2s
+	-- Desaparecer despu√©s de 1.2s
 	task.delay(1.2, function()
 		local fadeOut = TweenService:Create(evadedLabel, TweenInfo.new(0.4), {
 			TextTransparency = 1,
@@ -504,7 +504,7 @@ local function showEvasionFeedback(damageEvaded: number)
 		end)
 	end)
 
-	-- ? Anillo dorado expandiÈndose en 3D
+	-- ? Anillo dorado expandi√©ndose en 3D
 	local ring = Instance.new("Part")
 	ring.Name = "EvadeRing"
 	ring.Size = Vector3.new(2, 0.5, 2)
@@ -535,7 +535,7 @@ local function showEvasionFeedback(damageEvaded: number)
 
 	game.Debris:AddItem(ring, 1)
 
-	-- ? Sonido de Èxito
+	-- ? Sonido de √©xito
 	local sound = Instance.new("Sound")
 	sound.SoundId = "rbxassetid://6026984224" -- Epic shield/block sound
 	sound.Volume = 0.7
@@ -549,7 +549,7 @@ local function showEvasionFeedback(damageEvaded: number)
 	end
 end
 
--- Escuchar eventos de evasiÛn
+-- Escuchar eventos de evasi√≥n
 DashEvaded.OnClientEvent:Connect(function(damageEvaded: number)
 	if DEBUG then
 		print(("[DASH] ??? DashEvaded event recibido! Damage: %d"):format(damageEvaded))

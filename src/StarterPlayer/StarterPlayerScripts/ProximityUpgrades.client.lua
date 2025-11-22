@@ -1,7 +1,7 @@
 --!strict
 --[[
 	PROXIMITY UPGRADES CLIENT
-	Sistema de ProximityPrompts en botones físicos
+	Sistema de ProximityPrompts en botones fÃ­sicos
 ]]
 
 local Players = game:GetService("Players")
@@ -29,7 +29,7 @@ local function createProximityPrompt(buttonModel: Model)
 
 	local trigger = buttonModel.PrimaryPart or buttonModel:FindFirstChildWhichIsA("BasePart")
 	if not trigger then
-		warn("[ProximityUpgrades] No se encontró BasePart en", buttonModel.Name)
+		warn("[ProximityUpgrades] No se encontrÃ³ BasePart en", buttonModel.Name)
 		return
 	end
 
@@ -145,7 +145,7 @@ local function watchForNewButtons()
 end
 
 -------------------------------------------------------------------------
--- INICIALIZACIÓN
+-- INICIALIZACIÃ“N
 -------------------------------------------------------------------------
 player.CharacterAdded:Wait()
 task.wait(1)

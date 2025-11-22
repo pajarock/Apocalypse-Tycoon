@@ -5,8 +5,8 @@
 	-----------------------------------------------------------------------
 
 	Controlador cliente para manejar eventos de powerups:
-	? RecepciÛn de notificaciones de activaciÛn/expiraciÛn
-	? SincronizaciÛn con UI
+	? Recepci√≥n de notificaciones de activaci√≥n/expiraci√≥n
+	? Sincronizaci√≥n con UI
 	? Efectos de sonido
 	? Logging y debugging
 
@@ -46,16 +46,16 @@ PowerUpActivated.OnClientEvent:Connect(function(powerUpId: string, duration: num
 	}
 
 	-- ? FIX: Usar safeDuration en el print para evitar nil
-	print(("[PowerUpController] ? Powerup activado: %s (duraciÛn: %.1fs)"):format(powerUpId, safeDuration))
+	print(("[PowerUpController] ? Powerup activado: %s (duraci√≥n: %.1fs)"):format(powerUpId, safeDuration))
 end)
 
 -- Expirar powerup
 PowerUpExpired.OnClientEvent:Connect(function(powerUpId: string)
 	if ActivePowerUps[powerUpId] then
 		ActivePowerUps[powerUpId] = nil
-		print(("[PowerUpController] ExpirÛ: %s"):format(powerUpId))
+		print(("[PowerUpController] Expir√≥: %s"):format(powerUpId))
 	else
-		warn(("[PowerUpController] IntentÛ expirar powerup inexistente: %s"):format(powerUpId))
+		warn(("[PowerUpController] Intent√≥ expirar powerup inexistente: %s"):format(powerUpId))
 	end
 end)
 
@@ -63,7 +63,7 @@ end)
 PowerUpCollected.OnClientEvent:Connect(function(powerUpId: string)
 	print(("[PowerUpController] ?? Recogido: %s"):format(powerUpId))
 
-	-- AquÌ puedes agregar efectos de sonido:
+	-- Aqu√≠ puedes agregar efectos de sonido:
 	-- local sound = Instance.new("Sound")
 	-- sound.SoundId = "rbxassetid://XXXXXX"
 	-- sound.Parent = workspace
@@ -83,7 +83,7 @@ function GetActivePowerUps(): {string}
 	return active
 end
 
--- Verificar si un powerup est· activo
+-- Verificar si un powerup est√° activo
 function IsPowerUpActive(powerUpId: string): boolean
 	return ActivePowerUps[powerUpId] ~= nil
 end

@@ -1,6 +1,29 @@
 # Project place file
 /Apocalypse-Tycoon.rbxlx
+/Apocalypse-Tycoon.rbxl
 
 # Roblox Studio lock files
 /*.rbxlx.lock
 /*.rbxl.lock
+
+# Rojo build output
+/build/
+*.rbxl
+*.rbxlx
+
+# Rojo plugin
+/rojo-*.rbxm
+
+# Wally packages (if using Wally package manager)
+/Packages/
+/DevPackages/
+wally.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~

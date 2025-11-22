@@ -3,16 +3,16 @@
 	POWER-UP NOTIFICATIONS (CLIENT) - Apocalypse Tycoon
 	-----------------------------------------------------------------------
 
-	Sistema de notificaciones visuales ÉPICAS para power-ups.
+	Sistema de notificaciones visuales Ã‰PICAS para power-ups.
 
 	FEATURES:
 	? Banner grande cuando colectas power-up
 	? Floating income text cuando Coin Rain activo
-	? Screen flash de colección
+	? Screen flash de colecciÃ³n
 	? Sound effects impactantes
 	? Animaciones fluidas
 
-	UBICACIÓN: StarterPlayerScripts/Controllers/PowerUpNotifications
+	UBICACIÃ“N: StarterPlayerScripts/Controllers/PowerUpNotifications
 ]]
 
 local Players = game:GetService("Players")
@@ -37,31 +37,31 @@ local CONFIG = {
 			Icon = "???",
 			Name = "SHIELD BUBBLE",
 			Color = Color3.fromRGB(0, 170, 255),
-			Message = "¡INVULNERABLE POR 10s!",
+			Message = "Â¡INVULNERABLE POR 10s!",
 		},
 		SlowMotion = {
 			Icon = "??",
 			Name = "SLOW MOTION",
 			Color = Color3.fromRGB(150, 50, 200),
-			Message = "¡Meteoritos 50% más lentos!",
+			Message = "Â¡Meteoritos 50% mÃ¡s lentos!",
 		},
 		CoinRain = {
 			Icon = "??",
 			Name = "COIN RAIN",
 			Color = Color3.fromRGB(255, 215, 0),
-			Message = "¡INGRESOS x2 POR 30s!",
+			Message = "Â¡INGRESOS x2 POR 30s!",
 		},
 		AutoRepair = {
 			Icon = "??",
 			Name = "AUTO-REPAIR",
 			Color = Color3.fromRGB(0, 255, 100),
-			Message = "¡Regenerando +5 HP/s!",
+			Message = "Â¡Regenerando +5 HP/s!",
 		},
 		DamageBoost = {
 			Icon = "??",
 			Name = "DAMAGE BOOST",
 			Color = Color3.fromRGB(255, 50, 50),
-			Message = "¡DAÑO x3 POR 15s!",
+			Message = "Â¡DAÃ‘O x3 POR 15s!",
 		},
 	},
 
@@ -265,7 +265,7 @@ local function createFloatingIncomeText(amount: number)
 	label.TextStrokeColor3 = Color3.new(0, 0, 0)
 	label.Parent = billboard
 
-	-- Animación: sube y fade out
+	-- AnimaciÃ³n: sube y fade out
 	task.spawn(function()
 		local startPos = hrp.Position + Vector3.new(math.random(-2, 2), 5, math.random(-2, 2))
 		local endPos = startPos + Vector3.new(0, 3, 0)
@@ -310,7 +310,7 @@ local function monitorCoinRain()
 
 		local currentCash = cashValue.Value
 
-		-- Si incrementó, mostrar floating text
+		-- Si incrementÃ³, mostrar floating text
 		if lastCash > 0 and currentCash > lastCash then
 			local diff = currentCash - lastCash
 			if diff > 0 then
@@ -343,7 +343,7 @@ local function onPowerUpCollected(powerUpType: string, duration: number)
 
 	-- Sound effect (opcional)
 	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://6026984224" -- Collect sound épico
+	sound.SoundId = "rbxassetid://6026984224" -- Collect sound Ã©pico
 	sound.Volume = 0.5
 	sound.Parent = workspace
 	sound:Play()
