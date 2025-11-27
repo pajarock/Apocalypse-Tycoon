@@ -90,7 +90,7 @@ UpgradeDefinitions.GeneratorT2 = {
 	Color = Color3.fromRGB(150, 50, 200),  -- Púrpura
 	Material = Enum.Material.Neon,
 
-	Cost = 500,  -- 5x más caro que T1
+	Cost = 200,  -- T1 ($100) + upgrade cost ($100)
 
 	Stats = {
 		MoneyPerSecond = 15,  -- 3x producción de T1
@@ -110,7 +110,7 @@ UpgradeDefinitions.GeneratorT3 = {
 	Color = Color3.fromRGB(0, 255, 255),  -- Cyan brillante
 	Material = Enum.Material.Neon,
 
-	Cost = 2000,  -- 20x más caro que T1
+	Cost = 500,  -- T2 ($200) + upgrade cost ($300)
 
 	Stats = {
 		MoneyPerSecond = 50,  -- 10x producción de T1
@@ -118,6 +118,46 @@ UpgradeDefinitions.GeneratorT3 = {
 
 	Category = "Production",
 	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- GENERATOR TIER 4 - Nuclear (Producción muy alta)
+UpgradeDefinitions.GeneratorT4 = {
+	Name = "GeneratorT4",
+	DisplayName = "☢️ Generator Nuclear",
+	Description = "Radioactive reactor with extreme power output",
+
+	Size = Vector3.new(14, 12, 14),  -- Más grande que T3
+	Color = Color3.fromRGB(0, 255, 65),  -- Verde neón radiactivo
+	Material = Enum.Material.Neon,
+
+	Cost = 1500,  -- T3 ($500) + upgrade cost ($1,000)
+
+	Stats = {
+		MoneyPerSecond = 150,  -- 30x producción de T1, 3x de T3
+	},
+
+	Category = "Production",
+	IsPlaceable = false,  -- Solo accesible via upgrade
+} :: UpgradeDefinition
+
+-- GENERATOR TIER 5 - Quantum (Producción máxima - TIER FINAL)
+UpgradeDefinitions.GeneratorT5 = {
+	Name = "GeneratorT5",
+	DisplayName = "⭐ Generator Quantum",
+	Description = "Ultimate cosmic energy generator - MAX TIER",
+
+	Size = Vector3.new(16, 14, 16),  -- Más grande que T4
+	Color = Color3.fromRGB(255, 255, 255),  -- Blanco brillante
+	Material = Enum.Material.Neon,
+
+	Cost = 6500,  -- T4 ($1,500) + upgrade cost ($5,000)
+
+	Stats = {
+		MoneyPerSecond = 500,  -- 100x producción de T1, 10x de T3
+	},
+
+	Category = "Production",
+	IsPlaceable = false,  -- Solo accesible via upgrade
 } :: UpgradeDefinition
 
 -- TURRET - Dispara a meteoros/enemigos
@@ -292,7 +332,9 @@ end
 --[[
 	Obtiene el nombre del siguiente tier para un generador.
 
-	@param currentTierName - Nombre del tier actual ("Generator", "GeneratorT2", "GeneratorT3")
+	Cadena: Generator → GeneratorT2 → GeneratorT3 → GeneratorT4 → GeneratorT5
+
+	@param currentTierName - Nombre del tier actual
 	@return string? - Nombre del siguiente tier, o nil si ya está en tier máximo
 ]]
 function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
@@ -301,7 +343,11 @@ function UpgradeDefinitions.GetNextTier(currentTierName: string): string?
 	elseif currentTierName == "GeneratorT2" then
 		return "GeneratorT3"
 	elseif currentTierName == "GeneratorT3" then
-		return nil  -- Ya está en tier máximo
+		return "GeneratorT4"
+	elseif currentTierName == "GeneratorT4" then
+		return "GeneratorT5"
+	elseif currentTierName == "GeneratorT5" then
+		return nil  -- Ya está en tier máximo (Quantum)
 	end
 
 	return nil

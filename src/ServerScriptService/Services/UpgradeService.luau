@@ -75,6 +75,10 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		tier = 2
 	elseif generatorType == "GeneratorT3" then
 		tier = 3
+	elseif generatorType == "GeneratorT4" then
+		tier = 4
+	elseif generatorType == "GeneratorT5" then
+		tier = 5
 	end
 
 	activeGenerators[objectId] = {
@@ -255,6 +259,10 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 		newTier = 2
 	elseif nextTierName == "GeneratorT3" then
 		newTier = 3
+	elseif nextTierName == "GeneratorT4" then
+		newTier = 4
+	elseif nextTierName == "GeneratorT5" then
+		newTier = 5
 	end
 
 	local oldTier = data.Tier or 1

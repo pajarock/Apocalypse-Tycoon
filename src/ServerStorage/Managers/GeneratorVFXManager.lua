@@ -127,6 +127,34 @@ local TIER_CONFIGS: {[number]: TierConfig} = {
 		ParticleTexture = "rbxasset://textures/particles/fire_main.dds",
 		MoneyColor = Color3.fromRGB(100, 255, 255), -- Cyan brillante
 	},
+
+	-- Tier 4: Reactor Nuclear
+	[4] = {
+		Name = "Nuclear",
+		Color = Color3.fromRGB(0, 255, 65),        -- Verde neón radiactivo
+		GlowColor = Color3.fromRGB(50, 255, 100),  -- Verde brillante
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 255, 150)), -- Verde claro radiactivo
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 65)),  -- Verde neón puro
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 50)),    -- Verde oscuro
+		}),
+		ParticleTexture = "rbxasset://textures/particles/smoke_main.dds",
+		MoneyColor = Color3.fromRGB(100, 255, 100), -- Verde radiactivo
+	},
+
+	-- Tier 5: Generador Quantum (MAX TIER)
+	[5] = {
+		Name = "Quantum",
+		Color = Color3.fromRGB(255, 255, 255),     -- Blanco puro
+		GlowColor = Color3.fromRGB(255, 255, 200), -- Dorado celestial
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),  -- Blanco puro
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 220, 150)), -- Dorado
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 150, 255)),   -- Púrpura cósmico
+		}),
+		ParticleTexture = "rbxasset://textures/particles/sparkles_main.dds",
+		MoneyColor = Color3.fromRGB(255, 255, 200), -- Dorado brillante
+	},
 }
 
 -------------------------------------------------------------------------
@@ -807,7 +835,7 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 
 	-- Guardar MoneyPerSec (obtener de UpgradeDefinitions, no de TIER_CONFIGS)
 	local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
-	local tierNames = {[1] = "Generator", [2] = "GeneratorT2", [3] = "GeneratorT3"}
+	local tierNames = {[1] = "Generator", [2] = "GeneratorT2", [3] = "GeneratorT3", [4] = "GeneratorT4", [5] = "GeneratorT5"}
 	local tierName = tierNames[tier] or "Generator"
 	local definition = UpgradeDefinitions.GetDefinition(tierName)
 	local moneyPerSec = definition and definition.Stats and definition.Stats.MoneyPerSecond or 5

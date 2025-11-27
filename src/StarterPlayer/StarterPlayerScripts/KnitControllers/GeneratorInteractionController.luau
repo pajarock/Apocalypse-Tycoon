@@ -252,7 +252,7 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 
 			local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
 			if upgradeButton then
-				if currentTier >= 3 then
+				if currentTier >= 5 then
 					upgradeButton.Text = "🏆 MAX TIER REACHED"
 					upgradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 					upgradeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -344,7 +344,9 @@ function GeneratorInteractionController:ShowStats()
 	local tierNames = {
 		[1] = "Tier 1 Generator",
 		[2] = "Tier 2 Generator",
-		[3] = "Tier 3 Generator (MAX)",
+		[3] = "Tier 3 Generator",
+		[4] = "Tier 4 Nuclear",
+		[5] = "Tier 5 Quantum (MAX)",
 	}
 	local tierName = tierNames[tier] or "Unknown Generator"
 
