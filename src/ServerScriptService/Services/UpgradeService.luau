@@ -843,8 +843,8 @@ UpgradeService.Client = {}
 ]]
 function UpgradeService.Client:UpgradeGenerator(player: Player, objectId: string): boolean
 	-- Knit pasa automáticamente el player como primer argumento
-	-- Llamar al método interno del servidor
-	return self.Server:UpgradeGenerator(objectId, player.UserId)
+	-- Llamar al método del servidor (usar UpgradeService directamente, no self.Server)
+	return UpgradeService:UpgradeGenerator(objectId, player.UserId)
 end
 
 --[[────────────────────────────────────────────────────────────────────────

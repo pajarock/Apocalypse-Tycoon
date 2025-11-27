@@ -805,11 +805,16 @@ function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tie
 	tierValue.Value = tier
 	tierValue.Parent = mainPart
 
-	-- Guardar MoneyPerSec
-	local tierConfig = TIER_CONFIGS[tier] or TIER_CONFIGS[1]
+	-- Guardar MoneyPerSec (obtener de UpgradeDefinitions, no de TIER_CONFIGS)
+	local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
+	local tierNames = {[1] = "Generator", [2] = "GeneratorT2", [3] = "GeneratorT3"}
+	local tierName = tierNames[tier] or "Generator"
+	local definition = UpgradeDefinitions.GetDefinition(tierName)
+	local moneyPerSec = definition and definition.Stats and definition.Stats.MoneyPerSecond or 5
+
 	local moneyPerSecValue = Instance.new("IntValue")
 	moneyPerSecValue.Name = "MoneyPerSec"
-	moneyPerSecValue.Value = tierConfig.MoneyPerSecond
+	moneyPerSecValue.Value = moneyPerSec
 	moneyPerSecValue.Parent = mainPart
 
 	-- Guardar TotalProduced
