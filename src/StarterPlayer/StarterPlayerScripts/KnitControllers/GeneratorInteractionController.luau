@@ -307,15 +307,21 @@ function GeneratorInteractionController:ShowStats()
 		return
 	end
 
+	-- IMPORTANTE: Guardar referencias ANTES de cerrar el menú
+	-- (CloseMenu() setea currentGenerator = nil)
+	local generator = currentGenerator
+	local objectId = currentObjectId
+
 	-- Cerrar el menú principal
 	self:CloseMenu()
 
 	-- Mostrar stats panel
 	statsPanel.Visible = true
 
-	-- Obtener datos del generador
-	local mainPart = currentGenerator:FindFirstChild("MainPart")
+	-- Obtener datos del generador (usar referencia local, no currentGenerator)
+	local mainPart = generator:FindFirstChild("MainPart")
 	if not mainPart then
+		warn("[GeneratorInteractionController] MainPart not found in generator")
 		return
 	end
 
@@ -353,7 +359,7 @@ function GeneratorInteractionController:ShowStats()
 ⏱️ Uptime: %dm %ds
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ObjectID: %s
-]], tierName, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, currentObjectId or "Unknown")
+]], tierName, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, objectId or "Unknown")
 	end
 
 	if DEBUG_MODE then
@@ -362,7 +368,7 @@ ObjectID: %s
 end
 
 --[[
-	Solicita upgrade del generador al servidor
+	Solicita upgrade del generador al servidor via Knit RemoteFunction
 ]]
 function GeneratorInteractionController:RequestUpgrade()
 	if not currentObjectId then
@@ -370,17 +376,25 @@ function GeneratorInteractionController:RequestUpgrade()
 		return
 	end
 
-	-- TODO: Llamar al UpgradeService via RemoteEvent
-	-- Por ahora, usar el método directo (temporalmente)
+	-- Obtener UpgradeService del servidor (Knit lo maneja automáticamente)
 	local UpgradeService = Knit.GetService("UpgradeService")
-	local success = UpgradeService:UpgradeGenerator(currentObjectId, Players.LocalPlayer.UserId)
 
-	if success then
+	-- Llamar al método Client del servidor (Knit usa RemoteFunctions internamente)
+	-- IMPORTANTE: await() convierte la Promise en un resultado síncrono
+	local success, result = pcall(function()
+		return UpgradeService:UpgradeGenerator(currentObjectId):await()
+	end)
+
+	if success and result then
 		print("[GeneratorInteractionController] ✅ Upgrade successful!")
 		-- Cerrar menú
 		self:CloseMenu()
 	else
-		warn("[GeneratorInteractionController] ❌ Upgrade failed")
+		if not success then
+			warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
+		else
+			warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
+		end
 	end
 end
 

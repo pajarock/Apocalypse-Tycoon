@@ -825,6 +825,29 @@ function UpgradeService:GetActiveUpgradeCounts(): {Generators: number, Turrets: 
 end
 
 --[[────────────────────────────────────────────────────────────────────────
+	CLIENT-FACING METHODS (Exposed via Knit RemoteFunctions)
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Client-facing methods que pueden ser llamados desde el cliente.
+	Knit automáticamente crea RemoteFunctions para estos métodos.
+]]
+UpgradeService.Client = {}
+
+--[[
+	Solicita upgrade de un generador desde el cliente.
+
+	@param player - Jugador que solicita el upgrade (inyectado automáticamente por Knit)
+	@param objectId - ID del generator a upgradear
+	@return boolean - true si el upgrade fue exitoso
+]]
+function UpgradeService.Client:UpgradeGenerator(player: Player, objectId: string): boolean
+	-- Knit pasa automáticamente el player como primer argumento
+	-- Llamar al método interno del servidor
+	return self.Server:UpgradeGenerator(objectId, player.UserId)
+end
+
+--[[────────────────────────────────────────────────────────────────────────
 	LIFECYCLE HOOKS
 ────────────────────────────────────────────────────────────────────────]]
 
