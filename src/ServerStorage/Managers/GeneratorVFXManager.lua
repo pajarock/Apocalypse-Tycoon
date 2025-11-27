@@ -770,212 +770,82 @@ end
 	@param objectId - ID único del objeto (PHASE 4)
 	@return ProximityPrompt - El prompt creado
 ]]
+--[[
+	Crea un ProximityPrompt de interacción único para el generador.
+
+	IMPORTANTE: Este prompt reemplaza los antiguos StatsPrompt y UpgradePrompt.
+	Ahora usa un sistema de menú manejado por GeneratorInteractionController (cliente).
+
+	@param model - Modelo del generador
+	@param userId - ID del dueño del generador
+	@param tier - Tier actual del generador
+	@param objectId - ID único del objeto en BaseDataService
+	@return ProximityPrompt - El prompt creado
+]]
 function GeneratorVFXManager:CreateStatsPrompt(model: Model, userId: number, tier: number, objectId: string?): ProximityPrompt?
 	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
 	if not mainPart then
 		return nil
 	end
 
-	-- PHASE 4: Guardar objectId en el modelo para uso en upgrades
+	-- Guardar objectId en el modelo para uso en el controller
 	if objectId then
 		local objectIdValue = Instance.new("StringValue")
 		objectIdValue.Name = "ObjectId"
 		objectIdValue.Value = objectId
 		objectIdValue.Parent = mainPart
-		print("[GeneratorVFXManager] 💾 ObjectId saved in model:", objectId)
+		if DEBUG_MODE then
+			print("[GeneratorVFXManager] 💾 ObjectId saved in model:", objectId)
+		end
 	end
 
-	-- Verificar si ya existe
-	local existingPrompt = mainPart:FindFirstChild("StatsPrompt")
+	-- Guardar tier en el modelo
+	local tierValue = Instance.new("IntValue")
+	tierValue.Name = "Tier"
+	tierValue.Value = tier
+	tierValue.Parent = mainPart
+
+	-- Guardar MoneyPerSec
+	local tierConfig = TIER_CONFIGS[tier] or TIER_CONFIGS[1]
+	local moneyPerSecValue = Instance.new("IntValue")
+	moneyPerSecValue.Name = "MoneyPerSec"
+	moneyPerSecValue.Value = tierConfig.MoneyPerSecond
+	moneyPerSecValue.Parent = mainPart
+
+	-- Guardar TotalProduced
+	local totalProducedValue = Instance.new("NumberValue")
+	totalProducedValue.Name = "TotalProduced"
+	totalProducedValue.Value = 0
+	totalProducedValue.Parent = mainPart
+
+	-- Guardar SpawnTime
+	local spawnTimeValue = Instance.new("IntValue")
+	spawnTimeValue.Name = "SpawnTime"
+	spawnTimeValue.Value = os.time()
+	spawnTimeValue.Parent = mainPart
+
+	-- Verificar si ya existe el prompt
+	local existingPrompt = mainPart:FindFirstChild("InteractPrompt")
 	if existingPrompt then
 		return existingPrompt :: ProximityPrompt
 	end
 
-	-- Crear ProximityPrompt
+	-- Crear ProximityPrompt único de interacción
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "StatsPrompt"
-	prompt.ActionText = "View Stats"
-	prompt.ObjectText = "Generator"
+	prompt.Name = "InteractPrompt"
+	prompt.ActionText = "Manage Generator"
+	prompt.ObjectText = ""
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.MaxActivationDistance = 10
 	prompt.HoldDuration = 0
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = mainPart
 
-	-- Crear BillboardGui para mostrar stats (invisible por defecto)
-	local statsBillboard = Instance.new("BillboardGui")
-	statsBillboard.Name = "StatsBillboard"
-	statsBillboard.Size = UDim2.new(8, 0, 5, 0)
-	statsBillboard.StudsOffset = Vector3.new(0, 4, 0)
-	statsBillboard.AlwaysOnTop = true
-	statsBillboard.Enabled = false -- Oculto por defecto
-	statsBillboard.Parent = mainPart
-
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 1, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	frame.BackgroundTransparency = 0.2
-	frame.BorderSizePixel = 2
-	frame.BorderColor3 = TIER_CONFIGS[tier].Color
-	frame.Parent = statsBillboard
-
-	local uiCorner = Instance.new("UICorner")
-	uiCorner.CornerRadius = UDim.new(0, 10)
-	uiCorner.Parent = frame
-
-	local textLabel = Instance.new("TextLabel")
-	textLabel.Name = "StatsText"
-	textLabel.Size = UDim2.new(1, -20, 0.75, -10)  -- Reducido para dejar espacio al botón
-	textLabel.Position = UDim2.new(0, 10, 0, 10)
-	textLabel.BackgroundTransparency = 1
-	textLabel.TextColor3 = Color3.new(1, 1, 1)
-	textLabel.TextScaled = false
-	textLabel.TextSize = 18
-	textLabel.Font = Enum.Font.Code
-	textLabel.TextXAlignment = Enum.TextXAlignment.Left
-	textLabel.TextYAlignment = Enum.TextYAlignment.Top
-	textLabel.Text = "Loading stats..."
-	textLabel.Parent = frame
-
-	-- PHASE 4: ProximityPrompt para UPGRADE (tecla R)
-	local upgradePrompt = Instance.new("ProximityPrompt")
-	upgradePrompt.Name = "UpgradePrompt"
-	upgradePrompt.ActionText = "Upgrade Generator"
-	upgradePrompt.ObjectText = ""
-	upgradePrompt.KeyboardKeyCode = Enum.KeyCode.R
-	upgradePrompt.MaxActivationDistance = 10
-	upgradePrompt.HoldDuration = 0
-	upgradePrompt.RequiresLineOfSight = false
-	upgradePrompt.Enabled = false  -- Se activa cuando puede upgradear
-	upgradePrompt.Parent = mainPart
-
-	-- FASE 3: Función para actualizar stats dinámicamente
-	local function updateStatsText()
-		-- Leer valores del modelo
-		local totalProducedValue = mainPart:FindFirstChild("TotalProduced")
-		local spawnTimeValue = mainPart:FindFirstChild("SpawnTime")
-		local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec")
-		local tierValue = mainPart:FindFirstChild("Tier")
-
-		local totalProduced = totalProducedValue and totalProducedValue.Value or 0
-		local spawnTime = spawnTimeValue and spawnTimeValue.Value or os.time()
-		local moneyPerSec = moneyPerSecValue and moneyPerSecValue.Value or 0
-		local currentTier = tierValue and tierValue.Value or tier
-
-		-- Calcular uptime
-		local uptime = os.time() - spawnTime
-		local uptimeMinutes = math.floor(uptime / 60)
-		local uptimeSeconds = uptime % 60
-
-		-- Obtener configuración del tier
-		local tierConfig = TIER_CONFIGS[currentTier] or TIER_CONFIGS[1]
-		local Players = game:GetService("Players")
-		local owner = Players:GetPlayerByUserId(userId)
-		local ownerName = owner and owner.Name or "Unknown"
-
-		-- PHASE 4: Verificar si puede upgradear y obtener costo
-		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
-		local tierName = "Generator"
-		if currentTier == 2 then
-			tierName = "GeneratorT2"
-		elseif currentTier == 3 then
-			tierName = "GeneratorT3"
-		end
-
-		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
-		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
-
-		-- PHASE 4: Actualizar ProximityPrompt de upgrade
-		if canUpgrade and upgradeCost then
-			local nextTier = currentTier + 1
-			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
-			upgradePrompt.Enabled = true
-		else
-			upgradePrompt.Enabled = false
-		end
-
-		-- Texto de stats (incluye info de upgrade)
-		local upgradeText = ""
-		if canUpgrade and upgradeCost then
-			local nextTier = currentTier + 1
-			upgradeText = string.format("\n✨ Press R to UPGRADE → Tier %d ($%d)", nextTier, upgradeCost)
-		elseif currentTier >= 3 then
-			upgradeText = "\n🏆 MAX TIER REACHED"
-		end
-
-		textLabel.Text = string.format([[
-⚙️ %s
-━━━━━━━━━━━━━━━━━
-💰 Rate: $%d/sec
-💵 Total: $%.0f
-⏱️ Uptime: %dm %ds
-👤 Owner: %s
-━━━━━━━━━━━━━━━━━
-Press E to close%s]], tierConfig.Name, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, ownerName, upgradeText)
-	end
-
-	-- Loop de actualización dinámica (cada segundo)
-	local updateLoop = nil
-	local statsVisible = false
-
-	-- Evento para mostrar/ocultar stats
-	prompt.Triggered:Connect(function(player)
-		statsVisible = not statsVisible
-		statsBillboard.Enabled = statsVisible
-
-		if statsVisible then
-			-- Actualizar inmediatamente al abrir
-			updateStatsText()
-
-			-- Iniciar loop de actualización
-			updateLoop = task.spawn(function()
-				while statsVisible and mainPart.Parent do
-					task.wait(1)
-					if statsVisible then
-						updateStatsText()
-					end
-				end
-			end)
-		else
-			-- Detener loop al cerrar
-			if updateLoop then
-				task.cancel(updateLoop)
-				updateLoop = nil
-			end
-		end
-	end)
-
-	-- PHASE 4: Evento de upgrade (tecla R)
-	upgradePrompt.Triggered:Connect(function(player)
-		print("[GeneratorVFXManager] 🎯 Upgrade prompt triggered by:", player.Name)
-
-		-- Obtener objectId
-		local objectIdValue = mainPart:FindFirstChild("ObjectId")
-		if not objectIdValue then
-			warn("[GeneratorVFXManager] ❌ ObjectId not found!")
-			return
-		end
-
-		local objectId = objectIdValue.Value
-
-		-- Obtener UpgradeService
-		local Knit = require(game.ReplicatedStorage.Knit)
-		local UpgradeService = Knit.GetService("UpgradeService")
-
-		-- Intentar upgradear
-		local success = UpgradeService:UpgradeGenerator(objectId, player.UserId)
-
-		if success then
-			print("[GeneratorVFXManager] ✅ Upgrade successful!")
-			-- Actualizar stats inmediatamente
-			updateStatsText()
-		else
-			warn("[GeneratorVFXManager] ❌ Upgrade failed")
-		end
-	end)
+	-- NOTA: El evento Triggered se maneja en GeneratorInteractionController (cliente)
+	-- No necesitamos lógica server-side aquí
 
 	if DEBUG_MODE then
-		print("[GeneratorVFXManager] Stats prompt created")
+		print("[GeneratorVFXManager] ✅ Interact prompt created (single prompt system)")
 	end
 
 	return prompt
@@ -1001,59 +871,34 @@ function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: n
 		return
 	end
 
-	-- Verificar que el StatsPrompt existe (debería existir siempre)
-	local statsPrompt = mainPart:FindFirstChild("StatsPrompt")
-	if not statsPrompt then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsPrompt not found after upgrade! This shouldn't happen.")
+	-- Verificar que el InteractPrompt existe
+	local interactPrompt = mainPart:FindFirstChild("InteractPrompt")
+	if not interactPrompt then
+		warn("[GeneratorVFXManager] ⚠️  WARNING: InteractPrompt not found after upgrade!")
+		return
 	end
 
-	-- Verificar que el UpgradePrompt existe
-	local upgradePrompt = mainPart:FindFirstChild("UpgradePrompt")
-	if not upgradePrompt then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: UpgradePrompt not found after upgrade!")
-	end
-
-	-- Verificar que el StatsBillboard existe
-	local statsBillboard = mainPart:FindFirstChild("StatsBillboard")
-	if not statsBillboard then
-		warn("[GeneratorVFXManager] ⚠️  WARNING: StatsBillboard destroyed during upgrade! This is the bug we're trying to fix.")
-	else
+	-- Actualizar Tier value en el modelo
+	local tierValue = mainPart:FindFirstChild("Tier")
+	if tierValue and tierValue:IsA("IntValue") then
+		tierValue.Value = newTier
 		if DEBUG_MODE then
-			print("[GeneratorVFXManager] ✅ StatsBillboard preserved after upgrade to Tier", newTier)
+			print(string.format("[GeneratorVFXManager] Tier value updated to %d", newTier))
 		end
 	end
 
-	-- Actualizar el UpgradePrompt según el nuevo tier
-	if upgradePrompt then
-		local UpgradeDefinitions = require(game.ServerScriptService.Services.UpgradeDefinitions)
-		local tierName = "Generator"
-		if newTier == 2 then
-			tierName = "GeneratorT2"
-		elseif newTier == 3 then
-			tierName = "GeneratorT3"
-		end
-
-		local canUpgrade = UpgradeDefinitions.CanUpgrade(tierName)
-		local upgradeCost = UpgradeDefinitions.GetUpgradeCost(tierName)
-
-		if canUpgrade and upgradeCost then
-			local nextTier = newTier + 1
-			upgradePrompt.ActionText = string.format("Upgrade to Tier %d ($%d)", nextTier, upgradeCost)
-			upgradePrompt.Enabled = true
-			if DEBUG_MODE then
-				print(string.format("[GeneratorVFXManager] UpgradePrompt updated: T%d → T%d ($%d)", newTier, nextTier, upgradeCost))
-			end
-		else
-			-- Tier máximo alcanzado
-			upgradePrompt.Enabled = false
-			if DEBUG_MODE then
-				print("[GeneratorVFXManager] UpgradePrompt disabled (max tier reached)")
-			end
+	-- Actualizar MoneyPerSec según nuevo tier
+	local tierConfig = TIER_CONFIGS[newTier] or TIER_CONFIGS[1]
+	local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec")
+	if moneyPerSecValue and moneyPerSecValue:IsA("IntValue") then
+		moneyPerSecValue.Value = tierConfig.MoneyPerSecond
+		if DEBUG_MODE then
+			print(string.format("[GeneratorVFXManager] MoneyPerSec updated to $%d/sec", tierConfig.MoneyPerSecond))
 		end
 	end
 
 	if DEBUG_MODE then
-		print(string.format("[GeneratorVFXManager] Prompts refreshed after upgrade to Tier %d", newTier))
+		print(string.format("[GeneratorVFXManager] ✅ Generator values refreshed after upgrade to tier %d", newTier))
 	end
 end
 
