@@ -383,34 +383,39 @@ function GeneratorInteractionController:RequestUpgrade()
 	-- Obtener UpgradeService del servidor (Knit lo maneja automáticamente)
 	local UpgradeService = Knit.GetService("UpgradeService")
 
-	-- Llamar al método Client del servidor (Knit usa RemoteFunctions internamente)
-	-- IMPORTANTE: Knit retorna una Promise, usar :andThen() y :catch()
-	UpgradeService:UpgradeGenerator(objectId)
-		:andThen(function(success)
-			if success then
-				print("[GeneratorInteractionController] ✅ Upgrade successful!")
+	-- Llamar al método Client del servidor (Knit usa RemoteFunctions síncronamente)
+	-- IMPORTANTE: En Knit, Service.Client methods son síncronos, no Promises
+	local success, result = pcall(function()
+		return UpgradeService:UpgradeGenerator(objectId)
+	end)
 
-				-- Cerrar menú
-				self:CloseMenu()
+	if not success then
+		-- Error en la llamada remota
+		warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
+		return
+	end
 
-				-- Re-abrir menú automáticamente después de un pequeño delay
-				-- (para que el servidor tenga tiempo de actualizar el modelo)
-				task.wait(0.15)
+	-- result contiene el valor booleano retornado por el servidor
+	if result then
+		print("[GeneratorInteractionController] ✅ Upgrade successful!")
 
-				-- Verificar que el generator sigue existiendo antes de re-abrir
-				if generator and generator.Parent then
-					self:OpenMenu(generator, objectId)
-					if DEBUG_MODE then
-						print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
-					end
-				end
-			else
-				warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
+		-- Cerrar menú
+		self:CloseMenu()
+
+		-- Re-abrir menú automáticamente después de un pequeño delay
+		-- (para que el servidor tenga tiempo de actualizar el modelo)
+		task.wait(0.15)
+
+		-- Verificar que el generator sigue existiendo antes de re-abrir
+		if generator and generator.Parent then
+			self:OpenMenu(generator, objectId)
+			if DEBUG_MODE then
+				print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
 			end
-		end)
-		:catch(function(err)
-			warn("[GeneratorInteractionController] ❌ Upgrade request failed:", err)
-		end)
+		end
+	else
+		warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
+	end
 end
 
 --[[────────────────────────────────────────────────────────────────────────
