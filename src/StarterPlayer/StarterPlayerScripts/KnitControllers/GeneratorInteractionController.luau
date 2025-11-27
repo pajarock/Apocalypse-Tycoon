@@ -376,19 +376,36 @@ function GeneratorInteractionController:RequestUpgrade()
 		return
 	end
 
+	-- Guardar referencias ANTES de cerrar (para re-abrir después del upgrade)
+	local generator = currentGenerator
+	local objectId = currentObjectId
+
 	-- Obtener UpgradeService del servidor (Knit lo maneja automáticamente)
 	local UpgradeService = Knit.GetService("UpgradeService")
 
 	-- Llamar al método Client del servidor (Knit usa RemoteFunctions internamente)
 	-- IMPORTANTE: await() convierte la Promise en un resultado síncrono
 	local success, result = pcall(function()
-		return UpgradeService:UpgradeGenerator(currentObjectId):await()
+		return UpgradeService:UpgradeGenerator(objectId):await()
 	end)
 
 	if success and result then
 		print("[GeneratorInteractionController] ✅ Upgrade successful!")
+
 		-- Cerrar menú
 		self:CloseMenu()
+
+		-- Re-abrir menú automáticamente después de un pequeño delay
+		-- (para que el servidor tenga tiempo de actualizar el modelo)
+		task.wait(0.15)
+
+		-- Verificar que el generator sigue existiendo antes de re-abrir
+		if generator and generator.Parent then
+			self:OpenMenu(generator, objectId)
+			if DEBUG_MODE then
+				print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
+			end
+		end
 	else
 		if not success then
 			warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
