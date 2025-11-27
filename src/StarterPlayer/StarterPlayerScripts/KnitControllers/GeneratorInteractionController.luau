@@ -384,35 +384,33 @@ function GeneratorInteractionController:RequestUpgrade()
 	local UpgradeService = Knit.GetService("UpgradeService")
 
 	-- Llamar al método Client del servidor (Knit usa RemoteFunctions internamente)
-	-- IMPORTANTE: await() convierte la Promise en un resultado síncrono
-	local success, result = pcall(function()
-		return UpgradeService:UpgradeGenerator(objectId):await()
-	end)
+	-- IMPORTANTE: Knit retorna una Promise, usar :andThen() y :catch()
+	UpgradeService:UpgradeGenerator(objectId)
+		:andThen(function(success)
+			if success then
+				print("[GeneratorInteractionController] ✅ Upgrade successful!")
 
-	if success and result then
-		print("[GeneratorInteractionController] ✅ Upgrade successful!")
+				-- Cerrar menú
+				self:CloseMenu()
 
-		-- Cerrar menú
-		self:CloseMenu()
+				-- Re-abrir menú automáticamente después de un pequeño delay
+				-- (para que el servidor tenga tiempo de actualizar el modelo)
+				task.wait(0.15)
 
-		-- Re-abrir menú automáticamente después de un pequeño delay
-		-- (para que el servidor tenga tiempo de actualizar el modelo)
-		task.wait(0.15)
-
-		-- Verificar que el generator sigue existiendo antes de re-abrir
-		if generator and generator.Parent then
-			self:OpenMenu(generator, objectId)
-			if DEBUG_MODE then
-				print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
+				-- Verificar que el generator sigue existiendo antes de re-abrir
+				if generator and generator.Parent then
+					self:OpenMenu(generator, objectId)
+					if DEBUG_MODE then
+						print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
+					end
+				end
+			else
+				warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
 			end
-		end
-	else
-		if not success then
-			warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
-		else
-			warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
-		end
-	end
+		end)
+		:catch(function(err)
+			warn("[GeneratorInteractionController] ❌ Upgrade request failed:", err)
+		end)
 end
 
 --[[────────────────────────────────────────────────────────────────────────
