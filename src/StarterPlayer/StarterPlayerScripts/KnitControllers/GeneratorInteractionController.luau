@@ -78,11 +78,11 @@ local function createMenuUI(): ScreenGui
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
-	-- Panel principal
+	-- Panel principal (altura aumentada para acomodar upgrade button más grande)
 	local menuPanel = Instance.new("Frame")
 	menuPanel.Name = "MenuPanel"
-	menuPanel.Size = UDim2.new(0, 300, 0, 250)
-	menuPanel.Position = UDim2.new(0.5, -150, 0.5, -125)
+	menuPanel.Size = UDim2.new(0, 300, 0, 280)
+	menuPanel.Position = UDim2.new(0.5, -150, 0.5, -140)
 	menuPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	menuPanel.BorderSizePixel = 2
 	menuPanel.BorderColor3 = Color3.fromRGB(100, 100, 100)
@@ -107,10 +107,11 @@ local function createMenuUI(): ScreenGui
 	title.Parent = menuPanel
 
 	-- Función helper para crear botones
-	local function createButton(name: string, text: string, icon: string, yOffset: number): TextButton
+	local function createButton(name: string, text: string, icon: string, yOffset: number, height: number?): TextButton
+		local buttonHeight = height or 50
 		local button = Instance.new("TextButton")
 		button.Name = name
-		button.Size = UDim2.new(1, -40, 0, 50)
+		button.Size = UDim2.new(1, -40, 0, buttonHeight)
 		button.Position = UDim2.new(0, 20, 0, yOffset)
 		button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 		button.BorderSizePixel = 0
@@ -118,6 +119,7 @@ local function createMenuUI(): ScreenGui
 		button.TextColor3 = Color3.new(1, 1, 1)
 		button.TextSize = 18
 		button.Font = Enum.Font.Gotham
+		button.TextWrapped = true
 		button.Parent = menuPanel
 
 		local buttonCorner = Instance.new("UICorner")
@@ -138,11 +140,12 @@ local function createMenuUI(): ScreenGui
 	-- Botón View Stats
 	local viewStatsButton = createButton("ViewStatsButton", "View Stats", "📊", 60)
 
-	-- Botón Upgrade
-	local upgradeButton = createButton("UpgradeButton", "Upgrade Generator", "⬆️", 120)
+	-- Botón Upgrade (más alto para mostrar costo y beneficios)
+	local upgradeButton = createButton("UpgradeButton", "Upgrade Generator", "⬆️", 120, 80)
+	upgradeButton.TextSize = 15  -- Texto más pequeño para que quepa mejor
 
-	-- Botón Close
-	local closeButton = createButton("CloseButton", "Close", "❌", 180)
+	-- Botón Close (movido hacia abajo para dar espacio al upgradeButton)
+	local closeButton = createButton("CloseButton", "Close", "❌", 210)
 	closeButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
 	closeButton.MouseEnter:Connect(function()
 		closeButton.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
@@ -224,6 +227,66 @@ local function createStatsPanel(): Frame
 	return panel
 end
 
+--[[
+	Muestra una notificación temporal en pantalla
+
+	@param message - Mensaje a mostrar
+	@param isSuccess - true para mensaje de éxito (verde), false para error (rojo)
+]]
+local function showNotification(message: string, isSuccess: boolean)
+	local Players = game:GetService("Players")
+	local player = Players.LocalPlayer
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	-- Crear notificación
+	local notification = Instance.new("Frame")
+	notification.Name = "Notification"
+	notification.Size = UDim2.new(0, 400, 0, 60)
+	notification.Position = UDim2.new(0.5, -200, 0.1, 0)
+	notification.BackgroundColor3 = isSuccess and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(100, 30, 30)
+	notification.BorderSizePixel = 2
+	notification.BorderColor3 = isSuccess and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+	notification.Parent = playerGui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = notification
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = message
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextSize = 18
+	label.Font = Enum.Font.GothamBold
+	label.TextWrapped = true
+	label.Parent = notification
+
+	-- Animación de entrada
+	notification.Position = UDim2.new(0.5, -200, -0.1, 0)
+	local TweenService = game:GetService("TweenService")
+	local tweenIn = TweenService:Create(
+		notification,
+		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Position = UDim2.new(0.5, -200, 0.1, 0) }
+	)
+	tweenIn:Play()
+
+	-- Auto-cerrar después de 2.5 segundos
+	task.delay(2.5, function()
+		local tweenOut = TweenService:Create(
+			notification,
+			TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{ Position = UDim2.new(0.5, -200, -0.1, 0) }
+		)
+		tweenOut:Play()
+		tweenOut.Completed:Connect(function()
+			notification:Destroy()
+		end)
+	end)
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	MENU LOGIC
 ────────────────────────────────────────────────────────────────────────]]
@@ -244,25 +307,34 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 	if menuPanel then
 		menuPanel.Visible = true
 
-		-- Actualizar botón de upgrade según tier
-		local mainPart = generator:FindFirstChild("MainPart")
-		if mainPart then
-			local tierValue = mainPart:FindFirstChild("Tier")
-			local currentTier = tierValue and tierValue.Value or 1
+		-- Actualizar botón de upgrade según tier y obtener info del servidor
+		local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
+		if upgradeButton then
+			-- Obtener información del upgrade desde el servidor
+			local success, upgradeInfo = pcall(function()
+				return UpgradeService:GetUpgradeInfo(objectId)
+			end)
 
-			local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
-			if upgradeButton then
-				if currentTier >= 5 then
+			if success and upgradeInfo then
+				if not upgradeInfo.CanUpgrade then
+					-- Max tier alcanzado
 					upgradeButton.Text = "🏆 MAX TIER REACHED"
 					upgradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 					upgradeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
 				else
-					-- Obtener costo de upgrade (esto debería venir del servidor)
-					local nextTier = currentTier + 1
-					upgradeButton.Text = string.format("⬆️ Upgrade to Tier %d", nextTier)
+					-- Mostrar costo y beneficio del upgrade
+					local costText = string.format("$%d", upgradeInfo.UpgradeCost)
+					local benefitText = string.format("$%d/s → $%d/s", upgradeInfo.CurrentIncome, upgradeInfo.NextIncome)
+					upgradeButton.Text = string.format("⬆️ Upgrade to Tier %d\n💰 Cost: %s\n📈 Income: %s",
+						upgradeInfo.NextTier, costText, benefitText)
 					upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 					upgradeButton.TextColor3 = Color3.new(1, 1, 1)
 				end
+			else
+				-- Fallback si no se puede obtener info del servidor
+				upgradeButton.Text = "⬆️ Upgrade Generator"
+				upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+				upgradeButton.TextColor3 = Color3.new(1, 1, 1)
 			end
 		end
 	end
@@ -394,12 +466,14 @@ function GeneratorInteractionController:RequestUpgrade()
 	if not success then
 		-- Error en la llamada remota
 		warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
+		showNotification("❌ Upgrade failed! Server error.", false)
 		return
 	end
 
 	-- result contiene el valor booleano retornado por el servidor
 	if result then
 		print("[GeneratorInteractionController] ✅ Upgrade successful!")
+		showNotification("✅ Generator upgraded successfully!", true)
 
 		-- Cerrar menú
 		self:CloseMenu()
@@ -417,6 +491,7 @@ function GeneratorInteractionController:RequestUpgrade()
 		end
 	else
 		warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
+		showNotification("❌ Upgrade failed! Not enough money or max tier reached.", false)
 	end
 end
 

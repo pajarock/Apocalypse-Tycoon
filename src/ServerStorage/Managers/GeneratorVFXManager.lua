@@ -930,8 +930,45 @@ function GeneratorVFXManager:RefreshPromptsAfterUpgrade(model: Model, newTier: n
 		end
 	end
 
+	-- ACTUALIZAR VISUALES: Color, Glow, Partículas
+	-- 1. Actualizar color del MainPart
+	mainPart.Color = tierConfig.Color
 	if DEBUG_MODE then
-		print(string.format("[GeneratorVFXManager] ✅ Generator values refreshed after upgrade to tier %d", newTier))
+		print(string.format("[GeneratorVFXManager] MainPart color updated to %s", tostring(tierConfig.Color)))
+	end
+
+	-- 2. Actualizar PointLight (glow)
+	local pointLight = mainPart:FindFirstChild("GeneratorGlow") :: PointLight?
+	if pointLight then
+		pointLight.Color = tierConfig.GlowColor
+		if DEBUG_MODE then
+			print(string.format("[GeneratorVFXManager] PointLight color updated to %s", tostring(tierConfig.GlowColor)))
+		end
+	end
+
+	-- 3. Actualizar ParticleEmitter
+	local emitter = mainPart:FindFirstChild("GeneratorParticles") :: ParticleEmitter?
+	if emitter then
+		emitter.Color = tierConfig.ParticleColor
+		if DEBUG_MODE then
+			print(string.format("[GeneratorVFXManager] Particle color updated"))
+		end
+	end
+
+	-- 4. Actualizar Billboard (texto de dinero)
+	local billboard = mainPart:FindFirstChild("StatsBillboard") :: BillboardGui?
+	if billboard then
+		local moneyLabel = billboard:FindFirstChild("MoneyLabel") :: TextLabel?
+		if moneyLabel then
+			moneyLabel.TextColor3 = tierConfig.MoneyColor
+			if DEBUG_MODE then
+				print(string.format("[GeneratorVFXManager] Billboard text color updated"))
+			end
+		end
+	end
+
+	if DEBUG_MODE then
+		print(string.format("[GeneratorVFXManager] ✅ Generator values AND visuals refreshed after upgrade to tier %d", newTier))
 	end
 end
 

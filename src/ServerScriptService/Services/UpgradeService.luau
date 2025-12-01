@@ -855,6 +855,87 @@ function UpgradeService.Client:UpgradeGenerator(player: Player, objectId: string
 	return UpgradeService:UpgradeGenerator(objectId, player.UserId)
 end
 
+--[[
+	Obtiene información sobre el próximo upgrade de un generador.
+
+	@param player - Jugador que solicita la info (inyectado automáticamente por Knit)
+	@param objectId - ID del generator
+	@return table - Información del upgrade: {
+		CanUpgrade: boolean,
+		UpgradeCost: number,
+		CurrentIncome: number,
+		NextIncome: number,
+		CurrentTier: number,
+		NextTier: number,
+		NextTierName: string,
+		CurrentTierName: string
+	} o nil si el generator no existe
+]]
+function UpgradeService.Client:GetUpgradeInfo(player: Player, objectId: string)
+	local data = activeGenerators[objectId]
+	if not data then
+		return nil
+	end
+
+	-- Verificar ownership
+	if data.UserId ~= player.UserId then
+		return nil
+	end
+
+	local currentTierName = data.Type or "Generator"
+	local currentIncome = data.Definition.Stats.MoneyPerSecond or 0
+	local currentTier = data.Tier or 1
+
+	-- Verificar si hay siguiente tier
+	local nextTierName = UpgradeDefinitions.GetNextTier(currentTierName)
+	if not nextTierName then
+		-- Ya está en max tier
+		return {
+			CanUpgrade = false,
+			UpgradeCost = 0,
+			CurrentIncome = currentIncome,
+			NextIncome = currentIncome,
+			CurrentTier = currentTier,
+			NextTier = currentTier,
+			NextTierName = currentTierName,
+			CurrentTierName = currentTierName,
+		}
+	end
+
+	local nextDefinition = UpgradeDefinitions.GetDefinition(nextTierName)
+	if not nextDefinition then
+		return {
+			CanUpgrade = false,
+			UpgradeCost = 0,
+			CurrentIncome = currentIncome,
+			NextIncome = currentIncome,
+			CurrentTier = currentTier,
+			NextTier = currentTier,
+			NextTierName = currentTierName,
+			CurrentTierName = currentTierName,
+		}
+	end
+
+	-- Calcular costo de upgrade (diferencia entre el costo total del siguiente tier y el actual)
+	local currentCost = data.Definition.Cost or 0
+	local nextCost = nextDefinition.Cost or 0
+	local upgradeCost = nextCost - currentCost
+
+	local nextIncome = nextDefinition.Stats.MoneyPerSecond or 0
+	local nextTier = currentTier + 1
+
+	return {
+		CanUpgrade = true,
+		UpgradeCost = upgradeCost,
+		CurrentIncome = currentIncome,
+		NextIncome = nextIncome,
+		CurrentTier = currentTier,
+		NextTier = nextTier,
+		NextTierName = nextTierName,
+		CurrentTierName = currentTierName,
+	}
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	LIFECYCLE HOOKS
 ────────────────────────────────────────────────────────────────────────]]
