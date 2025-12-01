@@ -48,6 +48,32 @@ local BaseOwnershipService
 local PlayerDataService
 
 --[[────────────────────────────────────────────────────────────────────────
+	HELPER FUNCTIONS
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Convierte tier number a tier name
+
+	@param tier - Número del tier (1-5)
+	@return string - Nombre del tier (Generator, GeneratorT2, etc.)
+]]
+local function getTierName(tier: number): string
+	if tier == 1 then
+		return "Generator"
+	elseif tier == 2 then
+		return "GeneratorT2"
+	elseif tier == 3 then
+		return "GeneratorT3"
+	elseif tier == 4 then
+		return "GeneratorT4"
+	elseif tier == 5 then
+		return "GeneratorT5"
+	else
+		return "Generator"
+	end
+end
+
+--[[────────────────────────────────────────────────────────────────────────
 	GENERATOR SYSTEM - Passive Money Production
 ────────────────────────────────────────────────────────────────────────]]
 
@@ -885,11 +911,13 @@ function UpgradeService.Client:GetUpgradeInfo(player: Player, objectId: string)
 		return nil
 	end
 
-	local currentTierName = data.Type or "Generator"
-	local currentIncome = data.Definition.Stats.MoneyPerSecond or 0
+	-- IMPORTANTE: Usar getTierName() basándose en data.Tier, NO en data.Type
+	-- data.Type no existe/no se actualiza en activeGenerators
 	local currentTier = data.Tier or 1
+	local currentTierName = getTierName(currentTier)
+	local currentIncome = data.Definition.Stats.MoneyPerSecond or 0
 
-	print("[DEBUG SERVER] currentTierName:", currentTierName, "currentIncome:", currentIncome, "currentTier:", currentTier)
+	print("[DEBUG SERVER] currentTier:", currentTier, "currentTierName:", currentTierName, "currentIncome:", currentIncome)
 
 	-- Verificar si hay siguiente tier
 	local nextTierName = UpgradeDefinitions.GetNextTier(currentTierName)
