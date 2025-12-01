@@ -310,6 +310,9 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 		-- Actualizar botón de upgrade según tier y obtener info del servidor
 		local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
 		if upgradeButton then
+			-- IMPORTANTE: Obtener UpgradeService antes de usarlo
+			local UpgradeService = Knit.GetService("UpgradeService")
+
 			-- Obtener información del upgrade desde el servidor
 			print("[DEBUG] Calling GetUpgradeInfo for objectId:", objectId)
 			local success, upgradeInfo = pcall(function()
