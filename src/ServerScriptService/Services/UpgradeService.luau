@@ -872,19 +872,24 @@ end
 	} o nil si el generator no existe
 ]]
 function UpgradeService.Client:GetUpgradeInfo(player: Player, objectId: string)
+	print("[DEBUG SERVER] GetUpgradeInfo called for player:", player.Name, "objectId:", objectId)
 	local data = activeGenerators[objectId]
 	if not data then
+		print("[DEBUG SERVER] No data found for objectId:", objectId)
 		return nil
 	end
 
 	-- Verificar ownership
 	if data.UserId ~= player.UserId then
+		print("[DEBUG SERVER] Ownership mismatch. data.UserId:", data.UserId, "player.UserId:", player.UserId)
 		return nil
 	end
 
 	local currentTierName = data.Type or "Generator"
 	local currentIncome = data.Definition.Stats.MoneyPerSecond or 0
 	local currentTier = data.Tier or 1
+
+	print("[DEBUG SERVER] currentTierName:", currentTierName, "currentIncome:", currentIncome, "currentTier:", currentTier)
 
 	-- Verificar si hay siguiente tier
 	local nextTierName = UpgradeDefinitions.GetNextTier(currentTierName)
@@ -924,7 +929,7 @@ function UpgradeService.Client:GetUpgradeInfo(player: Player, objectId: string)
 	local nextIncome = nextDefinition.Stats.MoneyPerSecond or 0
 	local nextTier = currentTier + 1
 
-	return {
+	local result = {
 		CanUpgrade = true,
 		UpgradeCost = upgradeCost,
 		CurrentIncome = currentIncome,
@@ -934,6 +939,11 @@ function UpgradeService.Client:GetUpgradeInfo(player: Player, objectId: string)
 		NextTierName = nextTierName,
 		CurrentTierName = currentTierName,
 	}
+
+	print("[DEBUG SERVER] Returning upgrade info:", result)
+	print("[DEBUG SERVER] UpgradeCost:", upgradeCost, "CurrentIncome:", currentIncome, "NextIncome:", nextIncome)
+
+	return result
 end
 
 --[[────────────────────────────────────────────────────────────────────────

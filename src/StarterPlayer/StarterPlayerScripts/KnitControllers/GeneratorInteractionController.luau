@@ -311,11 +311,16 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 		local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
 		if upgradeButton then
 			-- Obtener información del upgrade desde el servidor
+			print("[DEBUG] Calling GetUpgradeInfo for objectId:", objectId)
 			local success, upgradeInfo = pcall(function()
 				return UpgradeService:GetUpgradeInfo(objectId)
 			end)
 
+			print("[DEBUG] GetUpgradeInfo success:", success)
+			print("[DEBUG] upgradeInfo:", upgradeInfo)
+
 			if success and upgradeInfo then
+				print("[DEBUG] upgradeInfo.CanUpgrade:", upgradeInfo.CanUpgrade)
 				if not upgradeInfo.CanUpgrade then
 					-- Max tier alcanzado
 					upgradeButton.Text = "🏆 MAX TIER REACHED"
@@ -325,13 +330,16 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 					-- Mostrar costo y beneficio del upgrade
 					local costText = string.format("$%d", upgradeInfo.UpgradeCost)
 					local benefitText = string.format("$%d/s → $%d/s", upgradeInfo.CurrentIncome, upgradeInfo.NextIncome)
-					upgradeButton.Text = string.format("⬆️ Upgrade to Tier %d\n💰 Cost: %s\n📈 Income: %s",
+					local buttonText = string.format("⬆️ Upgrade to Tier %d\n💰 Cost: %s\n📈 Income: %s",
 						upgradeInfo.NextTier, costText, benefitText)
+					print("[DEBUG] Setting button text to:", buttonText)
+					upgradeButton.Text = buttonText
 					upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 					upgradeButton.TextColor3 = Color3.new(1, 1, 1)
 				end
 			else
 				-- Fallback si no se puede obtener info del servidor
+				print("[DEBUG] Falling back to default text. Error:", upgradeInfo)
 				upgradeButton.Text = "⬆️ Upgrade Generator"
 				upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 				upgradeButton.TextColor3 = Color3.new(1, 1, 1)
