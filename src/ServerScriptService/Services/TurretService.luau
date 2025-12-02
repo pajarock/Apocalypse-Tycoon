@@ -883,7 +883,7 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 		local billboard = model:FindFirstChild("NameTag", true)
 		print("[TurretService] Billboard found:", billboard ~= nil)
 		if billboard and billboard:IsA("BillboardGui") then
-			local label = billboard:FindFirstChild("Label")
+			local label = billboard:FindFirstChild("TextLabel")
 			print("[TurretService] Label found:", label ~= nil)
 			if label and label:IsA("TextLabel") then
 				print("[TurretService] Old text:", label.Text)
