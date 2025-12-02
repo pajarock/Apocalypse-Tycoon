@@ -230,7 +230,7 @@ UpgradeDefinitions.RepairStation = {
 -- MACHINE GUN T1 - Entry-level rapid-fire turret
 UpgradeDefinitions.MachineGunT1 = {
 	Name = "MachineGunT1",
-	DisplayName = "🔫 Machine Gun T1",
+	DisplayName = "Machine Gun T1",
 	Description = "Rapid-fire turret. Best value for early defense.",
 
 	Size = Vector3.new(6, 8, 6),
@@ -252,7 +252,7 @@ UpgradeDefinitions.MachineGunT1 = {
 -- LASER TURRET T1 - Continuous beam weapon
 UpgradeDefinitions.LaserT1 = {
 	Name = "LaserT1",
-	DisplayName = "⚡ Laser Turret T1",
+	DisplayName = "Laser Turret T1",
 	Description = "Continuous beam weapon. Effective vs Large meteors.",
 
 	Size = Vector3.new(6, 10, 6),
@@ -274,7 +274,7 @@ UpgradeDefinitions.LaserT1 = {
 -- MISSILE LAUNCHER T1 - AOE explosive missiles
 UpgradeDefinitions.MissileT1 = {
 	Name = "MissileT1",
-	DisplayName = "🚀 Missile Launcher T1",
+	DisplayName = "Missile Launcher T1",
 	Description = "AOE explosive missiles. Intercepts meteor clusters.",
 
 	Size = Vector3.new(8, 10, 8),
@@ -297,7 +297,7 @@ UpgradeDefinitions.MissileT1 = {
 -- TESLA COIL T1 - Chain lightning
 UpgradeDefinitions.TeslaT1 = {
 	Name = "TeslaT1",
-	DisplayName = "⚡ Tesla Coil T1",
+	DisplayName = "Tesla Coil T1",
 	Description = "Chain lightning. Hits 2 targets simultaneously.",
 
 	Size = Vector3.new(7, 12, 7),
@@ -321,7 +321,7 @@ UpgradeDefinitions.TeslaT1 = {
 -- SHIELD DOME - Emergency protection structure
 UpgradeDefinitions.ShieldDome = {
 	Name = "ShieldDome",
-	DisplayName = "🛡️ Shield Dome",
+	DisplayName = "Shield Dome",
 	Description = "Emergency protection. Auto-activates when base HP < 30%.",
 
 	Size = Vector3.new(12, 8, 12),

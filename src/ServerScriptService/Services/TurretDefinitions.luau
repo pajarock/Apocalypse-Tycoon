@@ -82,7 +82,7 @@ local TurretDefinitions = {}
 -- MACHINE GUN T1
 TurretDefinitions.MachineGunT1 = {
 	Name = "MachineGunT1",
-	DisplayName = "🔫 Machine Gun T1",
+	DisplayName = "Machine Gun T1",
 	Description = "Rapid-fire turret. Best value for early defense.",
 	Tier = 1,
 
@@ -108,7 +108,7 @@ TurretDefinitions.MachineGunT1 = {
 -- MACHINE GUN T2
 TurretDefinitions.MachineGunT2 = {
 	Name = "MachineGunT2",
-	DisplayName = "🔫 Machine Gun T2",
+	DisplayName = "Machine Gun T2",
 	Description = "Improved fire rate and damage. Reliable mid-game defense.",
 	Tier = 2,
 
@@ -134,7 +134,7 @@ TurretDefinitions.MachineGunT2 = {
 -- MACHINE GUN T3
 TurretDefinitions.MachineGunT3 = {
 	Name = "MachineGunT3",
-	DisplayName = "🔫 Machine Gun T3",
+	DisplayName = "Machine Gun T3",
 	Description = "High-velocity rounds. Shreds normal meteors.",
 	Tier = 3,
 
@@ -160,7 +160,7 @@ TurretDefinitions.MachineGunT3 = {
 -- MACHINE GUN T4
 TurretDefinitions.MachineGunT4 = {
 	Name = "MachineGunT4",
-	DisplayName = "🔫 Machine Gun T4",
+	DisplayName = "Machine Gun T4",
 	Description = "Armor-piercing rounds. Devastating DPS.",
 	Tier = 4,
 
@@ -186,7 +186,7 @@ TurretDefinitions.MachineGunT4 = {
 -- MACHINE GUN T5
 TurretDefinitions.MachineGunT5 = {
 	Name = "MachineGunT5",
-	DisplayName = "🔫 Machine Gun T5 MAX",
+	DisplayName = "Machine Gun T5 MAX",
 	Description = "Ultimate rapid-fire cannon. MAXIMUM TIER.",
 	Tier = 5,
 
@@ -219,7 +219,7 @@ TurretDefinitions.MachineGunT5 = {
 -- LASER T1
 TurretDefinitions.LaserT1 = {
 	Name = "LaserT1",
-	DisplayName = "⚡ Laser Turret T1",
+	DisplayName = "Laser Turret T1",
 	Description = "Continuous beam weapon. Effective vs Large meteors.",
 	Tier = 1,
 
@@ -245,7 +245,7 @@ TurretDefinitions.LaserT1 = {
 -- LASER T2
 TurretDefinitions.LaserT2 = {
 	Name = "LaserT2",
-	DisplayName = "⚡ Laser Turret T2",
+	DisplayName = "Laser Turret T2",
 	Description = "Enhanced beam focus. Melts armor quickly.",
 	Tier = 2,
 
@@ -271,7 +271,7 @@ TurretDefinitions.LaserT2 = {
 -- LASER T3
 TurretDefinitions.LaserT3 = {
 	Name = "LaserT3",
-	DisplayName = "⚡ Laser Turret T3",
+	DisplayName = "Laser Turret T3",
 	Description = "Superheated beam. Vaporizes large threats.",
 	Tier = 3,
 
@@ -297,7 +297,7 @@ TurretDefinitions.LaserT3 = {
 -- LASER T4
 TurretDefinitions.LaserT4 = {
 	Name = "LaserT4",
-	DisplayName = "⚡ Laser Turret T4",
+	DisplayName = "Laser Turret T4",
 	Description = "Plasma-enhanced beam. Unstoppable damage.",
 	Tier = 4,
 
@@ -323,7 +323,7 @@ TurretDefinitions.LaserT4 = {
 -- LASER T5
 TurretDefinitions.LaserT5 = {
 	Name = "LaserT5",
-	DisplayName = "⚡ Laser Turret T5 MAX",
+	DisplayName = "Laser Turret T5 MAX",
 	Description = "Ultimate beam cannon. Nothing survives. MAXIMUM TIER.",
 	Tier = 5,
 
@@ -356,7 +356,7 @@ TurretDefinitions.LaserT5 = {
 -- MISSILE T1
 TurretDefinitions.MissileT1 = {
 	Name = "MissileT1",
-	DisplayName = "🚀 Missile Launcher T1",
+	DisplayName = "Missile Launcher T1",
 	Description = "AOE explosive missiles. Intercepts meteor clusters.",
 	Tier = 1,
 
@@ -383,7 +383,7 @@ TurretDefinitions.MissileT1 = {
 -- MISSILE T2
 TurretDefinitions.MissileT2 = {
 	Name = "MissileT2",
-	DisplayName = "🚀 Missile Launcher T2",
+	DisplayName = "Missile Launcher T2",
 	Description = "Faster reload. Wider blast radius.",
 	Tier = 2,
 
@@ -410,7 +410,7 @@ TurretDefinitions.MissileT2 = {
 -- MISSILE T3
 TurretDefinitions.MissileT3 = {
 	Name = "MissileT3",
-	DisplayName = "🚀 Missile Launcher T3",
+	DisplayName = "Missile Launcher T3",
 	Description = "Cluster warheads. Devastates meteor swarms.",
 	Tier = 3,
 
@@ -437,7 +437,7 @@ TurretDefinitions.MissileT3 = {
 -- MISSILE T4
 TurretDefinitions.MissileT4 = {
 	Name = "MissileT4",
-	DisplayName = "🚀 Missile Launcher T4",
+	DisplayName = "Missile Launcher T4",
 	Description = "Tactical nuke missiles. Massive area denial.",
 	Tier = 4,
 
@@ -464,7 +464,7 @@ TurretDefinitions.MissileT4 = {
 -- MISSILE T5
 TurretDefinitions.MissileT5 = {
 	Name = "MissileT5",
-	DisplayName = "🚀 Missile Launcher T5 MAX",
+	DisplayName = "Missile Launcher T5 MAX",
 	Description = "ICBM-class explosives. Total annihilation. MAXIMUM TIER.",
 	Tier = 5,
 
@@ -498,7 +498,7 @@ TurretDefinitions.MissileT5 = {
 -- TESLA T1
 TurretDefinitions.TeslaT1 = {
 	Name = "TeslaT1",
-	DisplayName = "⚡ Tesla Coil T1",
+	DisplayName = "Tesla Coil T1",
 	Description = "Chain lightning. Hits 2 targets simultaneously.",
 	Tier = 1,
 
@@ -526,7 +526,7 @@ TurretDefinitions.TeslaT1 = {
 -- TESLA T2
 TurretDefinitions.TeslaT2 = {
 	Name = "TeslaT2",
-	DisplayName = "⚡ Tesla Coil T2",
+	DisplayName = "Tesla Coil T2",
 	Description = "Amplified voltage. Chains to 3 targets.",
 	Tier = 2,
 
@@ -554,7 +554,7 @@ TurretDefinitions.TeslaT2 = {
 -- TESLA T3
 TurretDefinitions.TeslaT3 = {
 	Name = "TeslaT3",
-	DisplayName = "⚡ Tesla Coil T3",
+	DisplayName = "Tesla Coil T3",
 	Description = "Overcharged arcs. 4-target chain reaction.",
 	Tier = 3,
 
@@ -582,7 +582,7 @@ TurretDefinitions.TeslaT3 = {
 -- TESLA T4
 TurretDefinitions.TeslaT4 = {
 	Name = "TeslaT4",
-	DisplayName = "⚡ Tesla Coil T4",
+	DisplayName = "Tesla Coil T4",
 	Description = "Plasma arcs. 5-target devastation.",
 	Tier = 4,
 
@@ -610,7 +610,7 @@ TurretDefinitions.TeslaT4 = {
 -- TESLA T5
 TurretDefinitions.TeslaT5 = {
 	Name = "TeslaT5",
-	DisplayName = "⚡ Tesla Coil T5 MAX",
+	DisplayName = "Tesla Coil T5 MAX",
 	Description = "Infinite energy coil. 6-target lightning storm. MAXIMUM TIER.",
 	Tier = 5,
 
@@ -644,7 +644,7 @@ TurretDefinitions.TeslaT5 = {
 
 TurretDefinitions.ShieldDome = {
 	Name = "ShieldDome",
-	DisplayName = "🛡️ Shield Dome",
+	DisplayName = "Shield Dome",
 	Description = "Emergency protection. Auto-activates when base HP < 30%.",
 	Tier = 0,  -- Estructura especial, no tiene tiers
 
