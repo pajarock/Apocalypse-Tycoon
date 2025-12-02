@@ -497,45 +497,151 @@ end
 	@param newTier - Nuevo tier
 ]]
 function TurretVFXManager:PlayUpgradeEffect(model: Model, oldTier: number, newTier: number)
+	print(string.format("[TurretVFXManager] 🎨 PlayUpgradeEffect CALLED: T%d → T%d", oldTier, newTier))
+
 	local mainPart = model:FindFirstChild("MainPart") :: Part?
 	if not mainPart then
+		warn("[TurretVFXManager] ❌ PlayUpgradeEffect: MainPart not found!")
 		return
 	end
 
+	print("[TurretVFXManager] ✅ MainPart found, creating upgrade effects...")
+
 	local position = mainPart.Position
 
-	-- Efecto de luz ascendente
-	local beam = Instance.new("Part")
-	beam.Shape = Enum.PartType.Cylinder
-	beam.Material = Enum.Material.Neon
-	beam.Color = Color3.fromRGB(100, 255, 100)
-	beam.Size = Vector3.new(0.1, 8, 8)
-	beam.Transparency = 0.5
-	beam.Anchored = true
-	beam.CanCollide = false
-	beam.CFrame = CFrame.new(position) * CFrame.Angles(0, 0, math.rad(90))
-	beam.Parent = workspace
+	-- Reproducir sonido de upgrade
+	local upgradeSound = Instance.new("Sound")
+	upgradeSound.SoundId = UPGRADE_SOUND_ID
+	upgradeSound.Volume = 0.8
+	upgradeSound.Parent = mainPart
+	upgradeSound:Play()
+	Debris:AddItem(upgradeSound, 3)
 
-	-- Particles de upgrade
-	local particles = Instance.new("ParticleEmitter")
-	particles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	particles.Color = ColorSequence.new(Color3.fromRGB(100, 255, 100))
-	particles.Size = NumberSequence.new(1, 0)
-	particles.Lifetime = NumberRange.new(1, 2)
-	particles.Rate = 100
-	particles.SpreadAngle = Vector2.new(180, 180)
-	particles.Speed = NumberRange.new(10, 20)
-	particles.Parent = mainPart
+	-- Crear flash de luz DORADO
+	local flashLight = Instance.new("PointLight")
+	flashLight.Brightness = 10
+	flashLight.Range = 30
+	flashLight.Color = Color3.fromRGB(255, 215, 0) -- Dorado
+	flashLight.Parent = mainPart
 
-	-- Detener después de 0.5s
-	task.delay(0.5, function()
-		if particles then
-			particles.Enabled = false
-		end
-	end)
+	-- Fade out del flash
+	local flashTween = TweenService:Create(
+		flashLight,
+		TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ Brightness = 0 }
+	)
+	flashTween:Play()
+	Debris:AddItem(flashLight, 2)
 
-	-- Destruir beam
-	Debris:AddItem(beam, 1)
+	-- Crear partículas DORADAS explosivas
+	local upgradeParticles = Instance.new("ParticleEmitter")
+	upgradeParticles.Name = "UpgradeParticles"
+	upgradeParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	upgradeParticles.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),   -- Dorado
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 150)), -- Amarillo claro
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 0)),    -- Dorado oscuro
+	})
+	upgradeParticles.Rate = 0  -- Usaremos Emit() para burst
+	upgradeParticles.Lifetime = NumberRange.new(1, 1.5)
+	upgradeParticles.Speed = NumberRange.new(10, 20)
+	upgradeParticles.SpreadAngle = Vector2.new(180, 180)
+	upgradeParticles.Rotation = NumberRange.new(0, 360)
+	upgradeParticles.RotSpeed = NumberRange.new(-100, 100)
+	upgradeParticles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(0.5, 1),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	upgradeParticles.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.7, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	upgradeParticles.Parent = mainPart
+
+	-- Burst de partículas DORADAS
+	upgradeParticles:Emit(50)
+
+	-- Limpiar partículas después
+	Debris:AddItem(upgradeParticles, 2)
+
+	-- Crear anillos de energía expandiéndose (3 anillos)
+	for i = 1, 3 do
+		task.delay(i * 0.2, function()
+			local ring = Instance.new("Part")
+			ring.Name = "UpgradeRing"
+			ring.Size = Vector3.new(0.5, 0.5, 0.5)
+			ring.Shape = Enum.PartType.Ball
+			ring.Material = Enum.Material.Neon
+			ring.Color = Color3.fromRGB(255, 215, 0)  -- Dorado
+			ring.Transparency = 0.3
+			ring.Anchored = true
+			ring.CanCollide = false
+			ring.Position = position
+			ring.Parent = workspace
+
+			-- Expandir el anillo
+			local ringTween = TweenService:Create(
+				ring,
+				TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{
+					Size = Vector3.new(15, 15, 15),
+					Transparency = 1
+				}
+			)
+			ringTween:Play()
+			Debris:AddItem(ring, 1)
+		end)
+	end
+
+	-- Mensaje flotante de upgrade
+	local upgradeBillboard = Instance.new("BillboardGui")
+	upgradeBillboard.Size = UDim2.new(8, 0, 2, 0)
+	upgradeBillboard.StudsOffset = Vector3.new(0, 6, 0)
+	upgradeBillboard.AlwaysOnTop = true
+	upgradeBillboard.MaxDistance = 100
+	upgradeBillboard.Adornee = mainPart
+
+	-- Parent debe ser workspace o Effects folder
+	local effectsFolder = workspace:FindFirstChild("Effects")
+	if not effectsFolder then
+		effectsFolder = Instance.new("Folder")
+		effectsFolder.Name = "Effects"
+		effectsFolder.Parent = workspace
+	end
+	upgradeBillboard.Parent = effectsFolder
+
+	local upgradeLabel = Instance.new("TextLabel")
+	upgradeLabel.Size = UDim2.new(1, 0, 1, 0)
+	upgradeLabel.BackgroundTransparency = 1
+	upgradeLabel.Text = string.format("✨ UPGRADED TO TIER %d! ✨", newTier)
+	upgradeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+	upgradeLabel.TextStrokeTransparency = 0
+	upgradeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+	upgradeLabel.Font = Enum.Font.GothamBold
+	upgradeLabel.TextScaled = true
+	upgradeLabel.Parent = upgradeBillboard
+
+	-- Animar el texto flotando y desvaneciéndose
+	local textTween = TweenService:Create(
+		upgradeBillboard,
+		TweenInfo.new(2.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ StudsOffset = Vector3.new(0, 10, 0) }
+	)
+	textTween:Play()
+
+	-- Fade out del texto
+	local fadeTween = TweenService:Create(
+		upgradeLabel,
+		TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{ TextTransparency = 1, TextStrokeTransparency = 1 }
+	)
+	fadeTween:Play()
+
+	Debris:AddItem(upgradeBillboard, 3)
+
+	print(string.format("[TurretVFXManager] ✨ Upgrade effect complete: T%d → T%d", oldTier, newTier))
 end
 
 --[[────────────────────────────────────────────────────────────────────────

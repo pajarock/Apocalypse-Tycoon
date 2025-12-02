@@ -87,7 +87,7 @@ TurretDefinitions.MachineGunT1 = {
 	Tier = 1,
 
 	Size = Vector3.new(6, 8, 6),
-	Color = Color3.fromRGB(120, 120, 140),  -- Gris básico (T1)
+	Color = Color3.fromRGB(80, 80, 100),  -- Gris oscuro (T1)
 	Material = Enum.Material.Neon,
 
 	Cost = 5000,
@@ -113,7 +113,7 @@ TurretDefinitions.MachineGunT2 = {
 	Tier = 2,
 
 	Size = Vector3.new(7, 9, 7),
-	Color = Color3.fromRGB(140, 140, 160),  -- Gris azulado (T2)
+	Color = Color3.fromRGB(50, 150, 255),  -- Azul eléctrico (T2)
 	Material = Enum.Material.Neon,
 
 	Cost = 20000,
@@ -139,7 +139,7 @@ TurretDefinitions.MachineGunT3 = {
 	Tier = 3,
 
 	Size = Vector3.new(8, 10, 8),
-	Color = Color3.fromRGB(160, 160, 180),  -- Gris plateado (T3)
+	Color = Color3.fromRGB(200, 50, 255),  -- Púrpura brillante (T3)
 	Material = Enum.Material.Neon,
 
 	Cost = 80000,
@@ -165,7 +165,7 @@ TurretDefinitions.MachineGunT4 = {
 	Tier = 4,
 
 	Size = Vector3.new(9, 11, 9),
-	Color = Color3.fromRGB(180, 190, 210),  -- Gris brillante con azul (T4)
+	Color = Color3.fromRGB(255, 180, 0),  -- Naranja/Dorado (T4)
 	Material = Enum.Material.Neon,
 
 	Cost = 350000,
@@ -191,7 +191,7 @@ TurretDefinitions.MachineGunT5 = {
 	Tier = 5,
 
 	Size = Vector3.new(10, 12, 10),
-	Color = Color3.fromRGB(200, 210, 230),  -- Blanco brillante (T5 MAX)
+	Color = Color3.fromRGB(255, 255, 255),  -- Blanco puro (T5 MAX)
 	Material = Enum.Material.Neon,
 
 	Cost = 1500000,
