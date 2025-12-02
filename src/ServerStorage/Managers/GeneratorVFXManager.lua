@@ -64,8 +64,7 @@ local CASH_REGISTER_VOLUME = 0.5 -- Volumen del cash register
 local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
 
 -- PHASE 4 Constants
-local UPGRADE_SOUND_ID = "rbxassetid://5951069970" -- Sonido de upgrade mecánico/maquinaria (principal)
-local UPGRADE_SOUND_BACKUP_ID = "rbxassetid://3264793480" -- Sonido de respaldo (power up)
+local UPGRADE_SOUND_ID = "rbxassetid://85188753846582" -- Sonido de upgrade (reutilizando placement por ahora)
 local UPGRADE_ANIMATION_DURATION = 1.5 -- Duración de animación de upgrade
 local UPGRADE_PARTICLE_COUNT = 50 -- Cantidad de partículas de upgrade
 
@@ -636,52 +635,13 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 
 	print("[GeneratorVFXManager] ✅ MainPart found, creating upgrade effects...")
 
-	-- Reproducir sonido de upgrade (con sistema de respaldo)
+	-- Reproducir sonido de upgrade
 	local upgradeSound = Instance.new("Sound")
 	upgradeSound.SoundId = UPGRADE_SOUND_ID
-	upgradeSound.Volume = 1 -- Volumen máximo para asegurar que se escuche
+	upgradeSound.Volume = 0.8
 	upgradeSound.Parent = mainPart
-
-	print(string.format("[GeneratorVFXManager] 🔊 Attempting to play upgrade sound (ID: %s)...", UPGRADE_SOUND_ID))
-
-	-- Esperar a que el sonido cargue antes de reproducir
-	task.spawn(function()
-		local loaded = false
-		local timeoutTime = tick() + 2 -- Timeout de 2 segundos
-
-		-- Intentar cargar el sonido principal
-		while not loaded and tick() < timeoutTime do
-			if upgradeSound.IsLoaded then
-				loaded = true
-				break
-			end
-			task.wait(0.1)
-		end
-
-		if loaded then
-			print("[GeneratorVFXManager] ✅ Primary sound loaded successfully!")
-			upgradeSound:Play()
-
-			-- Verificar que está reproduciendo
-			task.wait(0.1)
-			if upgradeSound.IsPlaying then
-				print("[GeneratorVFXManager] 🎵 Sound is playing!")
-			else
-				warn("[GeneratorVFXManager] ⚠️ Sound loaded but not playing")
-			end
-		else
-			warn("[GeneratorVFXManager] ⚠️ Primary sound failed to load, trying backup...")
-
-			-- Probar con sonido de respaldo
-			upgradeSound.SoundId = UPGRADE_SOUND_BACKUP_ID
-			task.wait(0.5) -- Esperar un poco para que cargue
-			upgradeSound:Play()
-
-			print(string.format("[GeneratorVFXManager] 🔄 Using backup sound (ID: %s)", UPGRADE_SOUND_BACKUP_ID))
-		end
-	end)
-
-	Debris:AddItem(upgradeSound, 5) -- Más tiempo para asegurar que termine
+	upgradeSound:Play()
+	Debris:AddItem(upgradeSound, 3)
 
 	-- Crear flash de luz
 	local flashLight = Instance.new("PointLight")
@@ -781,11 +741,11 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	local upgradeLabel = Instance.new("TextLabel")
 	upgradeLabel.Size = UDim2.new(1, 0, 1, 0)
 	upgradeLabel.BackgroundTransparency = 1
-	upgradeLabel.Text = string.format("TIER %d", toTier) -- Texto simplificado
+	upgradeLabel.Text = string.format("✨ UPGRADED TO TIER %d! ✨", toTier)
 	upgradeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
 	upgradeLabel.TextStrokeTransparency = 0
 	upgradeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-	upgradeLabel.Font = Enum.Font.FredokaOne -- Estilo grafiti
+	upgradeLabel.Font = Enum.Font.GothamBold
 	upgradeLabel.TextScaled = true
 	upgradeLabel.Parent = upgradeBillboard
 
