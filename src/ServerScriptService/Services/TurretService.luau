@@ -864,6 +864,22 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 		end
 
 		-- Actualizar BillboardGui label
+		print("[TurretService] 🔍 Searching for BillboardGui...")
+		print("[TurretService] Model children count:", #model:GetChildren())
+
+		-- Listar todos los hijos del modelo para debug
+		for _, child in ipairs(model:GetChildren()) do
+			print("[TurretService]   - Child:", child.Name, "Type:", child.ClassName)
+		end
+
+		-- Listar hijos del PrimaryPart
+		if model.PrimaryPart then
+			print("[TurretService] PrimaryPart children count:", #model.PrimaryPart:GetChildren())
+			for _, child in ipairs(model.PrimaryPart:GetChildren()) do
+				print("[TurretService]   - PrimaryPart child:", child.Name, "Type:", child.ClassName)
+			end
+		end
+
 		local billboard = model:FindFirstChild("NameTag", true)
 		print("[TurretService] Billboard found:", billboard ~= nil)
 		if billboard and billboard:IsA("BillboardGui") then
