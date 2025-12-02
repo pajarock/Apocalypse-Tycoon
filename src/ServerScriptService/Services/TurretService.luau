@@ -846,22 +846,40 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 
 	-- Actualizar modelo visual (cambiar color, label, etc.)
 	local model = turretData.Model
+	print("[TurretService] 🎨 Updating visual model...")
+	print("[TurretService] Model exists:", model ~= nil)
+	print("[TurretService] Model in workspace:", model and model:IsDescendantOf(workspace))
+
 	if model and model:IsDescendantOf(workspace) then
 		-- Actualizar color del mainPart
 		if model.PrimaryPart then
+			print("[TurretService] PrimaryPart found:", model.PrimaryPart.Name)
+			print("[TurretService] New color:", nextDefinition.Color)
 			model.PrimaryPart.Color = nextDefinition.Color
 			-- Actualizar Attribute del tier
 			model.PrimaryPart:SetAttribute("ObjectType", nextTierName)
+			print("[TurretService] ✅ PrimaryPart updated")
+		else
+			warn("[TurretService] ❌ PrimaryPart is nil!")
 		end
 
 		-- Actualizar BillboardGui label
 		local billboard = model:FindFirstChild("TurretLabel", true)
+		print("[TurretService] Billboard found:", billboard ~= nil)
 		if billboard and billboard:IsA("BillboardGui") then
 			local label = billboard:FindFirstChild("Label")
+			print("[TurretService] Label found:", label ~= nil)
 			if label and label:IsA("TextLabel") then
+				print("[TurretService] Old text:", label.Text)
+				print("[TurretService] New text:", nextDefinition.DisplayName)
 				label.Text = nextDefinition.DisplayName
+				print("[TurretService] ✅ Label updated")
 			end
+		else
+			warn("[TurretService] ❌ Billboard not found or not a BillboardGui")
 		end
+	else
+		warn("[TurretService] ❌ Model not found or not in workspace!")
 	end
 
 	print(string.format(
