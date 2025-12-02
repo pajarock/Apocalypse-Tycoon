@@ -44,6 +44,68 @@ local currentTurretInfo: table? = nil
 local mainFrame: Frame? = nil
 
 --[[────────────────────────────────────────────────────────────────────────
+	HELPER FUNCTIONS (deben ir ANTES de ser usadas)
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Crea un botón estándar.
+]]
+local function createButton(name: string, text: string, position: UDim2, color: Color3): TextButton
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Size = UDim2.new(1, 0, 0, 50)
+	button.Position = position
+	button.BackgroundColor3 = color
+	button.BorderSizePixel = 0
+	button.Text = text
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.TextSize = 18
+	button.Font = Enum.Font.GothamBold
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
+
+	return button
+end
+
+--[[
+	Actualiza el UI con la info de la torreta.
+
+	@param info - Tabla con info de la torreta
+]]
+local function updateUI(info: table)
+	-- Actualizar nombre
+	local nameLabel = mainFrame:FindFirstChild("InfoContainer"):FindFirstChild("NameLabel")
+	nameLabel.Text = info.DisplayName
+
+	-- Actualizar stats
+	local statsLabel = mainFrame:FindFirstChild("InfoContainer"):FindFirstChild("StatsLabel")
+	local statsText = string.format(
+		"Damage: %s\nRange: %s studs\nFire Rate: %.2fs\nPriority: %s\n\nCurrent Tier: %s\n%s",
+		tostring(info.Stats.Damage),
+		tostring(info.Stats.Range),
+		info.Stats.FireRate,
+		info.Stats.TargetPriority,
+		info.CurrentTier,
+		info.CanUpgrade and "Can upgrade to: " .. info.NextTier or "MAX TIER"
+	)
+	statsLabel.Text = statsText
+
+	-- Actualizar botón de upgrade
+	local upgradeButton = mainFrame:FindFirstChild("ButtonsContainer"):FindFirstChild("UpgradeButton")
+	if info.CanUpgrade then
+		upgradeButton.Text = string.format("Upgrade to %s ($%d)", info.NextTier, info.UpgradeCost)
+		upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+		upgradeButton.Active = true
+	else
+		upgradeButton.Text = "MAX TIER"
+		upgradeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+		upgradeButton.Active = false
+	end
+end
+
+--[[────────────────────────────────────────────────────────────────────────
 	UI CREATION
 ────────────────────────────────────────────────────────────────────────]]
 
@@ -187,28 +249,6 @@ local function createUI()
 	print("[TurretManagementUI] ✅ UI Created")
 end
 
---[[
-	Crea un botón estándar.
-]]
-local function createButton(name: string, text: string, position: UDim2, color: Color3): TextButton
-	local button = Instance.new("TextButton")
-	button.Name = name
-	button.Size = UDim2.new(1, 0, 0, 50)
-	button.Position = position
-	button.BackgroundColor3 = color
-	button.BorderSizePixel = 0
-	button.Text = text
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.TextSize = 18
-	button.Font = Enum.Font.GothamBold
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = button
-
-	return button
-end
-
 --[[────────────────────────────────────────────────────────────────────────
 	UI LOGIC
 ────────────────────────────────────────────────────────────────────────]]
@@ -272,42 +312,6 @@ function TurretManagementUI.CloseUI()
 	end)
 
 	print("[TurretManagementUI] ✅ Closed")
-end
-
---[[
-	Actualiza el UI con la info de la torreta.
-
-	@param info - Tabla con info de la torreta
-]]
-local function updateUI(info: table)
-	-- Actualizar nombre
-	local nameLabel = mainFrame:FindFirstChild("InfoContainer"):FindFirstChild("NameLabel")
-	nameLabel.Text = info.DisplayName
-
-	-- Actualizar stats
-	local statsLabel = mainFrame:FindFirstChild("InfoContainer"):FindFirstChild("StatsLabel")
-	local statsText = string.format(
-		"Damage: %s\nRange: %s studs\nFire Rate: %.2fs\nPriority: %s\n\nCurrent Tier: %s\n%s",
-		tostring(info.Stats.Damage),
-		tostring(info.Stats.Range),
-		info.Stats.FireRate,
-		info.Stats.TargetPriority,
-		info.CurrentTier,
-		info.CanUpgrade and "Can upgrade to: " .. info.NextTier or "MAX TIER"
-	)
-	statsLabel.Text = statsText
-
-	-- Actualizar botón de upgrade
-	local upgradeButton = mainFrame:FindFirstChild("ButtonsContainer"):FindFirstChild("UpgradeButton")
-	if info.CanUpgrade then
-		upgradeButton.Text = string.format("Upgrade to %s ($%d)", info.NextTier, info.UpgradeCost)
-		upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-		upgradeButton.Active = true
-	else
-		upgradeButton.Text = "MAX TIER"
-		upgradeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-		upgradeButton.Active = false
-	end
 end
 
 --[[────────────────────────────────────────────────────────────────────────
