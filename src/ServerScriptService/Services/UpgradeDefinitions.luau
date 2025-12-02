@@ -223,6 +223,123 @@ UpgradeDefinitions.RepairStation = {
 	IsPlaceable = true,
 } :: UpgradeDefinition
 
+--[[────────────────────────────────────────────────────────────────────────
+	DEFENSE TOWERS (NEW SYSTEM - TIER 1 PLACEABLE)
+────────────────────────────────────────────────────────────────────────]]
+
+-- MACHINE GUN T1 - Entry-level rapid-fire turret
+UpgradeDefinitions.MachineGunT1 = {
+	Name = "MachineGunT1",
+	DisplayName = "Machine Gun T1",
+	Description = "Rapid-fire turret. Best value for early defense.",
+
+	Size = Vector3.new(6, 8, 6),
+	Color = Color3.fromRGB(100, 100, 120),
+	Material = Enum.Material.Metal,
+
+	Cost = 5000,
+
+	Stats = {
+		Damage = 8,
+		Range = 50,
+		FireRate = 0.25,
+	},
+
+	Category = "Defense",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- LASER TURRET T1 - Continuous beam weapon
+UpgradeDefinitions.LaserT1 = {
+	Name = "LaserT1",
+	DisplayName = "Laser Turret T1",
+	Description = "Continuous beam weapon. Effective vs Large meteors.",
+
+	Size = Vector3.new(6, 10, 6),
+	Color = Color3.fromRGB(255, 50, 50),
+	Material = Enum.Material.Neon,
+
+	Cost = 15000,
+
+	Stats = {
+		DPS = 25,
+		Range = 70,
+		FireRate = 0.1,  -- Beam continuo, pero para compatibilidad
+	},
+
+	Category = "Defense",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- MISSILE LAUNCHER T1 - AOE explosive missiles
+UpgradeDefinitions.MissileT1 = {
+	Name = "MissileT1",
+	DisplayName = "Missile Launcher T1",
+	Description = "AOE explosive missiles. Intercepts meteor clusters.",
+
+	Size = Vector3.new(8, 10, 8),
+	Color = Color3.fromRGB(100, 200, 255),
+	Material = Enum.Material.Metal,
+
+	Cost = 40000,
+
+	Stats = {
+		Damage = 80,
+		Range = 80,
+		FireRate = 3.0,
+		AOERadius = 12,
+	},
+
+	Category = "Defense",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- TESLA COIL T1 - Chain lightning
+UpgradeDefinitions.TeslaT1 = {
+	Name = "TeslaT1",
+	DisplayName = "Tesla Coil T1",
+	Description = "Chain lightning. Hits 2 targets simultaneously.",
+
+	Size = Vector3.new(7, 12, 7),
+	Color = Color3.fromRGB(100, 100, 255),
+	Material = Enum.Material.Neon,
+
+	Cost = 100000,
+
+	Stats = {
+		Damage = 35,
+		Range = 60,
+		FireRate = 1.5,
+		MaxChains = 2,
+		ChainRange = 20,
+	},
+
+	Category = "Defense",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
+-- SHIELD DOME - Emergency protection structure
+UpgradeDefinitions.ShieldDome = {
+	Name = "ShieldDome",
+	DisplayName = "Shield Dome",
+	Description = "Emergency protection. Auto-activates when base HP < 30%.",
+
+	Size = Vector3.new(12, 8, 12),
+	Color = Color3.fromRGB(100, 200, 255),
+	Material = Enum.Material.ForceField,
+
+	Cost = 2500000,
+
+	Stats = {
+		DomeHP = 1000,
+		Range = 50,  -- Radio del domo
+		FireRate = 40,  -- Cooldown (reutilizamos FireRate para compatibilidad)
+	},
+
+	Category = "Defense",
+	IsPlaceable = true,
+} :: UpgradeDefinition
+
 --[[------------------------------------------------------------------------
 	HELPER FUNCTIONS
 ------------------------------------------------------------------------]]
