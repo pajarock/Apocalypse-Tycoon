@@ -183,6 +183,29 @@ function TurretService:RegisterTurret(objectId: string, userId: number, model: M
 
 	activeTurrets[objectId] = turretData
 
+	-- Aplicar efectos visuales de construcción y efectos idle
+	local mainPart = model:FindFirstChild("MainPart")
+	if mainPart then
+		local finalPosition = mainPart.Position
+
+		-- Determinar tier del nombre (ej: "MachineGunT2" → tier 2)
+		local tier = 1
+		if string.match(turretName, "T(%d+)") then
+			tier = tonumber(string.match(turretName, "T(%d+)")) or 1
+		end
+
+		-- Animación de construcción (incluye efectos iniciales al terminar)
+		TurretVFXManager:PlayConstructionAnimation(model, finalPosition, turretName)
+
+		-- Aplicar efectos idle después de la animación
+		task.delay(1, function() -- Esperar a que termine la construcción
+			if model and model.Parent then
+				TurretVFXManager:ApplyGlowPulse(model, tier)
+				TurretVFXManager:CreateParticles(model, turretName, tier)
+			end
+		end)
+	end
+
 	print(("[TurretService] ✅ Registered %s (Owner: %d)"):format(definition.DisplayName, userId))
 	return true
 end
@@ -841,73 +864,70 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 		return
 	end
 
-	-- Actualizar definition en memoria
+	-- Calcular tiers (oldTier y newTier)
+	local oldTier = 1
+	if string.match(currentTierName, "T(%d+)") then
+		oldTier = tonumber(string.match(currentTierName, "T(%d+)")) or 1
+	end
+
+	local newTier = 1
+	if string.match(nextTierName, "T(%d+)") then
+		newTier = tonumber(string.match(nextTierName, "T(%d+)")) or 1
+	end
+
+	-- Actualizar definition en memoria PRIMERO
 	turretData.Definition = nextDefinition
 
-	-- Actualizar modelo visual (cambiar color, label, etc.)
+	-- Actualizar modelo en workspace
 	local model = turretData.Model
-	print("[TurretService] 🎨 Updating visual model...")
-	print("[TurretService] Model exists:", model ~= nil)
-	print("[TurretService] Model in workspace:", model and model:IsDescendantOf(workspace))
-
 	if model and model:IsDescendantOf(workspace) then
-		-- Actualizar color del mainPart
-		if model.PrimaryPart then
-			print("[TurretService] PrimaryPart found:", model.PrimaryPart.Name)
-			print("[TurretService] New color:", nextDefinition.Color)
-			model.PrimaryPart.Color = nextDefinition.Color
+		local mainPart = model:FindFirstChild("MainPart")
+		if mainPart then
+			-- Actualizar propiedades físicas (COMPLETO, no solo color)
+			mainPart.Size = nextDefinition.Size
+			mainPart.Color = nextDefinition.Color
+			mainPart.Material = nextDefinition.Material
+
+			-- Actualizar highlight
+			local highlight = mainPart:FindFirstChild("Highlight")
+			if highlight then
+				highlight.FillColor = nextDefinition.Color
+			end
+
 			-- Actualizar Attribute del tier
-			model.PrimaryPart:SetAttribute("ObjectType", nextTierName)
-			print("[TurretService] ✅ PrimaryPart updated")
-		else
-			warn("[TurretService] ❌ PrimaryPart is nil!")
-		end
+			mainPart:SetAttribute("ObjectType", nextTierName)
 
-		-- Actualizar BillboardGui label
-		print("[TurretService] 🔍 Searching for BillboardGui...")
-		print("[TurretService] Model children count:", #model:GetChildren())
+			-- Actualizar nombre del modelo
+			model.Name = nextTierName
 
-		-- Listar todos los hijos del modelo para debug
-		for _, child in ipairs(model:GetChildren()) do
-			print("[TurretService]   - Child:", child.Name, "Type:", child.ClassName)
-		end
-
-		-- Listar hijos del PrimaryPart
-		if model.PrimaryPart then
-			print("[TurretService] PrimaryPart children count:", #model.PrimaryPart:GetChildren())
-			for _, child in ipairs(model.PrimaryPart:GetChildren()) do
-				print("[TurretService]   - PrimaryPart child:", child.Name, "Type:", child.ClassName)
+			-- Actualizar billboard name tag
+			local billboard = mainPart:FindFirstChild("NameTag")
+			if billboard then
+				local label = billboard:FindFirstChild("TextLabel")
+				if label then
+					label.Text = nextDefinition.DisplayName
+				end
 			end
-		end
 
-		local billboard = model:FindFirstChild("NameTag", true)
-		print("[TurretService] Billboard found:", billboard ~= nil)
-		if billboard and billboard:IsA("BillboardGui") then
-			local label = billboard:FindFirstChild("TextLabel")
-			print("[TurretService] Label found:", label ~= nil)
-			if label and label:IsA("TextLabel") then
-				print("[TurretService] Old text:", label.Text)
-				print("[TurretService] New text:", nextDefinition.DisplayName)
-				label.Text = nextDefinition.DisplayName
-				print("[TurretService] ✅ Label updated")
-			end
-		else
-			warn("[TurretService] ❌ Billboard not found or not a BillboardGui")
+			-- Mostrar efectos visuales de upgrade
+			TurretVFXManager:ShowUpgradeEffect(model, oldTier, newTier)
+
+			-- Recrear efectos visuales con el nuevo tier
+			TurretVFXManager:RemoveEffects(model)
+			TurretVFXManager:ApplyGlowPulse(model, newTier)
+			TurretVFXManager:CreateParticles(model, nextTierName, newTier)
 		end
-	else
-		warn("[TurretService] ❌ Model not found or not in workspace!")
 	end
 
 	print(string.format(
-		"[TurretService] ✅ Turret upgraded: %s → %s (Cost: $%d, Owner: %d)",
+		"[TurretService] ✅ Turret upgraded: %s → %s (T%d → T%d, Cost: $%d, Owner: %d)",
 		currentTierName,
 		nextTierName,
+		oldTier,
+		newTier,
 		upgradeCost,
 		player.UserId
 	))
-
-	-- TODO: VFX de upgrade
-	-- TurretVFXManager:PlayUpgradeEffect(model, oldTier, newTier)
 end
 
 --[[

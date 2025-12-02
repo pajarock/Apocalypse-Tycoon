@@ -21,6 +21,131 @@
 ]]
 
 local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
+
+-------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------
+
+local CONSTRUCTION_DURATION = 1 -- Segundos de animación de construcción
+local CONSTRUCTION_START_OFFSET = -10 -- Studs bajo tierra al inicio
+local GLOW_PULSE_SPEED = 1 -- Velocidad del pulso (segundos)
+local PARTICLE_RATE = 5 -- Partículas por segundo (más sutil que generadores)
+local PLACEMENT_SOUND_ID = "rbxassetid://9116673678" -- Sonido al colocar
+local UPGRADE_SOUND_ID = "rbxassetid://85188753846582" -- Sonido de upgrade
+
+-------------------------------------------------------------------------
+-- TIER CONFIGURATIONS
+-------------------------------------------------------------------------
+
+type TierConfig = {
+	Name: string,
+	Color: Color3,
+	GlowColor: Color3,
+	ParticleColor: ColorSequence,
+	ParticleTexture: string,
+}
+
+-- Configuración visual por tier (T1 → T5, progresivamente más dramático)
+local TIER_CONFIGS: {[number]: TierConfig} = {
+	-- Tier 1: Gris básico
+	[1] = {
+		Name = "Basic",
+		Color = Color3.fromRGB(120, 120, 140),
+		GlowColor = Color3.fromRGB(150, 150, 180),
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 180, 200)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 100, 120)),
+		}),
+		ParticleTexture = "rbxasset://textures/particles/smoke_main.dds",
+	},
+
+	-- Tier 2: Gris azulado
+	[2] = {
+		Name = "Advanced",
+		Color = Color3.fromRGB(140, 140, 160),
+		GlowColor = Color3.fromRGB(170, 180, 200),
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 210, 230)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 130, 160)),
+		}),
+		ParticleTexture = "rbxasset://textures/particles/smoke_main.dds",
+	},
+
+	-- Tier 3: Gris plateado
+	[3] = {
+		Name = "Elite",
+		Color = Color3.fromRGB(160, 160, 180),
+		GlowColor = Color3.fromRGB(200, 210, 230),
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 230, 250)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 150, 180)),
+		}),
+		ParticleTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	},
+
+	-- Tier 4: Gris brillante con tinte azul
+	[4] = {
+		Name = "Supreme",
+		Color = Color3.fromRGB(180, 190, 210),
+		GlowColor = Color3.fromRGB(220, 230, 255),
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 245, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 170, 200)),
+		}),
+		ParticleTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	},
+
+	-- Tier 5: Blanco brillante (MAX)
+	[5] = {
+		Name = "MAX",
+		Color = Color3.fromRGB(200, 210, 230),
+		GlowColor = Color3.fromRGB(255, 255, 255),
+		ParticleColor = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 190, 220)),
+		}),
+		ParticleTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	},
+}
+
+-- Configuración de partículas por tipo de torreta
+local TURRET_TYPE_PARTICLES = {
+	MachineGun = {
+		Texture = "rbxasset://textures/particles/smoke_main.dds",
+		Color = ColorSequence.new(Color3.fromRGB(150, 150, 150)),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(1, 3),
+	},
+	Laser = {
+		Texture = "rbxasset://textures/particles/sparkles_main.dds",
+		Color = ColorSequence.new(Color3.fromRGB(255, 100, 100)),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(2, 4),
+	},
+	Missile = {
+		Texture = "rbxasset://textures/particles/fire_main.dds",
+		Color = ColorSequence.new(Color3.fromRGB(255, 150, 50)),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(1, 2),
+	},
+	Tesla = {
+		Texture = "rbxasset://textures/particles/sparkles_main.dds",
+		Color = ColorSequence.new(Color3.fromRGB(100, 150, 255)),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(3, 5),
+	},
+	ShieldDome = {
+		Texture = "rbxasset://textures/particles/sparkles_main.dds",
+		Color = ColorSequence.new(Color3.fromRGB(100, 200, 255)),
+		EmissionDirection = Enum.NormalId.Top,
+		Speed = NumberRange.new(1, 2),
+	},
+}
+
+-------------------------------------------------------------------------
+-- MODULE
+-------------------------------------------------------------------------
 
 local TurretVFXManager = {}
 
@@ -411,6 +536,263 @@ function TurretVFXManager:PlayUpgradeEffect(model: Model, oldTier: number, newTi
 
 	-- Destruir beam
 	Debris:AddItem(beam, 1)
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	CONSTRUCTION & PLACEMENT SYSTEM
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Anima la construcción de una torreta (aparece desde abajo).
+
+	@param model - Modelo de la torreta
+	@param finalPosition - Posición final donde debe quedar
+	@param turretName - Nombre de la torreta (ej: "MachineGunT1")
+]]
+function TurretVFXManager:PlayConstructionAnimation(model: Model, finalPosition: Vector3, turretName: string)
+	-- Obtener PrimaryPart o MainPart
+	local primaryPart = model.PrimaryPart or model:FindFirstChild("MainPart")
+	if not primaryPart then
+		warn("[TurretVFXManager] No PrimaryPart or MainPart found for construction animation")
+		return
+	end
+
+	-- Posición inicial (bajo tierra)
+	local startPosition = finalPosition + Vector3.new(0, CONSTRUCTION_START_OFFSET, 0)
+
+	-- Mover a posición inicial
+	if model.PrimaryPart then
+		model:SetPrimaryPartCFrame(CFrame.new(startPosition))
+	else
+		primaryPart.Position = startPosition
+	end
+
+	-- Reproducir sonido de placement
+	local placementSound = Instance.new("Sound")
+	placementSound.SoundId = PLACEMENT_SOUND_ID
+	placementSound.Volume = 0.7
+	placementSound.Parent = primaryPart
+	placementSound:Play()
+	Debris:AddItem(placementSound, 3)
+
+	-- Crear partículas temporales de construcción (polvo gris)
+	local constructionParticles = Instance.new("ParticleEmitter")
+	constructionParticles.Name = "ConstructionParticles"
+	constructionParticles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	constructionParticles.Color = ColorSequence.new(Color3.fromRGB(100, 100, 100))
+	constructionParticles.Rate = 50
+	constructionParticles.Lifetime = NumberRange.new(0.5, 1)
+	constructionParticles.Speed = NumberRange.new(5, 10)
+	constructionParticles.SpreadAngle = Vector2.new(180, 180)
+	constructionParticles.EmissionDirection = Enum.NormalId.Top
+	constructionParticles.Parent = primaryPart
+
+	-- Tween de construcción
+	local tweenInfo = TweenInfo.new(
+		CONSTRUCTION_DURATION,
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.Out
+	)
+
+	local tween
+	if model.PrimaryPart then
+		tween = TweenService:Create(
+			model.PrimaryPart,
+			tweenInfo,
+			{ CFrame = CFrame.new(finalPosition) }
+		)
+	else
+		tween = TweenService:Create(
+			primaryPart,
+			tweenInfo,
+			{ Position = finalPosition }
+		)
+	end
+
+	tween:Play()
+
+	-- Limpiar partículas de construcción después de la animación
+	task.delay(CONSTRUCTION_DURATION, function()
+		constructionParticles:Destroy()
+
+		-- Reproducir sonido de "clank" al terminar
+		local clankSound = Instance.new("Sound")
+		clankSound.SoundId = "rbxassetid://3765689841"
+		clankSound.Volume = 0.6
+		clankSound.Parent = primaryPart
+		clankSound:Play()
+		Debris:AddItem(clankSound, 2)
+	end)
+
+	print("[TurretVFXManager] Construction animation started for", turretName)
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	IDLE VFX SYSTEM
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Aplica un efecto de glow pulsante al MainPart de la torreta.
+
+	@param model - Modelo de la torreta
+	@param tier - Tier de la torreta (1-5)
+]]
+function TurretVFXManager:ApplyGlowPulse(model: Model, tier: number)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		warn("[TurretVFXManager] MainPart not found in turret model")
+		return
+	end
+
+	local tierConfig = TIER_CONFIGS[tier] or TIER_CONFIGS[1]
+
+	-- Aplicar material Neon
+	mainPart.Material = Enum.Material.Neon
+	mainPart.Color = tierConfig.Color
+
+	-- Crear PointLight para el glow (si no existe ya)
+	local existingLight = mainPart:FindFirstChild("TurretGlow") :: PointLight?
+	if not existingLight then
+		local pointLight = Instance.new("PointLight")
+		pointLight.Name = "TurretGlow"
+		pointLight.Color = tierConfig.GlowColor
+		pointLight.Brightness = 2
+		pointLight.Range = 12
+		pointLight.Parent = mainPart
+
+		-- Animación de pulso infinita
+		local pulseTween = TweenService:Create(
+			pointLight,
+			TweenInfo.new(
+				GLOW_PULSE_SPEED,
+				Enum.EasingStyle.Sine,
+				Enum.EasingDirection.InOut,
+				-1, -- Infinite
+				true -- Reverses
+			),
+			{ Brightness = 4 }
+		)
+
+		pulseTween:Play()
+	end
+
+	print(string.format("[TurretVFXManager] Applied glow pulse to Tier %d turret", tier))
+end
+
+--[[
+	Crea un sistema de partículas idle para la torreta.
+
+	Combina el tier (color) con el tipo de torreta (estilo de partículas).
+
+	@param model - Modelo de la torreta
+	@param turretName - Nombre de la torreta (ej: "MachineGunT1")
+	@param tier - Tier de la torreta (1-5)
+	@return ParticleEmitter - El emitter creado
+]]
+function TurretVFXManager:CreateParticles(model: Model, turretName: string, tier: number): ParticleEmitter?
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		warn("[TurretVFXManager] MainPart not found in turret model")
+		return nil
+	end
+
+	-- Verificar si ya existe
+	local existingEmitter = mainPart:FindFirstChild("TurretParticles") :: ParticleEmitter?
+	if existingEmitter then
+		return existingEmitter
+	end
+
+	-- Obtener configuración del tier
+	local tierConfig = TIER_CONFIGS[tier] or TIER_CONFIGS[1]
+
+	-- Determinar tipo de torreta (MachineGun, Laser, Missile, Tesla, ShieldDome)
+	local turretType = "MachineGun" -- Default
+	if string.match(turretName, "^MachineGun") then
+		turretType = "MachineGun"
+	elseif string.match(turretName, "^Laser") then
+		turretType = "Laser"
+	elseif string.match(turretName, "^Missile") then
+		turretType = "Missile"
+	elseif string.match(turretName, "^Tesla") then
+		turretType = "Tesla"
+	elseif turretName == "ShieldDome" then
+		turretType = "ShieldDome"
+	end
+
+	local typeConfig = TURRET_TYPE_PARTICLES[turretType] or TURRET_TYPE_PARTICLES.MachineGun
+
+	-- Crear nuevo emitter
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "TurretParticles"
+	emitter.Texture = typeConfig.Texture
+	emitter.Color = tierConfig.ParticleColor -- Color del tier
+	emitter.Rate = PARTICLE_RATE
+	emitter.Lifetime = NumberRange.new(1, 2)
+	emitter.Speed = typeConfig.Speed
+	emitter.SpreadAngle = Vector2.new(30, 30)
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.RotSpeed = NumberRange.new(-50, 50)
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(0.5, 0.3),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(0.5, 0.6),
+		NumberSequenceKeypoint.new(1, 0.1),
+	})
+	emitter.EmissionDirection = typeConfig.EmissionDirection
+	emitter.VelocityInheritance = 0
+	emitter.Acceleration = Vector3.new(0, 2, 0) -- Flotan hacia arriba sutilmente
+	emitter.Parent = mainPart
+
+	print(string.format("[TurretVFXManager] Created particles for %s Tier %d", turretType, tier))
+
+	return emitter
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	UTILITY FUNCTIONS
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Remueve todos los efectos visuales idle de una torreta.
+
+	IMPORTANTE: Solo remueve efectos idle (luz, partículas),
+	NO remueve ProximityPrompts ni BillboardGui.
+
+	@param model - Modelo de la torreta
+]]
+function TurretVFXManager:RemoveEffects(model: Model)
+	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
+	if not mainPart then
+		return
+	end
+
+	-- Remover luz
+	local light = mainPart:FindFirstChild("TurretGlow")
+	if light then
+		light:Destroy()
+	end
+
+	-- Remover partículas
+	local particles = mainPart:FindFirstChild("TurretParticles")
+	if particles then
+		particles:Destroy()
+	end
+
+	print("[TurretVFXManager] Removed visual effects from turret")
+end
+
+--[[
+	Obtiene la configuración de un tier específico.
+
+	@param tier - Número de tier (1-5)
+	@return TierConfig - Configuración del tier
+]]
+function TurretVFXManager:GetTierConfig(tier: number): TierConfig
+	return TIER_CONFIGS[tier] or TIER_CONFIGS[1]
 end
 
 return TurretVFXManager

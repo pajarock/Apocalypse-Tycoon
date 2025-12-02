@@ -87,8 +87,8 @@ TurretDefinitions.MachineGunT1 = {
 	Tier = 1,
 
 	Size = Vector3.new(6, 8, 6),
-	Color = Color3.fromRGB(100, 100, 120),  -- Gris metálico
-	Material = Enum.Material.Metal,
+	Color = Color3.fromRGB(120, 120, 140),  -- Gris básico (T1)
+	Material = Enum.Material.Neon,
 
 	Cost = 5000,
 
@@ -113,8 +113,8 @@ TurretDefinitions.MachineGunT2 = {
 	Tier = 2,
 
 	Size = Vector3.new(7, 9, 7),
-	Color = Color3.fromRGB(120, 120, 140),
-	Material = Enum.Material.Metal,
+	Color = Color3.fromRGB(140, 140, 160),  -- Gris azulado (T2)
+	Material = Enum.Material.Neon,
 
 	Cost = 20000,
 
@@ -139,8 +139,8 @@ TurretDefinitions.MachineGunT3 = {
 	Tier = 3,
 
 	Size = Vector3.new(8, 10, 8),
-	Color = Color3.fromRGB(140, 140, 160),
-	Material = Enum.Material.Metal,
+	Color = Color3.fromRGB(160, 160, 180),  -- Gris plateado (T3)
+	Material = Enum.Material.Neon,
 
 	Cost = 80000,
 
@@ -165,8 +165,8 @@ TurretDefinitions.MachineGunT4 = {
 	Tier = 4,
 
 	Size = Vector3.new(9, 11, 9),
-	Color = Color3.fromRGB(160, 160, 180),
-	Material = Enum.Material.Metal,
+	Color = Color3.fromRGB(180, 190, 210),  -- Gris brillante con azul (T4)
+	Material = Enum.Material.Neon,
 
 	Cost = 350000,
 
@@ -191,8 +191,8 @@ TurretDefinitions.MachineGunT5 = {
 	Tier = 5,
 
 	Size = Vector3.new(10, 12, 10),
-	Color = Color3.fromRGB(180, 180, 200),
-	Material = Enum.Material.Metal,
+	Color = Color3.fromRGB(200, 210, 230),  -- Blanco brillante (T5 MAX)
+	Material = Enum.Material.Neon,
 
 	Cost = 1500000,
 
@@ -362,7 +362,7 @@ TurretDefinitions.MissileT1 = {
 
 	Size = Vector3.new(8, 10, 8),
 	Color = Color3.fromRGB(100, 200, 255),  -- Azul misil
-	Material = Enum.Material.Metal,
+	Material = Enum.Material.Neon,
 
 	Cost = 40000,
 
@@ -389,7 +389,7 @@ TurretDefinitions.MissileT2 = {
 
 	Size = Vector3.new(9, 11, 9),
 	Color = Color3.fromRGB(120, 210, 255),
-	Material = Enum.Material.Metal,
+	Material = Enum.Material.Neon,
 
 	Cost = 150000,
 
@@ -416,7 +416,7 @@ TurretDefinitions.MissileT3 = {
 
 	Size = Vector3.new(10, 12, 10),
 	Color = Color3.fromRGB(140, 220, 255),
-	Material = Enum.Material.Metal,
+	Material = Enum.Material.Neon,
 
 	Cost = 600000,
 
@@ -443,7 +443,7 @@ TurretDefinitions.MissileT4 = {
 
 	Size = Vector3.new(11, 13, 11),
 	Color = Color3.fromRGB(160, 230, 255),
-	Material = Enum.Material.Metal,
+	Material = Enum.Material.Neon,
 
 	Cost = 2500000,
 
@@ -470,7 +470,7 @@ TurretDefinitions.MissileT5 = {
 
 	Size = Vector3.new(12, 14, 12),
 	Color = Color3.fromRGB(180, 240, 255),
-	Material = Enum.Material.Metal,
+	Material = Enum.Material.Neon,
 
 	Cost = 10000000,
 
