@@ -583,6 +583,13 @@ function BaseOwnershipService.Client:PlaceObject(player: Player, objectType: str
 	)
 
 	if placedObject then
+		-- Agregar ObjectId como Attribute al modelo para identificación client-side
+		if model.PrimaryPart then
+			model.PrimaryPart:SetAttribute("ObjectId", placedObject.ObjectId)
+			model.PrimaryPart:SetAttribute("OwnerId", player.UserId)
+			model.PrimaryPart:SetAttribute("ObjectType", objectType)
+		end
+
 		-- Registrar en UpgradeService para funcionalidad
 		local UpgradeService = require(script.Parent.UpgradeService)
 		UpgradeService:RegisterUpgrade(placedObject.ObjectId, player.UserId, objectType, model)

@@ -71,10 +71,67 @@ local METEOR_FOLDER_NAME = "Meteors"  -- Carpeta donde están los meteoritos
 
 function TurretService:KnitInit()
 	print("[TurretService] Initializing...")
+
+	-- Crear RemoteEvents para interacción client-server
+	local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
+	if not Remotes then
+		Remotes = Instance.new("Folder")
+		Remotes.Name = "Remotes"
+		Remotes.Parent = ReplicatedStorage
+	end
+
+	-- RemoteEvent para upgrade de torretas
+	if not Remotes:FindFirstChild("UpgradeTurret") then
+		local upgradeRemote = Instance.new("RemoteEvent")
+		upgradeRemote.Name = "UpgradeTurret"
+		upgradeRemote.Parent = Remotes
+	end
+
+	-- RemoteEvent para cambiar prioridad de targeting
+	if not Remotes:FindFirstChild("ChangeTurretPriority") then
+		local priorityRemote = Instance.new("RemoteEvent")
+		priorityRemote.Name = "ChangeTurretPriority"
+		priorityRemote.Parent = Remotes
+	end
+
+	-- RemoteEvent para vender torreta
+	if not Remotes:FindFirstChild("SellTurret") then
+		local sellRemote = Instance.new("RemoteEvent")
+		sellRemote.Name = "SellTurret"
+		sellRemote.Parent = Remotes
+	end
+
+	-- RemoteFunction para obtener info de torreta
+	if not Remotes:FindFirstChild("GetTurretInfo") then
+		local infoRemote = Instance.new("RemoteFunction")
+		infoRemote.Name = "GetTurretInfo"
+		infoRemote.Parent = Remotes
+	end
+
+	print("[TurretService] ✅ RemoteEvents created")
 end
 
 function TurretService:KnitStart()
 	print("[TurretService] Starting turret systems...")
+
+	-- Conectar RemoteEvents
+	local Remotes = ReplicatedStorage.Remotes
+
+	Remotes.UpgradeTurret.OnServerEvent:Connect(function(player, objectId)
+		self:HandleUpgradeTurret(player, objectId)
+	end)
+
+	Remotes.ChangeTurretPriority.OnServerEvent:Connect(function(player, objectId, newPriority)
+		self:HandleChangePriority(player, objectId, newPriority)
+	end)
+
+	Remotes.SellTurret.OnServerEvent:Connect(function(player, objectId)
+		self:HandleSellTurret(player, objectId)
+	end)
+
+	Remotes.GetTurretInfo.OnServerInvoke = function(player, objectId)
+		return self:HandleGetTurretInfo(player, objectId)
+	end
 
 	-- Iniciar update loop para targeting y disparo
 	RunService.Heartbeat:Connect(function()
@@ -713,6 +770,248 @@ function TurretService:GetStats(): {[string]: any}
 	end
 
 	return stats
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	REMOTE EVENT HANDLERS - Client-Server Communication
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Maneja solicitud de upgrade de torreta desde el cliente.
+
+	VALIDACIONES:
+	- Jugador es el owner
+	- Torreta puede upgradear
+	- Jugador tiene dinero suficiente
+
+	@param player - Jugador que solicita el upgrade
+	@param objectId - ID de la torreta
+]]
+function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
+	local turretData = activeTurrets[objectId]
+	if not turretData then
+		warn("[TurretService] ❌ Turret not found:", objectId)
+		return
+	end
+
+	-- Validar ownership
+	if turretData.UserId ~= player.UserId then
+		warn("[TurretService] ❌ Player", player.UserId, "is not owner of turret", objectId)
+		return
+	end
+
+	-- Validar que puede upgradear
+	local currentTierName = turretData.Definition.Name
+	local nextTierName = TurretDefinitions.GetNextTier(currentTierName)
+	if not nextTierName then
+		warn("[TurretService] ❌ Turret cannot upgrade (max tier):", currentTierName)
+		return
+	end
+
+	local upgradeCost = TurretDefinitions.GetUpgradeCost(currentTierName)
+	if not upgradeCost then
+		warn("[TurretService] ❌ Cannot get upgrade cost for:", currentTierName)
+		return
+	end
+
+	-- Validar dinero (integración con EconomyModule legacy)
+	local EconomyModule = require(ServerStorage:WaitForChild("Managers"):WaitForChild("EconomyModule"))
+	local playerMoney = EconomyModule.GetMoney(player.UserId)
+	if playerMoney < upgradeCost then
+		warn("[TurretService] ❌ Insufficient funds. Has:", playerMoney, "Needs:", upgradeCost)
+		return
+	end
+
+	-- Cobrar dinero
+	EconomyModule.RemoveMoney(player.UserId, upgradeCost)
+
+	-- Obtener nueva definición
+	local nextDefinition = TurretDefinitions.GetDefinition(nextTierName)
+	if not nextDefinition then
+		-- Refund si falla
+		EconomyModule.AddMoney(player.UserId, upgradeCost)
+		warn("[TurretService] ❌ Next tier definition not found:", nextTierName)
+		return
+	end
+
+	-- Actualizar definition en memoria
+	turretData.Definition = nextDefinition
+
+	-- Actualizar modelo visual (cambiar color, label, etc.)
+	local model = turretData.Model
+	if model and model:IsDescendantOf(workspace) then
+		-- Actualizar color del mainPart
+		if model.PrimaryPart then
+			model.PrimaryPart.Color = nextDefinition.Color
+			-- Actualizar Attribute del tier
+			model.PrimaryPart:SetAttribute("ObjectType", nextTierName)
+		end
+
+		-- Actualizar BillboardGui label
+		local billboard = model:FindFirstChild("TurretLabel", true)
+		if billboard and billboard:IsA("BillboardGui") then
+			local label = billboard:FindFirstChild("Label")
+			if label and label:IsA("TextLabel") then
+				label.Text = nextDefinition.DisplayName
+			end
+		end
+	end
+
+	print(string.format(
+		"[TurretService] ✅ Turret upgraded: %s → %s (Cost: $%d, Owner: %d)",
+		currentTierName,
+		nextTierName,
+		upgradeCost,
+		player.UserId
+	))
+
+	-- TODO: VFX de upgrade
+	-- TurretVFXManager:PlayUpgradeEffect(model, oldTier, newTier)
+end
+
+--[[
+	Maneja cambio de prioridad de targeting.
+
+	@param player - Jugador que solicita el cambio
+	@param objectId - ID de la torreta
+	@param newPriority - Nueva prioridad ("Closest", "Furthest", "Strongest", "Weakest")
+]]
+function TurretService:HandleChangePriority(player: Player, objectId: string, newPriority: string)
+	local turretData = activeTurrets[objectId]
+	if not turretData then
+		warn("[TurretService] ❌ Turret not found:", objectId)
+		return
+	end
+
+	-- Validar ownership
+	if turretData.UserId ~= player.UserId then
+		warn("[TurretService] ❌ Player", player.UserId, "is not owner of turret", objectId)
+		return
+	end
+
+	-- Validar prioridad
+	local validPriorities = {"Closest", "Furthest", "Strongest", "Weakest"}
+	local isValid = false
+	for _, priority in ipairs(validPriorities) do
+		if priority == newPriority then
+			isValid = true
+			break
+		end
+	end
+
+	if not isValid then
+		warn("[TurretService] ❌ Invalid priority:", newPriority)
+		return
+	end
+
+	-- Actualizar prioridad
+	turretData.Definition.Stats.TargetPriority = newPriority
+
+	print(string.format(
+		"[TurretService] ✅ Turret priority changed: %s → %s (Owner: %d)",
+		objectId,
+		newPriority,
+		player.UserId
+	))
+end
+
+--[[
+	Maneja venta de torreta.
+
+	REFUND: 50% del costo total (suma de T1 + upgrades)
+
+	@param player - Jugador que solicita la venta
+	@param objectId - ID de la torreta
+]]
+function TurretService:HandleSellTurret(player: Player, objectId: string)
+	local turretData = activeTurrets[objectId]
+	if not turretData then
+		warn("[TurretService] ❌ Turret not found:", objectId)
+		return
+	end
+
+	-- Validar ownership
+	if turretData.UserId ~= player.UserId then
+		warn("[TurretService] ❌ Player", player.UserId, "is not owner of turret", objectId)
+		return
+	end
+
+	-- Calcular refund (50% del costo original)
+	local refundAmount = math.floor(turretData.Definition.Cost * 0.5)
+
+	-- Dar dinero
+	local EconomyModule = require(ServerStorage:WaitForChild("Managers"):WaitForChild("EconomyModule"))
+	EconomyModule.AddMoney(player.UserId, refundAmount)
+
+	-- Desregistrar torreta
+	self:UnregisterTurret(objectId)
+
+	-- Destruir modelo (UnregisterTurret ya lo destruye, pero por si acaso)
+	if turretData.Model and turretData.Model.Parent then
+		turretData.Model:Destroy()
+	end
+
+	print(string.format(
+		"[TurretService] ✅ Turret sold: %s (Refund: $%d, Owner: %d)",
+		objectId,
+		refundAmount,
+		player.UserId
+	))
+end
+
+--[[
+	Obtiene información de una torreta para mostrar en el UI.
+
+	@param player - Jugador que solicita la info
+	@param objectId - ID de la torreta
+	@return table - Info de la torreta
+]]
+function TurretService:HandleGetTurretInfo(player: Player, objectId: string)
+	local turretData = activeTurrets[objectId]
+	if not turretData then
+		warn("[TurretService] ❌ Turret not found:", objectId)
+		return nil
+	end
+
+	-- Validar ownership (por ahora solo el owner puede ver info)
+	if turretData.UserId ~= player.UserId then
+		warn("[TurretService] ❌ Player", player.UserId, "is not owner of turret", objectId)
+		return nil
+	end
+
+	local definition = turretData.Definition
+	local currentTierName = definition.Name
+	local nextTierName = TurretDefinitions.GetNextTier(currentTierName)
+	local upgradeCost = nextTierName and TurretDefinitions.GetUpgradeCost(currentTierName) or 0
+
+	-- Construir info
+	local info = {
+		ObjectId = objectId,
+		TurretType = definition.TurretType,
+		DisplayName = definition.DisplayName,
+		CurrentTier = currentTierName,
+		CanUpgrade = definition.CanUpgrade,
+		NextTier = nextTierName,
+		UpgradeCost = upgradeCost,
+		Stats = {
+			Damage = definition.Stats.Damage,
+			Range = definition.Stats.Range,
+			FireRate = definition.Stats.FireRate,
+			TargetPriority = definition.Stats.TargetPriority,
+			-- Shield Dome específico
+			ShieldDuration = definition.Stats.ShieldDuration,
+			ShieldHP = definition.Stats.ShieldHP,
+			ShieldCooldown = definition.Stats.ShieldCooldown,
+			-- AOE específico
+			AOERadius = definition.Stats.AOERadius,
+			-- Tesla específico
+			ChainTargets = definition.Stats.ChainTargets,
+		},
+		Cost = definition.Cost,
+		IsActive = turretData.IsActive,
+	}
+
+	return info
 end
 
 return TurretService

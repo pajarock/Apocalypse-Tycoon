@@ -843,27 +843,17 @@ function TurretDefinitions.CreateModel(turretName: string): Model?
 	label.TextScaled = true
 	label.Parent = billboard
 
-	-- Agregar ProximityPrompt para upgrade (solo si puede upgradear)
-	if definition.CanUpgrade then
-		local upgradePrompt = Instance.new("ProximityPrompt")
-		upgradePrompt.Name = "UpgradePrompt"
-		upgradePrompt.ActionText = "Upgrade to Next Tier"
-		upgradePrompt.ObjectText = definition.DisplayName
-		upgradePrompt.RequiresLineOfSight = false
-		upgradePrompt.MaxActivationDistance = 10
-		upgradePrompt.HoldDuration = 0.5  -- Requiere hold para prevenir clicks accidentales
-		upgradePrompt.Parent = mainPart
-	end
-
-	-- Agregar ProximityPrompt para stats (siempre)
-	local statsPrompt = Instance.new("ProximityPrompt")
-	statsPrompt.Name = "StatsPrompt"
-	statsPrompt.ActionText = "View Stats"
-	statsPrompt.ObjectText = definition.DisplayName
-	statsPrompt.RequiresLineOfSight = false
-	statsPrompt.MaxActivationDistance = 10
-	statsPrompt.KeyboardKeyCode = Enum.KeyCode.E  -- Tecla E para ver stats
-	statsPrompt.Parent = mainPart
+	-- Agregar ProximityPrompt genérico para gestión (siempre)
+	-- El ObjectId se agregará como Attribute desde BaseOwnershipService después del registro
+	local managePrompt = Instance.new("ProximityPrompt")
+	managePrompt.Name = "ManageTurret"
+	managePrompt.ActionText = "Manage Turret"
+	managePrompt.ObjectText = definition.DisplayName
+	managePrompt.RequiresLineOfSight = false
+	managePrompt.MaxActivationDistance = 10
+	managePrompt.HoldDuration = 0  -- Sin hold para abrir rápido
+	managePrompt.KeyboardKeyCode = Enum.KeyCode.E
+	managePrompt.Parent = mainPart
 
 	-- PrimaryPart
 	model.PrimaryPart = mainPart
