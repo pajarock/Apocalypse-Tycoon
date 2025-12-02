@@ -24,6 +24,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local Knit = require(ReplicatedStorage.Knit)
 local TurretDefinitions = require(script.Parent.TurretDefinitions)
@@ -815,7 +816,7 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 	end
 
 	-- Validar dinero (integración con EconomyModule legacy)
-	local EconomyModule = require(ServerStorage:WaitForChild("Managers"):WaitForChild("EconomyModule"))
+	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
 	local playerMoney = EconomyModule.GetMoney(player.UserId)
 	if playerMoney < upgradeCost then
 		warn("[TurretService] ❌ Insufficient funds. Has:", playerMoney, "Needs:", upgradeCost)
@@ -940,7 +941,7 @@ function TurretService:HandleSellTurret(player: Player, objectId: string)
 	local refundAmount = math.floor(turretData.Definition.Cost * 0.5)
 
 	-- Dar dinero
-	local EconomyModule = require(ServerStorage:WaitForChild("Managers"):WaitForChild("EconomyModule"))
+	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
 	EconomyModule.AddMoney(player.UserId, refundAmount)
 
 	-- Desregistrar torreta
