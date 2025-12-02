@@ -646,9 +646,9 @@ function TurretVFXManager:ApplyGlowPulse(model: Model, tier: number)
 
 	local tierConfig = TIER_CONFIGS[tier] or TIER_CONFIGS[1]
 
-	-- Aplicar material Neon
+	-- Aplicar material Neon (el color ya está establecido por TurretDefinitions)
 	mainPart.Material = Enum.Material.Neon
-	mainPart.Color = tierConfig.Color
+	-- NO sobrescribir el color - TurretDefinitions controla el color del modelo
 
 	-- Crear PointLight para el glow (si no existe ya)
 	local existingLight = mainPart:FindFirstChild("TurretGlow") :: PointLight?

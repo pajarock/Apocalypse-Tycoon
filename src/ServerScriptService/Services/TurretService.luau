@@ -910,7 +910,7 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 			end
 
 			-- Mostrar efectos visuales de upgrade
-			TurretVFXManager:ShowUpgradeEffect(model, oldTier, newTier)
+			TurretVFXManager:PlayUpgradeEffect(model, oldTier, newTier)
 
 			-- Recrear efectos visuales con el nuevo tier
 			TurretVFXManager:RemoveEffects(model)
