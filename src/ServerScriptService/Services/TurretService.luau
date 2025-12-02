@@ -817,14 +817,20 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 
 	-- Validar dinero (integración con EconomyModule legacy)
 	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
-	local playerMoney = EconomyModule.GetMoney(player.UserId)
+	local playerState = EconomyModule.GetState(player.UserId)
+	if not playerState then
+		warn("[TurretService] ❌ Player state not found")
+		return
+	end
+
+	local playerMoney = playerState.Cash
 	if playerMoney < upgradeCost then
 		warn("[TurretService] ❌ Insufficient funds. Has:", playerMoney, "Needs:", upgradeCost)
 		return
 	end
 
-	-- Cobrar dinero
-	EconomyModule.RemoveMoney(player.UserId, upgradeCost)
+	-- Cobrar dinero (usar AdminGiveCash con monto negativo)
+	EconomyModule.AdminGiveCash(player.UserId, -upgradeCost)
 
 	-- Obtener nueva definición
 	local nextDefinition = TurretDefinitions.GetDefinition(nextTierName)
@@ -940,9 +946,9 @@ function TurretService:HandleSellTurret(player: Player, objectId: string)
 	-- Calcular refund (50% del costo original)
 	local refundAmount = math.floor(turretData.Definition.Cost * 0.5)
 
-	-- Dar dinero
+	-- Dar dinero (refund)
 	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
-	EconomyModule.AddMoney(player.UserId, refundAmount)
+	EconomyModule.AdminGiveCash(player.UserId, refundAmount)
 
 	-- Desregistrar torreta
 	self:UnregisterTurret(objectId)
