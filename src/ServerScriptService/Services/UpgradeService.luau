@@ -46,6 +46,7 @@ local repairStations = {}    -- {[objectId] = {UserId, Model}}
 -- Services (obtenidos en KnitStart)
 local BaseOwnershipService
 local PlayerDataService
+local TurretService  -- NEW: Sistema de torretas defensivas
 
 --[[────────────────────────────────────────────────────────────────────────
 	HELPER FUNCTIONS
@@ -359,6 +360,152 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 	))
 
 	return true
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	TURRET UPGRADE SYSTEM (NEW)
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Upgradea una torreta al siguiente tier (T1→T2→T3→T4→T5).
+
+	Similar al sistema de generators, pero usando TurretService y TurretDefinitions.
+
+	PROCESO:
+	1. Validar que el jugador es el dueño
+	2. Validar que puede upgradear (no está en tier máximo)
+	3. Calcular costo y validar dinero suficiente
+	4. Deducir dinero del jugador
+	5. Actualizar el modelo en TurretService
+	6. Mostrar efectos visuales de upgrade
+
+	@param objectId - ID de la torreta
+	@param userId - ID del jugador que intenta upgradear
+	@return boolean - true si el upgrade fue exitoso, false si falló
+]]
+function UpgradeService:UpgradeTurret(objectId: string, userId: number): boolean
+	-- Verificar que TurretService exista
+	if not TurretService then
+		warn("[UpgradeService] UpgradeTurret: TurretService not available")
+		return false
+	end
+
+	-- Obtener data de la torreta desde TurretService
+	local turretData = TurretService:GetTurretData(objectId)
+	if not turretData then
+		warn(string.format("[UpgradeService] UpgradeTurret: Turret not found: %s", objectId))
+		return false
+	end
+
+	-- Validar ownership
+	if turretData.UserId ~= userId then
+		warn(string.format("[UpgradeService] UpgradeTurret: User %d is not owner of turret %s", userId, objectId))
+		return false
+	end
+
+	-- Obtener tier actual usando TurretDefinitions
+	local TurretDefinitions = require(script.Parent.TurretDefinitions)
+	local currentTierName = turretData.Definition.Name
+
+	-- Validar que puede upgradear
+	if not TurretDefinitions.CanUpgrade(currentTierName) then
+		warn(string.format("[UpgradeService] UpgradeTurret: Turret %s is already at max tier", objectId))
+		return false
+	end
+
+	-- Obtener siguiente tier y costo
+	local nextTierName = TurretDefinitions.GetNextTier(currentTierName)
+	local upgradeCost = TurretDefinitions.GetUpgradeCost(currentTierName)
+
+	if not nextTierName or not upgradeCost then
+		warn(string.format("[UpgradeService] UpgradeTurret: Failed to get next tier or cost for %s", currentTierName))
+		return false
+	end
+
+	-- Validar dinero suficiente y deducir
+	if not PlayerDataService then
+		warn("[UpgradeService] ❌ PlayerDataService not available")
+		return false
+	end
+
+	print(string.format("[UpgradeService] 💰 Checking money for turret upgrade (user %d needs $%d)", userId, upgradeCost))
+
+	-- Intentar deducir dinero
+	local success = PlayerDataService:DeductMoney(userId, upgradeCost)
+	if not success then
+		warn(string.format("[UpgradeService] ❌ User %d doesn't have enough money ($%d needed)", userId, upgradeCost))
+		return false
+	end
+
+	print(string.format("[UpgradeService] ✅ Money deducted: $%d from user %d", upgradeCost, userId))
+
+	-- Upgradear la torreta en TurretService
+	local upgradeSuccess = TurretService:UpgradeTurret(objectId)
+	if not upgradeSuccess then
+		-- Si falla, devolver el dinero
+		PlayerDataService:AddMoney(userId, upgradeCost)
+		warn(string.format("[UpgradeService] ❌ Failed to upgrade turret, money refunded"))
+		return false
+	end
+
+	print(string.format(
+		"[UpgradeService] ⬆️ Turret upgraded: %s → %s (Cost: $%d)",
+		currentTierName,
+		nextTierName,
+		upgradeCost
+	))
+
+	-- TODO: VFX de upgrade (próxima fase)
+	-- GeneratorVFXManager:PlayUpgradeEffect(turretData.Model, oldTier, newTier)
+
+	return true
+end
+
+--[[
+	Obtiene información de upgrade para una torreta.
+
+	Devuelve información sobre el costo de upgrade, tier actual, siguiente tier, etc.
+	Útil para mostrar en UI (ProximityPrompts, paneles, etc.)
+
+	@param objectId - ID de la torreta
+	@return table? - Información de upgrade, o nil si no existe/no puede upgradear
+]]
+function UpgradeService:GetTurretUpgradeInfo(objectId: string): table?
+	if not TurretService then
+		return nil
+	end
+
+	local turretData = TurretService:GetTurretData(objectId)
+	if not turretData then
+		return nil
+	end
+
+	local TurretDefinitions = require(script.Parent.TurretDefinitions)
+	local currentTierName = turretData.Definition.Name
+
+	if not TurretDefinitions.CanUpgrade(currentTierName) then
+		return {
+			CanUpgrade = false,
+			CurrentTier = turretData.Definition.Tier,
+			CurrentTierName = currentTierName,
+			Reason = "Already at max tier",
+		}
+	end
+
+	local nextTierName = TurretDefinitions.GetNextTier(currentTierName)
+	local upgradeCost = TurretDefinitions.GetUpgradeCost(currentTierName)
+	local nextDefinition = TurretDefinitions.GetDefinition(nextTierName)
+
+	return {
+		CanUpgrade = true,
+		UpgradeCost = upgradeCost,
+		CurrentTier = turretData.Definition.Tier,
+		NextTier = nextDefinition and nextDefinition.Tier or 0,
+		CurrentTierName = currentTierName,
+		NextTierName = nextTierName,
+		CurrentDPS = turretData.Definition.Stats.DPS or turretData.Definition.Stats.Damage or 0,
+		NextDPS = nextDefinition and (nextDefinition.Stats.DPS or nextDefinition.Stats.Damage) or 0,
+	}
 end
 
 --[[
@@ -716,9 +863,19 @@ function UpgradeService:RegisterUpgrade(objectId: string, userId: number, object
 	if objectType == "Generator" or objectType == "GeneratorT2" or objectType == "GeneratorT3" or objectType == "GeneratorT4" or objectType == "GeneratorT5" then
 		self:RegisterGenerator(objectId, userId, model, objectType)
 	elseif objectType == "Turret" then
+		-- Legacy turret
 		self:RegisterTurret(objectId, userId, model)
 	elseif objectType == "RepairStation" then
 		self:RegisterRepairStation(objectId, userId, model)
+	-- NEW: Detectar nuevas torretas del sistema de defensa
+	elseif string.match(objectType, "^MachineGun") or string.match(objectType, "^Laser") or string.match(objectType, "^Missile") or string.match(objectType, "^Tesla") or objectType == "ShieldDome" then
+		-- Registrar en el nuevo TurretService
+		if TurretService then
+			TurretService:RegisterTurret(objectId, userId, model, objectType)
+			print(("[UpgradeService] ✅ Registered new turret: %s"):format(objectType))
+		else
+			warn("[UpgradeService] ⚠️ TurretService not available, turret won't function")
+		end
 	end
 end
 
@@ -733,9 +890,16 @@ function UpgradeService:UnregisterUpgrade(objectId: string, objectType: string)
 	if objectType == "Generator" or objectType == "GeneratorT2" or objectType == "GeneratorT3" or objectType == "GeneratorT4" or objectType == "GeneratorT5" then
 		self:UnregisterGenerator(objectId)
 	elseif objectType == "Turret" then
+		-- Legacy turret
 		self:UnregisterTurret(objectId)
 	elseif objectType == "RepairStation" then
 		self:UnregisterRepairStation(objectId)
+	-- NEW: Desregistrar nuevas torretas
+	elseif string.match(objectType, "^MachineGun") or string.match(objectType, "^Laser") or string.match(objectType, "^Missile") or string.match(objectType, "^Tesla") or objectType == "ShieldDome" then
+		if TurretService then
+			TurretService:UnregisterTurret(objectId)
+			print(("[UpgradeService] ❌ Unregistered turret: %s"):format(objectId))
+		end
 	end
 end
 
@@ -994,6 +1158,17 @@ function UpgradeService:KnitStart()
 		PlayerDataService = result
 	else
 		warn("[UpgradeService] PlayerDataService no encontrado - generators no dar�n dinero")
+	end
+
+	-- TurretService para el nuevo sistema de torretas
+	local turretSuccess, turretResult = pcall(function()
+		return Knit.GetService("TurretService")
+	end)
+	if turretSuccess then
+		TurretService = turretResult
+		print("[UpgradeService] ✅ TurretService integrado")
+	else
+		warn("[UpgradeService] ⚠️ TurretService no encontrado - torretas no funcionarán")
 	end
 
 	-- Iniciar update loops
