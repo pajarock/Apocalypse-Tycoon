@@ -51,7 +51,7 @@ local BILLBOARD_FLOAT_DURATION = 1.5 -- Segundos que flota el billboard
 local BILLBOARD_FLOAT_HEIGHT = 5 -- Studs que sube
 local GLOW_PULSE_SPEED = 1 -- Velocidad del pulso (segundos)
 local PARTICLE_RATE = 10 -- Partículas por segundo
-local DEBUG_MODE = false
+local DEBUG_MODE = true -- 🔍 Activado temporalmente para debugging de upgrades
 
 -- FASE 2 Constants
 local CONSTRUCTION_DURATION = 1 -- Segundos de animación de construcción
@@ -64,7 +64,7 @@ local CASH_REGISTER_VOLUME = 0.5 -- Volumen del cash register
 local PLACEMENT_VOLUME = 0.7 -- Volumen del placement
 
 -- PHASE 4 Constants
-local UPGRADE_SOUND_ID = "rbxassetid://6895079853" -- Sonido de upgrade (reutilizando placement por ahora)
+local UPGRADE_SOUND_ID = "rbxassetid://85188753846582" -- Sonido de upgrade (reutilizando placement por ahora)
 local UPGRADE_ANIMATION_DURATION = 1.5 -- Duración de animación de upgrade
 local UPGRADE_PARTICLE_COUNT = 50 -- Cantidad de partículas de upgrade
 
@@ -625,10 +625,15 @@ end
 	@param toTier - Tier nuevo
 ]]
 function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, toTier: number)
+	print(string.format("[GeneratorVFXManager] 🎨 ShowUpgradeEffect CALLED: T%d → T%d", fromTier, toTier))
+
 	local mainPart = model:FindFirstChild("MainPart") :: BasePart?
 	if not mainPart then
+		warn("[GeneratorVFXManager] ❌ ShowUpgradeEffect: MainPart not found!")
 		return
 	end
+
+	print("[GeneratorVFXManager] ✅ MainPart found, creating upgrade effects...")
 
 	-- Reproducir sonido de upgrade
 	local upgradeSound = Instance.new("Sound")
@@ -716,12 +721,22 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 		end)
 	end
 
-	-- Mensaje flotante de upgrade
+	-- Mensaje flotante de upgrade (FIX: usar Adornee + parent correcto)
 	local upgradeBillboard = Instance.new("BillboardGui")
-	upgradeBillboard.Size = UDim2.new(0, 200, 0, 50)
-	upgradeBillboard.StudsOffset = Vector3.new(0, 5, 0)
+	upgradeBillboard.Size = UDim2.new(8, 0, 2, 0) -- Más grande para mejor visibilidad
+	upgradeBillboard.StudsOffset = Vector3.new(0, 6, 0)
 	upgradeBillboard.AlwaysOnTop = true
-	upgradeBillboard.Parent = mainPart
+	upgradeBillboard.MaxDistance = 100
+	upgradeBillboard.Adornee = mainPart -- 🔧 FIX: Configurar Adornee
+
+	-- Parent debe ser workspace o Effects folder, NO mainPart
+	local effectsFolder = workspace:FindFirstChild("Effects")
+	if not effectsFolder then
+		effectsFolder = Instance.new("Folder")
+		effectsFolder.Name = "Effects"
+		effectsFolder.Parent = workspace
+	end
+	upgradeBillboard.Parent = effectsFolder -- 🔧 FIX: Parent correcto
 
 	local upgradeLabel = Instance.new("TextLabel")
 	upgradeLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -737,8 +752,8 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	-- Animar el texto flotando y desvaneciéndose
 	local textTween = TweenService:Create(
 		upgradeBillboard,
-		TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ StudsOffset = Vector3.new(0, 8, 0) }
+		TweenInfo.new(2.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), -- Más tiempo + bounce
+		{ StudsOffset = Vector3.new(0, 10, 0) }
 	)
 	textTween:Play()
 
@@ -750,7 +765,13 @@ function GeneratorVFXManager:ShowUpgradeEffect(model: Model, fromTier: number, t
 	)
 	fadeTween:Play()
 
-	Debris:AddItem(upgradeBillboard, 2.5)
+	Debris:AddItem(upgradeBillboard, 3) -- Más tiempo para verlo
+
+	print(string.format("[GeneratorVFXManager] ✨ Billboard created! Text: '%s', Position: %s, Parent: %s",
+		upgradeLabel.Text,
+		tostring(upgradeBillboard.StudsOffset),
+		upgradeBillboard.Parent.Name
+	))
 
 	if DEBUG_MODE then
 		print(string.format("[GeneratorVFXManager] Upgrade effect played: T%d → T%d", fromTier, toTier))
