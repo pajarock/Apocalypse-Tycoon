@@ -1,55 +1,47 @@
+--!strict
 --[[
-	TurretInteractionController.lua
-	═══════════════════════════════════════════════════════════════════════
+	TurretInteractionController - Sistema de interacción con torretas defensivas
 
-	Cliente controller para manejar interacción con torretas defensivas.
-
-	RESPONSABILIDADES:
-	- Escuchar ProximityPromptService.PromptTriggered
-	- Detectar ProximityPrompts de torretas ("ManageTurret")
-	- Obtener ObjectId del turret model
-	- Abrir TurretManagementUI con los datos de la torreta
+	CARACTERÍSTICAS:
+	- Handler centralizado de ProximityPromptService para torretas
+	- Detecta prompts "ManageTurret" y abre UI de gestión
+	- Comunica con TurretManagementUI module
 
 	ARQUITECTURA:
-	- Handler centralizado para TODOS los ProximityPrompts de torretas
-	- Usa sistema nativo de Roblox (no reinventa la rueda)
-	- Comunica con TurretManagementUI para mostrar panel
+	- Usa sistema nativo de ProximityPrompt (Roblox)
+	- Handler centralizado para TODOS los prompts de torretas
+	- No reimplementa detección de distancia (Roblox lo maneja)
 
-	═══════════════════════════════════════════════════════════════════════
+	FLUJO DE INTERACCIÓN:
+	1. Jugador presiona E cerca de torreta
+	2. ProximityPromptService.PromptTriggered detecta evento
+	3. Verifica que sea prompt de torreta (Name == "ManageTurret")
+	4. Obtiene ObjectId del Attribute
+	5. Abre TurretManagementUI con ObjectId
+
+	AUTHOR: Turret Interaction System v1
+	CLIENT-SIDE: Knit Controller
 ]]
 
-local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local Players = game:GetService("Players")
+local Knit = require(ReplicatedStorage.Knit)
 
+--[[────────────────────────────────────────────────────────────────────────
+	CONTROLLER DEFINITION
+────────────────────────────────────────────────────────────────────────]]
+
+local TurretInteractionController = Knit.CreateController({
+	Name = "TurretInteractionController",
+})
+
+-- Referencias
 local player = Players.LocalPlayer
-
--- Referencia al UI (se inicializará cuando esté disponible)
 local TurretManagementUI = nil
 
 --[[────────────────────────────────────────────────────────────────────────
-	INITIALIZATION
-────────────────────────────────────────────────────────────────────────]]
-
--- Esperar a que el UI module esté disponible
-task.spawn(function()
-	local PlayerGui = player:WaitForChild("PlayerGui")
-
-	-- Buscar el módulo de UI (puede estar en PlayerScripts o como módulo)
-	local success, result = pcall(function()
-		return require(script.Parent.Parent:WaitForChild("TurretManagementUI"))
-	end)
-
-	if success then
-		TurretManagementUI = result
-		print("[TurretInteractionController] ✅ TurretManagementUI loaded")
-	else
-		warn("[TurretInteractionController] ❌ Failed to load TurretManagementUI:", result)
-	end
-end)
-
---[[────────────────────────────────────────────────────────────────────────
-	PROXIMITY PROMPT HANDLER
+	HELPER FUNCTIONS
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
@@ -79,6 +71,10 @@ local function getTurretObjectId(prompt: ProximityPrompt): string?
 	local objectId = part:GetAttribute("ObjectId")
 	return objectId
 end
+
+--[[────────────────────────────────────────────────────────────────────────
+	EVENT HANDLERS
+────────────────────────────────────────────────────────────────────────]]
 
 --[[
 	Maneja el evento de activación de ProximityPrompt.
@@ -115,26 +111,43 @@ local function onPromptTriggered(prompt: ProximityPrompt, playerWhoTriggered: Pl
 end
 
 --[[────────────────────────────────────────────────────────────────────────
-	CONNECTIONS
+	LIFECYCLE METHODS
 ────────────────────────────────────────────────────────────────────────]]
 
--- Conectar al ProximityPromptService (centralizado para TODOS los prompts)
-ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
+function TurretInteractionController:KnitInit()
+	print("[TurretInteractionController] Initializing...")
 
-print("[TurretInteractionController] ✅ Initialized - Listening for turret prompts")
+	-- Cargar TurretManagementUI module
+	local success, result = pcall(function()
+		return require(script.Parent.Parent:WaitForChild("TurretManagementUI"))
+	end)
+
+	if success then
+		TurretManagementUI = result
+		print("[TurretInteractionController] ✅ TurretManagementUI loaded")
+	else
+		warn("[TurretInteractionController] ❌ Failed to load TurretManagementUI:", result)
+	end
+end
+
+function TurretInteractionController:KnitStart()
+	print("[TurretInteractionController] Starting...")
+
+	-- Conectar al ProximityPromptService (centralizado para TODOS los prompts)
+	ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
+
+	print("[TurretInteractionController] ✅ Listening for turret prompts")
+end
 
 --[[────────────────────────────────────────────────────────────────────────
-	MODULE EXPORT (opcional, para testing)
+	PUBLIC API (opcional, para testing)
 ────────────────────────────────────────────────────────────────────────]]
 
-local TurretInteractionController = {}
-
--- Exponer funciones para testing (opcional)
-function TurretInteractionController.IsTurretPrompt(prompt: ProximityPrompt): boolean
+function TurretInteractionController:IsTurretPrompt(prompt: ProximityPrompt): boolean
 	return isTurretPrompt(prompt)
 end
 
-function TurretInteractionController.GetTurretObjectId(prompt: ProximityPrompt): string?
+function TurretInteractionController:GetTurretObjectId(prompt: ProximityPrompt): string?
 	return getTurretObjectId(prompt)
 end
 
