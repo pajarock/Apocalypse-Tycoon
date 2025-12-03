@@ -362,6 +362,7 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 	-- Buscar meteoritos en el workspace
 	local meteorsFolder = workspace:FindFirstChild(METEOR_FOLDER_NAME)
 	if not meteorsFolder then
+		warn(("[TurretService] ❌ METEOR FOLDER NOT FOUND: '%s'"):format(METEOR_FOLDER_NAME))
 		return nil
 	end
 
@@ -454,9 +455,10 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 
 	-- Obtener cooldown apropiado
 	local cooldown = stats.FireRate or stats.Cooldown or 1.0
+	local timeSinceLastFire = currentTime - turretData.LastFireTime
 
 	-- Verificar si puede disparar
-	if currentTime - turretData.LastFireTime < cooldown then
+	if timeSinceLastFire < cooldown then
 		return
 	end
 
@@ -471,6 +473,8 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 		self:FireMissile(turretData, target)
 	elseif turretType == "Tesla" then
 		self:FireTesla(turretData, target)
+	else
+		warn(("[TurretService] ❌ Unknown TurretType: '%s'"):format(turretType))
 	end
 
 	-- Actualizar último disparo
@@ -630,9 +634,11 @@ function TurretService:ApplyDamage(meteor: Instance, damage: number)
 	if currentHP then
 		local newHP = math.max(0, currentHP - damage)
 		meteor:SetAttribute("HP", newHP)
+		print(("[TurretService] 💥 %s HP: %.1f → %.1f (-%d DMG via Attribute)"):format(meteor.Name, currentHP, newHP, damage))
 
 		-- Si HP llegó a 0, destruir meteorito
 		if newHP <= 0 then
+			print(("[TurretService] ☠️ Meteor destroyed: %s"):format(meteor.Name))
 			meteor:Destroy()
 		end
 		return
@@ -643,14 +649,17 @@ function TurretService:ApplyDamage(meteor: Instance, damage: number)
 	if hpValue then
 		local newHP = math.max(0, hpValue.Value - damage)
 		hpValue.Value = newHP
+		print(("[TurretService] 💥 %s HP: %d → %d (-%d DMG via IntValue)"):format(meteor.Name, hpValue.Value + damage, newHP, damage))
 
 		if newHP <= 0 then
+			print(("[TurretService] ☠️ Meteor destroyed: %s"):format(meteor.Name))
 			meteor:Destroy()
 		end
 		return
 	end
 
 	-- Si no tiene HP tracking, destruir directamente
+	print(("[TurretService] ⚠️ %s has no HP tracking, destroying directly"):format(meteor.Name))
 	meteor:Destroy()
 end
 
