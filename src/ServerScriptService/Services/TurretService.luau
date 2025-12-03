@@ -366,32 +366,16 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 		return nil
 	end
 
-	local meteorCount = #meteorsFolder:GetChildren()
-	if meteorCount > 0 then
-		print(("[TurretService] 🎯 Scanning %d meteors (Turret at %s, Range: %d)"):format(
-			meteorCount,
-			tostring(turretPos),
-			stats.Range
-		))
-	end
-
 	local potentialTargets = {}
 
 	-- Filtrar meteoritos dentro del rango
 	for _, meteor in ipairs(meteorsFolder:GetChildren()) do
 		if not meteor:IsA("BasePart") and not meteor:IsA("Model") then
-			print(("[TurretService] ⚠️ Skipping non-Part/Model: %s"):format(meteor.Name))
 			continue
 		end
 
 		local meteorPos = if meteor:IsA("Model") then meteor:GetPivot().Position else meteor.Position
 		local distance = (meteorPos - turretPos).Magnitude
-
-		print(("[TurretService] 📏 %s - Distance: %.1f (Range: %d)"):format(
-			meteor.Name,
-			distance,
-			stats.Range
-		))
 
 		if distance <= stats.Range then
 			table.insert(potentialTargets, {
@@ -399,7 +383,6 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 				Distance = distance,
 				HP = self:GetMeteorHP(meteor),
 			})
-			print(("[TurretService] ✅ Target in range: %s"):format(meteor.Name))
 		end
 	end
 
@@ -470,23 +453,17 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 	local definition = turretData.Definition
 	local stats = definition.Stats
 
-	print(("[TurretService] 🎯 TryFire called: %s targeting %s"):format(definition.DisplayName, target.Name))
-
 	-- Obtener cooldown apropiado
 	local cooldown = stats.FireRate or stats.Cooldown or 1.0
 	local timeSinceLastFire = currentTime - turretData.LastFireTime
 
-	print(("[TurretService] ⏱️ Cooldown check: %.3fs since last fire (cooldown: %.3fs)"):format(timeSinceLastFire, cooldown))
-
 	-- Verificar si puede disparar
 	if timeSinceLastFire < cooldown then
-		print(("[TurretService] ❌ Cooldown not ready (need %.3fs more)"):format(cooldown - timeSinceLastFire))
 		return
 	end
 
 	-- Disparar según tipo
 	local turretType = definition.TurretType
-	print(("[TurretService] 🔫 TurretType: '%s'"):format(turretType))
 
 	if turretType == "MachineGun" then
 		self:FireMachineGun(turretData, target)
@@ -514,8 +491,6 @@ function TurretService:FireMachineGun(turretData: TurretData, target: Model)
 	local stats = turretData.Definition.Stats
 	local damage = stats.Damage or 10
 
-	print(("[TurretService] 🔫 %s firing at %s (DMG: %d)"):format(turretData.Definition.DisplayName, target.Name, damage))
-
 	-- Aplicar daño directo
 	self:ApplyDamage(target, damage)
 
@@ -523,8 +498,6 @@ function TurretService:FireMachineGun(turretData: TurretData, target: Model)
 	local turretPos = turretData.Model:GetPivot().Position
 	local targetPos = target:GetPivot().Position
 	TurretVFXManager:CreateMachineGunTracer(turretPos, targetPos)
-
-	print(("[TurretService] ✅ MachineGun fire complete (tracer created)"):format())
 end
 
 --[[
@@ -656,8 +629,6 @@ end
 	@param damage - Cantidad de daño
 ]]
 function TurretService:ApplyDamage(meteor: Instance, damage: number)
-	print(("[TurretService] 💥 ApplyDamage called: %s (DMG: %d)"):format(meteor.Name, damage))
-
 	-- Intentar aplicar daño vía Attribute
 	local currentHP = meteor:GetAttribute("HP")
 	if currentHP then
