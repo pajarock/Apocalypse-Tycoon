@@ -362,7 +362,17 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 	-- Buscar meteoritos en el workspace
 	local meteorsFolder = workspace:FindFirstChild(METEOR_FOLDER_NAME)
 	if not meteorsFolder then
+		warn(("[TurretService] ❌ METEOR FOLDER NOT FOUND: '%s'"):format(METEOR_FOLDER_NAME))
 		return nil
+	end
+
+	local meteorCount = #meteorsFolder:GetChildren()
+	if meteorCount > 0 then
+		print(("[TurretService] 🎯 Scanning %d meteors (Turret at %s, Range: %d)"):format(
+			meteorCount,
+			tostring(turretPos),
+			stats.Range
+		))
 	end
 
 	local potentialTargets = {}
@@ -370,11 +380,18 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 	-- Filtrar meteoritos dentro del rango
 	for _, meteor in ipairs(meteorsFolder:GetChildren()) do
 		if not meteor:IsA("BasePart") and not meteor:IsA("Model") then
+			print(("[TurretService] ⚠️ Skipping non-Part/Model: %s"):format(meteor.Name))
 			continue
 		end
 
 		local meteorPos = if meteor:IsA("Model") then meteor:GetPivot().Position else meteor.Position
 		local distance = (meteorPos - turretPos).Magnitude
+
+		print(("[TurretService] 📏 %s - Distance: %.1f (Range: %d)"):format(
+			meteor.Name,
+			distance,
+			stats.Range
+		))
 
 		if distance <= stats.Range then
 			table.insert(potentialTargets, {
@@ -382,6 +399,7 @@ function TurretService:FindTarget(turretData: TurretData): Model?
 				Distance = distance,
 				HP = self:GetMeteorHP(meteor),
 			})
+			print(("[TurretService] ✅ Target in range: %s"):format(meteor.Name))
 		end
 	end
 

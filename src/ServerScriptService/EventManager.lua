@@ -107,11 +107,29 @@ end
 
 local function getPlayerBasePart(plr: Player): BasePart?
 	-- ?? MACHINE GUN INTEGRATION: Priorizar base Knit sobre legacy
+	if Config.DEBUG_MODE then
+		print(("[EventManager] 🔍 Getting base for %s (UserId: %d)"):format(plr.Name, plr.UserId))
+	end
+
 	-- Intentar obtener base Knit primero
-	local success, knitBase = pcall(function()
+	local success, result = pcall(function()
 		local Knit = require(ReplicatedStorage.Knit)
+		if Config.DEBUG_MODE then
+			print("[EventManager] 📦 Knit loaded successfully")
+		end
+
 		local BaseSpawnerService = Knit.GetService("BaseSpawnerService")
+		if Config.DEBUG_MODE then
+			print("[EventManager] 🎯 BaseSpawnerService obtained")
+		end
+
 		local baseData = BaseSpawnerService:GetBaseData(plr.UserId)
+		if Config.DEBUG_MODE then
+			print(("[EventManager] 📊 BaseData result: %s"):format(baseData and "EXISTS" or "NIL"))
+			if baseData then
+				print(("[EventManager] 📊 BaseData.PlateInstance: %s"):format(baseData.PlateInstance and "EXISTS" or "NIL"))
+			end
+		end
 
 		if baseData and baseData.PlateInstance then
 			return baseData.PlateInstance
@@ -119,11 +137,15 @@ local function getPlayerBasePart(plr: Player): BasePart?
 		return nil
 	end)
 
-	if success and knitBase then
+	if Config.DEBUG_MODE then
+		print(("[EventManager] Knit pcall: success=%s, result=%s"):format(tostring(success), tostring(result)))
+	end
+
+	if success and result then
 		if Config.DEBUG_MODE then
 			print(("[EventManager] ✅ Using Knit base for %s"):format(plr.Name))
 		end
-		return knitBase
+		return result
 	end
 
 	-- Fallback: Buscar base legacy
