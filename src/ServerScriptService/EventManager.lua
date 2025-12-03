@@ -3,17 +3,17 @@
 	EVENT MANAGER - Apocalypse Tycoon (ARREGLADO)
 	-----------------------------------------------------------------------
 
-	? ARREGLOS EN ESTA VERSIÓN:
+	? ARREGLOS EN ESTA VERSIï¿½N:
 	1. BaseModule ahora se inyecta desde Main.Server.lua (no require directo)
-	2. Validación de BaseModule antes de usar sus funciones
+	2. Validaciï¿½n de BaseModule antes de usar sus funciones
 	3. Flash en pantalla agregado en impactos
 	4. Mejores mensajes de error para debugging
 
-	CAMBIOS RESPECTO A LA VERSIÓN ANTERIOR:
-	- Línea 56: BaseModule = nil (se inyectará)
-	- Línea 67-72: Nueva función SetBaseModule()
-	- Línea 293-310: Validación de BaseModule añadida
-	- Línea 280-283: Flash rojo agregado en impactos
+	CAMBIOS RESPECTO A LA VERSIï¿½N ANTERIOR:
+	- Lï¿½nea 56: BaseModule = nil (se inyectarï¿½)
+	- Lï¿½nea 67-72: Nueva funciï¿½n SetBaseModule()
+	- Lï¿½nea 293-310: Validaciï¿½n de BaseModule aï¿½adida
+	- Lï¿½nea 280-283: Flash rojo agregado en impactos
 --]]
 
 local Players            = game:GetService("Players")
@@ -32,16 +32,16 @@ if not CameraShake then
 	CameraShake = Instance.new("RemoteEvent")
 	CameraShake.Name = "CameraShake"
 	CameraShake.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'CameraShake' creado automáticamente")
+	warn("[EventManager] RemoteEvent 'CameraShake' creado automï¿½ticamente")
 end
 
--- ?? NUEVO: Remote para notificaciones (dodge, daño, etc.)
+-- ?? NUEVO: Remote para notificaciones (dodge, daï¿½o, etc.)
 local ShowNotification = RemotesFolder:FindFirstChild("ShowNotification") :: RemoteEvent?
 if not ShowNotification then
 	ShowNotification = Instance.new("RemoteEvent")
 	ShowNotification.Name = "ShowNotification"
 	ShowNotification.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'ShowNotification' creado automáticamente")
+	warn("[EventManager] RemoteEvent 'ShowNotification' creado automï¿½ticamente")
 end
 
 -- ?? NUEVO: Remote para screen flash
@@ -50,7 +50,7 @@ if not ScreenFlash then
 	ScreenFlash = Instance.new("RemoteEvent")
 	ScreenFlash.Name = "ScreenFlash"
 	ScreenFlash.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'ScreenFlash' creado automáticamente")
+	warn("[EventManager] RemoteEvent 'ScreenFlash' creado automï¿½ticamente")
 end
 
 -- ?? NUEVO: Remote para notificar muerte de base
@@ -59,13 +59,13 @@ if not BaseDead then
 	BaseDead = Instance.new("RemoteEvent")
 	BaseDead.Name = "BaseDead"
 	BaseDead.Parent = RemotesFolder
-	warn("[EventManager] RemoteEvent 'BaseDead' creado automáticamente")
+	warn("[EventManager] RemoteEvent 'BaseDead' creado automï¿½ticamente")
 end
 
 
 local Config     = require(game.ServerStorage.Config.Config)
 
--- ? ARREGLADO: BaseModule se inyectará desde Main.Server.lua
+-- ? ARREGLADO: BaseModule se inyectarï¿½ desde Main.Server.lua
 local BaseModule = nil
 
 -- ?? NUEVO: Import VFXManager
@@ -77,12 +77,21 @@ local hasMeteorDamage = pcall(function()
 	MeteorDamageSystem = require(game.ServerStorage.MeteorDamageSystem)
 end)
 
+-- ?? MACHINE GUN INTEGRATION: Crear folder para meteoritos
+local meteorsFolder = workspace:FindFirstChild("Meteors")
+if not meteorsFolder then
+	meteorsFolder = Instance.new("Folder")
+	meteorsFolder.Name = "Meteors"
+	meteorsFolder.Parent = workspace
+	print("[EventManager] ðŸ“ Created 'Meteors' folder for turret targeting")
+end
+
 local EventManager = {}
 
 local DebugCooldowns: {[number]: number} = {}
 
 -------------------------------------------------------------------------
--- ? NUEVA FUNCIÓN: Inyectar BaseModule desde Main.Server.lua
+-- ? NUEVA FUNCIï¿½N: Inyectar BaseModule desde Main.Server.lua
 -------------------------------------------------------------------------
 
 function EventManager:SetBaseModule(base)
@@ -97,19 +106,46 @@ end
 -------------------------------------------------------------------------
 
 local function getPlayerBasePart(plr: Player): BasePart?
+	-- ?? MACHINE GUN INTEGRATION: Priorizar base Knit sobre legacy
+	-- Intentar obtener base Knit primero
+	local success, knitBase = pcall(function()
+		local Knit = require(ReplicatedStorage.Knit)
+		local BaseSpawnerService = Knit.GetService("BaseSpawnerService")
+		local baseData = BaseSpawnerService:GetBaseData(plr.UserId)
+
+		if baseData and baseData.PlateInstance then
+			return baseData.PlateInstance
+		end
+		return nil
+	end)
+
+	if success and knitBase then
+		if Config.DEBUG_MODE then
+			print(("[EventManager] âœ… Using Knit base for %s"):format(plr.Name))
+		end
+		return knitBase
+	end
+
+	-- Fallback: Buscar base legacy
 	local bases = workspace:FindFirstChild("Bases")
 	if not bases then
-		warn("[Meteor] No existe workspace.Bases")
+		warn("[Meteor] No existe workspace.Bases ni base Knit para", plr.Name)
 		return nil
 	end
 
 	local plate = bases:FindFirstChild(plr.Name.."_Base")
 	if plate and plate:IsA("BasePart") then
+		if Config.DEBUG_MODE then
+			print(("[EventManager] âš ï¸ Using legacy base for %s"):format(plr.Name))
+		end
 		return plate
 	end
 
 	for _, child in ipairs(bases:GetChildren()) do
 		if child:IsA("BasePart") and child:GetAttribute("OwnerUserId") == plr.UserId then
+			if Config.DEBUG_MODE then
+				print(("[EventManager] âš ï¸ Using legacy base for %s"):format(plr.Name))
+			end
 			return child
 		end
 	end
@@ -197,10 +233,10 @@ local function createMeteor(meteorType: string): Part
 	meteor:SetAttribute("MaxHP", meteorHP)
 	meteor:SetAttribute("MeteorType", meteorType)
 
-	-- ?? NUEVO: Usar VFX trail en lugar de Fire básico
-	-- El trail se spawneará con VFXManager (ver abajo)
+	-- ?? NUEVO: Usar VFX trail en lugar de Fire bï¿½sico
+	-- El trail se spawnearï¿½ con VFXManager (ver abajo)
 
-	-- Mantener efectos básicos para compatibilidad
+	-- Mantener efectos bï¿½sicos para compatibilidad
 	local fire = Instance.new("Fire", meteor)
 	fire.Size = 10
 	fire.Heat = 15
@@ -228,7 +264,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 
 	local meteor = createMeteor(meteorType)
 	meteor.Position = startPos
-	meteor.Parent = workspace
+	meteor.Parent = meteorsFolder  -- ?? MACHINE GUN: Parentear a folder para targeting
 
 	meteor:SetAttribute("TargetUserId", plr.UserId)
 	meteor:SetAttribute("MeteorType", meteorType)
@@ -264,7 +300,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 	task.delay(Config.METEOR_LIFETIME, function()
 		if meteor and meteor.Parent and not applied then
 			if Config.DEBUG_MODE then
-				print("[Meteor] Timeout sin impacto válido")
+				print("[Meteor] Timeout sin impacto vï¿½lido")
 			end
 			cleanup()
 		end
@@ -282,7 +318,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 
 		if not userId then return end
 
-		-- ?? NUEVO: Explosión visual épica
+		-- ?? NUEVO: Explosiï¿½n visual ï¿½pica
 		VFXManager:PlayEffect("MeteorExplosion", hitPos)
 
 		-- ?? NUEVO: Camera shake para el jugador afectado
@@ -304,7 +340,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			end
 		end
 
-		-- ?? NUEVO: DAÑO A JUGADORES (mecánica de salto para evadir)
+		-- ?? NUEVO: DAï¿½O A JUGADORES (mecï¿½nica de salto para evadir)
 		if hasMeteorDamage and MeteorDamageSystem then
 			local basePart = getPlayerBasePart(ownerPlr)
 			if basePart then
@@ -312,7 +348,7 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			end
 		end
 
-		-- ? ARREGLADO: Lógica de daño a la base con validación de BaseModule
+		-- ? ARREGLADO: Lï¿½gica de daï¿½o a la base con validaciï¿½n de BaseModule
 		local appliedAmount = 0
 
 		if BaseModule and BaseModule.ApplyDamage then
@@ -327,11 +363,11 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 			end
 
 			if BaseModule.GetHP and BaseModule.GetHP(userId) > 0 then
-				print(("[METEOR] Jugador %d sobrevivió!"):format(userId))
+				print(("[METEOR] Jugador %d sobreviviï¿½!"):format(userId))
 			end
 		else
-			warn("[EventManager] ?? BaseModule no está disponible - no se aplicó daño")
-			warn("[EventManager] ?? Asegúrate de llamar EventManager:SetBaseModule(Base) en Main.Server.lua")
+			warn("[EventManager] ?? BaseModule no estï¿½ disponible - no se aplicï¿½ daï¿½o")
+			warn("[EventManager] ?? Asegï¿½rate de llamar EventManager:SetBaseModule(Base) en Main.Server.lua")
 		end
 
 		if ownerPlr and appliedAmount > 0 then
@@ -339,14 +375,14 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 				BaseDamaged:FireClient(ownerPlr, appliedAmount)
 			end
 
-			-- ?? NUEVO: VFX de daño en la base
+			-- ?? NUEVO: VFX de daï¿½o en la base
 			local basePart = getPlayerBasePart(ownerPlr)
 			if basePart then
 				VFXManager:PlayEffect("DamageHit", basePart.Position + Vector3.new(0, 5, 0))
 			end
 
 			if BaseModule and BaseModule.IsLowHP and BaseModule.IsLowHP(userId) then
-				notifyPlayer(ownerPlr, "?? HP CRÍTICO!", Config.UI_COLORS.Warning)
+				notifyPlayer(ownerPlr, "?? HP CRï¿½TICO!", Config.UI_COLORS.Warning)
 			end
 		end
 
@@ -360,7 +396,7 @@ local function spawnMeteorOverBase(plr: Player, height: number?, spread: number?
 	local base = getPlayerBasePart(plr)
 
 	if not base then
-		warn(("[Meteor] No encontré base del jugador: %s"):format(plr.Name))
+		warn(("[Meteor] No encontrï¿½ base del jugador: %s"):format(plr.Name))
 		return
 	end
 
@@ -397,7 +433,7 @@ DebugSpawnMeteor.OnServerEvent:Connect(function(plr: Player)
 	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y, 12, randomType)
 end)
 
--- Evento: MeteorStorm (sin cambios de lógica, solo VFX)
+-- Evento: MeteorStorm (sin cambios de lï¿½gica, solo VFX)
 function EventManager:MeteorStorm()
 	local config = Config.EVENTS.MeteorStorm
 
@@ -478,13 +514,13 @@ local function BossPhase_Corners(plr: Player)
 	end
 end
 
--- Fase 2: "Círculo Infernal" - 6 meteoritos Normal en círculo rotando
+-- Fase 2: "Cï¿½rculo Infernal" - 6 meteoritos Normal en cï¿½rculo rotando
 local function BossPhase_Circle(plr: Player)
 	local base = getPlayerBasePart(plr)
 	if not base then return end
 
 	local basePos = base.Position
-	local radius = 35  -- ? Radio aumentado para patrón más visible
+	local radius = 35  -- ? Radio aumentado para patrï¿½n mï¿½s visible
 	local meteorCount = 6
 
 	for i = 1, meteorCount do
@@ -496,39 +532,39 @@ local function BossPhase_Circle(plr: Player)
 				math.sin(angle) * radius
 			)
 
-			-- ? Spawn desde arriba del punto del círculo
+			-- ? Spawn desde arriba del punto del cï¿½rculo
 			local startPos = basePos + offset + Vector3.new(0, 100, 0)
-			-- ? ARREGLADO: Caer directamente en el punto del círculo (offset completo)
+			-- ? ARREGLADO: Caer directamente en el punto del cï¿½rculo (offset completo)
 			local targetPos = basePos + offset
 			spawnMeteorTowards(plr, startPos, targetPos, "Normal")
 		end)
 	end
 
 	if Config.DEBUG_MODE then
-		print(("[BossMeteor] Fase 2 'Círculo Infernal' ejecutada para %s"):format(plr.Name))
+		print(("[BossMeteor] Fase 2 'Cï¿½rculo Infernal' ejecutada para %s"):format(plr.Name))
 	end
 end
 
--- Fase 3: "El Coloso" - 1 meteorito GIGANTE lento (8s caída)
+-- Fase 3: "El Coloso" - 1 meteorito GIGANTE lento (8s caï¿½da)
 local function BossPhase_Colossus(plr: Player)
 	local base = getPlayerBasePart(plr)
 	if not base then return end
 
 	local basePos = base.Position
 
-	-- Spawn muy alto para caída lenta épica
+	-- Spawn muy alto para caï¿½da lenta ï¿½pica
 	local startPos = basePos + Vector3.new(0, 250, 0)
 	local targetPos = basePos
 
-	-- Usar tipo Boss (más grande, más lento, más daño)
+	-- Usar tipo Boss (mï¿½s grande, mï¿½s lento, mï¿½s daï¿½o)
 	local meteor = createMeteor("Boss")
 	meteor.Position = startPos
-	meteor.Parent = workspace
+	meteor.Parent = meteorsFolder  -- ?? MACHINE GUN: Parentear a folder para targeting
 
 	meteor:SetAttribute("TargetUserId", plr.UserId)
 	meteor:SetAttribute("MeteorType", "Boss")
 
-	-- VFX trail épico
+	-- VFX trail ï¿½pico
 	task.spawn(function()
 		while meteor and meteor.Parent do
 			VFXManager:PlayEffect("MeteorTrail", meteor.Position, meteor)
@@ -536,19 +572,19 @@ local function BossPhase_Colossus(plr: Player)
 		end
 	end)
 
-	-- Velocidad MUY lenta para caída dramática
+	-- Velocidad MUY lenta para caï¿½da dramï¿½tica
 	local dir = (targetPos - startPos).Unit
 	local bv = Instance.new("BodyVelocity")
 	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
 	bv.Velocity = dir * 15 + Vector3.new(0, -15, 0) -- Muy lento
 	bv.Parent = meteor
 
-	-- Notificación épica
+	-- Notificaciï¿½n ï¿½pica
 	if ShowNotification then
 		ShowNotification:FireClient(plr, "?? THE COLOSSUS DESCENDS!", 4)
 	end
 
-	-- Sistema de impacto (igual que spawnMeteorTowards pero con más drama)
+	-- Sistema de impacto (igual que spawnMeteorTowards pero con mï¿½s drama)
 	local applied = false
 	local conn: RBXScriptConnection? = nil
 
@@ -558,7 +594,7 @@ local function BossPhase_Colossus(plr: Player)
 		Debris:AddItem(meteor, 0.1)
 	end
 
-	task.delay(12, function() -- Más tiempo para caída lenta
+	task.delay(12, function() -- Mï¿½s tiempo para caï¿½da lenta
 		if meteor and meteor.Parent and not applied then
 			cleanup()
 		end
@@ -574,7 +610,7 @@ local function BossPhase_Colossus(plr: Player)
 		local userId = resolveOwnerForHit(meteor, hit, hitPos)
 		if not userId then return end
 
-		-- ¡EXPLOSIÓN ÉPICA!
+		-- ï¿½EXPLOSIï¿½N ï¿½PICA!
 		VFXManager:PlayEffect("MeteorExplosion", hitPos)
 
 		local ownerPlr = Players:GetPlayerByUserId(userId)
@@ -590,7 +626,7 @@ local function BossPhase_Colossus(plr: Player)
 			end
 		end
 
-		-- Daño
+		-- Daï¿½o
 		if BaseModule and BaseModule.ApplyDamage then
 			local typeConfig = Config.METEOR_TYPES.Boss
 			local rawDamage = typeConfig.Damage
@@ -598,7 +634,7 @@ local function BossPhase_Colossus(plr: Player)
 			applied = appliedAmount > 0
 
 			if Config.DEBUG_MODE then
-				print(("[BossMeteor] COLOSSUS impactó - daño=%d"):format(rawDamage))
+				print(("[BossMeteor] COLOSSUS impactï¿½ - daï¿½o=%d"):format(rawDamage))
 			end
 
 			if ownerPlr and appliedAmount > 0 then
@@ -618,7 +654,7 @@ local function BossPhase_Colossus(plr: Player)
 	end
 end
 
--- Fase 4: "Triángulo de Fuego" - 3 meteoritos Large en triángulo simultáneo
+-- Fase 4: "Triï¿½ngulo de Fuego" - 3 meteoritos Large en triï¿½ngulo simultï¿½neo
 local function BossPhase_Triangle(plr: Player)
 	local base = getPlayerBasePart(plr)
 	if not base then return end
@@ -626,10 +662,10 @@ local function BossPhase_Triangle(plr: Player)
 	local basePos = base.Position
 	local radius = 20
 
-	-- Triángulo equilátero: 3 puntos a 120° cada uno
+	-- Triï¿½ngulo equilï¿½tero: 3 puntos a 120ï¿½ cada uno
 	for i = 1, 3 do
-		task.delay(0.2, function() -- Casi simultáneos (0.2s delay para drama)
-			local angle = (i / 3) * math.pi * 2 + math.pi / 6 -- Offset para rotación
+		task.delay(0.2, function() -- Casi simultï¿½neos (0.2s delay para drama)
+			local angle = (i / 3) * math.pi * 2 + math.pi / 6 -- Offset para rotaciï¿½n
 			local offset = Vector3.new(
 				math.cos(angle) * radius,
 				0,
@@ -643,19 +679,19 @@ local function BossPhase_Triangle(plr: Player)
 	end
 
 	if Config.DEBUG_MODE then
-		print(("[BossMeteor] Fase 4 'Triángulo de Fuego' ejecutada para %s"):format(plr.Name))
+		print(("[BossMeteor] Fase 4 'Triï¿½ngulo de Fuego' ejecutada para %s"):format(plr.Name))
 	end
 end
 
--- ?? FUNCIÓN PRINCIPAL: BossMeteor
+-- ?? FUNCIï¿½N PRINCIPAL: BossMeteor
 function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 	print(("[EVENT] ?? BOSS METEOR iniciado - Wave %d | Full Boss: %s"):format(waveNum, tostring(isFullBoss)))
 
 	local phaseNames = {
 		"Esquinas del Caos",
-		"Círculo Infernal",
+		"Cï¿½rculo Infernal",
 		"El Coloso",
-		"Triángulo de Fuego"
+		"Triï¿½ngulo de Fuego"
 	}
 
 	local phaseFunctions = {
@@ -709,7 +745,7 @@ function EventManager:BossMeteor(waveNum: number, isFullBoss: boolean)
 
 		-- Timing entre fases
 		if phaseNum == 3 then
-			totalDuration += 10 -- Coloso tarda más
+			totalDuration += 10 -- Coloso tarda mï¿½s
 		else
 			totalDuration += 6 -- Otras fases
 		end
@@ -727,7 +763,7 @@ Players.PlayerRemoving:Connect(function(plr)
 end)
 
 if Config.DEBUG_MODE then
-	print("[EVENTMANAGER ARREGLADO] ? Módulo cargado - esperando inyección de BaseModule")
+	print("[EVENTMANAGER ARREGLADO] ? Mï¿½dulo cargado - esperando inyecciï¿½n de BaseModule")
 end
 
 return EventManager
