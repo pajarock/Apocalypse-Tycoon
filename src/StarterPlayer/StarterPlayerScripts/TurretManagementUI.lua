@@ -81,15 +81,46 @@ local function updateUI(info: table)
 
 	-- Actualizar stats
 	local statsLabel = mainFrame:FindFirstChild("InfoContainer"):FindFirstChild("StatsLabel")
-	local statsText = string.format(
-		"Damage: %s\nRange: %s studs\nFire Rate: %.2fs\nPriority: %s\n\nCurrent Tier: %s\n%s",
-		tostring(info.Stats.Damage),
-		tostring(info.Stats.Range),
-		info.Stats.FireRate,
-		info.Stats.TargetPriority,
-		info.CurrentTier,
-		info.CanUpgrade and "Can upgrade to: " .. info.NextTier or "MAX TIER"
-	)
+
+	-- Construir texto de stats según el tipo de torreta
+	local statsText = ""
+
+	-- Tipo de torreta (Machine Gun, Laser, Missile, Tesla)
+	local turretType = info.TurretType or "Unknown"
+
+	-- Stats comunes
+	statsText = statsText .. string.format("Type: %s\n", turretType)
+	statsText = statsText .. string.format("Range: %s studs\n", tostring(info.Stats.Range))
+
+	-- Stats específicos por tipo
+	if turretType == "MachineGun" then
+		-- Machine Gun: Damage por disparo + Fire Rate
+		statsText = statsText .. string.format("Damage: %s per shot\n", tostring(info.Stats.Damage))
+		statsText = statsText .. string.format("Fire Rate: %.2fs\n", info.Stats.FireRate or 1.0)
+	elseif turretType == "Laser" then
+		-- Laser: DPS continuo
+		statsText = statsText .. string.format("DPS: %s (continuous)\n", tostring(info.Stats.DPS))
+		statsText = statsText .. "Beam: Continuous\n"
+	elseif turretType == "Missile" then
+		-- Missile: Damage + AOE + Cooldown
+		statsText = statsText .. string.format("Damage: %s\n", tostring(info.Stats.Damage))
+		statsText = statsText .. string.format("AOE Radius: %s studs\n", tostring(info.Stats.AOERadius))
+		statsText = statsText .. string.format("Cooldown: %.1fs\n", info.Stats.Cooldown or 2.0)
+	elseif turretType == "Tesla" then
+		-- Tesla: Damage + Chain Count + Cooldown
+		statsText = statsText .. string.format("Damage: %s\n", tostring(info.Stats.Damage))
+		statsText = statsText .. string.format("Chain: %s targets\n", tostring(info.Stats.ChainCount))
+		statsText = statsText .. string.format("Cooldown: %.1fs\n", info.Stats.Cooldown or 1.5)
+	else
+		-- Fallback genérico
+		statsText = statsText .. string.format("Damage: %s\n", tostring(info.Stats.Damage or info.Stats.DPS or "N/A"))
+	end
+
+	-- Priority y tier (comunes a todos)
+	statsText = statsText .. string.format("Priority: %s\n", info.Stats.TargetPriority or "Closest")
+	statsText = statsText .. string.format("\nCurrent Tier: %s\n", info.CurrentTier)
+	statsText = statsText .. (info.CanUpgrade and "Can upgrade to: " .. info.NextTier or "MAX TIER")
+
 	statsLabel.Text = statsText
 
 	-- Actualizar botón de upgrade
