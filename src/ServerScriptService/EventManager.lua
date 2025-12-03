@@ -127,12 +127,12 @@ local function getPlayerBasePart(plr: Player): BasePart?
 		if Config.DEBUG_MODE then
 			print(("[EventManager] 📊 BaseData result: %s"):format(baseData and "EXISTS" or "NIL"))
 			if baseData then
-				print(("[EventManager] 📊 BaseData.PlateInstance: %s"):format(baseData.PlateInstance and "EXISTS" or "NIL"))
+				print(("[EventManager] 📊 BaseData.BasePlate: %s"):format(baseData.BasePlate and "EXISTS" or "NIL"))
 			end
 		end
 
-		if baseData and baseData.PlateInstance then
-			return baseData.PlateInstance
+		if baseData and baseData.BasePlate then
+			return baseData.BasePlate
 		end
 		return nil
 	end)
