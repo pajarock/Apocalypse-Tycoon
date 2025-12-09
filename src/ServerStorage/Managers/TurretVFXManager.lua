@@ -304,6 +304,91 @@ function TurretVFXManager:CreateMissileExplosion(position: Vector3, radius: numb
 	Debris:AddItem(sphere, 1)
 end
 
+--[[
+	Crea un proyectil de misil que viaja hacia el target.
+
+	@param origin - Posición de origen (torreta)
+	@param target - Posición de destino
+	@param speed - Velocidad del proyectil (default 120)
+	@param onImpact - Callback cuando el proyectil llega al target
+	@return Part - El proyectil para tracking
+]]
+function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: Vector3, speed: number?, onImpact: ((Vector3) -> ())?): Part?
+	local projectileSpeed = speed or 120
+
+	-- Crear proyectil del misil
+	local missile = Instance.new("Part")
+	missile.Name = "MissileProjectile"
+	missile.Shape = Enum.PartType.Cylinder
+	missile.Size = Vector3.new(3, 0.8, 0.8)  -- Cilindro alargado
+	missile.Material = Enum.Material.Neon
+	missile.Color = Color3.fromRGB(200, 200, 200)  -- Gris metálico
+	missile.Anchored = false
+	missile.CanCollide = false
+	missile.Position = origin
+	missile.Parent = workspace
+
+	-- Orientar el misil hacia el target
+	local direction = (target - origin).Unit
+	missile.CFrame = CFrame.lookAt(origin, target) * CFrame.Angles(0, 0, math.pi/2)
+
+	-- Trail de humo
+	local att0 = Instance.new("Attachment", missile)
+	local att1 = Instance.new("Attachment", missile)
+	att1.Position = Vector3.new(-1.5, 0, 0)
+
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = att0
+	trail.Attachment1 = att1
+	trail.Lifetime = 0.5
+	trail.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	trail.Parent = missile
+
+	-- Particles de propulsión
+	local fire = Instance.new("Fire")
+	fire.Size = 3
+	fire.Heat = 10
+	fire.Color = Color3.fromRGB(255, 150, 50)
+	fire.SecondaryColor = Color3.fromRGB(255, 100, 0)
+	fire.Parent = missile
+
+	-- BodyVelocity para movimiento
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+	bv.Velocity = direction * projectileSpeed
+	bv.Parent = missile
+
+	-- Detectar llegada al target (por distancia)
+	local startTime = tick()
+	local maxTravelTime = 5  -- Máximo 5 segundos de vuelo
+
+	task.spawn(function()
+		while missile and missile.Parent do
+			local distanceToTarget = (missile.Position - target).Magnitude
+
+			-- Si llegó al target (dentro de 5 studs) o timeout
+			if distanceToTarget < 5 or (tick() - startTime) > maxTravelTime then
+				if onImpact then
+					onImpact(missile.Position)
+				end
+				missile:Destroy()
+				break
+			end
+
+			task.wait()
+		end
+	end)
+
+	-- Safety: destruir después de maxTravelTime
+	Debris:AddItem(missile, maxTravelTime)
+
+	return missile
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	TESLA VFX
 ────────────────────────────────────────────────────────────────────────]]
