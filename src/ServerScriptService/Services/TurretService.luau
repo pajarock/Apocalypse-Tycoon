@@ -168,7 +168,7 @@ function TurretService:RegisterTurret(objectId: string, userId: number, model: M
 		UserId = userId,
 		Model = model,
 		Definition = definition,
-		LastFireTime = 0,
+		LastFireTime = -999,  -- Inicializar en pasado para que pueda disparar inmediatamente
 		CurrentTarget = nil,
 		IsActive = true,
 	}
@@ -452,9 +452,17 @@ end
 function TurretService:TryFire(turretData: TurretData, target: Model, currentTime: number)
 	local definition = turretData.Definition
 	local stats = definition.Stats
+	local turretType = definition.TurretType
 
 	-- Obtener cooldown apropiado
-	local cooldown = stats.FireRate or stats.Cooldown or 1.0
+	-- Laser dispara cada frame (cooldown 0) para aplicar DPS continuo
+	local cooldown
+	if turretType == "Laser" then
+		cooldown = 0  -- Sin cooldown, dispara cada frame
+	else
+		cooldown = stats.FireRate or stats.Cooldown or 1.0
+	end
+
 	local timeSinceLastFire = currentTime - turretData.LastFireTime
 
 	-- Verificar si puede disparar
@@ -463,8 +471,6 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 	end
 
 	-- Disparar según tipo
-	local turretType = definition.TurretType
-
 	if turretType == "MachineGun" then
 		self:FireMachineGun(turretData, target)
 	elseif turretType == "Laser" then
@@ -531,14 +537,15 @@ function TurretService:FireMissile(turretData: TurretData, target: Model)
 	local damage = stats.Damage or 80
 	local aoeRadius = stats.AOERadius or 12
 
-	-- Obtener posición del target
-	local targetPos = target:GetPivot().Position
+	-- Obtener posición inicial de la torreta
+	local turretPos = turretData.Model:GetPivot().Position
 
-	-- Aplicar daño AOE
-	self:ApplyAOEDamage(targetPos, aoeRadius, damage)
-
-	-- VFX (explosión)
-	TurretVFXManager:CreateMissileExplosion(targetPos, aoeRadius)
+	-- Crear proyectil de misil que PERSIGUE al target en tiempo real
+	TurretVFXManager:CreateMissileProjectile(turretPos, target, 120, function(impactPos)
+		-- Cuando el proyectil impacta, aplicar daño AOE y explosión
+		self:ApplyAOEDamage(impactPos, aoeRadius, damage)
+		TurretVFXManager:CreateMissileExplosion(impactPos, aoeRadius)
+	end)
 end
 
 --[[
@@ -555,8 +562,12 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 
 	-- Lista de targets ya afectados
 	local affectedTargets = {}
-	local affectedPositions = {}  -- Para VFX
+	local chainPositions = {}  -- Para VFX: incluye torreta como origen
 	local currentTarget = target
+
+	-- Agregar posición de la torreta como primer punto de la cadena
+	local turretPos = turretData.Model:GetPivot().Position
+	table.insert(chainPositions, turretPos)
 
 	-- Aplicar cadenas
 	for i = 1, maxChains do
@@ -567,7 +578,7 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 		-- Aplicar daño
 		self:ApplyDamage(currentTarget, damage)
 		table.insert(affectedTargets, currentTarget)
-		table.insert(affectedPositions, currentTarget:GetPivot().Position)
+		table.insert(chainPositions, currentTarget:GetPivot().Position)
 
 		-- Buscar siguiente target en cadena
 		if i < maxChains then
@@ -575,9 +586,9 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 		end
 	end
 
-	-- VFX (cadenas eléctricas)
-	if #affectedPositions >= 2 then
-		TurretVFXManager:CreateTeslaChain(affectedPositions)
+	-- VFX (cadenas eléctricas) - siempre mostrar si hay al menos 1 target
+	if #chainPositions >= 2 then  -- Torreta + al menos 1 meteorito
+		TurretVFXManager:CreateTeslaChain(chainPositions)
 	end
 end
 

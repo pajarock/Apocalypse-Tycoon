@@ -204,7 +204,7 @@ end
 	@return Part - Part del beam para control posterior
 ]]
 function TurretVFXManager:CreateLaserBeam(origin: Vector3, target: Vector3, duration: number?): Part?
-	local beamDuration = duration or 0.1  -- Default 100ms
+	local beamDuration = duration or 0.3  -- Increased from 0.1 to 0.3 seconds for better visibility
 
 	-- Crear Part invisible
 	local beamPart = Instance.new("Part")
@@ -221,19 +221,19 @@ function TurretVFXManager:CreateLaserBeam(origin: Vector3, target: Vector3, dura
 
 	local att1 = self:CreateTargetAttachment(target)
 
-	-- Beam láser (rojo brillante)
+	-- Beam láser (rojo brillante, más grueso y brillante)
 	local beam = Instance.new("Beam")
 	beam.Attachment0 = att0
 	beam.Attachment1 = att1
 	beam.Color = ColorSequence.new(Color3.fromRGB(255, 50, 50))
-	beam.Brightness = 3
-	beam.Width0 = 0.4
-	beam.Width1 = 0.3
+	beam.Brightness = 7  -- Increased from 3 to 7 for much better visibility
+	beam.Width0 = 1.5  -- Increased from 0.4 to 1.5 studs
+	beam.Width1 = 1.2  -- Increased from 0.3 to 1.2 studs
 	beam.FaceCamera = true
 	beam.Texture = "rbxasset://textures/particles/smoke_main.dds"  -- Textura suave
 	beam.Parent = beamPart
 
-	-- Efecto de impacto en el target
+	-- Efecto de impacto en el target más visible
 	self:CreateImpactEffect(target, Color3.fromRGB(255, 100, 100))
 
 	-- Destruir automáticamente
@@ -304,6 +304,114 @@ function TurretVFXManager:CreateMissileExplosion(position: Vector3, radius: numb
 	Debris:AddItem(sphere, 1)
 end
 
+--[[
+	Crea un proyectil de misil que persigue al target.
+
+	@param origin - Posición de origen (torreta)
+	@param target - Model a perseguir (meteorito) o Vector3 fija
+	@param speed - Velocidad del proyectil (default 120)
+	@param onImpact - Callback cuando el proyectil impacta
+	@return Part - El proyectil para tracking
+]]
+function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, speed: number?, onImpact: ((Vector3) -> ())?): Part?
+	local projectileSpeed = speed or 120
+	-- Permitir tracking tanto de Models como Parts (meteoritos son Parts)
+	local isTrackingTarget = typeof(target) == "Instance" and (target:IsA("Model") or target:IsA("BasePart"))
+
+	-- Crear proyectil del misil
+	local missile = Instance.new("Part")
+	missile.Name = "MissileProjectile"
+	missile.Shape = Enum.PartType.Cylinder
+	missile.Size = Vector3.new(3, 0.8, 0.8)  -- Cilindro alargado
+	missile.Material = Enum.Material.Neon
+	missile.Color = Color3.fromRGB(200, 200, 200)  -- Gris metálico
+	missile.Anchored = false
+	missile.CanCollide = false
+	missile.Position = origin
+	missile.Parent = workspace
+
+	-- Trail de humo
+	local att0 = Instance.new("Attachment", missile)
+	local att1 = Instance.new("Attachment", missile)
+	att1.Position = Vector3.new(-1.5, 0, 0)
+
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = att0
+	trail.Attachment1 = att1
+	trail.Lifetime = 0.5
+	trail.Color = ColorSequence.new(Color3.fromRGB(150, 150, 150))
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.5),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	trail.Parent = missile
+
+	-- Particles de propulsión
+	local fire = Instance.new("Fire")
+	fire.Size = 3
+	fire.Heat = 10
+	fire.Color = Color3.fromRGB(255, 150, 50)
+	fire.SecondaryColor = Color3.fromRGB(255, 100, 0)
+	fire.Parent = missile
+
+	-- BodyVelocity para movimiento (se actualizará cada frame si persigue)
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+	bv.Parent = missile
+
+	-- Loop de persecución y detección de impacto
+	local startTime = tick()
+	local maxTravelTime = 5  -- Máximo 5 segundos de vuelo
+
+	task.spawn(function()
+		while missile and missile.Parent do
+			-- Obtener posición actual del target
+			local targetPos
+			if isTrackingTarget and target and target.Parent then
+				-- Parts usan .Position, Models usan :GetPivot().Position
+				if target:IsA("BasePart") then
+					targetPos = target.Position
+				else
+					targetPos = target:GetPivot().Position
+				end
+			elseif typeof(target) == "Vector3" then
+				targetPos = target
+			else
+				-- Target destruido, explotar en posición actual
+				if onImpact then
+					onImpact(missile.Position)
+				end
+				missile:Destroy()
+				break
+			end
+
+			-- Actualizar velocidad para perseguir el target
+			local direction = (targetPos - missile.Position).Unit
+			bv.Velocity = direction * projectileSpeed
+
+			-- Orientar el misil hacia el target
+			missile.CFrame = CFrame.lookAt(missile.Position, targetPos) * CFrame.Angles(0, 0, math.pi/2)
+
+			-- Verificar impacto (dentro de 8 studs o timeout)
+			local distanceToTarget = (missile.Position - targetPos).Magnitude
+			if distanceToTarget < 8 or (tick() - startTime) > maxTravelTime then
+				if onImpact then
+					onImpact(missile.Position)
+				end
+				missile:Destroy()
+				break
+			end
+
+			task.wait()
+		end
+	end)
+
+	-- Safety: destruir después de maxTravelTime
+	Debris:AddItem(missile, maxTravelTime)
+
+	return missile
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	TESLA VFX
 ────────────────────────────────────────────────────────────────────────]]
@@ -322,7 +430,7 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 		local origin = targets[i]
 		local target = targets[i + 1]
 
-		-- Crear beam eléctrico
+		-- Crear part invisible para attachments
 		local chainPart = Instance.new("Part")
 		chainPart.Anchored = true
 		chainPart.CanCollide = false
@@ -336,25 +444,37 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 
 		local att1 = self:CreateTargetAttachment(target)
 
-		-- Beam eléctrico (azul brillante con curva)
+		-- Beam único: Rayo eléctrico brillante (cyan -> blanco -> cyan)
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = att0
 		beam.Attachment1 = att1
-		beam.Color = ColorSequence.new(Color3.fromRGB(100, 150, 255))
-		beam.Brightness = 4
-		beam.Width0 = 0.5
-		beam.Width1 = 0.5
+		beam.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 200, 255)),    -- Cyan brillante
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 230, 255)),  -- Casi blanco
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 200, 255))     -- Cyan brillante
+		})
+		beam.Brightness = 10  -- Muy brillante
+		beam.Width0 = 2.5  -- Grueso y visible
+		beam.Width1 = 2.5
 		beam.FaceCamera = true
-		beam.CurveSize0 = math.random(-5, 5)  -- Zigzag aleatorio
-		beam.CurveSize1 = math.random(-5, 5)
+		beam.Transparency = NumberSequence.new(0)  -- Completamente opaco
+		beam.LightEmission = 1  -- Emite luz
+		beam.LightInfluence = 0  -- No afectado por iluminación ambiental
 		beam.Texture = "rbxasset://textures/particles/smoke_main.dds"
 		beam.Parent = chainPart
 
-		-- Efecto de impacto en cada target
-		self:CreateImpactEffect(target, Color3.fromRGB(150, 200, 255))
+		-- PointLight para iluminación ambiental eléctrica
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(100, 200, 255)
+		light.Brightness = 8
+		light.Range = 25
+		light.Parent = chainPart
 
-		-- Destruir después de 0.2s
-		Debris:AddItem(chainPart, 0.2)
+		-- Efecto de impacto eléctrico en target
+		self:CreateImpactEffect(target, Color3.fromRGB(150, 220, 255))
+
+		-- Destruir después de 0.5s (aumentado para mejor visibilidad)
+		Debris:AddItem(chainPart, 0.5)
 	end
 end
 
