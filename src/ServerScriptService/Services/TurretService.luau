@@ -452,9 +452,17 @@ end
 function TurretService:TryFire(turretData: TurretData, target: Model, currentTime: number)
 	local definition = turretData.Definition
 	local stats = definition.Stats
+	local turretType = definition.TurretType
 
 	-- Obtener cooldown apropiado
-	local cooldown = stats.FireRate or stats.Cooldown or 1.0
+	-- Laser dispara cada frame (cooldown 0) para aplicar DPS continuo
+	local cooldown
+	if turretType == "Laser" then
+		cooldown = 0  -- Sin cooldown, dispara cada frame
+	else
+		cooldown = stats.FireRate or stats.Cooldown or 1.0
+	end
+
 	local timeSinceLastFire = currentTime - turretData.LastFireTime
 
 	-- Verificar si puede disparar
@@ -463,8 +471,6 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 	end
 
 	-- Disparar según tipo
-	local turretType = definition.TurretType
-
 	if turretType == "MachineGun" then
 		self:FireMachineGun(turretData, target)
 	elseif turretType == "Laser" then
