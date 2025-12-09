@@ -305,16 +305,17 @@ function TurretVFXManager:CreateMissileExplosion(position: Vector3, radius: numb
 end
 
 --[[
-	Crea un proyectil de misil que viaja hacia el target.
+	Crea un proyectil de misil que persigue al target.
 
 	@param origin - Posición de origen (torreta)
-	@param target - Posición de destino
+	@param target - Model a perseguir (meteorito) o Vector3 fija
 	@param speed - Velocidad del proyectil (default 120)
-	@param onImpact - Callback cuando el proyectil llega al target
+	@param onImpact - Callback cuando el proyectil impacta
 	@return Part - El proyectil para tracking
 ]]
-function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: Vector3, speed: number?, onImpact: ((Vector3) -> ())?): Part?
+function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, speed: number?, onImpact: ((Vector3) -> ())?): Part?
 	local projectileSpeed = speed or 120
+	local isTrackingTarget = typeof(target) == "Instance" and target:IsA("Model")
 
 	-- Crear proyectil del misil
 	local missile = Instance.new("Part")
@@ -327,10 +328,6 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: Vecto
 	missile.CanCollide = false
 	missile.Position = origin
 	missile.Parent = workspace
-
-	-- Orientar el misil hacia el target
-	local direction = (target - origin).Unit
-	missile.CFrame = CFrame.lookAt(origin, target) * CFrame.Angles(0, 0, math.pi/2)
 
 	-- Trail de humo
 	local att0 = Instance.new("Attachment", missile)
@@ -356,22 +353,42 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: Vecto
 	fire.SecondaryColor = Color3.fromRGB(255, 100, 0)
 	fire.Parent = missile
 
-	-- BodyVelocity para movimiento
+	-- BodyVelocity para movimiento (se actualizará cada frame si persigue)
 	local bv = Instance.new("BodyVelocity")
 	bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-	bv.Velocity = direction * projectileSpeed
 	bv.Parent = missile
 
-	-- Detectar llegada al target (por distancia)
+	-- Loop de persecución y detección de impacto
 	local startTime = tick()
 	local maxTravelTime = 5  -- Máximo 5 segundos de vuelo
 
 	task.spawn(function()
 		while missile and missile.Parent do
-			local distanceToTarget = (missile.Position - target).Magnitude
+			-- Obtener posición actual del target
+			local targetPos
+			if isTrackingTarget and target and target.Parent then
+				targetPos = target:GetPivot().Position
+			elseif typeof(target) == "Vector3" then
+				targetPos = target
+			else
+				-- Target destruido, explotar en posición actual
+				if onImpact then
+					onImpact(missile.Position)
+				end
+				missile:Destroy()
+				break
+			end
 
-			-- Si llegó al target (dentro de 5 studs) o timeout
-			if distanceToTarget < 5 or (tick() - startTime) > maxTravelTime then
+			-- Actualizar velocidad para perseguir el target
+			local direction = (targetPos - missile.Position).Unit
+			bv.Velocity = direction * projectileSpeed
+
+			-- Orientar el misil hacia el target
+			missile.CFrame = CFrame.lookAt(missile.Position, targetPos) * CFrame.Angles(0, 0, math.pi/2)
+
+			-- Verificar impacto (dentro de 8 studs o timeout)
+			local distanceToTarget = (missile.Position - targetPos).Magnitude
+			if distanceToTarget < 8 or (tick() - startTime) > maxTravelTime then
 				if onImpact then
 					onImpact(missile.Position)
 				end

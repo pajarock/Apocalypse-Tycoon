@@ -537,13 +537,12 @@ function TurretService:FireMissile(turretData: TurretData, target: Model)
 	local damage = stats.Damage or 80
 	local aoeRadius = stats.AOERadius or 12
 
-	-- Obtener posiciones
+	-- Obtener posición inicial de la torreta
 	local turretPos = turretData.Model:GetPivot().Position
-	local targetPos = target:GetPivot().Position
 
-	-- Crear proyectil de misil que viaja hacia el target
-	TurretVFXManager:CreateMissileProjectile(turretPos, targetPos, 120, function(impactPos)
-		-- Cuando el proyectil llega, aplicar daño AOE y explosión
+	-- Crear proyectil de misil que PERSIGUE al target en tiempo real
+	TurretVFXManager:CreateMissileProjectile(turretPos, target, 120, function(impactPos)
+		-- Cuando el proyectil impacta, aplicar daño AOE y explosión
 		self:ApplyAOEDamage(impactPos, aoeRadius, damage)
 		TurretVFXManager:CreateMissileExplosion(impactPos, aoeRadius)
 	end)
