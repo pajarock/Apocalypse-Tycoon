@@ -168,7 +168,7 @@ function TurretService:RegisterTurret(objectId: string, userId: number, model: M
 		UserId = userId,
 		Model = model,
 		Definition = definition,
-		LastFireTime = 0,
+		LastFireTime = -999,  -- Inicializar en pasado para que pueda disparar inmediatamente
 		CurrentTarget = nil,
 		IsActive = true,
 	}

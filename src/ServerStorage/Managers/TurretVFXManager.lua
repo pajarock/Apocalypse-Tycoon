@@ -438,7 +438,7 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 		beam.Texture = "rbxasset://textures/particles/smoke_main.dds"
 		beam.Parent = chainPart
 
-		-- Beam core (centro blanco brillante sin curva)
+		-- Beam core (centro blanco brillante, completamente recto)
 		local coreBeam = Instance.new("Beam")
 		coreBeam.Attachment0 = att0
 		coreBeam.Attachment1 = att1
@@ -447,6 +447,8 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 		coreBeam.Width0 = 0.8  -- Centro delgado
 		coreBeam.Width1 = 0.8
 		coreBeam.FaceCamera = true
+		coreBeam.CurveSize0 = 0  -- Sin curva - completamente recto
+		coreBeam.CurveSize1 = 0  -- Sin curva - completamente recto
 		coreBeam.Transparency = NumberSequence.new(0)  -- Completamente opaco
 		coreBeam.LightEmission = 1
 		coreBeam.LightInfluence = 0
