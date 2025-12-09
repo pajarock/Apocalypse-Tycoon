@@ -880,9 +880,6 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 	local updatedState = EconomyModule.GetState(player.UserId)
 	if updatedState then
 		BaseModule.UpdateGuardianTarget(player.UserId, updatedState.Cash)
-		if Config.DEBUG_MODE then
-			print(("[TurretService] 🛡️ Guardian actualizado: nuevo target = $%d"):format(updatedState.Cash))
-		end
 	end
 
 	-- Obtener nueva definición
@@ -1046,9 +1043,6 @@ function TurretService:HandleSellTurret(player: Player, objectId: string)
 	local refundState = EconomyModule.GetState(player.UserId)
 	if refundState then
 		BaseModule.UpdateGuardianTarget(player.UserId, refundState.Cash)
-		if Config.DEBUG_MODE then
-			print(("[TurretService] 🛡️ Guardian actualizado después de refund: nuevo target = $%d"):format(refundState.Cash))
-		end
 	end
 
 	-- Desregistrar torreta
