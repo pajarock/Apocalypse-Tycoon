@@ -407,7 +407,7 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 		local origin = targets[i]
 		local target = targets[i + 1]
 
-		-- Crear beam eléctrico
+		-- Crear part invisible para attachments
 		local chainPart = Instance.new("Part")
 		chainPart.Anchored = true
 		chainPart.CanCollide = false
@@ -421,24 +421,49 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 
 		local att1 = self:CreateTargetAttachment(target)
 
-		-- Beam eléctrico (azul brillante con curva, mejorado para visibilidad)
+		-- Beam principal (azul eléctrico exterior con zigzag)
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = att0
 		beam.Attachment1 = att1
-		beam.Color = ColorSequence.new(Color3.fromRGB(100, 150, 255))
-		beam.Brightness = 6  -- Increased from 4 to 6 for better visibility
-		beam.Width0 = 1.5  -- Increased from 0.5 to 1.5 (3x thicker)
-		beam.Width1 = 1.5  -- Increased from 0.5 to 1.5 (3x thicker)
+		beam.Color = ColorSequence.new(Color3.fromRGB(50, 150, 255))  -- Azul eléctrico
+		beam.Brightness = 8  -- Muy brillante
+		beam.Width0 = 2.0  -- Más grueso
+		beam.Width1 = 2.0
 		beam.FaceCamera = true
-		beam.CurveSize0 = math.random(-8, 8)  -- Increased zigzag for dramatic effect
-		beam.CurveSize1 = math.random(-8, 8)
+		beam.CurveSize0 = math.random(-12, 12)  -- Zigzag muy pronunciado
+		beam.CurveSize1 = math.random(-12, 12)
+		beam.Transparency = NumberSequence.new(0.3)  -- Ligeramente transparente
+		beam.LightEmission = 1  -- Emite luz
+		beam.LightInfluence = 0  -- No afectado por iluminación ambiental
 		beam.Texture = "rbxasset://textures/particles/smoke_main.dds"
 		beam.Parent = chainPart
 
-		-- Efecto de impacto en cada target
+		-- Beam core (centro blanco brillante sin curva)
+		local coreBeam = Instance.new("Beam")
+		coreBeam.Attachment0 = att0
+		coreBeam.Attachment1 = att1
+		coreBeam.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))  -- Blanco puro
+		coreBeam.Brightness = 10  -- Extremadamente brillante
+		coreBeam.Width0 = 0.8  -- Centro delgado
+		coreBeam.Width1 = 0.8
+		coreBeam.FaceCamera = true
+		coreBeam.Transparency = NumberSequence.new(0)  -- Completamente opaco
+		coreBeam.LightEmission = 1
+		coreBeam.LightInfluence = 0
+		coreBeam.Texture = "rbxasset://textures/particles/smoke_main.dds"
+		coreBeam.Parent = chainPart
+
+		-- PointLight para iluminación ambiental
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(100, 200, 255)
+		light.Brightness = 5
+		light.Range = 20
+		light.Parent = chainPart
+
+		-- Efecto de impacto eléctrico en target
 		self:CreateImpactEffect(target, Color3.fromRGB(150, 200, 255))
 
-		-- Destruir después de 0.4s (increased from 0.2s for better visibility)
+		-- Destruir después de 0.4s
 		Debris:AddItem(chainPart, 0.4)
 	end
 end
