@@ -436,7 +436,7 @@ local function spawnMeteorOverBase(plr: Player, height: number?, spread: number?
 	local sp = spread or 12
 	local offset = Vector3.new(math.random(-sp, sp), 0, math.random(-sp, sp))
 	local startPos = base.Position + Vector3.new(0, h, 0) + offset
-	local target   = base.Position  -- Apuntar directamente a la base para trayectoria más larga
+	local target   = base.Position + offset * 0.25
 
 	spawnMeteorTowards(plr, startPos, target, meteorType)
 end
@@ -462,8 +462,8 @@ DebugSpawnMeteor.OnServerEvent:Connect(function(plr: Player)
 	local types = {"Small", "Normal", "Large"}
 	local randomType = types[math.random(1, #types)]
 
-	-- Spawn con spread de 200 studs para dar tiempo a torretas con cooldown (Missile 3.0s, Tesla 1.5s)
-	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y, 200, randomType)
+	-- Usar mismos parámetros que waves normales para consistencia
+	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y + 20, 14, randomType)
 end)
 
 -- Evento: MeteorStorm (sin cambios de l�gica, solo VFX)
