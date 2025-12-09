@@ -465,6 +465,13 @@ function TurretService:TryFire(turretData: TurretData, target: Model, currentTim
 
 	local timeSinceLastFire = currentTime - turretData.LastFireTime
 
+	-- DEBUG: Log para Missile
+	if turretType == "Missile" then
+		print(("[DEBUG] TryFire Missile: timeSince=%.2f, cooldown=%.2f, canFire=%s"):format(
+			timeSinceLastFire, cooldown, tostring(timeSinceLastFire >= cooldown)
+		))
+	end
+
 	-- Verificar si puede disparar
 	if timeSinceLastFire < cooldown then
 		return
@@ -539,6 +546,11 @@ function TurretService:FireMissile(turretData: TurretData, target: Model)
 
 	-- Obtener posición inicial de la torreta
 	local turretPos = turretData.Model:GetPivot().Position
+
+	-- DEBUG
+	print(("[DEBUG] FireMissile called: turretPos=%s, target=%s"):format(
+		tostring(turretPos), target.Name
+	))
 
 	-- Crear proyectil de misil que PERSIGUE al target en tiempo real
 	TurretVFXManager:CreateMissileProjectile(turretPos, target, 120, function(impactPos)

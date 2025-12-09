@@ -317,6 +317,11 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, 
 	local projectileSpeed = speed or 120
 	local isTrackingTarget = typeof(target) == "Instance" and target:IsA("Model")
 
+	-- DEBUG
+	print(("[DEBUG] CreateMissileProjectile: origin=%s, targetType=%s, isTracking=%s"):format(
+		tostring(origin), typeof(target), tostring(isTrackingTarget)
+	))
+
 	-- Crear proyectil del misil
 	local missile = Instance.new("Part")
 	missile.Name = "MissileProjectile"
@@ -328,6 +333,8 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, 
 	missile.CanCollide = false
 	missile.Position = origin
 	missile.Parent = workspace
+
+	print("[DEBUG] Missile created and parented to workspace")
 
 	-- Trail de humo
 	local att0 = Instance.new("Attachment", missile)
