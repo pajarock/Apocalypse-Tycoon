@@ -958,6 +958,23 @@ if PurchasePowerUp then
 			-- errorMsg ahora contiene el powerUpId
 			local powerUpId = errorMsg
 
+			-- ? Actualizar Guardian para permitir compra leg�tima
+			local s = Economy.GetState(plr.UserId)
+			if s then
+				Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
+				-- Sync leaderstats
+				local ls = plr:FindFirstChild("leaderstats")
+				if ls then
+					local c = ls:FindFirstChild("Cash") :: IntValue?
+					if c then c.Value = s.Cash end
+				end
+
+				if Config.DEBUG_MODE then
+					print(("[POWERUP] ? Guardian actualizado: nuevo target = $%d"):format(s.Cash))
+				end
+			end
+
 			-- ?? Spawnear chicle/gumball f�sico desde la m�quina
 			local vendingMachine = getBasesFolder():FindFirstChild("VendingMachine_" .. plr.Name)
 			if vendingMachine and powerUpId then
@@ -1118,10 +1135,17 @@ RequestRepair.OnServerEvent:Connect(function(plr: Player, amount: number)
 	-- Sync leaderstats
 	local s = Economy.GetState(plr.UserId)
 	if s then
+		-- ? Actualizar Guardian para permitir gasto leg�timo
+		Base.UpdateGuardianTarget(plr.UserId, s.Cash)
+
 		local ls = plr:FindFirstChild("leaderstats")
 		if ls then
 			local c = ls:FindFirstChild("Cash") :: IntValue?
 			if c then c.Value = s.Cash end
+		end
+
+		if DEBUG then
+			print(("[REPAIR] ? Guardian actualizado: nuevo target = $%d"):format(s.Cash))
 		end
 	end
 
