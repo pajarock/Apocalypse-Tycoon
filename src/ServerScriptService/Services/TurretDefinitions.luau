@@ -230,7 +230,7 @@ TurretDefinitions.LaserT1 = {
 	Cost = 15000,
 
 	Stats = {
-		DPS = 25,
+		DPS = 100,  -- Increased from 25 (4x) - now 3x stronger than Machine Gun to justify 3x cost
 		Range = 70,
 		BeamDuration = "Continuous",
 		TargetPriority = "Strongest",
@@ -256,7 +256,7 @@ TurretDefinitions.LaserT2 = {
 	Cost = 60000,
 
 	Stats = {
-		DPS = 50,
+		DPS = 200,  -- Increased from 50 (4x)
 		Range = 80,
 		BeamDuration = "Continuous",
 		TargetPriority = "Strongest",
@@ -282,7 +282,7 @@ TurretDefinitions.LaserT3 = {
 	Cost = 250000,
 
 	Stats = {
-		DPS = 100,
+		DPS = 400,  -- Increased from 100 (4x)
 		Range = 90,
 		BeamDuration = "Continuous",
 		TargetPriority = "Strongest",
@@ -308,7 +308,7 @@ TurretDefinitions.LaserT4 = {
 	Cost = 1000000,
 
 	Stats = {
-		DPS = 200,
+		DPS = 800,  -- Increased from 200 (4x)
 		Range = 110,
 		BeamDuration = "Continuous",
 		TargetPriority = "Strongest",
@@ -334,7 +334,7 @@ TurretDefinitions.LaserT5 = {
 	Cost = 4500000,
 
 	Stats = {
-		DPS = 400,
+		DPS = 1600,  -- Increased from 400 (4x)
 		Range = 130,
 		BeamDuration = "Continuous",
 		TargetPriority = "Strongest",
