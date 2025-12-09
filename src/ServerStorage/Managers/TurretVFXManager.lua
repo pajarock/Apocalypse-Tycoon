@@ -315,12 +315,8 @@ end
 ]]
 function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, speed: number?, onImpact: ((Vector3) -> ())?): Part?
 	local projectileSpeed = speed or 120
-	local isTrackingTarget = typeof(target) == "Instance" and target:IsA("Model")
-
-	-- DEBUG
-	print(("[DEBUG] CreateMissileProjectile: origin=%s, targetType=%s, isTracking=%s"):format(
-		tostring(origin), typeof(target), tostring(isTrackingTarget)
-	))
+	-- Permitir tracking tanto de Models como Parts (meteoritos son Parts)
+	local isTrackingTarget = typeof(target) == "Instance" and (target:IsA("Model") or target:IsA("BasePart"))
 
 	-- Crear proyectil del misil
 	local missile = Instance.new("Part")
@@ -333,8 +329,6 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, 
 	missile.CanCollide = false
 	missile.Position = origin
 	missile.Parent = workspace
-
-	print("[DEBUG] Missile created and parented to workspace")
 
 	-- Trail de humo
 	local att0 = Instance.new("Attachment", missile)
@@ -374,7 +368,12 @@ function TurretVFXManager:CreateMissileProjectile(origin: Vector3, target: any, 
 			-- Obtener posición actual del target
 			local targetPos
 			if isTrackingTarget and target and target.Parent then
-				targetPos = target:GetPivot().Position
+				-- Parts usan .Position, Models usan :GetPivot().Position
+				if target:IsA("BasePart") then
+					targetPos = target.Position
+				else
+					targetPos = target:GetPivot().Position
+				end
 			elseif typeof(target) == "Vector3" then
 				targetPos = target
 			else
