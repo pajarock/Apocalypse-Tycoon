@@ -204,7 +204,7 @@ end
 	@return Part - Part del beam para control posterior
 ]]
 function TurretVFXManager:CreateLaserBeam(origin: Vector3, target: Vector3, duration: number?): Part?
-	local beamDuration = duration or 0.1  -- Default 100ms
+	local beamDuration = duration or 0.3  -- Increased from 0.1 to 0.3 seconds for better visibility
 
 	-- Crear Part invisible
 	local beamPart = Instance.new("Part")
@@ -221,19 +221,19 @@ function TurretVFXManager:CreateLaserBeam(origin: Vector3, target: Vector3, dura
 
 	local att1 = self:CreateTargetAttachment(target)
 
-	-- Beam láser (rojo brillante)
+	-- Beam láser (rojo brillante, más grueso y brillante)
 	local beam = Instance.new("Beam")
 	beam.Attachment0 = att0
 	beam.Attachment1 = att1
 	beam.Color = ColorSequence.new(Color3.fromRGB(255, 50, 50))
-	beam.Brightness = 3
-	beam.Width0 = 0.4
-	beam.Width1 = 0.3
+	beam.Brightness = 7  -- Increased from 3 to 7 for much better visibility
+	beam.Width0 = 1.5  -- Increased from 0.4 to 1.5 studs
+	beam.Width1 = 1.2  -- Increased from 0.3 to 1.2 studs
 	beam.FaceCamera = true
 	beam.Texture = "rbxasset://textures/particles/smoke_main.dds"  -- Textura suave
 	beam.Parent = beamPart
 
-	-- Efecto de impacto en el target
+	-- Efecto de impacto en el target más visible
 	self:CreateImpactEffect(target, Color3.fromRGB(255, 100, 100))
 
 	-- Destruir automáticamente
