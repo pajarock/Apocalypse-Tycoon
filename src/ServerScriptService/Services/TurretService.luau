@@ -875,11 +875,28 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 	-- Cobrar dinero (usar AdminGiveCash con monto negativo)
 	EconomyModule.AdminGiveCash(player.UserId, -upgradeCost)
 
+	-- 🛡️ Actualizar Guardian para permitir gasto legítimo
+	local BaseModule = require(ServerScriptService:WaitForChild("BaseModule"))
+	local updatedState = EconomyModule.GetState(player.UserId)
+	if updatedState then
+		BaseModule.UpdateGuardianTarget(player.UserId, updatedState.Cash)
+		if Config.DEBUG_MODE then
+			print(("[TurretService] 🛡️ Guardian actualizado: nuevo target = $%d"):format(updatedState.Cash))
+		end
+	end
+
 	-- Obtener nueva definición
 	local nextDefinition = TurretDefinitions.GetDefinition(nextTierName)
 	if not nextDefinition then
 		-- Refund si falla
 		EconomyModule.AddMoney(player.UserId, upgradeCost)
+
+		-- 🛡️ Actualizar Guardian después de refund
+		local refundState = EconomyModule.GetState(player.UserId)
+		if refundState then
+			BaseModule.UpdateGuardianTarget(player.UserId, refundState.Cash)
+		end
+
 		warn("[TurretService] ❌ Next tier definition not found:", nextTierName)
 		return
 	end
@@ -1023,6 +1040,16 @@ function TurretService:HandleSellTurret(player: Player, objectId: string)
 	-- Dar dinero (refund)
 	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
 	EconomyModule.AdminGiveCash(player.UserId, refundAmount)
+
+	-- 🛡️ Actualizar Guardian después de refund
+	local BaseModule = require(ServerScriptService:WaitForChild("BaseModule"))
+	local refundState = EconomyModule.GetState(player.UserId)
+	if refundState then
+		BaseModule.UpdateGuardianTarget(player.UserId, refundState.Cash)
+		if Config.DEBUG_MODE then
+			print(("[TurretService] 🛡️ Guardian actualizado después de refund: nuevo target = $%d"):format(refundState.Cash))
+		end
+	end
 
 	-- Desregistrar torreta
 	self:UnregisterTurret(objectId)
