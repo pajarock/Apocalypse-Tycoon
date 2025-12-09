@@ -436,7 +436,7 @@ local function spawnMeteorOverBase(plr: Player, height: number?, spread: number?
 	local sp = spread or 12
 	local offset = Vector3.new(math.random(-sp, sp), 0, math.random(-sp, sp))
 	local startPos = base.Position + Vector3.new(0, h, 0) + offset
-	local target   = base.Position + offset * 0.25
+	local target   = base.Position  -- Apuntar directamente a la base para trayectoria más larga
 
 	spawnMeteorTowards(plr, startPos, target, meteorType)
 end
