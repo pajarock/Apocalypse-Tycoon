@@ -335,6 +335,16 @@ local function spawnMeteorTowards(plr: Player, startPos: Vector3, targetPos: Vec
 
 		if hit.Name:match("^Meteor_") then return end
 
+		-- Verificar si el meteorito fue destruido por torretas antes de aplicar daño
+		local meteorHP = meteor:GetAttribute("HP")
+		if meteorHP and meteorHP <= 0 then
+			if Config.DEBUG_MODE then
+				print(("[Meteor] %s destruido por torretas antes de impactar (HP: %.1f)"):format(meteorType, meteorHP))
+			end
+			cleanup()
+			return
+		end
+
 		local hitPos = meteor.Position
 		local userId = resolveOwnerForHit(meteor, hit, hitPos)
 
