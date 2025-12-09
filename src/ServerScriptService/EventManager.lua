@@ -462,8 +462,8 @@ DebugSpawnMeteor.OnServerEvent:Connect(function(plr: Player)
 	local types = {"Small", "Normal", "Large"}
 	local randomType = types[math.random(1, #types)]
 
-	-- Spawn con spread de 80 studs para testing más realista (similar a waves)
-	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y, 80, randomType)
+	-- Spawn con spread de 200 studs para dar tiempo a torretas con cooldown (Missile 3.0s, Tesla 1.5s)
+	spawnMeteorOverBase(plr, Config.METEOR_MIN_Y, 200, randomType)
 end)
 
 -- Evento: MeteorStorm (sin cambios de l�gica, solo VFX)
