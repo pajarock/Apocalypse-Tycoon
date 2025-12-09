@@ -421,25 +421,25 @@ function TurretVFXManager:CreateTeslaChain(targets: {Vector3})
 
 		local att1 = self:CreateTargetAttachment(target)
 
-		-- Beam eléctrico (azul brillante con curva)
+		-- Beam eléctrico (azul brillante con curva, mejorado para visibilidad)
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = att0
 		beam.Attachment1 = att1
 		beam.Color = ColorSequence.new(Color3.fromRGB(100, 150, 255))
-		beam.Brightness = 4
-		beam.Width0 = 0.5
-		beam.Width1 = 0.5
+		beam.Brightness = 6  -- Increased from 4 to 6 for better visibility
+		beam.Width0 = 1.5  -- Increased from 0.5 to 1.5 (3x thicker)
+		beam.Width1 = 1.5  -- Increased from 0.5 to 1.5 (3x thicker)
 		beam.FaceCamera = true
-		beam.CurveSize0 = math.random(-5, 5)  -- Zigzag aleatorio
-		beam.CurveSize1 = math.random(-5, 5)
+		beam.CurveSize0 = math.random(-8, 8)  -- Increased zigzag for dramatic effect
+		beam.CurveSize1 = math.random(-8, 8)
 		beam.Texture = "rbxasset://textures/particles/smoke_main.dds"
 		beam.Parent = chainPart
 
 		-- Efecto de impacto en cada target
 		self:CreateImpactEffect(target, Color3.fromRGB(150, 200, 255))
 
-		-- Destruir después de 0.2s
-		Debris:AddItem(chainPart, 0.2)
+		-- Destruir después de 0.4s (increased from 0.2s for better visibility)
+		Debris:AddItem(chainPart, 0.4)
 	end
 end
 

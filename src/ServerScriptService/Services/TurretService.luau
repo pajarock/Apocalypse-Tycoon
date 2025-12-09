@@ -563,8 +563,12 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 
 	-- Lista de targets ya afectados
 	local affectedTargets = {}
-	local affectedPositions = {}  -- Para VFX
+	local chainPositions = {}  -- Para VFX: incluye torreta como origen
 	local currentTarget = target
+
+	-- Agregar posición de la torreta como primer punto de la cadena
+	local turretPos = turretData.Model:GetPivot().Position
+	table.insert(chainPositions, turretPos)
 
 	-- Aplicar cadenas
 	for i = 1, maxChains do
@@ -575,7 +579,7 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 		-- Aplicar daño
 		self:ApplyDamage(currentTarget, damage)
 		table.insert(affectedTargets, currentTarget)
-		table.insert(affectedPositions, currentTarget:GetPivot().Position)
+		table.insert(chainPositions, currentTarget:GetPivot().Position)
 
 		-- Buscar siguiente target en cadena
 		if i < maxChains then
@@ -583,9 +587,9 @@ function TurretService:FireTesla(turretData: TurretData, target: Model)
 		end
 	end
 
-	-- VFX (cadenas eléctricas)
-	if #affectedPositions >= 2 then
-		TurretVFXManager:CreateTeslaChain(affectedPositions)
+	-- VFX (cadenas eléctricas) - siempre mostrar si hay al menos 1 target
+	if #chainPositions >= 2 then  -- Torreta + al menos 1 meteorito
+		TurretVFXManager:CreateTeslaChain(chainPositions)
 	end
 end
 
