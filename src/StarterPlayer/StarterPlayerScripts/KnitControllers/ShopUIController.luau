@@ -888,9 +888,14 @@ local function getPlayerTurretTier(turretType: string): number?
 	local objects = BaseOwnershipService:GetMyObjects(player)
 	if not objects then return nil end
 
+	print(string.format("[ShopUI DEBUG] Buscando turrets tipo '%s'", turretType))
 	local highestTier = nil
 	for _, obj in ipairs(objects) do
+		if obj.Type then
+			print(string.format("[ShopUI DEBUG] Objeto encontrado: Type='%s'", obj.Type))
+		end
 		if obj.Type and obj.Type:match("^" .. turretType) then
+			print(string.format("[ShopUI DEBUG] ✅ Match! Type='%s' matchea con '^%s'", obj.Type, turretType))
 			-- Extract tier from type (e.g., "MachineGunT2" -> 2)
 			local tierStr = obj.Type:match("T(%d+)$")
 			if tierStr then
@@ -901,6 +906,7 @@ local function getPlayerTurretTier(turretType: string): number?
 			end
 		end
 	end
+	print(string.format("[ShopUI DEBUG] Tier más alto para '%s': %s", turretType, tostring(highestTier)))
 	return highestTier
 end
 
