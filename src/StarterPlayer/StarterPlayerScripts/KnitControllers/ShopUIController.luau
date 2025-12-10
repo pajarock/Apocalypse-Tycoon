@@ -901,10 +901,19 @@ local function getPlayerTurretTier(turretType: string): number?
 
 	print(string.format("[ShopUI DEBUG] Buscando turrets tipo '%s', objetos encontrados: %d", turretType, #objects))
 	local highestTier = nil
-	for _, obj in ipairs(objects) do
+	for i, obj in ipairs(objects) do
+		-- Debug: Imprimir TODA la estructura del objeto
+		print(string.format("[ShopUI DEBUG] Objeto #%d:", i))
+		for key, value in pairs(obj) do
+			print(string.format("  - %s = %s (%s)", tostring(key), tostring(value), type(value)))
+		end
+
 		if obj.Type then
 			print(string.format("[ShopUI DEBUG] - Type='%s', ObjectId='%s'", obj.Type, tostring(obj.ObjectId)))
+		else
+			print("[ShopUI DEBUG] ⚠️ Este objeto NO tiene campo 'Type'")
 		end
+
 		if obj.Type and obj.Type:match("^" .. turretType) then
 			print(string.format("[ShopUI DEBUG] ✅ Match! Type='%s' matchea con '^%s'", obj.Type, turretType))
 			-- Extract tier from type (e.g., "MachineGunT2" -> 2)
