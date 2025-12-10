@@ -885,14 +885,25 @@ end
 
 -- Helper: Get player's turrets of a specific type and find highest tier
 local function getPlayerTurretTier(turretType: string): number?
-	local objects = BaseOwnershipService:GetMyObjects(player)
-	if not objects then return nil end
+	local ok, objects = pcall(function()
+		return BaseOwnershipService:GetMyObjects(player)
+	end)
 
-	print(string.format("[ShopUI DEBUG] Buscando turrets tipo '%s'", turretType))
+	if not ok then
+		warn("[ShopUI DEBUG] Error al obtener objetos:", objects)
+		return nil
+	end
+
+	if not objects or type(objects) ~= "table" then
+		print("[ShopUI DEBUG] GetMyObjects devolvió:", objects, "tipo:", type(objects))
+		return nil
+	end
+
+	print(string.format("[ShopUI DEBUG] Buscando turrets tipo '%s', objetos encontrados: %d", turretType, #objects))
 	local highestTier = nil
 	for _, obj in ipairs(objects) do
 		if obj.Type then
-			print(string.format("[ShopUI DEBUG] Objeto encontrado: Type='%s'", obj.Type))
+			print(string.format("[ShopUI DEBUG] - Type='%s', ObjectId='%s'", obj.Type, tostring(obj.ObjectId)))
 		end
 		if obj.Type and obj.Type:match("^" .. turretType) then
 			print(string.format("[ShopUI DEBUG] ✅ Match! Type='%s' matchea con '^%s'", obj.Type, turretType))
@@ -989,18 +1000,28 @@ function ShopUIController:PopulateGrid()
 
 			-- Build stats display
 			local stats = nil
-			if turretData.damage then
+			if turretData.damage and turretData.fireRate then
+				-- Machine Gun
 				stats = {
 					DMG = {current = turretData.damage, after = turretData.damage},
 					FR = {current = string.format("%.2fs", turretData.fireRate), after = string.format("%.2fs", turretData.fireRate)},
 					RNG = {current = turretData.range, after = turretData.range},
 				}
+			elseif turretData.dps and turretData.chains then
+				-- Tesla (has chains)
+				stats = {
+					DPS = {current = turretData.dps, after = turretData.dps},
+					CHAIN = {current = turretData.chains, after = turretData.chains},
+					RNG = {current = turretData.range, after = turretData.range},
+				}
 			elseif turretData.dps then
+				-- Laser (no chains)
 				stats = {
 					DPS = {current = turretData.dps, after = turretData.dps},
 					RNG = {current = turretData.range, after = turretData.range},
 				}
-			elseif turretData.cooldown then
+			elseif turretData.cooldown and turretData.damage then
+				-- Missile
 				stats = {
 					DMG = {current = turretData.damage, after = turretData.damage},
 					CD = {current = string.format("%.1fs", turretData.cooldown), after = string.format("%.1fs", turretData.cooldown)},
