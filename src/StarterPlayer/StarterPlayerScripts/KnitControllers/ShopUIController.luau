@@ -69,10 +69,10 @@ local COLORS = {
 -- Tab definitions
 local MAIN_TABS = {
 	{name = "Income", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
-	{name = "Defense", emoji = "🛡️", color = Color3.fromRGB(100, 150, 255)},
 	{name = "Turrets", emoji = "🔫", color = Color3.fromRGB(255, 100, 100)},
-	{name = "Utility", emoji = "⚙️", color = Color3.fromRGB(150, 150, 150)},
-	{name = "Eggs", emoji = "🥚", color = Color3.fromRGB(255, 200, 255)},
+	{name = "Defense", emoji = "🛡️", color = Color3.fromRGB(100, 150, 255)},
+	{name = "Pets", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
+	{name = "PowerUps", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
 }
 
 local TURRET_SUBTABS = {
@@ -82,20 +82,48 @@ local TURRET_SUBTABS = {
 	{name = "Tesla", emoji = "⚡", displayName = "Tesla"},
 }
 
--- Upgrade categories mapping
-local UPGRADE_CATEGORIES = {
-	Income = {"Upgrade_1", "Upgrade_2", "Upgrade_3", "Upgrade_4", "Upgrade_5", "Upgrade_9"},
-	Defense = {"Upgrade_6", "Upgrade_7", "Upgrade_8"},
-	Utility = {"Upgrade_11", "Upgrade_10"},
-	Eggs = {},
+-- Generator definitions (Income)
+local GENERATORS = {
+	{
+		id = "Generator",
+		name = "Generator",
+		icon = "⚙️",
+		cost = 100,
+		size = Vector3.new(8, 6, 8),
+		description = "Produces money passively over time",
+	},
 }
 
--- Icon mappings
-local UPGRADE_ICONS = {
-	Upgrade_1 = "💵", Upgrade_2 = "💰", Upgrade_3 = "🏦",
-	Upgrade_4 = "💎", Upgrade_5 = "🏆", Upgrade_6 = "🛡️",
-	Upgrade_7 = "🏰", Upgrade_8 = "⚡", Upgrade_9 = "📈",
-	Upgrade_10 = "🔧", Upgrade_11 = "⚙️",
+-- Turret type definitions (from TurretDefinitions.luau)
+local TURRET_TYPES = {
+	MachineGun = {
+		{id = "MachineGunT1", tier = 1, cost = 5000, damage = 8, fireRate = 0.25, range = 50, placeable = true},
+		{id = "MachineGunT2", tier = 2, cost = 20000, damage = 12, fireRate = 0.20, range = 60, placeable = false},
+		{id = "MachineGunT3", tier = 3, cost = 80000, damage = 18, fireRate = 0.15, range = 70, placeable = false},
+		{id = "MachineGunT4", tier = 4, cost = 350000, damage = 28, fireRate = 0.12, range = 80, placeable = false},
+		{id = "MachineGunT5", tier = 5, cost = 1500000, damage = 45, fireRate = 0.10, range = 100, placeable = false},
+	},
+	Laser = {
+		{id = "LaserT1", tier = 1, cost = 15000, dps = 100, range = 70, placeable = true},
+		{id = "LaserT2", tier = 2, cost = 60000, dps = 200, range = 80, placeable = false},
+		{id = "LaserT3", tier = 3, cost = 250000, dps = 400, range = 90, placeable = false},
+		{id = "LaserT4", tier = 4, cost = 1000000, dps = 800, range = 100, placeable = false},
+		{id = "LaserT5", tier = 5, cost = 4500000, dps = 1600, range = 120, placeable = false},
+	},
+	Missile = {
+		{id = "MissileT1", tier = 1, cost = 40000, damage = 150, cooldown = 3.0, range = 100, placeable = true},
+		{id = "MissileT2", tier = 2, cost = 150000, damage = 300, cooldown = 2.5, range = 110, placeable = false},
+		{id = "MissileT3", tier = 3, cost = 600000, damage = 600, cooldown = 2.0, range = 120, placeable = false},
+		{id = "MissileT4", tier = 4, cost = 2500000, damage = 1200, cooldown = 1.5, range = 130, placeable = false},
+		{id = "MissileT5", tier = 5, cost = 10000000, damage = 2500, cooldown = 1.0, range = 150, placeable = false},
+	},
+	Tesla = {
+		{id = "TeslaT1", tier = 1, cost = 100000, dps = 200, chains = 2, range = 60, placeable = true},
+		{id = "TeslaT2", tier = 2, cost = 400000, dps = 400, chains = 3, range = 70, placeable = false},
+		{id = "TeslaT3", tier = 3, cost = 1600000, dps = 800, chains = 4, range = 80, placeable = false},
+		{id = "TeslaT4", tier = 4, cost = 6500000, dps = 1600, chains = 5, range = 90, placeable = false},
+		{id = "TeslaT5", tier = 5, cost = 27000000, dps = 3200, chains = 6, range = 100, placeable = false},
+	},
 }
 
 local TURRET_ICONS = {
@@ -137,6 +165,11 @@ local currentMainTab = "Income"
 local currentSubTab = "MachineGun"
 local selectedItem: any? = nil
 local isMenuOpen = false
+
+-- Services & Controllers (obtained in KnitStart)
+local BasePlacementController
+local BaseOwnershipService
+local UpgradeTurretRemote: RemoteEvent
 
 --[[────────────────────────────────────────────────────────────────────────
 	UTILITY FUNCTIONS
@@ -790,19 +823,33 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 		end
 	end
 
-	-- Update button
+	-- Update button based on item type
 	buyButton.Visible = true
-	if itemData.state == "Max" then
-		buyButton.Text = "MAX TIER"
-		buyButton.BackgroundColor3 = COLORS.MaxTier
+	local itemType = itemData.itemType
+
+	if itemType == "placeholder" then
+		buyButton.Text = "COMING SOON"
+		buyButton.BackgroundColor3 = COLORS.Locked
 		buyButton.AutoButtonColor = false
-	elseif itemData.state == "Locked" then
+	elseif itemType == "owned" then
+		buyButton.Text = "✅ OWNED"
+		buyButton.BackgroundColor3 = COLORS.Owned
+		buyButton.AutoButtonColor = false
+	elseif itemType == "locked" or itemData.state == "Locked" then
 		buyButton.Text = "🔒 LOCKED"
 		buyButton.BackgroundColor3 = COLORS.Locked
 		buyButton.AutoButtonColor = false
-	elseif itemData.canAfford then
-		buyButton.Text = (itemData.count > 0 and "UPGRADE • " or "BUY • ") .. formatMoney(itemData.price)
+	elseif itemType == "generator" then
+		buyButton.Text = string.format("PLACE • %s", formatMoney(itemData.price))
 		buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		buyButton.AutoButtonColor = true
+	elseif itemType == "place" then
+		buyButton.Text = string.format("PLACE T1 • %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		buyButton.AutoButtonColor = true
+	elseif itemType == "upgrade" then
+		buyButton.Text = string.format("UPGRADE • %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
 		buyButton.AutoButtonColor = true
 	else
 		buyButton.Text = "🚫 " .. formatMoney(itemData.price)
@@ -836,57 +883,191 @@ local function getCardState(count: number, maxCount: number?, price: number, cas
 	else return "Locked" end
 end
 
+-- Helper: Get player's turrets of a specific type and find highest tier
+local function getPlayerTurretTier(turretType: string): number?
+	local objects = BaseOwnershipService:GetMyObjects(player)
+	if not objects then return nil end
+
+	local highestTier = nil
+	for _, obj in ipairs(objects) do
+		if obj.Type and obj.Type:match("^" .. turretType) then
+			-- Extract tier from type (e.g., "MachineGunT2" -> 2)
+			local tierStr = obj.Type:match("T(%d+)$")
+			if tierStr then
+				local tier = tonumber(tierStr)
+				if not highestTier or tier > highestTier then
+					highestTier = tier
+				end
+			end
+		end
+	end
+	return highestTier
+end
+
+-- Helper: Get ObjectId of a specific turret type
+local function getTurretObjectId(turretType: string): string?
+	local objects = BaseOwnershipService:GetMyObjects(player)
+	if not objects then return nil end
+
+	for _, obj in ipairs(objects) do
+		if obj.Type and obj.Type:match("^" .. turretType) then
+			return obj.ObjectId
+		end
+	end
+	return nil
+end
+
 function ShopUIController:PopulateGrid()
 	clearCards()
 	local state = fetchState()
 	local cash = state.Cash or 0
 	cashLabel.Text = formatMoney(cash)
 
-	if currentMainTab == "Turrets" then
-		-- Placeholder turret data
-		for tier = 1, 5 do
-			local turretId = currentSubTab .. "T" .. tier
-			local cost = tier * 10000
-
+	if currentMainTab == "Income" then
+		-- Show generators
+		for _, gen in ipairs(GENERATORS) do
 			makeCard({
-				id = turretId,
-				name = string.format("%s T%d", currentSubTab, tier),
-				price = cost,
+				id = gen.id,
+				name = gen.name,
+				price = gen.cost,
 				count = 0,
-				state = getCardState(0, nil, cost, cash),
-				icon = TURRET_ICONS[currentSubTab] or "🔫",
-				category = "Turrets",
-				canAfford = cash >= cost,
-				description = string.format("Tier %d %s turret", tier, currentSubTab),
-				stats = {
-					DMG = {current = tier * 10, after = (tier + 1) * 10},
-					DPS = {current = tier * 5, after = (tier + 1) * 5},
-					RNG = {current = tier * 20, after = (tier + 1) * 20},
-					CD = {current = 1.0, after = 0.9},
-				}
+				state = cash >= gen.cost and "Available" or "Locked",
+				icon = gen.icon,
+				category = "Income",
+				canAfford = cash >= gen.cost,
+				description = gen.description,
+				stats = nil,
+				itemType = "generator",
+				size = gen.size,
 			})
 		end
-	else
-		-- Load upgrades
-		local categoryUpgrades = UPGRADE_CATEGORIES[currentMainTab] or {}
-		for _, upgradeId in ipairs(categoryUpgrades) do
-			local upgradeInfo = state.UpgradesInfo and state.UpgradesInfo[upgradeId]
-			if upgradeInfo then
-				makeCard({
-					id = upgradeId,
-					name = upgradeInfo.Title or upgradeId,
-					price = upgradeInfo.Price or 0,
-					count = upgradeInfo.Count or 0,
-					maxCount = upgradeInfo.MaxCount,
-					state = getCardState(upgradeInfo.Count or 0, upgradeInfo.MaxCount, upgradeInfo.Price or 0, cash),
-					icon = UPGRADE_ICONS[upgradeId] or "📦",
-					category = currentMainTab,
-					canAfford = cash >= (upgradeInfo.Price or 0),
-					description = upgradeInfo.Description or "No description",
-					stats = nil
-				})
+
+	elseif currentMainTab == "Turrets" then
+		-- Smart turret system
+		local turretList = TURRET_TYPES[currentSubTab]
+		if not turretList then return end
+
+		local currentTier = getPlayerTurretTier(currentSubTab) or 0
+		local turretObjectId = getTurretObjectId(currentSubTab)
+
+		for _, turretData in ipairs(turretList) do
+			local tier = turretData.tier
+			local itemState: CardState
+			local canAfford = cash >= turretData.cost
+			local actionType = "locked"
+
+			if tier == 1 then
+				-- T1 is always available for placement
+				if currentTier >= 1 then
+					itemState = "Owned"
+					actionType = "owned"
+				else
+					itemState = canAfford and "Available" or "Locked"
+					actionType = canAfford and "place" or "locked"
+				end
+			else
+				-- T2-T5 require previous tier
+				if currentTier >= tier then
+					itemState = "Owned"
+					actionType = "owned"
+				elseif currentTier == tier - 1 then
+					-- Next tier available for upgrade
+					itemState = canAfford and "Available" or "Locked"
+					actionType = canAfford and "upgrade" or "locked"
+				else
+					-- Locked until previous tier
+					itemState = "Locked"
+					actionType = "locked"
+				end
 			end
+
+			-- Build stats display
+			local stats = nil
+			if turretData.damage then
+				stats = {
+					DMG = {current = turretData.damage, after = turretData.damage},
+					FR = {current = string.format("%.2fs", turretData.fireRate), after = string.format("%.2fs", turretData.fireRate)},
+					RNG = {current = turretData.range, after = turretData.range},
+				}
+			elseif turretData.dps then
+				stats = {
+					DPS = {current = turretData.dps, after = turretData.dps},
+					RNG = {current = turretData.range, after = turretData.range},
+				}
+			elseif turretData.cooldown then
+				stats = {
+					DMG = {current = turretData.damage, after = turretData.damage},
+					CD = {current = string.format("%.1fs", turretData.cooldown), after = string.format("%.1fs", turretData.cooldown)},
+					RNG = {current = turretData.range, after = turretData.range},
+				}
+			end
+
+			makeCard({
+				id = turretData.id,
+				name = string.format("%s T%d", currentSubTab, tier),
+				price = turretData.cost,
+				count = currentTier >= tier and 1 or 0,
+				maxCount = 1,
+				state = itemState,
+				icon = TURRET_ICONS[currentSubTab] or "🔫",
+				category = "Turrets",
+				canAfford = canAfford,
+				description = string.format("Tier %d %s turret", tier, currentSubTab),
+				stats = stats,
+				itemType = actionType,
+				turretType = currentSubTab,
+				objectId = turretObjectId,
+				size = Vector3.new(6 + tier, 8 + tier, 6 + tier),
+			})
 		end
+
+	elseif currentMainTab == "Defense" then
+		-- Shield Dome placeholder
+		makeCard({
+			id = "ShieldDome",
+			name = "Shield Dome",
+			price = 2500000,
+			count = 0,
+			state = "Locked",
+			icon = "🛡️",
+			category = "Defense",
+			canAfford = false,
+			description = "Coming soon: Emergency protection dome",
+			stats = nil,
+			itemType = "placeholder",
+		})
+
+	elseif currentMainTab == "Pets" then
+		-- Pets placeholder
+		makeCard({
+			id = "PetSystem",
+			name = "Pet System",
+			price = 0,
+			count = 0,
+			state = "Locked",
+			icon = "🐾",
+			category = "Pets",
+			canAfford = false,
+			description = "Coming soon: Gachapon pet system with buffs",
+			stats = nil,
+			itemType = "placeholder",
+		})
+
+	elseif currentMainTab == "PowerUps" then
+		-- PowerUps placeholder
+		makeCard({
+			id = "PowerUps",
+			name = "Power-Ups",
+			price = 0,
+			count = 0,
+			state = "Locked",
+			icon = "⚡",
+			category = "PowerUps",
+			canAfford = false,
+			description = "Coming soon: Improved vending machine system",
+			stats = nil,
+			itemType = "placeholder",
+		})
 	end
 end
 
@@ -917,6 +1098,13 @@ end
 function ShopUIController:KnitStart()
 	print("[ShopUIController] Starting...")
 
+	-- Get services and controllers
+	BasePlacementController = Knit.GetController("BasePlacementController")
+	BaseOwnershipService = Knit.GetService("BaseOwnershipService")
+
+	-- Get RemoteEvents
+	UpgradeTurretRemote = Remotes:WaitForChild("UpgradeTurret")
+
 	-- Create UI
 	screenGui = createMainUI()
 	createStructure()
@@ -938,17 +1126,46 @@ function ShopUIController:KnitStart()
 
 	-- Buy button
 	buyButton.MouseButton1Click:Connect(function()
-		if not selectedItem or selectedItem.state == "Locked" or selectedItem.state == "Max" or not selectedItem.canAfford then
+		if not selectedItem or not selectedItem.canAfford then
 			return
 		end
-		RequestPurchase:FireServer(selectedItem.id)
-		print("[ShopUIController] Purchase requested:", selectedItem.id)
+
+		local itemType = selectedItem.itemType
+
+		if itemType == "generator" then
+			-- Place generator
+			print("[ShopUIController] Placing generator")
+			self:SetVisible(false)
+			BasePlacementController:StartPlacement(selectedItem.id, selectedItem.size)
+
+		elseif itemType == "place" then
+			-- Place T1 turret
+			print("[ShopUIController] Placing turret:", selectedItem.id)
+			self:SetVisible(false)
+			BasePlacementController:StartPlacement(selectedItem.id, selectedItem.size)
+
+		elseif itemType == "upgrade" then
+			-- Upgrade turret T2-T5
+			if not selectedItem.objectId then
+				warn("[ShopUIController] No ObjectId found for upgrade")
+				return
+			end
+			print("[ShopUIController] Upgrading turret:", selectedItem.id, "ObjectId:", selectedItem.objectId)
+			UpgradeTurretRemote:FireServer(selectedItem.objectId)
+			-- Refresh after upgrade
+			task.wait(0.5)
+			self:PopulateGrid()
+
+		elseif itemType == "owned" or itemType == "placeholder" or itemType == "locked" then
+			-- Do nothing
+			print("[ShopUIController] Item not purchasable:", itemType)
+		end
 	end)
 
-	-- Keyboard toggle
+	-- Keyboard toggle (Q key)
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then return end
-		if input.KeyCode == Enum.KeyCode.B then
+		if input.KeyCode == Enum.KeyCode.Q then
 			self:ToggleMenu()
 		end
 	end)
@@ -972,7 +1189,7 @@ function ShopUIController:KnitStart()
 	-- Start visible
 	self:SetVisible(true)
 
-	print("[ShopUIController] ✅ Ready (Press B to toggle)")
+	print("[ShopUIController] ✅ Ready (Press Q to toggle)")
 end
 
 return ShopUIController
