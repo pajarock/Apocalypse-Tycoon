@@ -52,37 +52,43 @@ local MENU_SIZE = Vector2.new(800, 600)
 local GRID_WIDTH_PERCENT = 0.6
 local CARD_SIZE = Vector2.new(150, 180)
 local CARD_PADDING = 8
-local SCROLL_BAR_THICKNESS = 16
+local SCROLL_BAR_THICKNESS = 8  -- Más delgado, apocalíptico
 
--- Color scheme - Modern Roblox 2024 Style
+-- Color scheme - APOCALYPTIC LAVA/METEORITO STYLE 🌋💥
 local COLORS = {
-	-- Backgrounds
-	Background = Color3.fromRGB(20, 25, 40),        -- Dark blue instead of black
-	BackgroundLight = Color3.fromRGB(30, 35, 50),   -- Slightly lighter
-	Header = Color3.fromRGB(120, 180, 255),         -- Bright blue
+	-- Backgrounds - Negro carbón
+	Background = Color3.fromRGB(26, 26, 26),        -- #1A1A1A carbón oscuro
+	BackgroundLight = Color3.fromRGB(35, 35, 35),   -- Levemente más claro
+	Header = Color3.fromRGB(255, 36, 0),            -- #FF2400 Rojo lava
 
 	-- Shadows and borders
 	Shadow = Color3.fromRGB(0, 0, 0),
-	BorderBright = Color3.fromRGB(150, 200, 255),   -- Cyan border
+	BorderBright = Color3.fromRGB(204, 85, 0),      -- #CC5500 Naranja quemado
 
-	-- Tab colors
-	TabActive = Color3.fromRGB(80, 140, 220),       -- Bright blue
-	TabInactive = Color3.fromRGB(35, 40, 55),       -- Dark blue-gray
+	-- Tab colors - Apocalípticos
+	TabActive = Color3.fromRGB(255, 36, 0),         -- Rojo lava
+	TabInactive = Color3.fromRGB(45, 45, 45),       -- Gris oscuro
 
-	-- Card states - VIBRANT!
-	Available = Color3.fromRGB(100, 220, 100),      -- Better green (not neon ugly)
-	AvailableDark = Color3.fromRGB(20, 180, 100),   -- Darker green for backgrounds
-	Owned = Color3.fromRGB(100, 200, 255),          -- Bright cyan
-	OwnedDark = Color3.fromRGB(30, 80, 120),        -- Dark cyan for backgrounds
-	Locked = Color3.fromRGB(255, 100, 150),         -- Pink/Red
-	LockedDark = Color3.fromRGB(60, 35, 45),        -- Dark red for backgrounds
-	MaxTier = Color3.fromRGB(255, 215, 0),          -- Gold
+	-- Card states - RADIOACTIVOS!
+	Available = Color3.fromRGB(57, 255, 20),        -- #39FF14 Verde radioactivo
+	AvailableDark = Color3.fromRGB(20, 80, 10),     -- Verde oscuro para fondos
+	Owned = Color3.fromRGB(204, 85, 0),             -- Naranja quemado (owned items)
+	OwnedDark = Color3.fromRGB(50, 25, 0),          -- Naranja oscuro para fondos
+	Locked = Color3.fromRGB(255, 165, 0),           -- #FFA500 Amarillo fuego (warning)
+	LockedDark = Color3.fromRGB(60, 40, 0),         -- Amarillo oscuro para fondos
+	MaxTier = Color3.fromRGB(255, 215, 0),          -- Dorado (mítico)
 
 	-- UI Elements
 	Gold = Color3.fromRGB(255, 215, 0),             -- Money/price
 	White = Color3.fromRGB(255, 255, 255),
-	Gray = Color3.fromRGB(180, 180, 180),
-	DarkGray = Color3.fromRGB(100, 100, 100),
+	Gray = Color3.fromRGB(150, 150, 150),
+	DarkGray = Color3.fromRGB(80, 80, 80),
+
+	-- Apocalypse accent colors (for future use)
+	LavaRed = Color3.fromRGB(255, 36, 0),           -- #FF2400
+	BurntOrange = Color3.fromRGB(204, 85, 0),       -- #CC5500
+	FireYellow = Color3.fromRGB(255, 165, 0),       -- #FFA500
+	RadioactiveGreen = Color3.fromRGB(57, 255, 20), -- #39FF14
 }
 
 -- Tab definitions - CORRECT ORDER!
@@ -303,8 +309,8 @@ local function createStructure()
 	mainFrame.BorderSizePixel = 0
 	mainFrame.ZIndex = 2
 	mainFrame.Parent = screenGui
-	createUICorner(mainFrame, 12)
-	createUIStroke(mainFrame, COLORS.Header, 3)
+	createUICorner(mainFrame, 16)  -- 🔥 Más redondeado, más premium
+	createUIStroke(mainFrame, COLORS.Header, 3)  -- Stroke rojo lava
 
 	-- Header
 	local header = Instance.new("Frame")
@@ -315,21 +321,29 @@ local function createStructure()
 	header.Parent = mainFrame
 	createUICorner(header, 12)
 
+	-- Padding para que no esté pegado
+	local headerPadding = Instance.new("UIPadding")
+	headerPadding.PaddingTop = UDim.new(0, 8)
+	headerPadding.PaddingBottom = UDim.new(0, 8)
+	headerPadding.PaddingLeft = UDim.new(0, 16)
+	headerPadding.PaddingRight = UDim.new(0, 16)
+	headerPadding.Parent = header
+
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(0.5, -60, 1, 0)
 	title.Position = UDim2.fromOffset(20, 0)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold  -- Bold and clean (FredokaOne doesn't exist in Roblox)
-	title.TextSize = 26  -- Bigger for impact!
-	title.TextColor3 = COLORS.Header
+	title.Font = Enum.Font.Bangers  -- 🔥 APOCALYPTIC GRAFFITI STYLE!
+	title.TextSize = 28  -- Bigger, bolder!
+	title.TextColor3 = COLORS.Header  -- Rojo lava
 	title.Text = "🏗️ BUILD MENU V2.0"
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = header
 
-	-- Add stroke for better visibility
-	local titleStroke = createUIStroke(title, COLORS.Shadow, 4)
-	titleStroke.Transparency = 0.5
+	-- Add stroke for better visibility - naranja quemado
+	local titleStroke = createUIStroke(title, COLORS.BurntOrange, 3)
+	titleStroke.Transparency = 0.3
 
 	cashLabel = Instance.new("TextLabel")
 	cashLabel.Name = "Cash"
@@ -407,8 +421,9 @@ local function createStructure()
 	gridContainer.BackgroundColor3 = COLORS.BackgroundLight
 	gridContainer.BackgroundTransparency = 0.3
 	gridContainer.BorderSizePixel = 0
-	gridContainer.ScrollBarThickness = SCROLL_BAR_THICKNESS
-	gridContainer.ScrollBarImageColor3 = COLORS.BorderBright
+	gridContainer.ScrollBarThickness = SCROLL_BAR_THICKNESS  -- 8px delgado
+	gridContainer.ScrollBarImageColor3 = COLORS.BurntOrange  -- 🔥 Naranja quemado
+	gridContainer.ScrollBarImageTransparency = 0.3  -- Con opacidad
 	gridContainer.CanvasSize = UDim2.fromScale(1, 0)
 	gridContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	gridContainer.ScrollingDirection = Enum.ScrollingDirection.Y  -- ONLY VERTICAL SCROLL!
@@ -581,16 +596,16 @@ local function createMainTab(tabData: {name: string, emoji: string, color: Color
 	btn.BackgroundColor3 = COLORS.TabInactive
 	btn.BackgroundTransparency = 0.3
 	btn.BorderSizePixel = 0
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 16
+	btn.Font = Enum.Font.Bangers  -- 🔥 Apocalyptic font!
+	btn.TextSize = 17  -- Slightly bigger for Bangers
 	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 	btn.Text = tabData.emoji .. " " .. tabData.name
 	btn.AutoButtonColor = false
 	btn.Parent = mainTabsRow
 
 	createUICorner(btn, 8)
-	local stroke = createUIStroke(btn, tabData.color, 2)
-	stroke.Transparency = 0.3
+	local stroke = createUIStroke(btn, COLORS.BurntOrange, 2)  -- Naranja quemado
+	stroke.Transparency = 0.4
 
 	btn.MouseButton1Click:Connect(function()
 		currentMainTab = tabData.name
@@ -637,15 +652,15 @@ local function createSubTab(subData: {name: string, emoji: string, displayName: 
 	btn.BackgroundColor3 = COLORS.TabInactive
 	btn.BackgroundTransparency = 0.3
 	btn.BorderSizePixel = 0
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14
+	btn.Font = Enum.Font.Bangers  -- 🔥 Apocalyptic font!
+	btn.TextSize = 15  -- Slightly bigger for Bangers
 	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 	btn.Text = subData.emoji .. " " .. subData.displayName
 	btn.AutoButtonColor = false
 	btn.Parent = subTabsRow
 
 	createUICorner(btn, 6)
-	local stroke = createUIStroke(btn, COLORS.Header, 1)
+	local stroke = createUIStroke(btn, COLORS.FireYellow, 1)  -- Amarillo fuego
 	stroke.Transparency = 0.5
 
 	btn.MouseButton1Click:Connect(function()
@@ -728,15 +743,38 @@ local function getCardStateVisuals(state: CardState, canAfford: boolean)
 end
 
 local function makeCard(itemData: any): Frame
+	-- Container para card + shadow
+	local container = Instance.new("Frame")
+	container.Name = "CardContainer_" .. itemData.id
+	container.Size = UDim2.fromOffset(CARD_SIZE.X, CARD_SIZE.Y)
+	container.BackgroundTransparency = 1
+	container.BorderSizePixel = 0
+
+	-- Shadow frame - 🔥 AAA look!
+	local shadow = Instance.new("Frame")
+	shadow.Name = "Shadow"
+	shadow.Size = UDim2.fromOffset(CARD_SIZE.X, CARD_SIZE.Y)
+	shadow.Position = UDim2.fromOffset(3, 3)  -- Offset para profundidad
+	shadow.BackgroundColor3 = COLORS.Shadow
+	shadow.BackgroundTransparency = 0.7
+	shadow.BorderSizePixel = 0
+	shadow.ZIndex = 1
+	shadow.Parent = container
+	createUICorner(shadow, 10)
+
+	-- Card actual
 	local card = Instance.new("Frame")
 	card.Name = "Card_" .. itemData.id
 	card.Size = UDim2.fromOffset(CARD_SIZE.X, CARD_SIZE.Y)
+	card.Position = UDim2.fromOffset(0, 0)
 	card.BorderSizePixel = 0
+	card.ZIndex = 2
+	card.Parent = container
 
 	local visuals = getCardStateVisuals(itemData.state, itemData.canAfford)
 	card.BackgroundColor3 = visuals.backgroundColor
 
-	createUICorner(card, 8)
+	createUICorner(card, 10)  -- 🔥 Más redondeado para look premium
 	local stroke = createUIStroke(card, visuals.strokeColor, 2)
 	stroke.Transparency = 0.2
 
@@ -772,8 +810,8 @@ local function makeCard(itemData: any): Frame
 	nameLabel.Size = UDim2.new(1, -16, 0, 22)
 	nameLabel.Position = UDim2.fromOffset(8, 108)
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 12
+	nameLabel.Font = Enum.Font.Bangers  -- 🔥 Apocalyptic font!
+	nameLabel.TextSize = 13  -- Slightly bigger for Bangers
 	nameLabel.TextColor3 = COLORS.White
 	nameLabel.Text = itemData.name
 	nameLabel.TextWrapped = true
@@ -833,9 +871,9 @@ local function makeCard(itemData: any): Frame
 		stroke.Thickness = 2
 	end)
 
-	card.Parent = gridContainer
-	cardInstances[itemData.id] = card
-	return card
+	container.Parent = gridContainer
+	cardInstances[itemData.id] = container  -- Guardamos el container, no el card
+	return container
 end
 
 local function clearCards()
