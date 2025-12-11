@@ -68,18 +68,19 @@ local COLORS = {
 
 -- Tab definitions
 local MAIN_TABS = {
+	{name = "MyBase", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
 	{name = "Income", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
-	{name = "Turrets", emoji = "🔫", color = Color3.fromRGB(255, 100, 100)},
+	{name = "Turrets", emoji = "💀", color = Color3.fromRGB(255, 100, 100)},
 	{name = "Defense", emoji = "🛡️", color = Color3.fromRGB(100, 150, 255)},
 	{name = "Pets", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
 	{name = "PowerUps", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
 }
 
 local TURRET_SUBTABS = {
-	{name = "MachineGun", emoji = "🔫", displayName = "MG"},
+	{name = "MachineGun", emoji = "💀", displayName = "MG"},
 	{name = "Laser", emoji = "⚡", displayName = "Laser"},
-	{name = "Missile", emoji = "🚀", displayName = "Missile"},
-	{name = "Tesla", emoji = "⚡", displayName = "Tesla"},
+	{name = "Missile", emoji = "💥", displayName = "Missile"},
+	{name = "Tesla", emoji = "🔮", displayName = "Tesla"},
 }
 
 -- Generator definitions (Income)
@@ -127,8 +128,10 @@ local TURRET_TYPES = {
 }
 
 local TURRET_ICONS = {
-	MachineGun = "🔫", Laser = "⚡",
-	Missile = "🚀", Tesla = "⚡",
+	MachineGun = "💀", -- Skull for death machine
+	Laser = "⚡",      -- Lightning bolt
+	Missile = "💥",    -- Explosion
+	Tesla = "🔮",      -- Crystal ball for electric
 }
 
 --[[────────────────────────────────────────────────────────────────────────
@@ -161,7 +164,7 @@ local mainTabButtons: {[string]: TextButton} = {}
 local subTabButtons: {[string]: TextButton} = {}
 local cardInstances: {[string]: Frame} = {}
 
-local currentMainTab = "Income"
+local currentMainTab = "MyBase"  -- Start with MyBase tab
 local currentSubTab = "MachineGun"
 local selectedItem: any? = nil
 local isMenuOpen = false
@@ -283,9 +286,9 @@ local function createStructure()
 	closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 	closeButton.BorderSizePixel = 0
 	closeButton.Font = Enum.Font.GothamBold
-	closeButton.TextSize = 24
+	closeButton.TextSize = 20
 	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.Text = "✕"
+	closeButton.Text = "X"  -- Simple X works better than special characters
 	closeButton.Parent = header
 	createUICorner(closeButton, 8)
 
@@ -933,7 +936,81 @@ function ShopUIController:PopulateGrid()
 	local cash = state.Cash or 0
 	cashLabel.Text = formatMoney(cash)
 
-	if currentMainTab == "Income" then
+	if currentMainTab == "MyBase" then
+		-- Show all owned items in the base
+		local objects = BaseOwnershipService:GetMyObjects(player)
+		if objects and #objects > 0 then
+			-- Group objects by type for cleaner display
+			local groupedObjects = {}
+			for _, obj in ipairs(objects) do
+				local objType = obj.ObjectType
+				if objType then
+					if not groupedObjects[objType] then
+						groupedObjects[objType] = 0
+					end
+					groupedObjects[objType] += 1
+				end
+			end
+
+			-- Create cards for each type
+			for objType, count in pairs(groupedObjects) do
+				-- Extract tier if it's a turret
+				local tierStr = objType:match("T(%d+)$")
+				local tier = tierStr and tonumber(tierStr) or 1
+
+				-- Determine icon based on type
+				local icon = "📦"
+				local displayName = objType
+				if objType:match("^MachineGun") then
+					icon = "💀"
+					displayName = string.format("Machine Gun T%d", tier)
+				elseif objType:match("^Laser") then
+					icon = "⚡"
+					displayName = string.format("Laser T%d", tier)
+				elseif objType:match("^Missile") then
+					icon = "💥"
+					displayName = string.format("Missile T%d", tier)
+				elseif objType:match("^Tesla") then
+					icon = "🔮"
+					displayName = string.format("Tesla T%d", tier)
+				elseif objType:match("Generator") then
+					icon = "⚙️"
+					displayName = "Generator"
+				end
+
+				makeCard({
+					id = objType .. "_owned",
+					name = displayName,
+					price = 0,
+					count = count,
+					maxCount = nil,
+					state = "Owned",
+					icon = icon,
+					category = "MyBase",
+					canAfford = false,
+					description = string.format("You own %d of these. Click turrets to upgrade!", count),
+					stats = nil,
+					itemType = "owned",
+				})
+			end
+		else
+			-- No items owned yet - show placeholder
+			makeCard({
+				id = "empty_base",
+				name = "Empty Base",
+				price = 0,
+				count = 0,
+				state = "Locked",
+				icon = "🏗️",
+				category = "MyBase",
+				canAfford = false,
+				description = "Build your first structure! Check Income or Turrets tab",
+				stats = nil,
+				itemType = "placeholder",
+			})
+		end
+
+	elseif currentMainTab == "Income" then
 		-- Show generators
 		for _, gen in ipairs(GENERATORS) do
 			makeCard({
@@ -953,89 +1030,62 @@ function ShopUIController:PopulateGrid()
 		end
 
 	elseif currentMainTab == "Turrets" then
-		-- Smart turret system
+		-- ONLY SHOW T1 TURRETS (upgrades done via TurretManagementUI)
 		local turretList = TURRET_TYPES[currentSubTab]
 		if not turretList then return end
 
-		local currentTier = getPlayerTurretTier(currentSubTab) or 0
-		local turretObjectId = getTurretObjectId(currentSubTab)
-
-		for _, turretData in ipairs(turretList) do
-			local tier = turretData.tier
-			local itemState: CardState
-			local canAfford = cash >= turretData.cost
-			local actionType = "locked"
-
-			if tier == 1 then
-				-- T1 ALWAYS available for placement (can place multiple)
-				-- Never show as "Owned" in the Build Menu
-				itemState = canAfford and "Available" or "Locked"
-				actionType = canAfford and "place" or "locked"
-			else
-				-- T2-T5 require previous tier (upgrade via TurretManagementUI, not Build Menu)
-				if currentTier >= tier then
-					itemState = "Owned"
-					actionType = "owned"
-				elseif currentTier == tier - 1 then
-					-- Next tier available for upgrade
-					itemState = canAfford and "Available" or "Locked"
-					actionType = canAfford and "upgrade" or "locked"
-				else
-					-- Locked until previous tier
-					itemState = "Locked"
-					actionType = "locked"
-				end
-			end
+		-- Get only T1 (first item in the list)
+		local t1Data = turretList[1]
+		if t1Data and t1Data.tier == 1 then
+			local canAfford = cash >= t1Data.cost
 
 			-- Build stats display
 			local stats = nil
-			if turretData.damage and turretData.fireRate then
+			if t1Data.damage and t1Data.fireRate then
 				-- Machine Gun
 				stats = {
-					DMG = {current = turretData.damage, after = turretData.damage},
-					FR = {current = string.format("%.2fs", turretData.fireRate), after = string.format("%.2fs", turretData.fireRate)},
-					RNG = {current = turretData.range, after = turretData.range},
+					DMG = {current = t1Data.damage, after = t1Data.damage},
+					FR = {current = string.format("%.2fs", t1Data.fireRate), after = string.format("%.2fs", t1Data.fireRate)},
+					RNG = {current = t1Data.range, after = t1Data.range},
 				}
-			elseif turretData.dps and turretData.chains then
+			elseif t1Data.dps and t1Data.chains then
 				-- Tesla (has chains)
 				stats = {
-					DPS = {current = turretData.dps, after = turretData.dps},
-					CHAIN = {current = turretData.chains, after = turretData.chains},
-					RNG = {current = turretData.range, after = turretData.range},
+					DPS = {current = t1Data.dps, after = t1Data.dps},
+					CHAIN = {current = t1Data.chains, after = t1Data.chains},
+					RNG = {current = t1Data.range, after = t1Data.range},
 				}
-			elseif turretData.dps then
+			elseif t1Data.dps then
 				-- Laser (no chains)
 				stats = {
-					DPS = {current = turretData.dps, after = turretData.dps},
-					RNG = {current = turretData.range, after = turretData.range},
+					DPS = {current = t1Data.dps, after = t1Data.dps},
+					RNG = {current = t1Data.range, after = t1Data.range},
 				}
-			elseif turretData.cooldown and turretData.damage then
+			elseif t1Data.cooldown and t1Data.damage then
 				-- Missile
 				stats = {
-					DMG = {current = turretData.damage, after = turretData.damage},
-					CD = {current = string.format("%.1fs", turretData.cooldown), after = string.format("%.1fs", turretData.cooldown)},
-					RNG = {current = turretData.range, after = turretData.range},
+					DMG = {current = t1Data.damage, after = t1Data.damage},
+					CD = {current = string.format("%.1fs", t1Data.cooldown), after = string.format("%.1fs", t1Data.cooldown)},
+					RNG = {current = t1Data.range, after = t1Data.range},
 				}
 			end
 
 			makeCard({
-				id = turretData.id,
-				name = string.format("%s T%d", currentSubTab, tier),
-				price = turretData.cost,
-				count = tier == 1 and 0 or (currentTier >= tier and 1 or 0), -- T1 never shows count
-				maxCount = tier == 1 and nil or 1, -- T1 has no max (can place multiple)
-				state = itemState,
-				icon = TURRET_ICONS[currentSubTab] or "🔫",
+				id = t1Data.id,
+				name = string.format("%s T1", currentSubTab),
+				price = t1Data.cost,
+				count = 0,  -- Never show count for T1
+				maxCount = nil,  -- No max limit
+				state = canAfford and "Available" or "Locked",
+				icon = TURRET_ICONS[currentSubTab] or "💀",
 				category = "Turrets",
 				canAfford = canAfford,
-				description = tier == 1
-					and string.format("Tier %d %s turret - Place multiple!", tier, currentSubTab)
-					or string.format("Tier %d %s turret - Upgrade required", tier, currentSubTab),
+				description = string.format("%s Tier 1 - Place multiple turrets! Upgrade via turret menu", currentSubTab),
 				stats = stats,
-				itemType = actionType,
+				itemType = canAfford and "place" or "locked",
 				turretType = currentSubTab,
-				objectId = turretObjectId,
-				size = Vector3.new(6 + tier, 8 + tier, 6 + tier),
+				objectId = nil,
+				size = Vector3.new(7, 9, 7),
 			})
 		end
 
