@@ -54,50 +54,51 @@ local CARD_SIZE = Vector2.new(150, 180)
 local CARD_PADDING = 8
 local SCROLL_BAR_THICKNESS = 8  -- Más delgado, apocalíptico
 
--- Color scheme - APOCALYPTIC LAVA/METEORITO STYLE 🌋💥
+-- Color scheme - APOCALYPTIC FINAL PALETTE 🔥💀
+-- ONLY 4 COLORS + GRAYS for maximum cohesion
 local COLORS = {
-	-- Backgrounds - Negro carbón
-	Background = Color3.fromRGB(26, 26, 26),        -- #1A1A1A carbón oscuro
-	BackgroundLight = Color3.fromRGB(35, 35, 35),   -- Levemente más claro
-	Header = Color3.fromRGB(255, 36, 0),            -- #FF2400 Rojo lava
+	-- BASE (Grays)
+	Background = Color3.fromRGB(15, 15, 15),        -- #0F0F0F Negro carbón PRINCIPAL
+	BackgroundLight = Color3.fromRGB(26, 26, 26),   -- #1A1A1A
+	BackgroundMid = Color3.fromRGB(42, 42, 42),     -- #2A2A2A
+	BackgroundCard = Color3.fromRGB(24, 37, 22),    -- #182516 Verde oscuro para generator cards
 
-	-- Shadows and borders
-	Shadow = Color3.fromRGB(0, 0, 0),
-	BorderBright = Color3.fromRGB(204, 85, 0),      -- #CC5500 Naranja quemado
+	-- APOCALYPSE PALETTE (ONLY THESE 4!)
+	LavaRed = Color3.fromRGB(255, 36, 0),           -- #FF2400 Crítico/Peligro/Activo
+	ToxicGreen = Color3.fromRGB(57, 255, 20),       -- #39FF14 Energía/Disponible
+	FireYellow = Color3.fromRGB(255, 165, 0),       -- #FFA500 UI/Warnings
 
-	-- Tab colors - Apocalípticos
+	-- NEUTRALS
+	White = Color3.fromRGB(255, 255, 255),          -- #FFFFFF
+	LightGray = Color3.fromRGB(204, 204, 204),      -- #CCCCCC
+	MidGray = Color3.fromRGB(187, 187, 187),        -- #BBBBBB
+	DarkGray = Color3.fromRGB(51, 51, 51),          -- #333333
+	DarkerGray = Color3.fromRGB(119, 119, 119),     -- #777777
+	Shadow = Color3.fromRGB(0, 0, 0),               -- #000000
+
+	-- ALIASES (for compatibility)
+	Header = Color3.fromRGB(255, 36, 0),            -- Rojo lava
+	BorderBright = Color3.fromRGB(255, 36, 0),      -- Rojo lava
 	TabActive = Color3.fromRGB(255, 36, 0),         -- Rojo lava
-	TabInactive = Color3.fromRGB(45, 45, 45),       -- Gris oscuro
-
-	-- Card states - RADIOACTIVOS!
-	Available = Color3.fromRGB(57, 255, 20),        -- #39FF14 Verde radioactivo
-	AvailableDark = Color3.fromRGB(20, 80, 10),     -- Verde oscuro para fondos
-	Owned = Color3.fromRGB(204, 85, 0),             -- Naranja quemado (owned items)
-	OwnedDark = Color3.fromRGB(50, 25, 0),          -- Naranja oscuro para fondos
-	Locked = Color3.fromRGB(255, 165, 0),           -- #FFA500 Amarillo fuego (warning)
-	LockedDark = Color3.fromRGB(60, 40, 0),         -- Amarillo oscuro para fondos
-	MaxTier = Color3.fromRGB(255, 215, 0),          -- Dorado (mítico)
-
-	-- UI Elements
-	Gold = Color3.fromRGB(255, 215, 0),             -- Money/price
-	White = Color3.fromRGB(255, 255, 255),
-	Gray = Color3.fromRGB(150, 150, 150),
-	DarkGray = Color3.fromRGB(80, 80, 80),
-
-	-- Apocalypse accent colors (for future use)
-	LavaRed = Color3.fromRGB(255, 36, 0),           -- #FF2400
-	BurntOrange = Color3.fromRGB(204, 85, 0),       -- #CC5500
-	FireYellow = Color3.fromRGB(255, 165, 0),       -- #FFA500
-	RadioactiveGreen = Color3.fromRGB(57, 255, 20), -- #39FF14
+	TabInactive = Color3.fromRGB(26, 26, 26),       -- #1A1A1A
+	Available = Color3.fromRGB(57, 255, 20),        -- Verde tóxico
+	AvailableDark = Color3.fromRGB(24, 37, 22),     -- #182516 Verde oscuro
+	Owned = Color3.fromRGB(255, 165, 0),            -- Amarillo fuego (no más naranja!)
+	OwnedDark = Color3.fromRGB(42, 42, 42),         -- Gris oscuro
+	Locked = Color3.fromRGB(51, 51, 51),            -- #333333 Gris
+	LockedDark = Color3.fromRGB(26, 26, 26),        -- #1A1A1A
+	MaxTier = Color3.fromRGB(255, 36, 0),           -- Rojo lava (mítico)
+	Gold = Color3.fromRGB(255, 165, 0),             -- Amarillo fuego (precio)
 }
 
 -- Tab definitions - CORRECT ORDER!
+-- NO custom colors - all use apocalyptic palette
 local MAIN_TABS = {
-	{name = "INCOME", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
-	{name = "TURRETS", emoji = "💀", color = Color3.fromRGB(255, 100, 100)},
-	{name = "MY BASE", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
-	{name = "PETS", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
-	{name = "POWERUPS", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
+	{name = "INCOME", emoji = "💰"},
+	{name = "TURRETS", emoji = "💀"},
+	{name = "MY BASE", emoji = "🏠"},
+	{name = "PETS", emoji = "🐾"},
+	{name = "POWERUPS", emoji = "⚡"},
 }
 
 local TURRET_SUBTABS = {
@@ -240,6 +241,9 @@ local BasePlacementController
 local BaseOwnershipService
 local UpgradeTurretRemote: RemoteEvent
 
+-- Ambient audio
+local ambientSound: Sound? = nil
+
 --[[────────────────────────────────────────────────────────────────────────
 	UTILITY FUNCTIONS
 ────────────────────────────────────────────────────────────────────────]]
@@ -341,9 +345,9 @@ local function createStructure()
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = header
 
-	-- Add stroke for better visibility - naranja quemado
-	local titleStroke = createUIStroke(title, COLORS.BurntOrange, 3)
-	titleStroke.Transparency = 0.3
+	-- Add stroke for better visibility - sombra negra
+	local titleStroke = createUIStroke(title, COLORS.Shadow, 4)
+	titleStroke.Transparency = 0.4
 
 	cashLabel = Instance.new("TextLabel")
 	cashLabel.Name = "Cash"
@@ -352,7 +356,7 @@ local function createStructure()
 	cashLabel.BackgroundTransparency = 1
 	cashLabel.Font = Enum.Font.GothamBold
 	cashLabel.TextSize = 20
-	cashLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+	cashLabel.TextColor3 = COLORS.FireYellow  -- #FFA500 Amarillo fuego
 	cashLabel.Text = "$0"
 	cashLabel.TextXAlignment = Enum.TextXAlignment.Center
 	cashLabel.Parent = header
@@ -422,8 +426,8 @@ local function createStructure()
 	gridContainer.BackgroundTransparency = 0.3
 	gridContainer.BorderSizePixel = 0
 	gridContainer.ScrollBarThickness = SCROLL_BAR_THICKNESS  -- 8px delgado
-	gridContainer.ScrollBarImageColor3 = COLORS.BurntOrange  -- 🔥 Naranja quemado
-	gridContainer.ScrollBarImageTransparency = 0.3  -- Con opacidad
+	gridContainer.ScrollBarImageColor3 = COLORS.LavaRed  -- 🔥 Rojo lava!
+	gridContainer.ScrollBarImageTransparency = 0.2  -- Con opacidad
 	gridContainer.CanvasSize = UDim2.fromScale(1, 0)
 	gridContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	gridContainer.ScrollingDirection = Enum.ScrollingDirection.Y  -- ONLY VERTICAL SCROLL!
@@ -479,17 +483,21 @@ local function createStructure()
 	viewportFrame.Parent = previewPanel
 	createUICorner(viewportFrame, 8)
 
-	-- Stats container
+	-- Stats container - APOCALYPTIC PANEL!
 	statsContainer = Instance.new("Frame")
 	statsContainer.Name = "StatsContainer"
 	statsContainer.Size = UDim2.new(1, -20, 0, 140)
 	statsContainer.Position = UDim2.fromOffset(10, 220)
-	statsContainer.BackgroundColor3 = COLORS.Background
-	statsContainer.BackgroundTransparency = 0.3
+	statsContainer.BackgroundColor3 = COLORS.BackgroundLight  -- #1A1A1A
+	statsContainer.BackgroundTransparency = 0
 	statsContainer.BorderSizePixel = 0
 	statsContainer.Visible = false
 	statsContainer.Parent = previewPanel
 	createUICorner(statsContainer, 8)
+
+	-- Borde rojo lava para el panel
+	local statsStroke = createUIStroke(statsContainer, COLORS.LavaRed, 2)
+	statsStroke.Transparency = 0
 
 	local statsTitle = Instance.new("TextLabel")
 	statsTitle.Size = UDim2.new(1, -16, 0, 25)
@@ -497,7 +505,7 @@ local function createStructure()
 	statsTitle.BackgroundTransparency = 1
 	statsTitle.Font = Enum.Font.GothamBold
 	statsTitle.TextSize = 16
-	statsTitle.TextColor3 = COLORS.BorderBright
+	statsTitle.TextColor3 = COLORS.FireYellow  -- #FFA500 Amarillo fuego
 	statsTitle.Text = "📊 ITEM INFO"
 	statsTitle.TextXAlignment = Enum.TextXAlignment.Center
 	statsTitle.Parent = statsContainer
@@ -514,25 +522,25 @@ local function createStructure()
 	statsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	statsLayout.Parent = statsGrid
 
-	-- Buy button - BIGGER and MORE VIBRANT!
+	-- Buy button - APOCALYPTIC STYLE!
 	buyButton = Instance.new("TextButton")
 	buyButton.Name = "BuyButton"
 	buyButton.Size = UDim2.new(1, -20, 0, 60)
 	buyButton.Position = UDim2.fromOffset(10, 370)
-	buyButton.BackgroundColor3 = COLORS.Available  -- Neon green
+	buyButton.BackgroundColor3 = COLORS.ToxicGreen  -- Verde tóxico por default
 	buyButton.BorderSizePixel = 0
 	buyButton.Font = Enum.Font.GothamBold
 	buyButton.TextSize = 22
-	buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)  -- Dark text on bright background
+	buyButton.TextColor3 = COLORS.Background  -- Negro carbón #0F0F0F
 	buyButton.Text = "BUY"
 	buyButton.AutoButtonColor = true
 	buyButton.Visible = false
 	buyButton.Parent = previewPanel
 	createUICorner(buyButton, 10)
 
-	-- Add a stroke to the buy button for extra pop
-	local buyButtonStroke = createUIStroke(buyButton, COLORS.White, 2)
-	buyButtonStroke.Transparency = 0.5
+	-- Add a THICK stroke to the buy button - Borde amarillo fuego o negro según estado
+	local buyButtonStroke = createUIStroke(buyButton, COLORS.FireYellow, 3)  -- 3px thick!
+	buyButtonStroke.Transparency = 0
 
 	-- Description - NOW VISIBLE! Moved inside statsContainer at the bottom
 	descriptionLabel = Instance.new("TextLabel")
@@ -542,12 +550,23 @@ local function createStructure()
 	descriptionLabel.BackgroundTransparency = 1
 	descriptionLabel.Font = Enum.Font.Gotham
 	descriptionLabel.TextSize = 11
-	descriptionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)  -- Brighter for visibility
+	descriptionLabel.TextColor3 = COLORS.MidGray  -- #BBBBBB Gris suave
 	descriptionLabel.Text = ""
 	descriptionLabel.TextWrapped = true
 	descriptionLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descriptionLabel.Visible = false
 	descriptionLabel.Parent = statsContainer  -- NOW inside statsContainer!
+
+	-- 🔥 AMBIENT AUDIO - Brasas/Carbón encendido
+	-- TODO: Add SoundId when asset is ready
+	ambientSound = Instance.new("Sound")
+	ambientSound.Name = "AmbientForge"
+	ambientSound.SoundId = ""  -- TODO: rbxassetid://XXXXXXXXX (brasas/carbon loop)
+	ambientSound.Volume = 0.08  -- 8% volumen (5-12% range)
+	ambientSound.Looped = true
+	ambientSound.PlaybackSpeed = 1
+	ambientSound.Parent = mainFrame
+	-- Note: Will play when menu opens, stop when closes
 end
 
 --[[────────────────────────────────────────────────────────────────────────
@@ -557,14 +576,16 @@ end
 local function updateTabStates()
 	for tabName, tabButton in pairs(mainTabButtons) do
 		if tabName == currentMainTab then
-			tabButton.BackgroundColor3 = COLORS.TabActive
+			-- ACTIVO: Rojo lava con texto negro carbón
+			tabButton.BackgroundColor3 = COLORS.LavaRed
 			tabButton.BackgroundTransparency = 0
-			tabButton.TextColor3 = Color3.new(1, 1, 1)
+			tabButton.TextColor3 = COLORS.Background  -- Negro carbón #0F0F0F
 			tabButton.TextSize = 18
 		else
+			-- INACTIVO: Gris oscuro con texto gris claro
 			tabButton.BackgroundColor3 = COLORS.TabInactive
-			tabButton.BackgroundTransparency = 0.3
-			tabButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+			tabButton.BackgroundTransparency = 0
+			tabButton.TextColor3 = COLORS.LightGray  -- #CCCCCC
 			tabButton.TextSize = 16
 		end
 	end
@@ -573,13 +594,15 @@ local function updateTabStates()
 		subTabsRow.Visible = true
 		for subName, subButton in pairs(subTabButtons) do
 			if subName == currentSubTab then
-				subButton.BackgroundColor3 = COLORS.TabActive
+				-- ACTIVO: Rojo lava con texto negro carbón
+				subButton.BackgroundColor3 = COLORS.LavaRed
 				subButton.BackgroundTransparency = 0
-				subButton.TextColor3 = Color3.new(1, 1, 1)
+				subButton.TextColor3 = COLORS.Background  -- Negro carbón
 			else
+				-- INACTIVO: Gris con texto gris claro
 				subButton.BackgroundColor3 = COLORS.TabInactive
-				subButton.BackgroundTransparency = 0.3
-				subButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+				subButton.BackgroundTransparency = 0
+				subButton.TextColor3 = COLORS.LightGray
 			end
 		end
 	else
@@ -589,23 +612,23 @@ local function updateTabStates()
 	ShopUIController:PopulateGrid()
 end
 
-local function createMainTab(tabData: {name: string, emoji: string, color: Color3})
+local function createMainTab(tabData: {name: string, emoji: string})
 	local btn = Instance.new("TextButton")
 	btn.Name = "Tab_" .. tabData.name
 	btn.Size = UDim2.fromOffset(130, 40)
 	btn.BackgroundColor3 = COLORS.TabInactive
-	btn.BackgroundTransparency = 0.3
+	btn.BackgroundTransparency = 0
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.Bangers  -- 🔥 Apocalyptic font!
 	btn.TextSize = 17  -- Slightly bigger for Bangers
-	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	btn.TextColor3 = COLORS.LightGray  -- #CCCCCC
 	btn.Text = tabData.emoji .. " " .. tabData.name
 	btn.AutoButtonColor = false
 	btn.Parent = mainTabsRow
 
 	createUICorner(btn, 8)
-	local stroke = createUIStroke(btn, COLORS.BurntOrange, 2)  -- Naranja quemado
-	stroke.Transparency = 0.4
+	local stroke = createUIStroke(btn, COLORS.LavaRed, 2)  -- 🔥 Rojo lava border
+	stroke.Transparency = 0
 
 	btn.MouseButton1Click:Connect(function()
 		currentMainTab = tabData.name
@@ -650,18 +673,18 @@ local function createSubTab(subData: {name: string, emoji: string, displayName: 
 	btn.Name = "SubTab_" .. subData.name
 	btn.Size = UDim2.fromOffset(90, 36)
 	btn.BackgroundColor3 = COLORS.TabInactive
-	btn.BackgroundTransparency = 0.3
+	btn.BackgroundTransparency = 0
 	btn.BorderSizePixel = 0
 	btn.Font = Enum.Font.Bangers  -- 🔥 Apocalyptic font!
 	btn.TextSize = 15  -- Slightly bigger for Bangers
-	btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+	btn.TextColor3 = COLORS.LightGray  -- #CCCCCC
 	btn.Text = subData.emoji .. " " .. subData.displayName
 	btn.AutoButtonColor = false
 	btn.Parent = subTabsRow
 
 	createUICorner(btn, 6)
-	local stroke = createUIStroke(btn, COLORS.FireYellow, 1)  -- Amarillo fuego
-	stroke.Transparency = 0.5
+	local stroke = createUIStroke(btn, COLORS.LavaRed, 1)  -- 🔥 Rojo lava border
+	stroke.Transparency = 0
 
 	btn.MouseButton1Click:Connect(function()
 		currentSubTab = subData.name
@@ -707,37 +730,40 @@ end
 
 local function getCardStateVisuals(state: CardState, canAfford: boolean)
 	if state == "Max" then
+		-- MAX TIER: Rojo lava (mítico apocalíptico)
 		return {
-			backgroundColor = Color3.fromRGB(60, 50, 25),
+			backgroundColor = Color3.fromRGB(60, 20, 10),  -- Rojo oscuro
 			badgeText = "⭐",
-			badgeColor = COLORS.MaxTier,
-			strokeColor = COLORS.MaxTier,
-			glowColor = COLORS.MaxTier
+			badgeColor = COLORS.LavaRed,
+			strokeColor = COLORS.LavaRed,
+			glowColor = COLORS.LavaRed
 		}
 	elseif state == "Owned" then
+		-- OWNED: Amarillo fuego (no más naranja!)
 		return {
-			backgroundColor = COLORS.OwnedDark,
+			backgroundColor = COLORS.OwnedDark,  -- #2A2A2A gris oscuro
 			badgeText = "✅",
-			badgeColor = COLORS.Owned,
-			strokeColor = COLORS.Owned,
-			glowColor = COLORS.Owned
+			badgeColor = COLORS.FireYellow,
+			strokeColor = COLORS.FireYellow,
+			glowColor = COLORS.FireYellow
 		}
 	elseif state == "Locked" then
+		-- LOCKED: Gris
 		return {
-			backgroundColor = COLORS.LockedDark,
+			backgroundColor = COLORS.LockedDark,  -- #1A1A1A
 			badgeText = "🔒",
-			badgeColor = COLORS.Locked,
-			strokeColor = COLORS.Locked,
-			glowColor = COLORS.Locked
+			badgeColor = COLORS.DarkGray,  -- #333333
+			strokeColor = COLORS.DarkGray,
+			glowColor = COLORS.DarkGray
 		}
 	else
-		-- Available state
+		-- AVAILABLE: Verde tóxico radioactivo!
 		return {
-			backgroundColor = canAfford and COLORS.AvailableDark or COLORS.LockedDark,
+			backgroundColor = canAfford and COLORS.AvailableDark or COLORS.LockedDark,  -- #182516 o #1A1A1A
 			badgeText = "💎",
-			badgeColor = canAfford and COLORS.Available or COLORS.Locked,
-			strokeColor = canAfford and COLORS.Available or COLORS.Locked,
-			glowColor = canAfford and COLORS.Available or COLORS.Locked
+			badgeColor = canAfford and COLORS.ToxicGreen or COLORS.DarkGray,
+			strokeColor = canAfford and COLORS.ToxicGreen or COLORS.DarkGray,  -- 🔥 Verde tóxico!
+			glowColor = canAfford and COLORS.ToxicGreen or COLORS.DarkGray
 		}
 	end
 end
@@ -775,8 +801,8 @@ local function makeCard(itemData: any): Frame
 	card.BackgroundColor3 = visuals.backgroundColor
 
 	createUICorner(card, 10)  -- 🔥 Más redondeado para look premium
-	local stroke = createUIStroke(card, visuals.strokeColor, 2)
-	stroke.Transparency = 0.2
+	local stroke = createUIStroke(card, visuals.strokeColor, 3)  -- 3px para más presencia
+	stroke.Transparency = 0
 
 	-- Badge
 	local badge = Instance.new("TextLabel")
@@ -827,7 +853,7 @@ local function makeCard(itemData: any): Frame
 	priceLabel.BackgroundTransparency = 1
 	priceLabel.Font = Enum.Font.GothamBold
 	priceLabel.TextSize = 18
-	priceLabel.TextColor3 = COLORS.Gold
+	priceLabel.TextColor3 = COLORS.FireYellow  -- #FFA500 Amarillo fuego
 	priceLabel.Text = formatMoney(itemData.price)
 	priceLabel.TextXAlignment = Enum.TextXAlignment.Center
 	priceLabel.ZIndex = 2
@@ -887,7 +913,7 @@ end
 	PREVIEW PANEL
 ────────────────────────────────────────────────────────────────────────]]
 
--- Simplified stat row - NO comparison, just clean info display
+-- Simplified stat row - APOCALYPTIC COLORS!
 local function createStatRow(statName: string, value: string, order: number)
 	local row = Instance.new("Frame")
 	row.Size = UDim2.new(1, 0, 0, 22)
@@ -895,25 +921,25 @@ local function createStatRow(statName: string, value: string, order: number)
 	row.LayoutOrder = order
 	row.Parent = statsGrid
 
-	-- Stat name (left side)
+	-- Stat name (left side) - Gris claro
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.45, 0, 1, 0)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Font = Enum.Font.GothamBold
 	nameLabel.TextSize = 13
-	nameLabel.TextColor3 = COLORS.Gray
+	nameLabel.TextColor3 = COLORS.LightGray  -- #CCCCCC Gris claro
 	nameLabel.Text = statName
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = row
 
-	-- Value (right side) - BIGGER and BRIGHTER
+	-- Value (right side) - VERDE TÓXICO!
 	local valueLabel = Instance.new("TextLabel")
 	valueLabel.Size = UDim2.new(0.55, 0, 1, 0)
 	valueLabel.Position = UDim2.fromScale(0.45, 0)
 	valueLabel.BackgroundTransparency = 1
 	valueLabel.Font = Enum.Font.GothamBold
 	valueLabel.TextSize = 14
-	valueLabel.TextColor3 = COLORS.BorderBright  -- Bright blue
+	valueLabel.TextColor3 = COLORS.ToxicGreen  -- #39FF14 Verde tóxico radioactivo!
 	valueLabel.Text = value
 	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
 	valueLabel.Parent = row
@@ -953,45 +979,51 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 		end
 	end
 
-	-- Update button based on item type
+	-- Update button based on item type - APOCALYPTIC COLORS!
 	buyButton.Visible = true
 	local itemType = itemData.itemType
+	local btnStroke = buyButton:FindFirstChildOfClass("UIStroke")
 
 	if itemType == "placeholder" then
 		buyButton.Text = "⏳ COMING SOON"
-		buyButton.BackgroundColor3 = COLORS.DarkGray
-		buyButton.TextColor3 = COLORS.Gray
+		buyButton.BackgroundColor3 = COLORS.DarkGray  -- #333333
+		buyButton.TextColor3 = COLORS.DarkerGray  -- #777777
 		buyButton.AutoButtonColor = false
+		if btnStroke then btnStroke.Color = COLORS.Shadow end
 	elseif itemType == "owned" then
 		buyButton.Text = "✅ OWNED"
-		buyButton.BackgroundColor3 = COLORS.Owned
-		buyButton.TextColor3 = COLORS.OwnedDark
+		buyButton.BackgroundColor3 = COLORS.FireYellow
+		buyButton.TextColor3 = COLORS.Background
 		buyButton.AutoButtonColor = false
+		if btnStroke then btnStroke.Color = COLORS.FireYellow end
 	elseif itemType == "locked" or itemData.state == "Locked" then
 		buyButton.Text = "🔒 LOCKED"
-		buyButton.BackgroundColor3 = COLORS.Locked
-		buyButton.TextColor3 = COLORS.LockedDark
+		buyButton.BackgroundColor3 = COLORS.DarkGray  -- #333333
+		buyButton.TextColor3 = COLORS.DarkerGray  -- #777777
 		buyButton.AutoButtonColor = false
-	elseif itemType == "generator" then
-		buyButton.Text = string.format("PLACE FOR %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = COLORS.Available
-		buyButton.TextColor3 = Color3.fromRGB(0, 0, 0)  -- BLACK text on green
+		if btnStroke then btnStroke.Color = COLORS.Shadow end
+	elseif itemType == "generator" or itemType == "place" then
+		-- PLACE: Verde tóxico con texto negro, borde amarillo
+		buyButton.Text = itemType == "generator"
+			and string.format("PLACE FOR %s", formatMoney(itemData.price))
+			or string.format("PLACE T1 FOR %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = COLORS.ToxicGreen  -- #39FF14
+		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbón
 		buyButton.AutoButtonColor = true
-	elseif itemType == "place" then
-		buyButton.Text = string.format("PLACE T1 FOR %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = COLORS.Available
-		buyButton.TextColor3 = Color3.fromRGB(0, 0, 0)  -- BLACK text on green
-		buyButton.AutoButtonColor = true
+		if btnStroke then btnStroke.Color = COLORS.FireYellow end  -- Borde amarillo fuego
 	elseif itemType == "upgrade" then
+		-- UPGRADE: Amarillo fuego con texto negro, borde amarillo
 		buyButton.Text = string.format("UPGRADE FOR %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = COLORS.Gold
-		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
+		buyButton.BackgroundColor3 = COLORS.FireYellow  -- #FFA500
+		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbón
 		buyButton.AutoButtonColor = true
+		if btnStroke then btnStroke.Color = COLORS.FireYellow end
 	else
 		buyButton.Text = "🚫 " .. formatMoney(itemData.price)
-		buyButton.BackgroundColor3 = COLORS.Locked
-		buyButton.TextColor3 = COLORS.White
+		buyButton.BackgroundColor3 = COLORS.DarkGray
+		buyButton.TextColor3 = COLORS.DarkerGray
 		buyButton.AutoButtonColor = false
+		if btnStroke then btnStroke.Color = COLORS.Shadow end
 	end
 
 	descriptionLabel.Visible = true
@@ -1290,6 +1322,16 @@ function ShopUIController:ToggleMenu()
 	isMenuOpen = not isMenuOpen
 	mainFrame.Visible = isMenuOpen
 	shadow.Visible = isMenuOpen
+
+	-- 🔥 Ambient audio control
+	if ambientSound then
+		if isMenuOpen and ambientSound.SoundId ~= "" then
+			ambientSound:Play()
+		else
+			ambientSound:Stop()
+		end
+	end
+
 	-- Refresh data when opening menu
 	if isMenuOpen then
 		self:PopulateGrid()
@@ -1300,6 +1342,16 @@ function ShopUIController:SetVisible(visible: boolean)
 	isMenuOpen = visible
 	mainFrame.Visible = visible
 	shadow.Visible = visible
+
+	-- 🔥 Ambient audio control
+	if ambientSound then
+		if visible and ambientSound.SoundId ~= "" then
+			ambientSound:Play()
+		else
+			ambientSound:Stop()
+		end
+	end
+
 	-- Refresh data when opening menu
 	if visible then
 		self:PopulateGrid()
