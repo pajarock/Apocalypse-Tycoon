@@ -436,6 +436,35 @@ function BaseOwnershipService:GetObjectData(objectId: string): PlacedObject?
 end
 
 --[[
+	Actualiza el ObjectType de un objeto colocado.
+
+	Se usa principalmente cuando un objeto es upgradeado (ej: MachineGunT1 → MachineGunT2)
+
+	@param objectId - ID del objeto a actualizar
+	@param newObjectType - Nuevo tipo/nombre del objeto
+	@return boolean - true si se actualizó correctamente
+]]
+function BaseOwnershipService:UpdateObjectType(objectId: string, newObjectType: string): boolean
+	local placedObject = placedObjects[objectId]
+	if not placedObject then
+		warn("[BaseOwnershipService] ❌ Cannot update ObjectType: Object not found:", objectId)
+		return false
+	end
+
+	local oldType = placedObject.ObjectType
+	placedObject.ObjectType = newObjectType
+
+	print(string.format(
+		"[BaseOwnershipService] ✅ Updated ObjectType: %s → %s (ObjectId: %s)",
+		oldType,
+		newObjectType,
+		objectId
+	))
+
+	return true
+end
+
+--[[
 	Limpia todos los objetos de una base (cuando se destruye).
 ]]
 function BaseOwnershipService:ClearBaseObjects(ownerId: number): number

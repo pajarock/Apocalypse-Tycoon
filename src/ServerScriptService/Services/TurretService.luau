@@ -953,6 +953,13 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 		end
 	end
 
+	-- 🔥 CRITICAL: Actualizar ObjectType en BaseOwnershipService
+	-- Esto es necesario para que el Build Menu detecte correctamente el tier actual
+	local updateSuccess = BaseOwnershipService:UpdateObjectType(objectId, nextTierName)
+	if not updateSuccess then
+		warn("[TurretService] ⚠️ Failed to update ObjectType in BaseOwnershipService")
+	end
+
 	print(string.format(
 		"[TurretService] ✅ Turret upgraded: %s → %s (T%d → T%d, Cost: $%d, Owner: %d)",
 		currentTierName,

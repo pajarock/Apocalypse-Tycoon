@@ -890,16 +890,14 @@ local function getPlayerTurretTier(turretType: string): number?
 	end)
 
 	if not ok then
-		warn("[ShopUI DEBUG] Error al obtener objetos:", objects)
+		warn("[ShopUIController] Error getting objects:", objects)
 		return nil
 	end
 
 	if not objects or type(objects) ~= "table" then
-		print("[ShopUI DEBUG] GetMyObjects devolvió:", objects, "tipo:", type(objects))
 		return nil
 	end
 
-	print(string.format("[ShopUI DEBUG] Buscando turrets tipo '%s', objetos encontrados: %d", turretType, #objects))
 	local highestTier = nil
 	for i, obj in ipairs(objects) do
 		if obj.ObjectType and obj.ObjectType:match("^" .. turretType) then
@@ -1101,12 +1099,20 @@ function ShopUIController:ToggleMenu()
 	isMenuOpen = not isMenuOpen
 	mainFrame.Visible = isMenuOpen
 	shadow.Visible = isMenuOpen
+	-- Refresh data when opening menu
+	if isMenuOpen then
+		self:PopulateGrid()
+	end
 end
 
 function ShopUIController:SetVisible(visible: boolean)
 	isMenuOpen = visible
 	mainFrame.Visible = visible
 	shadow.Visible = visible
+	-- Refresh data when opening menu
+	if visible then
+		self:PopulateGrid()
+	end
 end
 
 --[[────────────────────────────────────────────────────────────────────────
@@ -1189,21 +1195,12 @@ function ShopUIController:KnitStart()
 		if gameProcessed then return end
 		if input.KeyCode == Enum.KeyCode.Q then
 			self:ToggleMenu()
+			-- ToggleMenu() already refreshes when opening, no need to refresh again here
 		end
 	end)
 
 	-- Initial load
 	self:PopulateGrid()
-
-	-- Auto-refresh
-	task.spawn(function()
-		while true do
-			task.wait(2)
-			if isMenuOpen then
-				self:PopulateGrid()
-			end
-		end
-	end)
 
 	-- Parent to PlayerGui
 	screenGui.Parent = player:WaitForChild("PlayerGui")
