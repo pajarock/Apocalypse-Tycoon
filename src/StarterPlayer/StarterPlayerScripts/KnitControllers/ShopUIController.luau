@@ -69,7 +69,7 @@ local COLORS = {
 	TabInactive = Color3.fromRGB(35, 40, 55),       -- Dark blue-gray
 
 	-- Card states - VIBRANT!
-	Available = Color3.fromRGB(50, 255, 150),       -- Neon green
+	Available = Color3.fromRGB(100, 220, 100),      -- Better green (not neon ugly)
 	AvailableDark = Color3.fromRGB(20, 180, 100),   -- Darker green for backgrounds
 	Owned = Color3.fromRGB(100, 200, 255),          -- Bright cyan
 	OwnedDark = Color3.fromRGB(30, 80, 120),        -- Dark cyan for backgrounds
@@ -84,18 +84,17 @@ local COLORS = {
 	DarkGray = Color3.fromRGB(100, 100, 100),
 }
 
--- Tab definitions
+-- Tab definitions - CORRECT ORDER!
 local MAIN_TABS = {
-	{name = "MyBase", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
 	{name = "Income", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
 	{name = "Turrets", emoji = "💀", color = Color3.fromRGB(255, 100, 100)},
-	{name = "Defense", emoji = "🛡️", color = Color3.fromRGB(100, 150, 255)},
+	{name = "MyBase", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
 	{name = "Pets", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
 	{name = "PowerUps", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
 }
 
 local TURRET_SUBTABS = {
-	{name = "MachineGun", emoji = "💀", displayName = "MG"},
+	{name = "MachineGun", emoji = "💀", displayName = "MG"},  -- FIRST! Cheapest and easiest
 	{name = "Laser", emoji = "⚡", displayName = "Laser"},
 	{name = "Missile", emoji = "💥", displayName = "Missile"},
 	{name = "Tesla", emoji = "🔮", displayName = "Tesla"},
@@ -109,7 +108,8 @@ local GENERATORS = {
 		icon = "⚙️",
 		cost = 100,
 		size = Vector3.new(8, 6, 8),
-		description = "Produces money passively over time",
+		description = "Produces money passively over time. The more you place, the more you earn!",
+		income = "$10/sec",  -- Example stat
 	},
 }
 
@@ -182,7 +182,7 @@ local mainTabButtons: {[string]: TextButton} = {}
 local subTabButtons: {[string]: TextButton} = {}
 local cardInstances: {[string]: Frame} = {}
 
-local currentMainTab = "MyBase"  -- Start with MyBase tab
+local currentMainTab = "Income"  -- Start with Income tab
 local currentSubTab = "MachineGun"
 local selectedItem: any? = nil
 local isMenuOpen = false
@@ -278,12 +278,16 @@ local function createStructure()
 	title.Size = UDim2.new(0.5, -60, 1, 0)
 	title.Position = UDim2.fromOffset(20, 0)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 22
+	title.Font = Enum.Font.FredokaOne  -- More fun, visual font!
+	title.TextSize = 24
 	title.TextColor3 = COLORS.Header
-	title.Text = "🏗️ BUILD MENU v2.0"
+	title.Text = "🏗️ BUILD MENU V2.0"  -- UPPERCASE!
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = header
+
+	-- Add stroke for better visibility
+	local titleStroke = createUIStroke(title, COLORS.Shadow, 3)
+	titleStroke.Transparency = 0.6
 
 	cashLabel = Instance.new("TextLabel")
 	cashLabel.Name = "Cash"
@@ -854,12 +858,12 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 	elseif itemType == "generator" then
 		buyButton.Text = string.format("PLACE FOR %s", formatMoney(itemData.price))
 		buyButton.BackgroundColor3 = COLORS.Available
-		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
+		buyButton.TextColor3 = Color3.fromRGB(0, 0, 0)  -- BLACK text on green
 		buyButton.AutoButtonColor = true
 	elseif itemType == "place" then
 		buyButton.Text = string.format("PLACE T1 FOR %s", formatMoney(itemData.price))
 		buyButton.BackgroundColor3 = COLORS.Available
-		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
+		buyButton.TextColor3 = Color3.fromRGB(0, 0, 0)  -- BLACK text on green
 		buyButton.AutoButtonColor = true
 	elseif itemType == "upgrade" then
 		buyButton.Text = string.format("UPGRADE FOR %s", formatMoney(itemData.price))
@@ -1026,6 +1030,14 @@ function ShopUIController:PopulateGrid()
 	elseif currentMainTab == "Income" then
 		-- Show generators
 		for _, gen in ipairs(GENERATORS) do
+			-- Build stats for generator
+			local stats = nil
+			if gen.income then
+				stats = {
+					INCOME = {current = gen.income},
+				}
+			end
+
 			makeCard({
 				id = gen.id,
 				name = gen.name,
@@ -1036,7 +1048,7 @@ function ShopUIController:PopulateGrid()
 				category = "Income",
 				canAfford = cash >= gen.cost,
 				description = gen.description,
-				stats = nil,
+				stats = stats,
 				itemType = "generator",
 				size = gen.size,
 			})
