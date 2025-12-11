@@ -53,17 +53,35 @@ local CARD_SIZE = Vector2.new(150, 180)
 local CARD_PADDING = 8
 local SCROLL_BAR_THICKNESS = 16
 
--- Color scheme
+-- Color scheme - Modern Roblox 2024 Style
 local COLORS = {
-	Background = Color3.fromRGB(15, 15, 20),
-	Header = Color3.fromRGB(100, 150, 255),
+	-- Backgrounds
+	Background = Color3.fromRGB(20, 25, 40),        -- Dark blue instead of black
+	BackgroundLight = Color3.fromRGB(30, 35, 50),   -- Slightly lighter
+	Header = Color3.fromRGB(120, 180, 255),         -- Bright blue
+
+	-- Shadows and borders
 	Shadow = Color3.fromRGB(0, 0, 0),
-	TabActive = Color3.fromRGB(60, 100, 180),
-	TabInactive = Color3.fromRGB(30, 30, 35),
-	Available = Color3.fromRGB(0, 255, 100),
-	Owned = Color3.fromRGB(0, 180, 80),
-	Locked = Color3.fromRGB(100, 100, 110),
-	MaxTier = Color3.fromRGB(255, 215, 0),
+	BorderBright = Color3.fromRGB(150, 200, 255),   -- Cyan border
+
+	-- Tab colors
+	TabActive = Color3.fromRGB(80, 140, 220),       -- Bright blue
+	TabInactive = Color3.fromRGB(35, 40, 55),       -- Dark blue-gray
+
+	-- Card states - VIBRANT!
+	Available = Color3.fromRGB(50, 255, 150),       -- Neon green
+	AvailableDark = Color3.fromRGB(20, 180, 100),   -- Darker green for backgrounds
+	Owned = Color3.fromRGB(100, 200, 255),          -- Bright cyan
+	OwnedDark = Color3.fromRGB(30, 80, 120),        -- Dark cyan for backgrounds
+	Locked = Color3.fromRGB(255, 100, 150),         -- Pink/Red
+	LockedDark = Color3.fromRGB(60, 35, 45),        -- Dark red for backgrounds
+	MaxTier = Color3.fromRGB(255, 215, 0),          -- Gold
+
+	-- UI Elements
+	Gold = Color3.fromRGB(255, 215, 0),             -- Money/price
+	White = Color3.fromRGB(255, 255, 255),
+	Gray = Color3.fromRGB(180, 180, 180),
+	DarkGray = Color3.fromRGB(100, 100, 100),
 }
 
 -- Tab definitions
@@ -250,7 +268,7 @@ local function createStructure()
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.Size = UDim2.new(1, 0, 0, 50)
-	header.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+	header.BackgroundColor3 = COLORS.BackgroundLight
 	header.BorderSizePixel = 0
 	header.Parent = mainFrame
 	createUICorner(header, 12)
@@ -340,11 +358,11 @@ local function createStructure()
 	gridContainer.Name = "GridContainer"
 	gridContainer.Size = UDim2.new(GRID_WIDTH_PERCENT, -5, 1, 0)
 	gridContainer.Position = UDim2.fromScale(0, 0)
-	gridContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-	gridContainer.BackgroundTransparency = 0.5
+	gridContainer.BackgroundColor3 = COLORS.BackgroundLight
+	gridContainer.BackgroundTransparency = 0.3
 	gridContainer.BorderSizePixel = 0
 	gridContainer.ScrollBarThickness = SCROLL_BAR_THICKNESS
-	gridContainer.ScrollBarImageColor3 = COLORS.Header
+	gridContainer.ScrollBarImageColor3 = COLORS.BorderBright
 	gridContainer.CanvasSize = UDim2.fromScale(1, 0)
 	gridContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	gridContainer.Parent = contentArea
@@ -368,8 +386,8 @@ local function createStructure()
 	previewPanel.Name = "PreviewPanel"
 	previewPanel.Size = UDim2.new(1 - GRID_WIDTH_PERCENT, -5, 1, 0)
 	previewPanel.Position = UDim2.new(GRID_WIDTH_PERCENT, 5, 0, 0)
-	previewPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-	previewPanel.BackgroundTransparency = 0.5
+	previewPanel.BackgroundColor3 = COLORS.BackgroundLight
+	previewPanel.BackgroundTransparency = 0.3
 	previewPanel.BorderSizePixel = 0
 	previewPanel.Parent = contentArea
 	createUICorner(previewPanel, 8)
@@ -402,30 +420,30 @@ local function createStructure()
 	-- Stats container
 	statsContainer = Instance.new("Frame")
 	statsContainer.Name = "StatsContainer"
-	statsContainer.Size = UDim2.new(1, -20, 0, 120)
+	statsContainer.Size = UDim2.new(1, -20, 0, 140)
 	statsContainer.Position = UDim2.fromOffset(10, 220)
-	statsContainer.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
-	statsContainer.BackgroundTransparency = 0.5
+	statsContainer.BackgroundColor3 = COLORS.Background
+	statsContainer.BackgroundTransparency = 0.3
 	statsContainer.BorderSizePixel = 0
 	statsContainer.Visible = false
 	statsContainer.Parent = previewPanel
 	createUICorner(statsContainer, 8)
 
 	local statsTitle = Instance.new("TextLabel")
-	statsTitle.Size = UDim2.new(1, -16, 0, 20)
+	statsTitle.Size = UDim2.new(1, -16, 0, 25)
 	statsTitle.Position = UDim2.fromOffset(8, 5)
 	statsTitle.BackgroundTransparency = 1
 	statsTitle.Font = Enum.Font.GothamBold
-	statsTitle.TextSize = 14
-	statsTitle.TextColor3 = COLORS.Header
-	statsTitle.Text = "STATS COMPARISON"
+	statsTitle.TextSize = 16
+	statsTitle.TextColor3 = COLORS.BorderBright
+	statsTitle.Text = "📊 ITEM INFO"
 	statsTitle.TextXAlignment = Enum.TextXAlignment.Center
 	statsTitle.Parent = statsContainer
 
 	statsGrid = Instance.new("Frame")
 	statsGrid.Name = "StatsGrid"
-	statsGrid.Size = UDim2.new(1, -16, 1, -30)
-	statsGrid.Position = UDim2.fromOffset(8, 28)
+	statsGrid.Size = UDim2.new(1, -16, 1, -35)
+	statsGrid.Position = UDim2.fromOffset(8, 33)
 	statsGrid.BackgroundTransparency = 1
 	statsGrid.Parent = statsContainer
 
@@ -434,21 +452,25 @@ local function createStructure()
 	statsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	statsLayout.Parent = statsGrid
 
-	-- Buy button
+	-- Buy button - BIGGER and MORE VIBRANT!
 	buyButton = Instance.new("TextButton")
 	buyButton.Name = "BuyButton"
-	buyButton.Size = UDim2.new(1, -20, 0, 50)
-	buyButton.Position = UDim2.fromOffset(10, 350)
-	buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	buyButton.Size = UDim2.new(1, -20, 0, 60)
+	buyButton.Position = UDim2.fromOffset(10, 370)
+	buyButton.BackgroundColor3 = COLORS.Available  -- Neon green
 	buyButton.BorderSizePixel = 0
 	buyButton.Font = Enum.Font.GothamBold
-	buyButton.TextSize = 20
-	buyButton.TextColor3 = Color3.new(1, 1, 1)
+	buyButton.TextSize = 22
+	buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)  -- Dark text on bright background
 	buyButton.Text = "BUY"
 	buyButton.AutoButtonColor = true
 	buyButton.Visible = false
 	buyButton.Parent = previewPanel
-	createUICorner(buyButton, 8)
+	createUICorner(buyButton, 10)
+
+	-- Add a stroke to the buy button for extra pop
+	local buyButtonStroke = createUIStroke(buyButton, COLORS.White, 2)
+	buyButtonStroke.Transparency = 0.5
 
 	-- Description
 	descriptionLabel = Instance.new("TextLabel")
@@ -588,31 +610,36 @@ end
 local function getCardStateVisuals(state: CardState, canAfford: boolean)
 	if state == "Max" then
 		return {
-			backgroundColor = Color3.fromRGB(50, 45, 30),
+			backgroundColor = Color3.fromRGB(60, 50, 25),
 			badgeText = "⭐",
 			badgeColor = COLORS.MaxTier,
-			strokeColor = COLORS.MaxTier
+			strokeColor = COLORS.MaxTier,
+			glowColor = COLORS.MaxTier
 		}
 	elseif state == "Owned" then
 		return {
-			backgroundColor = Color3.fromRGB(20, 40, 30),
+			backgroundColor = COLORS.OwnedDark,
 			badgeText = "✅",
 			badgeColor = COLORS.Owned,
-			strokeColor = COLORS.Owned
+			strokeColor = COLORS.Owned,
+			glowColor = COLORS.Owned
 		}
 	elseif state == "Locked" then
 		return {
-			backgroundColor = Color3.fromRGB(25, 25, 28),
+			backgroundColor = COLORS.LockedDark,
 			badgeText = "🔒",
 			badgeColor = COLORS.Locked,
-			strokeColor = COLORS.Locked
+			strokeColor = COLORS.Locked,
+			glowColor = COLORS.Locked
 		}
 	else
+		-- Available state
 		return {
-			backgroundColor = canAfford and Color3.fromRGB(20, 35, 25) or Color3.fromRGB(35, 20, 20),
+			backgroundColor = canAfford and COLORS.AvailableDark or COLORS.LockedDark,
 			badgeText = "💎",
-			badgeColor = canAfford and COLORS.Available or Color3.fromRGB(255, 100, 100),
-			strokeColor = canAfford and COLORS.Available or Color3.fromRGB(255, 50, 50)
+			badgeColor = canAfford and COLORS.Available or COLORS.Locked,
+			strokeColor = canAfford and COLORS.Available or COLORS.Locked,
+			glowColor = canAfford and COLORS.Available or COLORS.Locked
 		}
 	end
 end
@@ -645,26 +672,26 @@ local function makeCard(itemData: any): Frame
 	badge.Parent = card
 	createUICorner(badge, 6)
 
-	-- Icon
+	-- Icon - BIGGER!
 	local iconLabel = Instance.new("TextLabel")
-	iconLabel.Size = UDim2.new(1, -16, 0, 60)
-	iconLabel.Position = UDim2.fromOffset(8, 40)
+	iconLabel.Size = UDim2.new(1, -16, 0, 70)
+	iconLabel.Position = UDim2.fromOffset(8, 35)
 	iconLabel.BackgroundTransparency = 1
 	iconLabel.Font = Enum.Font.GothamBold
-	iconLabel.TextSize = 48
-	iconLabel.TextColor3 = Color3.new(1, 1, 1)
+	iconLabel.TextSize = 56
+	iconLabel.TextColor3 = COLORS.White
 	iconLabel.Text = itemData.icon
 	iconLabel.ZIndex = 2
 	iconLabel.Parent = card
 
 	-- Name
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(1, -16, 0, 24)
-	nameLabel.Position = UDim2.fromOffset(8, 105)
+	nameLabel.Size = UDim2.new(1, -16, 0, 22)
+	nameLabel.Position = UDim2.fromOffset(8, 108)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 13
-	nameLabel.TextColor3 = Color3.new(1, 1, 1)
+	nameLabel.TextSize = 12
+	nameLabel.TextColor3 = COLORS.White
 	nameLabel.Text = itemData.name
 	nameLabel.TextWrapped = true
 	nameLabel.TextScaled = true
@@ -672,14 +699,14 @@ local function makeCard(itemData: any): Frame
 	nameLabel.ZIndex = 2
 	nameLabel.Parent = card
 
-	-- Price
+	-- Price - BIGGER and MORE PROMINENT!
 	local priceLabel = Instance.new("TextLabel")
-	priceLabel.Size = UDim2.new(1, -16, 0, 20)
-	priceLabel.Position = UDim2.fromOffset(8, 132)
+	priceLabel.Size = UDim2.new(1, -16, 0, 28)
+	priceLabel.Position = UDim2.fromOffset(8, 133)
 	priceLabel.BackgroundTransparency = 1
-	priceLabel.Font = Enum.Font.Gotham
-	priceLabel.TextSize = 14
-	priceLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+	priceLabel.Font = Enum.Font.GothamBold
+	priceLabel.TextSize = 18
+	priceLabel.TextColor3 = COLORS.Gold
 	priceLabel.Text = formatMoney(itemData.price)
 	priceLabel.TextXAlignment = Enum.TextXAlignment.Center
 	priceLabel.ZIndex = 2
@@ -739,54 +766,36 @@ end
 	PREVIEW PANEL
 ────────────────────────────────────────────────────────────────────────]]
 
-local function createStatRow(statName: string, currentValue: string, afterValue: string, order: number)
+-- Simplified stat row - NO comparison, just clean info display
+local function createStatRow(statName: string, value: string, order: number)
 	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, 0, 0, 18)
+	row.Size = UDim2.new(1, 0, 0, 22)
 	row.BackgroundTransparency = 1
 	row.LayoutOrder = order
 	row.Parent = statsGrid
 
+	-- Stat name (left side)
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.3, 0, 1, 0)
+	nameLabel.Size = UDim2.new(0.45, 0, 1, 0)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 11
-	nameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	nameLabel.TextSize = 13
+	nameLabel.TextColor3 = COLORS.Gray
 	nameLabel.Text = statName
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = row
 
-	local currentLabel = Instance.new("TextLabel")
-	currentLabel.Size = UDim2.new(0.35, 0, 1, 0)
-	currentLabel.Position = UDim2.fromScale(0.3, 0)
-	currentLabel.BackgroundTransparency = 1
-	currentLabel.Font = Enum.Font.Gotham
-	currentLabel.TextSize = 11
-	currentLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-	currentLabel.Text = currentValue
-	currentLabel.TextXAlignment = Enum.TextXAlignment.Center
-	currentLabel.Parent = row
-
-	local arrowLabel = Instance.new("TextLabel")
-	arrowLabel.Size = UDim2.fromOffset(20, 18)
-	arrowLabel.Position = UDim2.fromScale(0.65, 0)
-	arrowLabel.BackgroundTransparency = 1
-	arrowLabel.Font = Enum.Font.GothamBold
-	arrowLabel.TextSize = 12
-	arrowLabel.TextColor3 = COLORS.Header
-	arrowLabel.Text = "→"
-	arrowLabel.Parent = row
-
-	local afterLabel = Instance.new("TextLabel")
-	afterLabel.Size = UDim2.new(0.3, 0, 1, 0)
-	afterLabel.Position = UDim2.fromScale(0.7, 0)
-	afterLabel.BackgroundTransparency = 1
-	afterLabel.Font = Enum.Font.GothamBold
-	afterLabel.TextSize = 11
-	afterLabel.TextColor3 = COLORS.Available
-	afterLabel.Text = afterValue
-	afterLabel.TextXAlignment = Enum.TextXAlignment.Center
-	afterLabel.Parent = row
+	-- Value (right side) - BIGGER and BRIGHTER
+	local valueLabel = Instance.new("TextLabel")
+	valueLabel.Size = UDim2.new(0.55, 0, 1, 0)
+	valueLabel.Position = UDim2.fromScale(0.45, 0)
+	valueLabel.BackgroundTransparency = 1
+	valueLabel.Font = Enum.Font.GothamBold
+	valueLabel.TextSize = 14
+	valueLabel.TextColor3 = COLORS.BorderBright  -- Bright blue
+	valueLabel.Text = value
+	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+	valueLabel.Parent = row
 end
 
 function ShopUIController:UpdatePreviewPanel(itemData: any?)
@@ -810,17 +819,14 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 		end
 	end
 
-	-- Create stats
+	-- Create stats - simplified, no comparison
 	if itemData.stats then
 		local order = 1
 		for statName, statValues in pairs(itemData.stats) do
-			if order <= 4 then
-				createStatRow(
-					statName,
-					tostring(statValues.current or "0"),
-					tostring(statValues.after or "0"),
-					order
-				)
+			if order <= 5 then  -- Show up to 5 stats
+				-- Just show the value, no "current" vs "after"
+				local value = tostring(statValues.current or statValues.after or "0")
+				createStatRow(statName, value, order)
 				order += 1
 			end
 		end
@@ -831,32 +837,39 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 	local itemType = itemData.itemType
 
 	if itemType == "placeholder" then
-		buyButton.Text = "COMING SOON"
-		buyButton.BackgroundColor3 = COLORS.Locked
+		buyButton.Text = "⏳ COMING SOON"
+		buyButton.BackgroundColor3 = COLORS.DarkGray
+		buyButton.TextColor3 = COLORS.Gray
 		buyButton.AutoButtonColor = false
 	elseif itemType == "owned" then
 		buyButton.Text = "✅ OWNED"
 		buyButton.BackgroundColor3 = COLORS.Owned
+		buyButton.TextColor3 = COLORS.OwnedDark
 		buyButton.AutoButtonColor = false
 	elseif itemType == "locked" or itemData.state == "Locked" then
 		buyButton.Text = "🔒 LOCKED"
 		buyButton.BackgroundColor3 = COLORS.Locked
+		buyButton.TextColor3 = COLORS.LockedDark
 		buyButton.AutoButtonColor = false
 	elseif itemType == "generator" then
-		buyButton.Text = string.format("PLACE • %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		buyButton.Text = string.format("PLACE FOR %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = COLORS.Available
+		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
 		buyButton.AutoButtonColor = true
 	elseif itemType == "place" then
-		buyButton.Text = string.format("PLACE T1 • %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+		buyButton.Text = string.format("PLACE T1 FOR %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = COLORS.Available
+		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
 		buyButton.AutoButtonColor = true
 	elseif itemType == "upgrade" then
-		buyButton.Text = string.format("UPGRADE • %s", formatMoney(itemData.price))
-		buyButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+		buyButton.Text = string.format("UPGRADE FOR %s", formatMoney(itemData.price))
+		buyButton.BackgroundColor3 = COLORS.Gold
+		buyButton.TextColor3 = Color3.fromRGB(10, 10, 15)
 		buyButton.AutoButtonColor = true
 	else
 		buyButton.Text = "🚫 " .. formatMoney(itemData.price)
-		buyButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+		buyButton.BackgroundColor3 = COLORS.Locked
+		buyButton.TextColor3 = COLORS.White
 		buyButton.AutoButtonColor = false
 	end
 
