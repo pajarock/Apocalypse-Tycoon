@@ -5,7 +5,7 @@
 
 	Sistema completo de Shop/Build Menu con arquitectura moderna.
 
-	CARACTERÕSTICAS:
+	CARACTERÔøΩSTICAS:
 	- 5 tabs principales: Income, Defense, Turrets, Utility, Eggs
 	- 4 sub-tabs para Turrets: MG, Laser, Missile, Tesla
 	- Grid adaptivo 3x4 con cards de 150x180px
@@ -16,16 +16,16 @@
 
 	ARQUITECTURA:
 	+-------------------------------------------------+
-	¶ Header (Title + Cash + Close)                   ¶
-	+-------------------------------------------------¶
-	¶ Main Tabs: Income|Defense|Turrets|Utility|Eggs  ¶
-	¶ Sub-tabs (if Turrets): MG|Laser|Missile|Tesla   ¶
-	+-------------------------------------------------¶
-	¶ Grid (60%)              ¶  Preview Panel (40%)  ¶
-	¶ 3x4 cards (adaptive)    ¶  ViewportFrame 3D     ¶
-	¶ Scroll 16px thick       ¶  Current vs After     ¶
-	¶                         ¶  Stats (4 max)        ¶
-	¶                         ¶  Buy button           ¶
+	ÔøΩ Header (Title + Cash + Close)                   ÔøΩ
+	+-------------------------------------------------ÔøΩ
+	ÔøΩ Main Tabs: Income|Defense|Turrets|Utility|Eggs  ÔøΩ
+	ÔøΩ Sub-tabs (if Turrets): MG|Laser|Missile|Tesla   ÔøΩ
+	+-------------------------------------------------ÔøΩ
+	ÔøΩ Grid (60%)              ÔøΩ  Preview Panel (40%)  ÔøΩ
+	ÔøΩ 3x4 cards (adaptive)    ÔøΩ  ViewportFrame 3D     ÔøΩ
+	ÔøΩ Scroll 16px thick       ÔøΩ  Current vs After     ÔøΩ
+	ÔøΩ                         ÔøΩ  Stats (4 max)        ÔøΩ
+	ÔøΩ                         ÔøΩ  Buy button           ÔøΩ
 	+-------------------------------------------------+
 ]]
 
@@ -52,7 +52,7 @@ local MENU_SIZE = Vector2.new(800, 600)
 local GRID_WIDTH_PERCENT = 0.6
 local CARD_SIZE = Vector2.new(150, 180)
 local CARD_PADDING = 8
-local SCROLL_BAR_THICKNESS = 8  -- M·s delgado, apocalÌptico
+local SCROLL_BAR_THICKNESS = 8  -- MÔøΩs delgado, apocalÔøΩptico
 
 -- Color scheme - APOCALYPTIC FINAL PALETTE ????
 -- ONLY 4 COLORS + GRAYS for maximum cohesion
@@ -79,8 +79,8 @@ local COLORS = {
 	Shadow = Color3.fromRGB(0, 0, 0),
 
 	-- UI ALIASES
-	Header = Color3.fromRGB(110, 255, 110),         -- Verde neon suave (texto del tÌtulo)
-	BorderBright = Color3.fromRGB(70, 120, 70),     -- Sludge (borde del men˙)
+	Header = Color3.fromRGB(110, 255, 110),         -- Verde neon suave (texto del tÔøΩtulo)
+	BorderBright = Color3.fromRGB(70, 120, 70),     -- Sludge (borde del menÔøΩ)
 	TabActive = Color3.fromRGB(70, 120, 70),        -- Sludge activo (NO fosfo)
 	TabInactive = Color3.fromRGB(20, 28, 20),       -- Sludge apagado
 
@@ -96,7 +96,7 @@ local COLORS = {
 	MaxTier = Color3.fromRGB(110, 255, 110),
 	Gold = Color3.fromRGB(220, 255, 140),
 
-	-- COMPAT PARA EL C”DIGO ANTERIOR
+	-- COMPAT PARA EL CÔøΩDIGO ANTERIOR
 	LavaRed = Color3.fromRGB(70, 120, 70),          -- Antes rojo, ahora sludge
 	FireYellow = Color3.fromRGB(220, 255, 140),
 }
@@ -259,6 +259,14 @@ local UpgradeTurretRemote: RemoteEvent
 -- Ambient audio
 local ambientSound: Sound? = nil
 
+-- ‚ò¢Ô∏è Visual Effects & Audio
+local slimeDripContainer: Frame? = nil
+local particleContainer: Frame? = nil
+local clickSound: Sound? = nil
+local menuOpenSound: Sound? = nil
+local slimeDripActive = false
+local particlesActive = false
+
 --[[------------------------------------------------------------------------
 	UTILITY FUNCTIONS
 ------------------------------------------------------------------------]]
@@ -291,6 +299,249 @@ local function createUIStroke(parent: Instance, color: Color3, thickness: number
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Parent = parent
 	return stroke
+end
+
+--[[------------------------------------------------------------------------
+	‚ò¢Ô∏è VISUAL EFFECTS & AUDIO SYSTEM
+------------------------------------------------------------------------]]
+
+-- üíß TOXIC SLIME DRIP EFFECT
+local function createSlimeDrip(parentFrame: Frame)
+	local container = Instance.new("Frame")
+	container.Name = "SlimeDripContainer"
+	container.Size = UDim2.new(1, 0, 0, 100)
+	container.Position = UDim2.new(0, 0, 0, 0)
+	container.BackgroundTransparency = 1
+	container.ClipsDescendants = false
+	container.ZIndex = 10
+	container.Parent = parentFrame
+
+	-- Funci√≥n para crear una gota
+	local function createDrip(xPercent: number)
+		local drip = Instance.new("Frame")
+		drip.Name = "SlimeDrip"
+		drip.Size = UDim2.new(0, 3, 0, 0)
+		drip.Position = UDim2.new(xPercent, 0, 0, 0)
+		drip.BackgroundColor3 = COLORS.ToxicGreen
+		drip.BorderSizePixel = 0
+		drip.ZIndex = 11
+
+		local glow = Instance.new("UIStroke")
+		glow.Color = COLORS.NeonGreen
+		glow.Thickness = 2
+		glow.Transparency = 0.3
+		glow.Parent = drip
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = drip
+
+		drip.Parent = container
+
+		local dripLength = math.random(15, 40)
+		local dripSpeed = math.random(8, 15) / 10
+
+		local growTween = TweenService:Create(drip, TweenInfo.new(dripSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+			Size = UDim2.new(0, 3, 0, dripLength)
+		})
+
+		growTween:Play()
+		growTween.Completed:Connect(function()
+			local fadeTween = TweenService:Create(drip, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+				BackgroundTransparency = 1
+			})
+			local fadeGlow = TweenService:Create(glow, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {
+				Transparency = 1
+			})
+
+			fadeTween:Play()
+			fadeGlow:Play()
+
+			fadeTween.Completed:Connect(function()
+				drip:Destroy()
+			end)
+		end)
+	end
+
+	-- Sistema de generaci√≥n
+	local function startDripping()
+		task.spawn(function()
+			while slimeDripActive and container.Parent do
+				local numDrips = math.random(1, 3)
+				for i = 1, numDrips do
+					local xPos = math.random(5, 95) / 100
+					createDrip(xPos)
+					task.wait(math.random(1, 3) / 10)
+				end
+				task.wait(math.random(20, 40) / 10)
+			end
+		end)
+	end
+
+	slimeDripActive = true
+	startDripping()
+	return container
+end
+
+-- ‚ò¢Ô∏è RADIOACTIVE PARTICLE SYSTEM
+local function createRadioactiveParticles(parentFrame: Frame)
+	local container = Instance.new("Frame")
+	container.Name = "ParticleContainer"
+	container.Size = UDim2.new(1, 0, 1, 0)
+	container.BackgroundTransparency = 1
+	container.ClipsDescendants = true
+	container.ZIndex = 5
+	container.Parent = parentFrame
+
+	local function createParticle()
+		local particle = Instance.new("Frame")
+		particle.Name = "RadParticle"
+
+		local size = math.random(2, 5)
+		particle.Size = UDim2.new(0, size, 0, size)
+
+		local startX = math.random(0, 100) / 100
+		particle.Position = UDim2.new(startX, 0, 1, 0)
+
+		local colorChoice = math.random(1, 3)
+		if colorChoice == 1 then
+			particle.BackgroundColor3 = COLORS.NeonGreen
+		elseif colorChoice == 2 then
+			particle.BackgroundColor3 = COLORS.ToxicGreen
+		else
+			particle.BackgroundColor3 = COLORS.SludgeBright
+		end
+
+		particle.BackgroundTransparency = 0.3
+		particle.BorderSizePixel = 0
+		particle.ZIndex = 6
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = particle
+
+		local glow = Instance.new("UIStroke")
+		glow.Color = COLORS.NeonGreen
+		glow.Thickness = 1
+		glow.Transparency = 0.5
+		glow.Parent = particle
+
+		particle.Parent = container
+
+		local floatTime = math.random(30, 50) / 10
+		local endY = -0.2
+		local horizontalDrift = (math.random(-10, 10) / 100)
+
+		local floatTween = TweenService:Create(particle, TweenInfo.new(floatTime, Enum.EasingStyle.Linear), {
+			Position = UDim2.new(startX + horizontalDrift, 0, endY, 0),
+			BackgroundTransparency = 1
+		})
+
+		local glowFade = TweenService:Create(glow, TweenInfo.new(floatTime, Enum.EasingStyle.Linear), {
+			Transparency = 1
+		})
+
+		floatTween:Play()
+		glowFade:Play()
+
+		floatTween.Completed:Connect(function()
+			particle:Destroy()
+		end)
+	end
+
+	local function startParticleSystem()
+		task.spawn(function()
+			while particlesActive and container.Parent do
+				local numParticles = math.random(1, 2)
+				for i = 1, numParticles do
+					createParticle()
+				end
+				task.wait(math.random(3, 8) / 10)
+			end
+		end)
+	end
+
+	particlesActive = true
+	startParticleSystem()
+	return container
+end
+
+-- üîä CLICK SOUND
+local function createClickSound(parentFrame: Frame): Sound
+	local sound = Instance.new("Sound")
+	sound.Name = "ClickSound"
+	sound.SoundId = "rbxassetid://12221967"  -- Cambiar por tu asset ID
+	sound.Volume = 0.3
+	sound.PlaybackSpeed = 1.2
+	sound.Parent = parentFrame
+	return sound
+end
+
+local function addClickSoundToButton(button: GuiButton)
+	button.MouseButton1Click:Connect(function()
+		if clickSound then
+			local soundClone = clickSound:Clone()
+			soundClone.Parent = clickSound.Parent
+			soundClone:Play()
+			soundClone.Ended:Connect(function()
+				soundClone:Destroy()
+			end)
+		end
+	end)
+end
+
+-- üîä MENU OPEN SOUND
+local function createMenuOpenSound(parentFrame: Frame): Sound
+	local sound = Instance.new("Sound")
+	sound.Name = "MenuOpenSound"
+	sound.SoundId = "rbxassetid://3398620867"  -- Cambiar por tu asset ID
+	sound.Volume = 0.4
+	sound.PlaybackSpeed = 1.0
+	sound.Parent = parentFrame
+	return sound
+end
+
+-- üé¨ MENU ANIMATIONS
+local function playOpenAnimation(frame: Frame)
+	-- Estado inicial
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.Position = UDim2.new(0.5, 0, 0.55, 0)
+	frame.Size = UDim2.new(0, 0, 0, 0)
+	frame.Rotation = -5
+
+	-- Reproducir sonido
+	if menuOpenSound then
+		menuOpenSound:Play()
+	end
+
+	-- Animaci√≥n
+	local openTween = TweenService:Create(frame, TweenInfo.new(
+		0.4,
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.Out
+	), {
+		Size = UDim2.new(0, MENU_SIZE.X, 0, MENU_SIZE.Y),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Rotation = 0
+	})
+
+	openTween:Play()
+	return openTween
+end
+
+local function playCloseAnimation(frame: Frame)
+	local closeTween = TweenService:Create(frame, TweenInfo.new(
+		0.25,
+		Enum.EasingStyle.Back,
+		Enum.EasingDirection.In
+	), {
+		Size = UDim2.new(0, 0, 0, 0),
+		Position = UDim2.new(0.5, 0, 0.45, 0),
+		Rotation = 5
+	})
+
+	closeTween:Play()
+	return closeTween
 end
 
 --[[------------------------------------------------------------------------
@@ -328,7 +579,7 @@ local function createStructure()
 	mainFrame.BorderSizePixel = 0
 	mainFrame.ZIndex = 2
 	mainFrame.Parent = screenGui
-	createUICorner(mainFrame, 16)  -- ?? M·s redondeado, m·s premium
+	createUICorner(mainFrame, 16)  -- ?? MÔøΩs redondeado, mÔøΩs premium
 	createUIStroke(mainFrame, COLORS.BorderBright, 3)
 
 
@@ -341,7 +592,7 @@ local function createStructure()
 	header.Parent = mainFrame
 	createUICorner(header, 12)
 
-	-- Padding para que no estÈ pegado
+	-- Padding para que no estÔøΩ pegado
 	local headerPadding = Instance.new("UIPadding")
 	headerPadding.PaddingTop = UDim.new(0, 8)
 	headerPadding.PaddingBottom = UDim.new(0, 8)
@@ -455,7 +706,7 @@ local function createStructure()
 	gridLayout.CellPadding = UDim2.fromOffset(CARD_PADDING, CARD_PADDING)
 	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-	-- IMPORTANTE: m·ximo 3 columnas
+	-- IMPORTANTE: mÔøΩximo 3 columnas
 	gridLayout.FillDirection = Enum.FillDirection.Horizontal
 	gridLayout.FillDirectionMaxCells = 3
 	gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
@@ -548,18 +799,18 @@ local function createStructure()
 	buyButton.Name = "BuyButton"
 	buyButton.Size = UDim2.new(1, -20, 0, 60)
 	buyButton.Position = UDim2.fromOffset(10, 370)
-	buyButton.BackgroundColor3 = COLORS.ToxicGreen  -- Verde tÛxico por default
+	buyButton.BackgroundColor3 = COLORS.ToxicGreen  -- Verde tÔøΩxico por default
 	buyButton.BorderSizePixel = 0
 	buyButton.Font = Enum.Font.GothamBold
 	buyButton.TextSize = 22
-	buyButton.TextColor3 = COLORS.Background  -- Negro carbÛn #0F0F0F
+	buyButton.TextColor3 = COLORS.Background  -- Negro carbÔøΩn #0F0F0F
 	buyButton.Text = "BUY"
 	buyButton.AutoButtonColor = true
 	buyButton.Visible = false
 	buyButton.Parent = previewPanel
 	createUICorner(buyButton, 10)
 
-	-- Add a THICK stroke to the buy button - Borde amarillo fuego o negro seg˙n estado
+	-- Add a THICK stroke to the buy button - Borde amarillo fuego o negro segÔøΩn estado
 	local buyButtonStroke = createUIStroke(buyButton, COLORS.FireYellow, 3)  -- 3px thick!
 	buyButtonStroke.Transparency = 0
 
@@ -578,7 +829,7 @@ local function createStructure()
 	descriptionLabel.Visible = false
 	descriptionLabel.Parent = statsContainer  -- NOW inside statsContainer!
 
-	-- ?? AMBIENT AUDIO - Brasas/CarbÛn encendido
+	-- ?? AMBIENT AUDIO - Brasas/CarbÔøΩn encendido
 	-- TODO: Add SoundId when asset is ready
 	ambientSound = Instance.new("Sound")
 	ambientSound.Name = "AmbientForge"
@@ -597,10 +848,10 @@ end
 local function updateTabStates()
 	for tabName, tabButton in pairs(mainTabButtons) do
 		if tabName == currentMainTab then
-			-- ACTIVO: Rojo lava con texto negro carbÛn
+			-- ACTIVO: Rojo lava con texto negro carbÔøΩn
 			tabButton.BackgroundColor3 = COLORS.LavaRed
 			tabButton.BackgroundTransparency = 0
-			tabButton.TextColor3 = COLORS.NuclearYellow  -- Negro carbÛn #0F0F0F
+			tabButton.TextColor3 = COLORS.NuclearYellow  -- Negro carbÔøΩn #0F0F0F
 			tabButton.TextSize = 18
 		else
 			-- INACTIVO: Gris oscuro con texto gris claro
@@ -615,10 +866,10 @@ local function updateTabStates()
 		subTabsRow.Visible = true
 		for subName, subButton in pairs(subTabButtons) do
 			if subName == currentSubTab then
-				-- ACTIVO: Rojo lava con texto negro carbÛn
+				-- ACTIVO: Rojo lava con texto negro carbÔøΩn
 				subButton.BackgroundColor3 = COLORS.LavaRed
 				subButton.BackgroundTransparency = 0
-				subButton.TextColor3 = COLORS.Background  -- Negro carbÛn
+				subButton.TextColor3 = COLORS.Background  -- Negro carbÔøΩn
 			else
 				-- INACTIVO: Gris con texto gris claro
 				subButton.BackgroundColor3 = COLORS.TabInactive
@@ -858,7 +1109,7 @@ local function makeCard(itemData: any): Frame
 	glow.Size = UDim2.new(1, 20, 1, 1)          -- antes 1,12,1,12
 	glow.Position = UDim2.fromOffset(-16, -16)   -- antes -6,-6
 	glow.BackgroundColor3 = visuals.glowColor or visuals.strokeColor
-	glow.BackgroundTransparency = 0.5            -- antes 0.55, ahora m·s sÛlido
+	glow.BackgroundTransparency = 0.5            -- antes 0.55, ahora mÔøΩs sÔøΩlido
 	glow.ZIndex = 3
 	glow.Parent = container
 	createUICorner(glow, 20)
@@ -992,14 +1243,14 @@ local function createStatRow(statName: string, value: string, order: number)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = row
 
-	-- Value (right side) - VERDE T”XICO!
+	-- Value (right side) - VERDE TÔøΩXICO!
 	local valueLabel = Instance.new("TextLabel")
 	valueLabel.Size = UDim2.new(0.55, 0, 1, 0)
 	valueLabel.Position = UDim2.fromScale(0.45, 0)
 	valueLabel.BackgroundTransparency = 1
 	valueLabel.Font = Enum.Font.GothamBold
 	valueLabel.TextSize = 14
-	valueLabel.TextColor3 = COLORS.ToxicGreen  -- #39FF14 Verde tÛxico radioactivo!
+	valueLabel.TextColor3 = COLORS.ToxicGreen  -- #39FF14 Verde tÔøΩxico radioactivo!
 	valueLabel.Text = value
 	valueLabel.TextXAlignment = Enum.TextXAlignment.Right
 	valueLabel.Parent = row
@@ -1063,19 +1314,19 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 		buyButton.AutoButtonColor = false
 		if btnStroke then btnStroke.Color = COLORS.Shadow end
 	elseif itemType == "generator" or itemType == "place" then
-		-- PLACE: Verde tÛxico con texto negro, borde amarillo
+		-- PLACE: Verde tÔøΩxico con texto negro, borde amarillo
 		buyButton.Text = itemType == "generator"
 			and string.format("PLACE FOR %s", formatMoney(itemData.price))
 			or string.format("PLACE T1 FOR %s", formatMoney(itemData.price))
 		buyButton.BackgroundColor3 = COLORS.ToxicGreen  -- #39FF14
-		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbÛn
+		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbÔøΩn
 		buyButton.AutoButtonColor = true
 		if btnStroke then btnStroke.Color = COLORS.FireYellow end  -- Borde amarillo fuego
 	elseif itemType == "upgrade" then
 		-- UPGRADE: Amarillo fuego con texto negro, borde amarillo
 		buyButton.Text = string.format("UPGRADE FOR %s", formatMoney(itemData.price))
 		buyButton.BackgroundColor3 = COLORS.FireYellow  -- #FFA500
-		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbÛn
+		buyButton.TextColor3 = COLORS.Background  -- #0F0F0F Negro carbÔøΩn
 		buyButton.AutoButtonColor = true
 		if btnStroke then btnStroke.Color = COLORS.FireYellow end
 	else
@@ -1388,41 +1639,97 @@ end
 
 function ShopUIController:ToggleMenu()
 	isMenuOpen = not isMenuOpen
-	mainFrame.Visible = isMenuOpen
-	shadow.Visible = isMenuOpen
 
-	-- ?? Ambient audio control
-	if ambientSound then
-		if isMenuOpen and ambientSound.SoundId ~= "158853971" then
+	if isMenuOpen then
+		-- ‚ïê‚ïê‚ïê ABRIR MENU ‚ïê‚ïê‚ïê
+		screenGui.Enabled = true
+		shadow.Visible = true
+		mainFrame.Visible = true
+
+		-- üé¨ Animaci√≥n de apertura + sonido
+		playOpenAnimation(mainFrame)
+
+		-- Update UI
+		self:PopulateGrid()
+
+		-- üîÑ Ambient audio
+		if ambientSound and ambientSound.SoundId ~= "158853971" then
 			ambientSound:Play()
-		else
+		end
+
+		-- ‚ò¢Ô∏è Activar efectos
+		slimeDripActive = true
+		particlesActive = true
+
+	else
+		-- ‚ïê‚ïê‚ïê CERRAR MENU ‚ïê‚ïê‚ïê
+
+		-- üé¨ Animaci√≥n de cierre
+		local closeTween = playCloseAnimation(mainFrame)
+
+		-- Esperar a que termine animaci√≥n
+		closeTween.Completed:Connect(function()
+			screenGui.Enabled = false
+			shadow.Visible = false
+			mainFrame.Visible = false
+		end)
+
+		-- üîá Ambient audio stop
+		if ambientSound then
 			ambientSound:Stop()
 		end
-	end
 
-	-- Refresh data when opening menu
-	if isMenuOpen then
-		self:PopulateGrid()
+		-- ‚ò¢Ô∏è Desactivar efectos
+		slimeDripActive = false
+		particlesActive = false
 	end
 end
 
 function ShopUIController:SetVisible(visible: boolean)
 	isMenuOpen = visible
-	mainFrame.Visible = visible
-	shadow.Visible = visible
 
-	-- ?? Ambient audio control
-	if ambientSound then
-		if visible and ambientSound.SoundId ~= "158853971" then
+	if visible then
+		-- ‚ïê‚ïê‚ïê ABRIR MENU ‚ïê‚ïê‚ïê
+		screenGui.Enabled = true
+		shadow.Visible = true
+		mainFrame.Visible = true
+
+		-- üé¨ Animaci√≥n de apertura + sonido
+		playOpenAnimation(mainFrame)
+
+		-- Update UI
+		self:PopulateGrid()
+
+		-- üîÑ Ambient audio
+		if ambientSound and ambientSound.SoundId ~= "158853971" then
 			ambientSound:Play()
-		else
+		end
+
+		-- ‚ò¢Ô∏è Activar efectos
+		slimeDripActive = true
+		particlesActive = true
+
+	else
+		-- ‚ïê‚ïê‚ïê CERRAR MENU ‚ïê‚ïê‚ïê
+
+		-- üé¨ Animaci√≥n de cierre
+		local closeTween = playCloseAnimation(mainFrame)
+
+		-- Esperar a que termine animaci√≥n
+		closeTween.Completed:Connect(function()
+			screenGui.Enabled = false
+			shadow.Visible = false
+			mainFrame.Visible = false
+		end)
+
+		-- üîá Ambient audio stop
+		if ambientSound then
 			ambientSound:Stop()
 		end
-	end
 
-	-- Refresh data when opening menu
-	if visible then
-		self:PopulateGrid()
+		-- ‚ò¢Ô∏è Desactivar efectos
+		slimeDripActive = false
+		particlesActive = false
 	end
 end
 
@@ -1457,6 +1764,38 @@ function ShopUIController:KnitStart()
 	end
 
 	updateTabStates()
+
+	-- ‚ò¢Ô∏è SETUP VISUAL EFFECTS & AUDIO
+	print("üé® Setting up visual effects...")
+
+	-- 1. Toxic slime drip
+	slimeDripContainer = createSlimeDrip(mainFrame)
+	print("‚úì Toxic slime drip created")
+
+	-- 2. Radioactive particles
+	particleContainer = createRadioactiveParticles(mainFrame)
+	print("‚úì Radioactive particles created")
+
+	-- 3. Click sound
+	clickSound = createClickSound(mainFrame)
+	print("‚úì Click sound created")
+
+	-- 4. Menu open sound
+	menuOpenSound = createMenuOpenSound(mainFrame)
+	print("‚úì Menu open sound created")
+
+	-- 5. Add click sounds to all buttons
+	for _, btn in pairs(mainTabButtons) do
+		addClickSoundToButton(btn)
+	end
+	for _, btn in pairs(subTabButtons) do
+		addClickSoundToButton(btn)
+	end
+	addClickSoundToButton(buyButton)
+	addClickSoundToButton(closeButton)
+	print("‚úì Click sounds added to all buttons")
+
+	print("üî• Visual effects initialized!")
 
 	-- Close button
 	closeButton.MouseButton1Click:Connect(function()
