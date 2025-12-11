@@ -30,6 +30,9 @@ local Knit = require(ReplicatedStorage.Knit)
 local TurretDefinitions = require(script.Parent.TurretDefinitions)
 local TurretVFXManager = require(ServerStorage.Managers.TurretVFXManager)
 
+-- Dependencies (loaded in KnitStart)
+local BaseOwnershipService
+
 --[[────────────────────────────────────────────────────────────────────────
 	TYPE DEFINITIONS
 ────────────────────────────────────────────────────────────────────────]]
@@ -114,6 +117,9 @@ end
 
 function TurretService:KnitStart()
 	print("[TurretService] Starting turret systems...")
+
+	-- Get service dependencies
+	BaseOwnershipService = Knit.GetService("BaseOwnershipService")
 
 	-- Conectar RemoteEvents
 	local Remotes = ReplicatedStorage.Remotes

@@ -967,16 +967,12 @@ function ShopUIController:PopulateGrid()
 			local actionType = "locked"
 
 			if tier == 1 then
-				-- T1 is always available for placement
-				if currentTier >= 1 then
-					itemState = "Owned"
-					actionType = "owned"
-				else
-					itemState = canAfford and "Available" or "Locked"
-					actionType = canAfford and "place" or "locked"
-				end
+				-- T1 ALWAYS available for placement (can place multiple)
+				-- Never show as "Owned" in the Build Menu
+				itemState = canAfford and "Available" or "Locked"
+				actionType = canAfford and "place" or "locked"
 			else
-				-- T2-T5 require previous tier
+				-- T2-T5 require previous tier (upgrade via TurretManagementUI, not Build Menu)
 				if currentTier >= tier then
 					itemState = "Owned"
 					actionType = "owned"
@@ -1026,13 +1022,15 @@ function ShopUIController:PopulateGrid()
 				id = turretData.id,
 				name = string.format("%s T%d", currentSubTab, tier),
 				price = turretData.cost,
-				count = currentTier >= tier and 1 or 0,
-				maxCount = 1,
+				count = tier == 1 and 0 or (currentTier >= tier and 1 or 0), -- T1 never shows count
+				maxCount = tier == 1 and nil or 1, -- T1 has no max (can place multiple)
 				state = itemState,
 				icon = TURRET_ICONS[currentSubTab] or "🔫",
 				category = "Turrets",
 				canAfford = canAfford,
-				description = string.format("Tier %d %s turret", tier, currentSubTab),
+				description = tier == 1
+					and string.format("Tier %d %s turret - Place multiple!", tier, currentSubTab)
+					or string.format("Tier %d %s turret - Upgrade required", tier, currentSubTab),
 				stats = stats,
 				itemType = actionType,
 				turretType = currentSubTab,
