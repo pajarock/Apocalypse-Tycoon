@@ -109,18 +109,18 @@ local COLORS = {
 -- Tab definitions - CORRECT ORDER!
 -- NO custom colors - all use apocalyptic palette
 local MAIN_TABS = {
-	{name = "INCOME", emoji = "??"},
-	{name = "TURRETS", emoji = "??"},
-	{name = "MY BASE", emoji = "??"},
-	{name = "PETS", emoji = "??"},
-	{name = "POWERUPS", emoji = "?"},
+	{name = "INCOME", emoji = "💰"},
+	{name = "TURRETS", emoji = "💀"},
+	{name = "MY BASE", emoji = "🏠"},
+	{name = "PETS", emoji = "🐾"},
+	{name = "POWERUPS", emoji = "⚡"},
 }
 
 local TURRET_SUBTABS = {
-	{name = "MachineGun", emoji = "??", displayName = "MG"},  -- FIRST! Cheapest and easiest
-	{name = "Laser", emoji = "?", displayName = "LASER"},
-	{name = "Missile", emoji = "??", displayName = "MISSILE LAUNCHER"},
-	{name = "Tesla", emoji = "??", displayName = "TESLA COIL"},
+	{name = "MachineGun", emoji = "💀", displayName = "MG"},  -- FIRST! Cheapest and easiest
+	{name = "Laser", emoji = "⚡", displayName = "LASER"},
+	{name = "Missile", emoji = "💥", displayName = "MISSILE LAUNCHER"},
+	{name = "Tesla", emoji = "🔮", displayName = "TESLA COIL"},
 }
 
 -- Generator definitions (Income) - 5 TIERS!
@@ -128,7 +128,7 @@ local GENERATORS = {
 	{
 		id = "Generator",
 		name = "Hand Crank Generator",
-		icon = "??",
+		icon = "⚙️",
 		tier = 1,
 		cost = 100,
 		size = Vector3.new(6, 5, 6),
@@ -138,7 +138,7 @@ local GENERATORS = {
 	{
 		id = "GeneratorT2",
 		name = "Solar Panel",
-		icon = "??",
+		icon = "⚙️",
 		tier = 2,
 		cost = 500,
 		size = Vector3.new(7, 6, 7),
@@ -148,7 +148,7 @@ local GENERATORS = {
 	{
 		id = "GeneratorT3",
 		name = "Wind Turbine",
-		icon = "??",
+		icon = "⚙️",
 		tier = 3,
 		cost = 2500,
 		size = Vector3.new(8, 7, 8),
@@ -158,7 +158,7 @@ local GENERATORS = {
 	{
 		id = "GeneratorT4",
 		name = "Fusion Core",
-		icon = "??",
+		icon = "⚙️",
 		tier = 4,
 		cost = 12500,
 		size = Vector3.new(9, 8, 9),
@@ -168,7 +168,7 @@ local GENERATORS = {
 	{
 		id = "GeneratorT5",
 		name = "Quantum Extractor",
-		icon = "??",
+		icon = "⚙️",
 		tier = 5,
 		cost = 62500,
 		size = Vector3.new(10, 9, 10),
@@ -210,10 +210,10 @@ local TURRET_TYPES = {
 }
 
 local TURRET_ICONS = {
-	MachineGun = "??", -- Skull for death machine
-	Laser = "xD",      -- Lightning bolt
-	Missile = "??",    -- Explosion
-	Tesla = "?",      -- Crystal ball for electric
+	MachineGun = "💀", -- Skull for death machine
+	Laser = "⚡",      -- Lightning bolt
+	Missile = "💥",    -- Explosion
+	Tesla = "🔮",      -- Crystal ball for electric
 }
 
 --[[------------------------------------------------------------------------
@@ -306,6 +306,7 @@ end
 ------------------------------------------------------------------------]]
 
 -- 💧 TOXIC SLIME DRIP EFFECT
+local slimeDripStartFunc = nil
 local function createSlimeDrip(parentFrame: Frame)
 	local container = Instance.new("Frame")
 	container.Name = "SlimeDripContainer"
@@ -316,11 +317,11 @@ local function createSlimeDrip(parentFrame: Frame)
 	container.ZIndex = 10
 	container.Parent = parentFrame
 
-	-- Función para crear una gota
+	-- Función para crear una gota - MÁS VISIBLE 💧
 	local function createDrip(xPercent: number)
 		local drip = Instance.new("Frame")
 		drip.Name = "SlimeDrip"
-		drip.Size = UDim2.new(0, 3, 0, 0)
+		drip.Size = UDim2.new(0, 6, 0, 0)  -- Más ancho (era 3, ahora 6)
 		drip.Position = UDim2.new(xPercent, 0, 0, 0)
 		drip.BackgroundColor3 = COLORS.ToxicGreen
 		drip.BorderSizePixel = 0
@@ -328,8 +329,8 @@ local function createSlimeDrip(parentFrame: Frame)
 
 		local glow = Instance.new("UIStroke")
 		glow.Color = COLORS.NeonGreen
-		glow.Thickness = 2
-		glow.Transparency = 0.3
+		glow.Thickness = 3  -- Más grueso (era 2, ahora 3)
+		glow.Transparency = 0.2  -- Más visible (era 0.3, ahora 0.2)
 		glow.Parent = drip
 
 		local corner = Instance.new("UICorner")
@@ -338,11 +339,11 @@ local function createSlimeDrip(parentFrame: Frame)
 
 		drip.Parent = container
 
-		local dripLength = math.random(15, 40)
+		local dripLength = math.random(25, 60)  -- Más largo (era 15-40, ahora 25-60)
 		local dripSpeed = math.random(8, 15) / 10
 
 		local growTween = TweenService:Create(drip, TweenInfo.new(dripSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
-			Size = UDim2.new(0, 3, 0, dripLength)
+			Size = UDim2.new(0, 6, 0, dripLength)
 		})
 
 		growTween:Play()
@@ -363,27 +364,26 @@ local function createSlimeDrip(parentFrame: Frame)
 		end)
 	end
 
-	-- Sistema de generación
-	local function startDripping()
+	-- Sistema de generación - GUARDAR FUNCIÓN PARA REINICIAR
+	slimeDripStartFunc = function()
 		task.spawn(function()
 			while slimeDripActive and container.Parent do
-				local numDrips = math.random(1, 3)
+				local numDrips = math.random(2, 4)  -- Más gotas (era 1-3, ahora 2-4)
 				for i = 1, numDrips do
 					local xPos = math.random(5, 95) / 100
 					createDrip(xPos)
-					task.wait(math.random(1, 3) / 10)
+					task.wait(math.random(1, 2) / 10)  -- Más frecuente
 				end
-				task.wait(math.random(20, 40) / 10)
+				task.wait(math.random(15, 30) / 10)  -- Menos espera (era 20-40, ahora 15-30)
 			end
 		end)
 	end
 
-	slimeDripActive = true
-	startDripping()
 	return container
 end
 
 -- ☢️ RADIOACTIVE PARTICLE SYSTEM
+local particleStartFunc = nil
 local function createRadioactiveParticles(parentFrame: Frame)
 	local container = Instance.new("Frame")
 	container.Name = "ParticleContainer"
@@ -449,7 +449,8 @@ local function createRadioactiveParticles(parentFrame: Frame)
 		end)
 	end
 
-	local function startParticleSystem()
+	-- GUARDAR FUNCIÓN PARA REINICIAR
+	particleStartFunc = function()
 		task.spawn(function()
 			while particlesActive and container.Parent do
 				local numParticles = math.random(1, 2)
@@ -461,8 +462,6 @@ local function createRadioactiveParticles(parentFrame: Frame)
 		end)
 	end
 
-	particlesActive = true
-	startParticleSystem()
 	return container
 end
 
@@ -1004,7 +1003,7 @@ local function getCardStateVisuals(state: CardState, canAfford: boolean)
 	if state == "Max" then
 		return {
 			backgroundColor = COLORS.BackgroundCard,
-			badgeText = "?",
+			badgeText = "⭐",
 			badgeColor = COLORS.MaxTier,
 			strokeColor = COLORS.MaxTier,
 			glowColor   = COLORS.MaxTier,
@@ -1013,7 +1012,7 @@ local function getCardStateVisuals(state: CardState, canAfford: boolean)
 	elseif state == "Owned" then
 		return {
 			backgroundColor = COLORS.BackgroundCard,
-			badgeText = "?",
+			badgeText = "💎",
 			badgeColor = COLORS.Owned,
 			strokeColor = COLORS.Owned,
 			glowColor   = COLORS.Owned,
@@ -1022,7 +1021,7 @@ local function getCardStateVisuals(state: CardState, canAfford: boolean)
 	elseif state == "Locked" then
 		return {
 			backgroundColor = COLORS.BackgroundCard,
-			badgeText = "??",
+			badgeText = "🔒",
 			badgeColor = COLORS.DarkGray,
 			strokeColor = COLORS.DarkGray,
 			glowColor   = COLORS.DarkGray,
@@ -1034,11 +1033,11 @@ local function getCardStateVisuals(state: CardState, canAfford: boolean)
 
 		return {
 			backgroundColor = COLORS.BackgroundCard,
-			badgeText = "??",
+			badgeText = "✓",
 			badgeColor = activeColor,
 			strokeColor = activeColor,
 			glowColor = COLORS.NuclearYellow,
-			
+
 		}
 	end
 end
@@ -1444,22 +1443,22 @@ function ShopUIController:PopulateGrid()
 				local tier = tierStr and tonumber(tierStr) or 1
 
 				-- Determine icon based on type
-				local icon = "??"
+				local icon = "⚙️"
 				local displayName = objType
 				if objType:match("^MachineGun") then
-					icon = "??"
+					icon = "💀"
 					displayName = string.format("Machine Gun T%d", tier)
 				elseif objType:match("^Laser") then
-					icon = "?"
+					icon = "⚡"
 					displayName = string.format("Laser T%d", tier)
 				elseif objType:match("^Missile") then
-					icon = "??"
+					icon = "💥"
 					displayName = string.format("Missile T%d", tier)
 				elseif objType:match("^Tesla") then
-					icon = "??"
+					icon = "🔮"
 					displayName = string.format("Tesla T%d", tier)
 				elseif objType:match("Generator") then
-					icon = "??"
+					icon = "⚙️"
 					displayName = "Generator"
 				end
 
@@ -1570,7 +1569,7 @@ function ShopUIController:PopulateGrid()
 				count = 0,  -- Never show count for T1
 				maxCount = nil,  -- No max limit
 				state = canAfford and "Available" or "Locked",
-				icon = TURRET_ICONS[currentSubTab] or "??",
+				icon = TURRET_ICONS[currentSubTab] or "💀",
 				category = "Turrets",
 				canAfford = canAfford,
 				description = string.format("%s Tier 1 - Place multiple turrets! Upgrade via turret menu", currentSubTab),
@@ -1607,7 +1606,7 @@ function ShopUIController:PopulateGrid()
 			price = 0,
 			count = 0,
 			state = "Locked",
-			icon = "??",
+			icon = "⚙️",
 			category = "Pets",
 			canAfford = false,
 			description = "Coming soon: Gachapon pet system with buffs",
@@ -1657,9 +1656,11 @@ function ShopUIController:ToggleMenu()
 			ambientSound:Play()
 		end
 
-		-- ☢️ Activar efectos
+		-- ☢️ REINICIAR efectos
 		slimeDripActive = true
 		particlesActive = true
+		if slimeDripStartFunc then slimeDripStartFunc() end
+		if particleStartFunc then particleStartFunc() end
 
 	else
 		-- ═══ CERRAR MENU ═══
@@ -1705,9 +1706,11 @@ function ShopUIController:SetVisible(visible: boolean)
 			ambientSound:Play()
 		end
 
-		-- ☢️ Activar efectos
+		-- ☢️ REINICIAR efectos
 		slimeDripActive = true
 		particlesActive = true
+		if slimeDripStartFunc then slimeDripStartFunc() end
+		if particleStartFunc then particleStartFunc() end
 
 	else
 		-- ═══ CERRAR MENU ═══
