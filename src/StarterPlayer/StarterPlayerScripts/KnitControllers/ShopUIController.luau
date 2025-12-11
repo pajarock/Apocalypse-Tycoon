@@ -111,7 +111,7 @@ local TURRET_SUBTABS = {
 -- Generator definitions (Income) - 5 TIERS!
 local GENERATORS = {
 	{
-		id = "GeneratorT1",
+		id = "Generator",
 		name = "Generator T1",
 		icon = "⚙️",
 		tier = 1,
