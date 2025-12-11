@@ -32,6 +32,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local Knit = require(ReplicatedStorage.Knit)
 
@@ -86,30 +87,71 @@ local COLORS = {
 
 -- Tab definitions - CORRECT ORDER!
 local MAIN_TABS = {
-	{name = "Income", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
-	{name = "Turrets", emoji = "💀", color = Color3.fromRGB(255, 100, 100)},
-	{name = "MyBase", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
-	{name = "Pets", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
-	{name = "PowerUps", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
+	{name = "INCOME", emoji = "💰", color = Color3.fromRGB(255, 215, 0)},
+	{name = "TURRETS", emoji = "💀", color = Color3.fromRGB(255, 100, 100)},
+	{name = "MY BASE", emoji = "🏠", color = Color3.fromRGB(100, 200, 255)},
+	{name = "PETS", emoji = "🐾", color = Color3.fromRGB(255, 150, 200)},
+	{name = "POWERUPS", emoji = "⚡", color = Color3.fromRGB(255, 255, 100)},
 }
 
 local TURRET_SUBTABS = {
 	{name = "MachineGun", emoji = "💀", displayName = "MG"},  -- FIRST! Cheapest and easiest
-	{name = "Laser", emoji = "⚡", displayName = "Laser"},
-	{name = "Missile", emoji = "💥", displayName = "Missile"},
-	{name = "Tesla", emoji = "🔮", displayName = "Tesla"},
+	{name = "Laser", emoji = "⚡", displayName = "LASER"},
+	{name = "Missile", emoji = "💥", displayName = "MISSILE"},
+	{name = "Tesla", emoji = "🔮", displayName = "TESLA"},
 }
 
--- Generator definitions (Income)
+-- Generator definitions (Income) - 5 TIERS!
 local GENERATORS = {
 	{
-		id = "Generator",
-		name = "Generator",
+		id = "GeneratorT1",
+		name = "Generator T1",
 		icon = "⚙️",
+		tier = 1,
 		cost = 100,
-		size = Vector3.new(8, 6, 8),
-		description = "Produces money passively over time. The more you place, the more you earn!",
-		income = "$10/sec",  -- Example stat
+		size = Vector3.new(6, 5, 6),
+		description = "Basic money generator. Place many to increase income!",
+		income = "$10/sec",
+	},
+	{
+		id = "GeneratorT2",
+		name = "Generator T2",
+		icon = "⚙️",
+		tier = 2,
+		cost = 500,
+		size = Vector3.new(7, 6, 7),
+		description = "Improved generator with better output!",
+		income = "$50/sec",
+	},
+	{
+		id = "GeneratorT3",
+		name = "Generator T3",
+		icon = "⚙️",
+		tier = 3,
+		cost = 2500,
+		size = Vector3.new(8, 7, 8),
+		description = "Advanced generator for serious income!",
+		income = "$250/sec",
+	},
+	{
+		id = "GeneratorT4",
+		name = "Generator T4",
+		icon = "⚙️",
+		tier = 4,
+		cost = 12500,
+		size = Vector3.new(9, 8, 9),
+		description = "High-tech generator with massive output!",
+		income = "$1,250/sec",
+	},
+	{
+		id = "GeneratorT5",
+		name = "Generator T5",
+		icon = "⚙️",
+		tier = 5,
+		cost = 62500,
+		size = Vector3.new(10, 9, 10),
+		description = "Ultimate generator - maximum money production!",
+		income = "$6,250/sec",
 	},
 }
 
@@ -182,7 +224,7 @@ local mainTabButtons: {[string]: TextButton} = {}
 local subTabButtons: {[string]: TextButton} = {}
 local cardInstances: {[string]: Frame} = {}
 
-local currentMainTab = "Income"  -- Start with Income tab
+local currentMainTab = "INCOME"  -- Start with Income tab
 local currentSubTab = "MachineGun"
 local selectedItem: any? = nil
 local isMenuOpen = false
@@ -278,16 +320,16 @@ local function createStructure()
 	title.Size = UDim2.new(0.5, -60, 1, 0)
 	title.Position = UDim2.fromOffset(20, 0)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.FredokaOne  -- More fun, visual font!
-	title.TextSize = 24
+	title.Font = Enum.Font.GothamBold  -- Bold and clean (FredokaOne doesn't exist in Roblox)
+	title.TextSize = 26  -- Bigger for impact!
 	title.TextColor3 = COLORS.Header
-	title.Text = "🏗️ BUILD MENU V2.0"  -- UPPERCASE!
+	title.Text = "🏗️ BUILD MENU V2.0"
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = header
 
 	-- Add stroke for better visibility
-	local titleStroke = createUIStroke(title, COLORS.Shadow, 3)
-	titleStroke.Transparency = 0.6
+	local titleStroke = createUIStroke(title, COLORS.Shadow, 4)
+	titleStroke.Transparency = 0.5
 
 	cashLabel = Instance.new("TextLabel")
 	cashLabel.Name = "Cash"
@@ -369,6 +411,7 @@ local function createStructure()
 	gridContainer.ScrollBarImageColor3 = COLORS.BorderBright
 	gridContainer.CanvasSize = UDim2.fromScale(1, 0)
 	gridContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	gridContainer.ScrollingDirection = Enum.ScrollingDirection.Y  -- ONLY VERTICAL SCROLL!
 	gridContainer.Parent = contentArea
 	createUICorner(gridContainer, 8)
 
@@ -476,20 +519,20 @@ local function createStructure()
 	local buyButtonStroke = createUIStroke(buyButton, COLORS.White, 2)
 	buyButtonStroke.Transparency = 0.5
 
-	-- Description
+	-- Description - NOW VISIBLE! Moved inside statsContainer at the bottom
 	descriptionLabel = Instance.new("TextLabel")
 	descriptionLabel.Name = "Description"
-	descriptionLabel.Size = UDim2.new(1, -20, 0, 30)
-	descriptionLabel.Position = UDim2.fromOffset(10, 410)
+	descriptionLabel.Size = UDim2.new(1, -16, 0, 35)
+	descriptionLabel.Position = UDim2.fromOffset(8, 105)  -- Below stats grid
 	descriptionLabel.BackgroundTransparency = 1
 	descriptionLabel.Font = Enum.Font.Gotham
 	descriptionLabel.TextSize = 11
-	descriptionLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+	descriptionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)  -- Brighter for visibility
 	descriptionLabel.Text = ""
 	descriptionLabel.TextWrapped = true
 	descriptionLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descriptionLabel.Visible = false
-	descriptionLabel.Parent = previewPanel
+	descriptionLabel.Parent = statsContainer  -- NOW inside statsContainer!
 end
 
 --[[────────────────────────────────────────────────────────────────────────
@@ -511,7 +554,7 @@ local function updateTabStates()
 		end
 	end
 
-	if currentMainTab == "Turrets" then
+	if currentMainTab == "TURRETS" then
 		subTabsRow.Visible = true
 		for subName, subButton in pairs(subTabButtons) do
 			if subName == currentSubTab then
@@ -556,12 +599,30 @@ local function createMainTab(tabData: {name: string, emoji: string, color: Color
 
 	btn.MouseEnter:Connect(function()
 		if currentMainTab ~= tabData.name then
+			-- PRONOUNCED BOUNCE animation - scale up with bounce!
+			local tweenInfo = TweenInfo.new(
+				0.4,  -- Duration
+				Enum.EasingStyle.Bounce,  -- Bounce style!
+				Enum.EasingDirection.Out
+			)
+			local goal = {Size = UDim2.fromOffset(140, 45)}  -- Bigger!
+			local tween = TweenService:Create(btn, tweenInfo, goal)
+			tween:Play()
 			btn.BackgroundTransparency = 0.1
 		end
 	end)
 
 	btn.MouseLeave:Connect(function()
 		if currentMainTab ~= tabData.name then
+			-- Return to normal size smoothly
+			local tweenInfo = TweenInfo.new(
+				0.3,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.Out
+			)
+			local goal = {Size = UDim2.fromOffset(130, 40)}
+			local tween = TweenService:Create(btn, tweenInfo, goal)
+			tween:Play()
 			btn.BackgroundTransparency = 0.3
 		end
 	end)
@@ -594,12 +655,30 @@ local function createSubTab(subData: {name: string, emoji: string, displayName: 
 
 	btn.MouseEnter:Connect(function()
 		if currentSubTab ~= subData.name then
+			-- PRONOUNCED BOUNCE animation for subtabs too!
+			local tweenInfo = TweenInfo.new(
+				0.4,
+				Enum.EasingStyle.Bounce,
+				Enum.EasingDirection.Out
+			)
+			local goal = {Size = UDim2.fromOffset(96, 40)}  -- Slightly bigger
+			local tween = TweenService:Create(btn, tweenInfo, goal)
+			tween:Play()
 			btn.BackgroundTransparency = 0.1
 		end
 	end)
 
 	btn.MouseLeave:Connect(function()
 		if currentSubTab ~= subData.name then
+			-- Return to normal size
+			local tweenInfo = TweenInfo.new(
+				0.3,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.Out
+			)
+			local goal = {Size = UDim2.fromOffset(90, 36)}
+			local tween = TweenService:Create(btn, tweenInfo, goal)
+			tween:Play()
 			btn.BackgroundTransparency = 0.3
 		end
 	end)
@@ -953,7 +1032,7 @@ function ShopUIController:PopulateGrid()
 	local cash = state.Cash or 0
 	cashLabel.Text = formatMoney(cash)
 
-	if currentMainTab == "MyBase" then
+	if currentMainTab == "MY BASE" then
 		-- Show all owned items in the base
 		local objects = BaseOwnershipService:GetMyObjects(player)
 		if objects and #objects > 0 then
@@ -1027,7 +1106,7 @@ function ShopUIController:PopulateGrid()
 			})
 		end
 
-	elseif currentMainTab == "Income" then
+	elseif currentMainTab == "INCOME" then
 		-- Show generators
 		for _, gen in ipairs(GENERATORS) do
 			-- Build stats for generator
@@ -1054,7 +1133,7 @@ function ShopUIController:PopulateGrid()
 			})
 		end
 
-	elseif currentMainTab == "Turrets" then
+	elseif currentMainTab == "TURRETS" then
 		-- ONLY SHOW T1 TURRETS (upgrades done via TurretManagementUI)
 		local turretList = TURRET_TYPES[currentSubTab]
 		if not turretList then return end
@@ -1114,23 +1193,24 @@ function ShopUIController:PopulateGrid()
 			})
 		end
 
-	elseif currentMainTab == "Defense" then
+	-- NOTE: Defense tab removed from MAIN_TABS, keeping code commented for future use
+	-- elseif currentMainTab == "DEFENSE" then
 		-- Shield Dome placeholder
-		makeCard({
-			id = "ShieldDome",
-			name = "Shield Dome",
-			price = 2500000,
-			count = 0,
-			state = "Locked",
-			icon = "🛡️",
-			category = "Defense",
-			canAfford = false,
-			description = "Coming soon: Emergency protection dome",
-			stats = nil,
-			itemType = "placeholder",
-		})
+		-- makeCard({
+		-- 	id = "ShieldDome",
+		-- 	name = "Shield Dome",
+		-- 	price = 2500000,
+		-- 	count = 0,
+		-- 	state = "Locked",
+		-- 	icon = "🛡️",
+		-- 	category = "Defense",
+		-- 	canAfford = false,
+		-- 	description = "Coming soon: Emergency protection dome",
+		-- 	stats = nil,
+		-- 	itemType = "placeholder",
+		-- })
 
-	elseif currentMainTab == "Pets" then
+	elseif currentMainTab == "PETS" then
 		-- Pets placeholder
 		makeCard({
 			id = "PetSystem",
@@ -1146,7 +1226,7 @@ function ShopUIController:PopulateGrid()
 			itemType = "placeholder",
 		})
 
-	elseif currentMainTab == "PowerUps" then
+	elseif currentMainTab == "POWERUPS" then
 		-- PowerUps placeholder
 		makeCard({
 			id = "PowerUps",
