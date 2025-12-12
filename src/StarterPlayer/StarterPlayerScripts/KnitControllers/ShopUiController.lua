@@ -732,16 +732,25 @@ local function createStructure()
 
 	previewPlaceholder = Instance.new("TextLabel")
 	previewPlaceholder.Name = "Placeholder"
-	previewPlaceholder.Size = UDim2.fromScale(1, 0.3)
-	previewPlaceholder.Position = UDim2.fromScale(0, 0.35)
+	previewPlaceholder.Size = UDim2.fromScale(1, 1)
+	previewPlaceholder.Position = UDim2.fromScale(0, 0)
 	previewPlaceholder.BackgroundTransparency = 1
-	previewPlaceholder.Font = Enum.Font.Gotham
-	previewPlaceholder.TextSize = 16
-	previewPlaceholder.TextColor3 = Color3.fromRGB(120, 120, 120)
-	previewPlaceholder.Text = "Select an item to preview..."
-	previewPlaceholder.TextWrapped = true
-	previewPlaceholder.TextYAlignment = Enum.TextYAlignment.Top
+	previewPlaceholder.Font = Enum.Font.GothamBold
+	previewPlaceholder.TextSize = 120  -- HUGE nuclear icon
+	previewPlaceholder.TextColor3 = COLORS.NuclearYellow  -- Nuclear yellow
+	previewPlaceholder.TextTransparency = 0.7  -- Semi-transparent
+	previewPlaceholder.Text = "☢️"  -- Nuclear icon
+	previewPlaceholder.TextWrapped = false
+	previewPlaceholder.TextYAlignment = Enum.TextYAlignment.Center
+	previewPlaceholder.TextXAlignment = Enum.TextXAlignment.Center
 	previewPlaceholder.Parent = previewPanel
+
+	-- Add glow to nuclear icon
+	local nuclearGlow = Instance.new("UIStroke")
+	nuclearGlow.Color = COLORS.ToxicGreen
+	nuclearGlow.Thickness = 3
+	nuclearGlow.Transparency = 0.6
+	nuclearGlow.Parent = previewPlaceholder
 
 	-- ViewportFrame
 	viewportFrame = Instance.new("ViewportFrame")
@@ -1199,6 +1208,36 @@ local function makeCard(itemData: any): Frame
 	clickButton.Parent = card
 
 	clickButton.MouseButton1Click:Connect(function()
+		-- Check if player can't afford this item
+		if not itemData.canAfford and itemData.state ~= "Owned" and itemData.state ~= "Max" then
+			-- SHAKE effect - slight position shake
+			local originalPos = card.Position
+			local shakeSequence = {
+				UDim2.fromOffset(3, 2),
+				UDim2.fromOffset(-3, -2),
+				UDim2.fromOffset(2, -3),
+				UDim2.fromOffset(-2, 3),
+				UDim2.fromOffset(0, 0)
+			}
+
+			task.spawn(function()
+				for _, offset in ipairs(shakeSequence) do
+					card.Position = UDim2.fromOffset(offset.X.Offset, offset.Y.Offset)
+					task.wait(0.05)
+				end
+				card.Position = originalPos
+			end)
+
+			-- Price label turns RED briefly
+			local originalColor = priceLabel.TextColor3
+			priceLabel.TextColor3 = Color3.fromRGB(255, 60, 60) -- Bright red
+			task.delay(0.2, function()
+				priceLabel.TextColor3 = originalColor
+			end)
+
+			return -- Don't select the item
+		end
+
 		selectedItem = itemData
 		ShopUIController:UpdatePreviewPanel(itemData)
 
@@ -1219,10 +1258,36 @@ local function makeCard(itemData: any): Frame
 	end)
 
 	clickButton.MouseEnter:Connect(function()
+		-- Hover effect: grow 10% + brightness increase
+		local newSize = UDim2.fromOffset(CARD_SIZE.X * 1.1, CARD_SIZE.Y * 1.1)
+		local hoverTween = TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = newSize
+		})
+		hoverTween:Play()
+
+		-- Increase brightness by making background lighter
+		local brighterColor = Color3.fromRGB(
+			math.min(255, visuals.backgroundColor.R * 255 * 1.3),
+			math.min(255, visuals.backgroundColor.G * 255 * 1.3),
+			math.min(255, visuals.backgroundColor.B * 255 * 1.3)
+		)
+		local colorTween = TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundColor3 = brighterColor
+		})
+		colorTween:Play()
+
 		stroke.Thickness = 3
 	end)
 
 	clickButton.MouseLeave:Connect(function()
+		-- Return to normal size and color
+		local normalSize = UDim2.fromOffset(CARD_SIZE.X, CARD_SIZE.Y)
+		local leaveTween = TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = normalSize,
+			BackgroundColor3 = visuals.backgroundColor
+		})
+		leaveTween:Play()
+
 		stroke.Thickness = 2
 	end)
 
@@ -1278,6 +1343,63 @@ local function createStatRow(statName: string, value: string, order: number)
 	valueLabel.Parent = row
 end
 
+-- ☢️ NEW: Create decorative stat bar with animated fill
+local function createStatBar(statName: string, fillPercent: number, order: number)
+	local barContainer = Instance.new("Frame")
+	barContainer.Name = "StatBar_" .. statName
+	barContainer.Size = UDim2.new(1, 0, 0, 26)
+	barContainer.BackgroundTransparency = 1
+	barContainer.LayoutOrder = order
+	barContainer.Parent = statsGrid
+
+	-- Stat label
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0.35, 0, 0, 12)
+	label.Position = UDim2.fromOffset(0, 0)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 10
+	label.TextColor3 = COLORS.LightGray
+	label.Text = statName
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = barContainer
+
+	-- Bar background
+	local barBg = Instance.new("Frame")
+	barBg.Size = UDim2.new(1, 0, 0, 12)
+	barBg.Position = UDim2.fromOffset(0, 14)
+	barBg.BackgroundColor3 = COLORS.BackgroundCard
+	barBg.BorderSizePixel = 0
+	barBg.Parent = barContainer
+	createUICorner(barBg, 4)
+
+	local barStroke = createUIStroke(barBg, COLORS.DarkGray, 1)
+	barStroke.Transparency = 0.5
+
+	-- Bar fill (animated)
+	local barFill = Instance.new("Frame")
+	barFill.Name = "Fill"
+	barFill.Size = UDim2.new(0, 0, 1, 0)  -- Start at 0 width
+	barFill.Position = UDim2.fromOffset(0, 0)
+	barFill.BackgroundColor3 = COLORS.NuclearYellow  -- Nuclear yellow!
+	barFill.BorderSizePixel = 0
+	barFill.Parent = barBg
+	createUICorner(barFill, 4)
+
+	-- Glow effect on fill
+	local fillGlow = createUIStroke(barFill, COLORS.ToxicGreen, 2)
+	fillGlow.Transparency = 0.3
+
+	-- Animate fill
+	local targetSize = UDim2.new(math.clamp(fillPercent, 0, 1), 0, 1, 0)
+	local fillTween = TweenService:Create(barFill, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = targetSize
+	})
+	fillTween:Play()
+
+	return barContainer
+end
+
 function ShopUIController:UpdatePreviewPanel(itemData: any?)
 	if not itemData then
 		previewPlaceholder.Visible = true
@@ -1299,15 +1421,45 @@ function ShopUIController:UpdatePreviewPanel(itemData: any?)
 		end
 	end
 
-	-- Create stats - simplified, no comparison
+	-- Create stats - 3 DECORATIVE BARS: Income, Range, Fire Rate
 	if itemData.stats then
+		-- Define the 3 stats we want to show as bars
+		local statsToShow = {
+			{name = "INCOME", key = "INCOME", maxValue = 10000, icon = "💰"},
+			{name = "RANGE", key = "RNG", maxValue = 150, icon = "🎯"},
+			{name = "FIRE RATE", key = "FR", maxValue = 2, icon = "⚡"},
+		}
+
 		local order = 1
-		for statName, statValues in pairs(itemData.stats) do
-			if order <= 5 then  -- Show up to 5 stats
-				-- Just show the value, no "current" vs "after"
-				local value = tostring(statValues.current or statValues.after or "0")
-				createStatRow(statName, value, order)
+		for _, statConfig in ipairs(statsToShow) do
+			local statData = itemData.stats[statConfig.key]
+			if statData then
+				-- Extract numeric value from stat
+				local value = statData.current or statData.after or 0
+
+				-- If value is string (like "0.25s"), try to extract number
+				if type(value) == "string" then
+					local numMatch = string.match(value, "([%d%.]+)")
+					value = tonumber(numMatch) or 0
+				end
+
+				-- Calculate fill percent (0-1)
+				local fillPercent = math.min(1, tonumber(value) / statConfig.maxValue)
+
+				-- Create decorative bar
+				createStatBar(statConfig.icon .. " " .. statConfig.name, fillPercent, order)
 				order += 1
+			end
+		end
+
+		-- If we didn't find the expected stats, fallback to showing any stats as rows
+		if order == 1 then
+			for statName, statValues in pairs(itemData.stats) do
+				if order <= 3 then
+					local value = tostring(statValues.current or statValues.after or "0")
+					createStatRow(statName, value, order)
+					order += 1
+				end
 			end
 		end
 	end
