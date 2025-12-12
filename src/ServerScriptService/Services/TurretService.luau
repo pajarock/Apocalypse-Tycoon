@@ -30,6 +30,9 @@ local Knit = require(ReplicatedStorage.Knit)
 local TurretDefinitions = require(script.Parent.TurretDefinitions)
 local TurretVFXManager = require(ServerStorage.Managers.TurretVFXManager)
 
+-- Dependencies (loaded in KnitStart)
+local BaseOwnershipService
+
 --[[────────────────────────────────────────────────────────────────────────
 	TYPE DEFINITIONS
 ────────────────────────────────────────────────────────────────────────]]
@@ -114,6 +117,9 @@ end
 
 function TurretService:KnitStart()
 	print("[TurretService] Starting turret systems...")
+
+	-- Get service dependencies
+	BaseOwnershipService = Knit.GetService("BaseOwnershipService")
 
 	-- Conectar RemoteEvents
 	local Remotes = ReplicatedStorage.Remotes
@@ -951,6 +957,13 @@ function TurretService:HandleUpgradeTurret(player: Player, objectId: string)
 			TurretVFXManager:ApplyGlowPulse(model, newTier)
 			TurretVFXManager:CreateParticles(model, nextTierName, newTier)
 		end
+	end
+
+	-- 🔥 CRITICAL: Actualizar ObjectType en BaseOwnershipService
+	-- Esto es necesario para que el Build Menu detecte correctamente el tier actual
+	local updateSuccess = BaseOwnershipService:UpdateObjectType(objectId, nextTierName)
+	if not updateSuccess then
+		warn("[TurretService] ⚠️ Failed to update ObjectType in BaseOwnershipService")
 	end
 
 	print(string.format(
