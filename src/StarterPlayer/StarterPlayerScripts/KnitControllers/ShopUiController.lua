@@ -245,6 +245,7 @@ local descriptionLabel: TextLabel
 local mainTabButtons: {[string]: TextButton} = {}
 local subTabButtons: {[string]: TextButton} = {}
 local cardInstances: {[string]: Frame} = {}
+local cardGlows: {[string]: Frame} = {}  -- ✨ Para controlar el glow de selección
 
 local currentMainTab = "INCOME"  -- Start with Income tab
 local currentSubTab = "MachineGun"
@@ -1102,16 +1103,19 @@ local function makeCard(itemData: any): Frame
 	local stroke = createUIStroke(card, visuals.strokeColor, 3)
 	stroke.Transparency = 0.30
 
-	-- ?? Glow EFECTIVO y visible
+	-- ✨ Glow - SOLO VISIBLE EN CARD SELECCIONADA
 	local glow = Instance.new("Frame")
 	glow.Name = "Glow"
-	glow.Size = UDim2.new(1, 20, 1, 1)          -- antes 1,12,1,12
-	glow.Position = UDim2.fromOffset(-16, -16)   -- antes -6,-6
+	glow.Size = UDim2.new(1, 20, 1, 1)
+	glow.Position = UDim2.fromOffset(-16, -16)
 	glow.BackgroundColor3 = visuals.glowColor or visuals.strokeColor
-	glow.BackgroundTransparency = 0.5            -- antes 0.55, ahora m�s s�lido
+	glow.BackgroundTransparency = 1  -- ✨ INVISIBLE por default
 	glow.ZIndex = 3
 	glow.Parent = container
 	createUICorner(glow, 20)
+
+	-- Guardar referencia al glow
+	cardGlows[itemData.id] = glow
 
 
 	-- Badge
@@ -1197,6 +1201,21 @@ local function makeCard(itemData: any): Frame
 	clickButton.MouseButton1Click:Connect(function()
 		selectedItem = itemData
 		ShopUIController:UpdatePreviewPanel(itemData)
+
+		-- ✨ Actualizar glows: Solo la seleccionada brilla
+		for cardId, cardGlow in pairs(cardGlows) do
+			if cardId == itemData.id then
+				-- Mostrar glow en card seleccionada
+				TweenService:Create(cardGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+					BackgroundTransparency = 0.5
+				}):Play()
+			else
+				-- Ocultar glow en otras cards
+				TweenService:Create(cardGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+					BackgroundTransparency = 1
+				}):Play()
+			end
+		end
 	end)
 
 	clickButton.MouseEnter:Connect(function()
@@ -1216,6 +1235,10 @@ local function clearCards()
 	for id, card in pairs(cardInstances) do
 		card:Destroy()
 		cardInstances[id] = nil
+	end
+	-- ✨ Limpiar glows también
+	for id, glow in pairs(cardGlows) do
+		cardGlows[id] = nil
 	end
 end
 
