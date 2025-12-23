@@ -93,9 +93,7 @@ end
 
 -- Spawn de base para un jugador
 local function spawnBaseForPlayer(player: Player)
-	if Config.DEBUG_MODE then
-		print(("[BaseAutoSpawner] 🎯 Spawneando base para %s..."):format(player.Name))
-	end
+	print(("[BaseAutoSpawner] 🎯 Spawneando base para %s (userId: %d)..."):format(player.Name, player.UserId))
 
 	-- Spawnear base usando el servicio Knit
 	local success, baseData = pcall(function()
@@ -113,12 +111,9 @@ local function spawnBaseForPlayer(player: Player)
 		return nil
 	end
 
-	if Config.DEBUG_MODE then
-		print(("[BaseAutoSpawner] ✅ Base spawneada exitosamente para %s"):format(player.Name))
-		print(("[BaseAutoSpawner] 📊 Posición: %s"):format(tostring(baseData.Position)))
-		print(("[BaseAutoSpawner] 📊 BuildZone Radio: 60 studs"):format())
-		print(("[BaseAutoSpawner] 📊 SpawnZone Radio: 15 studs"):format())
-	end
+	print(("[BaseAutoSpawner] ✅ Base spawneada exitosamente para %s"):format(player.Name))
+	print(("[BaseAutoSpawner] 📊 Posición: %s"):format(tostring(baseData.Position)))
+	print(("[BaseAutoSpawner] 📊 UserId: %d"):format(player.UserId))
 
 	return baseData
 end
