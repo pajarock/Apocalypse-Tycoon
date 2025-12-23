@@ -2,23 +2,23 @@
 --[[
 	PlayerDataService - Wrapper para integrar EconomyModule con Knit
 
-	PROPÓSITO:
+	PROPï¿½SITO:
 	- Actuar como puente entre el sistema Knit (nuevo) y EconomyModule (legacy)
-	- Exponer API limpia de economía para otros servicios Knit
-	- Permitir migración gradual sin romper funcionalidad existente
+	- Exponer API limpia de economï¿½a para otros servicios Knit
+	- Permitir migraciï¿½n gradual sin romper funcionalidad existente
 
 	ARQUITECTURA:
 	- Knit Service (servidor-side)
 	- Wrapper del EconomyModule legacy
-	- Preserva toda la funcionalidad del sistema de economía original
+	- Preserva toda la funcionalidad del sistema de economï¿½a original
 
-	MÉTODOS PRINCIPALES:
+	Mï¿½TODOS PRINCIPALES:
 	- AddMoney(userId, amount) - Usado por generadores
 	- GetMoney(userId) - Consultar dinero actual
 	- GetState(userId) - Estado completo del jugador
 	- Purchase(userId, upgradeId) - Comprar upgrade (legacy)
 
-	INTEGRACIÓN:
+	INTEGRACIï¿½N:
 	- UpgradeService lo usa para dar dinero de generators
 	- Futuras features pueden usar esta API limpia
 	- Mantiene compatibilidad con sistema legacy existente
@@ -26,11 +26,15 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local RunService = game:GetService("RunService")
 
 local Knit = require(ReplicatedStorage.Knit)
 
 -- Importar EconomyModule legacy
 local EconomyModule = require(ServerScriptService.EconomyModule)
+
+-- Detectar si estamos en Studio (para aceptar userId negativos en testing)
+local IS_STUDIO = RunService:IsStudio()
 
 --[[------------------------------------------------------------------------
 	SERVICE DEFINITION
@@ -49,11 +53,19 @@ local PlayerDataService = Knit.CreateService({
 
 	@param userId - ID del jugador
 	@param amount - Cantidad de dinero a agregar (puede ser decimal)
-	@return success - Si la operación fue exitosa
+	@return success - Si la operaciï¿½n fue exitosa
 ]]
 function PlayerDataService:AddMoney(userId: number, amount: number): boolean
-	if type(userId) ~= "number" or userId <= 0 then
-		warn(string.format("[PlayerDataService] Invalid userId: %s", tostring(userId)))
+	-- Validar userId (aceptar negativos en Studio para Server & Client Test)
+	if type(userId) ~= "number" then
+		warn(string.format("[PlayerDataService] Invalid userId type: %s", tostring(userId)))
+		return false
+	end
+
+	-- En producciÃ³n, rechazar userId <= 0
+	-- En Studio, aceptar userId negativos (Server & Client Test usa -1, -2, -3)
+	if not IS_STUDIO and userId <= 0 then
+		warn(string.format("[PlayerDataService] Invalid userId: %d (must be positive)", userId))
 		return false
 	end
 
@@ -66,7 +78,7 @@ function PlayerDataService:AddMoney(userId: number, amount: number): boolean
 	local success = EconomyModule.AdminGiveCash(userId, amount)
 
 	if success then
-		-- Debug opcional (comentar en producción para reducir spam)
+		-- Debug opcional (comentar en producciï¿½n para reducir spam)
 		-- print(string.format("[PlayerDataService] ?? Added $%.2f to userId=%d", amount, userId))
 		return true
 	else
@@ -91,7 +103,7 @@ function PlayerDataService:GetMoney(userId: number): number
 end
 
 --[[
-	Obtiene el estado completo de economía de un jugador.
+	Obtiene el estado completo de economï¿½a de un jugador.
 
 	@param userId - ID del jugador
 	@return state - Estado completo (Cash, IncomePerSec, OwnedUpgrades, etc.)
@@ -122,13 +134,13 @@ end
 --[[
 	Compra un upgrade usando el sistema legacy.
 
-	NOTA: Este método está aquí para compatibilidad con upgrades legacy.
+	NOTA: Este mï¿½todo estï¿½ aquï¿½ para compatibilidad con upgrades legacy.
 	Los nuevos upgrades de Knit (BaseOwnershipService) NO usan esto.
 
 	@param userId - ID del jugador
 	@param upgradeId - ID del upgrade a comprar
 	@return success - Si la compra fue exitosa
-	@return error - Código de error si falló
+	@return error - Cï¿½digo de error si fallï¿½
 ]]
 function PlayerDataService:PurchaseLegacyUpgrade(userId: number, upgradeId: string): (boolean, string?)
 	return EconomyModule.Purchase(userId, upgradeId)
@@ -150,10 +162,10 @@ end
 ------------------------------------------------------------------------]]
 
 --[[
-	Inicializa la economía de un jugador.
+	Inicializa la economï¿½a de un jugador.
 
 	NOTA: Esto normalmente lo hace el Main.Server.lua legacy.
-	Solo usar si sabes lo que estás haciendo.
+	Solo usar si sabes lo que estï¿½s haciendo.
 
 	@param userId - ID del jugador
 	@param blob - Datos guardados (opcional)
@@ -182,12 +194,12 @@ end
 --[[
 	Intenta deducir dinero de un jugador.
 
-	ADVERTENCIA: Esto modifica el cash directamente. Úsalo con cuidado.
-	Para compras, usa PurchaseLegacyUpgrade() que maneja validación.
+	ADVERTENCIA: Esto modifica el cash directamente. ï¿½salo con cuidado.
+	Para compras, usa PurchaseLegacyUpgrade() que maneja validaciï¿½n.
 
 	@param userId - ID del jugador
 	@param amount - Cantidad a deducir
-	@return success - Si la operación fue exitosa
+	@return success - Si la operaciï¿½n fue exitosa
 ]]
 function PlayerDataService:DeductMoney(userId: number, amount: number): boolean
 	if not self:HasEnoughMoney(userId, amount) then
@@ -210,12 +222,12 @@ function PlayerDataService:KnitStart()
 	print("[PlayerDataService] ? Started - Ready to process money operations")
 	print("[PlayerDataService] ?? Connected to EconomyModule (legacy)")
 
-	-- Verificar que EconomyModule esté cargado
+	-- Verificar que EconomyModule estï¿½ cargado
 	if not EconomyModule then
 		error("[PlayerDataService] ? CRITICAL: EconomyModule not found!")
 	end
 
-	-- Mostrar info sobre el módulo de economía
+	-- Mostrar info sobre el mï¿½dulo de economï¿½a
 	local metrics = EconomyModule.GetMetrics()
 	if metrics then
 		print(string.format(
