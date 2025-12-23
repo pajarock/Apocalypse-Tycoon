@@ -115,9 +115,13 @@ end
 -- EVENTO PRINCIPAL: PlayerAdded
 -------------------------------------------------------------------------
 
-Players.PlayerAdded:Connect(function(player: Player)
+local function handlePlayerJoin(player: Player)
+	if Config.DEBUG_MODE then
+		print(("[BaseAutoSpawner] 🎮 Procesando jugador: %s"):format(player.Name))
+	end
+
 	-- Esperar a que el character se cargue
-	player.CharacterAdded:Wait()
+	local character = player.Character or player.CharacterAdded:Wait()
 
 	-- Pequeño delay para asegurar que todos los sistemas estén listos
 	task.wait(0.5)
@@ -133,7 +137,20 @@ Players.PlayerAdded:Connect(function(player: Player)
 	-- Teleportar jugador a su base
 	task.wait(0.5) -- Pequeño delay antes de teleportar
 	teleportPlayerToBase(player, baseData.Position)
-end)
+end
+
+-- Conectar evento para nuevos jugadores
+Players.PlayerAdded:Connect(handlePlayerJoin)
+
+-- Procesar jugadores que ya están en el juego (importante para Studio)
+for _, player in Players:GetPlayers() do
+	if Config.DEBUG_MODE then
+		print(("[BaseAutoSpawner] 🔄 Procesando jugador existente: %s"):format(player.Name))
+	end
+	task.spawn(function()
+		handlePlayerJoin(player)
+	end)
+end
 
 -------------------------------------------------------------------------
 -- INICIALIZACIÓN

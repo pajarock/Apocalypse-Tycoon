@@ -1,18 +1,25 @@
 --[[
 	TEST SCRIPT - Base System
 
-	Este script demuestra c�mo usar el nuevo sistema de bases.
-	C�pialo a ServerScriptService para probarlo.
+	Este script demuestra cómo usar el nuevo sistema de bases.
+	Cópialo a ServerScriptService para probarlo.
 
-	IMPORTANTE: Esto es SOLO para testing. NO es para producci�n.
+	IMPORTANTE: Esto es SOLO para testing. NO es para producción.
+
+	NOTA: Si Config.USE_KNIT_BASES = true, este script solo provee comandos de chat
+	      y NO spawnea bases automáticamente (eso lo hace BaseAutoSpawner.lua)
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local Players = game:GetService("Players")
 
-print("[TEST] ?? Esperando a que Knit est� listo...")
+-- Cargar Config
+local Config = require(ServerStorage.Config.Config)
 
--- Esperar a que Knit est� listo (aumentado a 5 segundos para estar seguro)
+print("[TEST] 🔄 Esperando a que Knit esté listo...")
+
+-- Esperar a que Knit esté listo (aumentado a 5 segundos para estar seguro)
 task.wait(5)
 
 local Knit = require(ReplicatedStorage.Knit)
@@ -22,17 +29,26 @@ local BaseSpawnerService = Knit.GetService("BaseSpawnerService")
 local BaseOwnershipService = Knit.GetService("BaseOwnershipService")
 local BasePlacementService = Knit.GetService("BasePlacementService")
 
-print("???????????????????????????????????????????????????")
-print("?? TEST SCRIPT - Base System Ready")
-print("???????????????????????????????????????????????????")
-print(string.format("[TEST] ? Servicios cargados: Spawner=%s, Ownership=%s, Placement=%s",
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("🧪 TEST SCRIPT - Base System Ready")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print(string.format("[TEST] ✅ Servicios cargados: Spawner=%s, Ownership=%s, Placement=%s",
 	BaseSpawnerService and "OK" or "FAIL",
 	BaseOwnershipService and "OK" or "FAIL",
 	BasePlacementService and "OK" or "FAIL"
-	))
+))
 
--- Test 1: Spawnear base autom�ticamente cuando un jugador se une
-Players.PlayerAdded:Connect(function(player)
+-- Verificar si el auto-spawn está activo
+if Config.USE_KNIT_BASES then
+	print("[TEST] 📌 Auto-spawn ACTIVO (BaseAutoSpawner.lua) - Solo comandos de chat disponibles")
+else
+	print("[TEST] 📌 Auto-spawn DESACTIVADO - Usar /testbase para spawnear bases manualmente")
+end
+
+-- Test 1: Spawnear base automáticamente cuando un jugador se une
+-- SOLO si USE_KNIT_BASES = false (para no interferir con BaseAutoSpawner)
+if not Config.USE_KNIT_BASES then
+	Players.PlayerAdded:Connect(function(player)
 	-- Esperar a que el character se cargue
 	player.CharacterAdded:Wait()
 
@@ -42,7 +58,7 @@ Players.PlayerAdded:Connect(function(player)
 	local baseData = BaseSpawnerService:SpawnBase(player.UserId, player.Name)
 
 	if baseData then
-		print(string.format("[TEST] ? Base spawneada exitosamente en posici�n: %s", tostring(baseData.Position)))
+		print(string.format("[TEST] ? Base spawneada exitosamente en posici�n: %s", tostring(baseData.Position)))
 		print(string.format("[TEST] BuildZone radio: %.1f studs", 60))
 		print(string.format("[TEST] SpawnZone radio: %.1f studs", 15))
 
@@ -56,9 +72,10 @@ Players.PlayerAdded:Connect(function(player)
 			end
 		end
 	else
-		warn("[TEST] ? Error al spawnear base")
+		warn("[TEST] ❌ Error al spawnear base")
 	end
-end)
+	end)
+end -- Fin del if not Config.USE_KNIT_BASES
 
 -- Test 2: Comando de chat para probar placement
 Players.PlayerAdded:Connect(function(player)
@@ -121,7 +138,7 @@ Players.PlayerAdded:Connect(function(player)
 
 			print(string.format("[TEST] Base encontrada en: %s", tostring(baseData.Position)))
 
-			-- Calcular posici�n de prueba (lejos del spawn zone)
+			-- Calcular posici�n de prueba (lejos del spawn zone)
 			local testPosition = baseData.Position + Vector3.new(40, 2, 20)
 			local testRotation = 0
 			local testSize = Vector3.new(10, 5, 10)
@@ -136,10 +153,10 @@ Players.PlayerAdded:Connect(function(player)
 				testSize
 			)
 
-			print(string.format("[TEST] Resultado de validaci�n: IsValid=%s", tostring(result.IsValid)))
+			print(string.format("[TEST] Resultado de validaci�n: IsValid=%s", tostring(result.IsValid)))
 
 			if result.IsValid then
-				print("[TEST] ? Posici�n v�lida:", result.Position)
+				print("[TEST] ? Posici�n v�lida:", result.Position)
 
 				-- Crear objeto visual de prueba
 				local testPart = Instance.new("Part")
@@ -165,7 +182,7 @@ Players.PlayerAdded:Connect(function(player)
 					print("[TEST] ?? Objeto registrado:", placedObject.ObjectId)
 				end
 			else
-				print("[TEST] ? Posici�n inv�lida:", result.ErrorMessage)
+				print("[TEST] ? Posici�n inv�lida:", result.ErrorMessage)
 			end
 		end
 
@@ -188,7 +205,7 @@ print("   /clearobjects - Limpiar objetos de tu base")
 print("   Z (tecla)     - Abrir build menu (cliente)")
 print("???????????????????????????????????????????????????")
 
--- Conectar a jugadores que ya est�n en el juego
+-- Conectar a jugadores que ya est�n en el juego
 for _, player in Players:GetPlayers() do
 	print(string.format("[TEST] ?? Conectando comandos para jugador existente: %s", player.Name))
 
@@ -241,7 +258,7 @@ for _, player in Players:GetPlayers() do
 
 			print(string.format("[TEST] Base encontrada en: %s", tostring(baseData.Position)))
 
-			-- Calcular posici�n de prueba (lejos del spawn zone)
+			-- Calcular posici�n de prueba (lejos del spawn zone)
 			local testPosition = baseData.Position + Vector3.new(40, 2, 20)
 			local testRotation = 0
 			local testSize = Vector3.new(10, 5, 10)
@@ -256,10 +273,10 @@ for _, player in Players:GetPlayers() do
 				testSize
 			)
 
-			print(string.format("[TEST] Resultado de validaci�n: IsValid=%s", tostring(result.IsValid)))
+			print(string.format("[TEST] Resultado de validaci�n: IsValid=%s", tostring(result.IsValid)))
 
 			if result.IsValid then
-				print("[TEST] ? Posici�n v�lida:", result.Position)
+				print("[TEST] ? Posici�n v�lida:", result.Position)
 
 				-- Crear objeto visual de prueba
 				local testPart = Instance.new("Part")
@@ -285,7 +302,7 @@ for _, player in Players:GetPlayers() do
 					print("[TEST] ?? Objeto registrado:", placedObject.ObjectId)
 				end
 			else
-				print("[TEST] ? Posici�n inv�lida:", result.ErrorMessage)
+				print("[TEST] ? Posici�n inv�lida:", result.ErrorMessage)
 			end
 		elseif command == "/clearobjects" then
 			local count = BaseOwnershipService:ClearBaseObjects(player.UserId)
