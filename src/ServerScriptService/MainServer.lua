@@ -2271,40 +2271,58 @@ Players.PlayerAdded:Connect(function(plr: Player)
 	end
 
 	-- Asignar slot y base
-	local slot = SlotByUserId[plr.UserId]
-	if not slot then
-		slot = NextSlot
-		SlotByUserId[plr.UserId] = slot
-		NextSlot += 1
+	-- 🏗️ MIGRACIÓN KNIT: Solo usar sistema legacy si USE_KNIT_BASES = false
+	if not Config.USE_KNIT_BASES then
+		local slot = SlotByUserId[plr.UserId]
+		if not slot then
+			slot = NextSlot
+			SlotByUserId[plr.UserId] = slot
+			NextSlot += 1
+		end
+
+		assignBase(plr, slot)
+		-- ? DIAGN�STICO TEMPORAL
+		if Config.DEBUG_MODE then
+			diagnosticBillboards(plr.UserId)
+		end
+	else
+		-- Sistema Knit: BaseAutoSpawner.lua maneja el spawn automático
+		if Config.DEBUG_MODE then
+			print(("[MAIN] 🏗️ Sistema Knit activo - BaseAutoSpawner manejará el spawn de %s"):format(plr.Name))
+		end
 	end
 
-	assignBase(plr, slot)
-	-- ? DIAGN�STICO TEMPORAL
-	if Config.DEBUG_MODE then
-		diagnosticBillboards(plr.UserId)
-	end
+	-- Rebuild progreso (solo sistema legacy)
+	if not Config.USE_KNIT_BASES then
+		local basePart = BasePartByUser[plr.UserId]
+		if basePart then
+			rebuildPlayerProgress(plr, basePart)
+		end
 
-	-- Rebuild progreso
-	local basePart = BasePartByUser[plr.UserId]
-	if basePart then
-		rebuildPlayerProgress(plr, basePart)
-	end
+		-- Character lifecycle
+		local function onCharacterAdded(char: Model)
+			teleportToBase(plr, char)
 
-	-- Character lifecycle
-	local function onCharacterAdded(char: Model)
-		teleportToBase(plr, char)
+			-- Mostrar tutorial si es nuevo
+			if not TutorialCompleted[plr.UserId] then
+				task.delay(3, function()
+					notifyPlayer(plr, "?? Welcome! Press G to open shop", 5)
+				end)
+			end
+		end
 
-		-- Mostrar tutorial si es nuevo
+		plr.CharacterAdded:Connect(onCharacterAdded)
+		if plr.Character then
+			onCharacterAdded(plr.Character)
+		end
+	else
+		-- Sistema Knit: BaseAutoSpawner maneja el teleport
+		-- Solo mostrar tutorial si es nuevo
 		if not TutorialCompleted[plr.UserId] then
 			task.delay(3, function()
 				notifyPlayer(plr, "?? Welcome! Press G to open shop", 5)
 			end)
 		end
-	end
-
-	plr.CharacterAdded:Connect(onCharacterAdded)
-	if plr.Character then
-		onCharacterAdded(plr.Character)
 	end
 
 	-- Welcome message

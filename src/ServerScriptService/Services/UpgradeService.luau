@@ -226,15 +226,26 @@ end
 	@return boolean - true si el upgrade fue exitoso, false si falló
 ]]
 function UpgradeService:UpgradeGenerator(objectId: string, userId: number): boolean
+	print(string.format("[UpgradeService] 🔧 UpgradeGenerator called - objectId: %s, userId: %d", objectId, userId))
+
 	local data = activeGenerators[objectId]
 	if not data then
-		warn(string.format("[UpgradeService] UpgradeGenerator: Generator not found: %s", objectId))
+		warn(string.format("[UpgradeService] ❌ Generator not found: %s", objectId))
+		print("[UpgradeService] 📊 Active generators count:", (function()
+			local count = 0
+			for _ in pairs(activeGenerators) do count += 1 end
+			return count
+		end)())
 		return false
 	end
 
+	print(string.format("[UpgradeService] ✅ Generator found - Owner: %d, Tier: %s",
+		data.UserId, data.Definition.Name))
+
 	-- Validar ownership
 	if data.UserId ~= userId then
-		warn(string.format("[UpgradeService] UpgradeGenerator: User %d is not owner of generator %s", userId, objectId))
+		warn(string.format("[UpgradeService] ❌ Ownership mismatch - Generator owner: %d, Requester: %d",
+			data.UserId, userId))
 		return false
 	end
 
@@ -243,7 +254,7 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 
 	-- Validar que puede upgradear
 	if not UpgradeDefinitions.CanUpgrade(currentTierName) then
-		warn(string.format("[UpgradeService] UpgradeGenerator: Generator %s is already at max tier", objectId))
+		warn(string.format("[UpgradeService] ❌ Already at max tier: %s", currentTierName))
 		return false
 	end
 
@@ -252,9 +263,12 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 	local upgradeCost = UpgradeDefinitions.GetUpgradeCost(currentTierName)
 
 	if not nextTierName or not upgradeCost then
-		warn(string.format("[UpgradeService] UpgradeGenerator: Failed to get next tier or cost for %s", currentTierName))
+		warn(string.format("[UpgradeService] ❌ Failed to get next tier info for %s", currentTierName))
 		return false
 	end
+
+	print(string.format("[UpgradeService] 📊 Upgrade info - Current: %s, Next: %s, Cost: $%d",
+		currentTierName, nextTierName, upgradeCost))
 
 	-- Validar dinero suficiente y deducir
 	if not PlayerDataService then
