@@ -3,12 +3,12 @@
 	CONFIG.LUA - Apocalypse Tycoon
 	? BALANCE V2.0 - HIGH DIFFICULTY BUT FAIR
 	
-	DISEÑO DE DIFICULTAD:
+	DISEï¿½O DE DIFICULTAD:
 	- Primeros 5 minutos: Tutorial natural (waves suaves)
 	- Minutos 5-15: Rampa de dificultad (decisiones importantes)
-	- Minutos 15+: Endgame (multitasking, gestión de recursos)
+	- Minutos 15+: Endgame (multitasking, gestiï¿½n de recursos)
 	
-	FILOSOFÍA:
+	FILOSOFï¿½A:
 	? Cada compra debe sentirse significativa
 	? Los meteoritos son amenaza real pero predecible
 	? Muerte = setback, no game over
@@ -18,26 +18,26 @@
 local Config = {}
 
 -------------------------------------------------------------------------
--- ?? ECONOMÍA - Tight pero justa
+-- ?? ECONOMï¿½A - Tight pero justa
 -------------------------------------------------------------------------
-Config.START_CASH = 750  -- Suficiente para: 1 income upgrade + 1 defensa básica
+Config.START_CASH = 750  -- Suficiente para: 1 income upgrade + 1 defensa bï¿½sica
 Config.CASH_PER_SEC_BASE = 8  -- 8/sec = 480/min base (sin upgrades)
 Config.TICK_SECS = 1
 
--- Límites
+-- Lï¿½mites
 Config.MAX_CASH = 999999999
 Config.MIN_CASH = 0
 
--- Progresión (curva exponencial moderada)
-Config.PRICE_MULTIPLIER = 1.14  -- 14% más caro cada nivel
-Config.INCOME_DIMINISHING_RETURNS = 0.90  -- Cada upgrade da 10% menos (fuerza diversificación)
+-- Progresiï¿½n (curva exponencial moderada)
+Config.PRICE_MULTIPLIER = 1.14  -- 14% mï¿½s caro cada nivel
+Config.INCOME_DIMINISHING_RETURNS = 0.90  -- Cada upgrade da 10% menos (fuerza diversificaciï¿½n)
 
 -- Offline (penalizar heavy AFK)
 Config.OFFLINE_MAX_MINUTES = 15  -- Solo 15 minutos
 Config.OFFLINE_RATE_MULTIPLIER = 0.2  -- 20% del income (no recompensa AFK)
 
 -------------------------------------------------------------------------
--- ??? BASES Y CONSTRUCCIÓN
+-- ??? BASES Y CONSTRUCCIï¿½N
 -------------------------------------------------------------------------
 Config.BASE_SIZE = Vector3.new(120, 1, 120)
 Config.SPAWN_RING_RADIUS = 250
@@ -54,15 +54,15 @@ Config.BASE_COLORS = {
 }
 
 -------------------------------------------------------------------------
--- ??? SISTEMA DE DAÑO Y DEFENSA - Balanceado para skill
+-- ??? SISTEMA DE DAï¿½O Y DEFENSA - Balanceado para skill
 -------------------------------------------------------------------------
-Config.BASE_MAX_HP = 150  -- HP aumentado (antes 100) para más margen de error
+Config.BASE_MAX_HP = 150  -- HP aumentado (antes 100) para mï¿½s margen de error
 Config.BASE_REGEN_RATE = 0.3  -- Regen lenta pero presente (45 HP/min)
 Config.REPAIR_COST_PER_HP = 8  -- 8$/HP = 1200$ para full repair (significativo)
 Config.BASE_REGEN_DELAY = 0.2
 -- Escudos (crucial para late game)
 Config.SHIELD_REDUCTION_PER_LEVEL = 0.18  -- 18% por nivel
-Config.SHIELD_MAX_REDUCTION = 0.54  -- Máximo 54% (3 niveles)
+Config.SHIELD_MAX_REDUCTION = 0.54  -- Mï¿½ximo 54% (3 niveles)
 Config.SHIELD_MAX_LEVEL = 3
 
 -- Invencibilidad post-respawn
@@ -73,7 +73,7 @@ Config.RESPAWN_INVULNERABILITY_SECS = 8  -- 8 segundos para reorganizarse
 -------------------------------------------------------------------------
 Config.METEOR_DAMAGE = 28  -- ~5 hits = muerte sin defensas
 Config.METEOR_DAMAGE_RADIUS = 22  -- Radio ligeramente mayor
-Config.METEOR_MIN_Y = 130  -- Más altura = más tiempo de reacción
+Config.METEOR_MIN_Y = 130  -- Mï¿½s altura = mï¿½s tiempo de reacciï¿½n
 Config.METEOR_VELOCITY = 135  -- Velocidad moderada (antes 140)
 Config.METEOR_LIFETIME = 15
 
@@ -95,20 +95,20 @@ Config.METEOR_TYPES = {
 		Damage = 50,
 		Size = Vector3.new(12, 12, 12),
 		Color = Color3.fromRGB(255, 50, 0),
-		Speed = 100,  -- Más lentos pero mortales
+		Speed = 100,  -- Mï¿½s lentos pero mortales
 	},
 }
 
 Config.METEOR_DEBUG_COOLDOWN = 5
 
 -------------------------------------------------------------------------
--- ?? SISTEMA DE WAVES - Progresión dramática pero fair
+-- ?? SISTEMA DE WAVES - Progresiï¿½n dramï¿½tica pero fair
 -------------------------------------------------------------------------
 Config.CURRENT_WAVE = 1
-Config.METEORS_PER_WAVE_BASE = 5  -- Empezar más suave
+Config.METEORS_PER_WAVE_BASE = 5  -- Empezar mï¿½s suave
 
--- CURVA DE DIFICULTAD DISEÑADA:
--- Wave 1-3: Tutorial (5-9 meteors, 75s interval) - Aprender mecánicas
+-- CURVA DE DIFICULTAD DISEï¿½ADA:
+-- Wave 1-3: Tutorial (5-9 meteors, 75s interval) - Aprender mecï¿½nicas
 -- Wave 4-7: Ramp up (11-17 meteors, 60s interval) - Construir defensas
 -- Wave 8-12: Mid game (19-27 meteors, 50s interval) - Optimizar estrategia
 -- Wave 13+: Endgame (29+ meteors, 45s interval) - Survival mode
@@ -122,7 +122,7 @@ function Config.GetWaveDifficulty(waveNum: number)
 		damage = 20 + (waveNum * 3)  -- 23, 26, 29
 		interval = 75  -- Tiempo generoso entre waves
 
-		-- Ramp Up (Waves 4-7): Presión moderada
+		-- Ramp Up (Waves 4-7): Presiï¿½n moderada
 	elseif waveNum <= 7 then
 		meteorsCount = 11 + ((waveNum - 3) * 2)  -- 13, 15, 17, 19
 		damage = 28 + (waveNum * 2)  -- 36, 38, 40, 42
@@ -137,8 +137,8 @@ function Config.GetWaveDifficulty(waveNum: number)
 		-- End Game (Wave 13+): Chaos controlado
 	else
 		meteorsCount = 29 + ((waveNum - 12) * 1)  -- +1 por wave
-		damage = 66 + ((waveNum - 12) * 3)  -- Daño sigue escalando
-		interval = 45  -- Intervalo mínimo constante
+		damage = 66 + ((waveNum - 12) * 3)  -- Daï¿½o sigue escalando
+		interval = 45  -- Intervalo mï¿½nimo constante
 	end
 
 	return {
@@ -177,18 +177,18 @@ Config.EVENTS = {
 -- ?? SISTEMA DE REPARACIONES - Costoso pero necesario
 -------------------------------------------------------------------------
 Config.REPAIR_BASE_COST = 75
-Config.REPAIR_MULTIPLIER = 1.28  -- Cada reparación +28% más cara (era 35%)
-Config.REPAIR_DECAY_SECS = 90  -- Decay del costo más lento
+Config.REPAIR_MULTIPLIER = 1.28  -- Cada reparaciï¿½n +28% mï¿½s cara (era 35%)
+Config.REPAIR_DECAY_SECS = 90  -- Decay del costo mï¿½s lento
 Config.REPAIR_DAMAGE_FACTOR = 1.3
 
 -------------------------------------------------------------------------
 -- ?? DATASTORE Y GUARDADO
 -------------------------------------------------------------------------
 Config.DATASTORE_NAME = "ApocalypseTycoon_v2_BALANCED"
-Config.AUTOSAVE_SECS = 45  -- Guardar más frecuente
+Config.AUTOSAVE_SECS = 45  -- Guardar mï¿½s frecuente
 Config.SAVE_ON_PURCHASE = false
 Config.MAX_SAVE_RETRIES = 3
-Config.DATA_VERSION = 2  -- Nueva versión por balance changes
+Config.DATA_VERSION = 2  -- Nueva versiï¿½n por balance changes
 
 -------------------------------------------------------------------------
 -- ?? SEGURIDAD Y RATE LIMITING
@@ -269,20 +269,27 @@ Config.DEBUG_MODE = true
 Config.SHOW_DEBUG_UI = false
 
 -------------------------------------------------------------------------
--- ?? BALANCE Y PROGRESIÓN
+-- ðŸ—ï¸ KNIT MIGRATION FLAGS
+-------------------------------------------------------------------------
+-- Flag para usar el nuevo sistema de bases Knit en lugar del legacy
+-- IMPORTANTE: Cambiar a true cuando el sistema Knit estÃ© listo para producciÃ³n
+Config.USE_KNIT_BASES = false  -- false = usa sistema legacy | true = usa sistema Knit
+
+-------------------------------------------------------------------------
+-- ?? BALANCE Y PROGRESIï¿½N
 -------------------------------------------------------------------------
 Config.PROGRESSION = {
-	-- Early: Boost inicial para evitar frustración
+	-- Early: Boost inicial para evitar frustraciï¿½n
 	EarlyGame = {
 		MaxMinutes = 8,
-		IncomeBoost = 1.4,  -- +40% income (aprender sin estrés)
+		IncomeBoost = 1.4,  -- +40% income (aprender sin estrï¿½s)
 	},
 	-- Mid: Income normal, dificultad aumenta
 	MidGame = {
 		MaxMinutes = 25,
 		IncomeBoost = 1.0,
 	},
-	-- Late: Reducir grind, mantener desafío
+	-- Late: Reducir grind, mantener desafï¿½o
 	LateGame = {
 		MaxMinutes = 999,
 		IncomeBoost = 0.85,  -- -15% para evitar snowball excesivo
@@ -297,7 +304,7 @@ Config.PRESTIGE = {
 }
 
 -------------------------------------------------------------------------
--- ??? UTILIDADES DE VALIDACIÓN
+-- ??? UTILIDADES DE VALIDACIï¿½N
 -------------------------------------------------------------------------
 function Config.Validate(): (boolean, string?)
 	if Config.BASE_MAX_HP <= 0 then
@@ -337,7 +344,7 @@ function Config.Get(key: string, default: any): any
 	return default
 end
 
--- Dificultad dinámica según jugadores (más jugadores = más fácil individualmente)
+-- Dificultad dinï¿½mica segï¿½n jugadores (mï¿½s jugadores = mï¿½s fï¿½cil individualmente)
 function Config.GetDynamicDifficulty(playerCount: number): number
 	if playerCount <= 1 then
 		return 1.0  -- Solo, dificultad completa
@@ -351,14 +358,14 @@ function Config.GetDynamicDifficulty(playerCount: number): number
 end
 
 -------------------------------------------------------------------------
--- ?? HELPER: Calculadora de economía
+-- ?? HELPER: Calculadora de economï¿½a
 -------------------------------------------------------------------------
--- Función útil para balancear precios de upgrades
+-- Funciï¿½n ï¿½til para balancear precios de upgrades
 function Config.CalculateUpgradePrice(basePrice: number, level: number): number
 	return math.floor(basePrice * (Config.PRICE_MULTIPLIER ^ level))
 end
 
--- Calcular income después de X upgrades
+-- Calcular income despuï¿½s de X upgrades
 function Config.CalculateIncome(upgradeCount: number): number
 	local income = Config.CASH_PER_SEC_BASE
 	for i = 1, upgradeCount do
@@ -367,12 +374,12 @@ function Config.CalculateIncome(upgradeCount: number): number
 	return math.floor(income)
 end
 
--- Preview de progresión (para testing)
+-- Preview de progresiï¿½n (para testing)
 function Config.PrintProgressionCurve()
 	if not Config.DEBUG_MODE then return end
 
 	print("\n+-----------------------------------------------------------+")
-	print("¦  APOCALYPSE TYCOON - PROGRESSION PREVIEW                ¦")
+	print("ï¿½  APOCALYPSE TYCOON - PROGRESSION PREVIEW                ï¿½")
 	print("+-----------------------------------------------------------+\n")
 
 	for wave = 1, 15 do
@@ -389,24 +396,24 @@ function Config.PrintProgressionCurve()
 end
 
 -------------------------------------------------------------------------
--- ?? INICIALIZACIÓN
+-- ?? INICIALIZACIï¿½N
 -------------------------------------------------------------------------
 local isValid, errorMsg = Config.Validate()
 if not isValid then
-	error(("[CONFIG] Error de validación: %s"):format(errorMsg or "desconocido"))
+	error(("[CONFIG] Error de validaciï¿½n: %s"):format(errorMsg or "desconocido"))
 end
 
 if Config.DEBUG_MODE then
 	print("+-----------------------------------------------------------+")
-	print("¦        ? APOCALYPSE TYCOON - BALANCED CONFIG ?        ¦")
-	print("¦-----------------------------------------------------------¦")
-	print(string.format("¦  Version: v%d | Mode: HIGH DIFFICULTY               ¦", Config.DATA_VERSION))
-	print(string.format("¦  DataStore: %-42s¦", Config.DATASTORE_NAME))
-	print(string.format("¦  Start Cash: $%-6d | Income: %d$/sec base        ¦", Config.START_CASH, Config.CASH_PER_SEC_BASE))
-	print(string.format("¦  Base HP: %-3d | Meteor Damage: %-3d                ¦", Config.BASE_MAX_HP, Config.METEOR_DAMAGE))
+	print("ï¿½        ? APOCALYPSE TYCOON - BALANCED CONFIG ?        ï¿½")
+	print("ï¿½-----------------------------------------------------------ï¿½")
+	print(string.format("ï¿½  Version: v%d | Mode: HIGH DIFFICULTY               ï¿½", Config.DATA_VERSION))
+	print(string.format("ï¿½  DataStore: %-42sï¿½", Config.DATASTORE_NAME))
+	print(string.format("ï¿½  Start Cash: $%-6d | Income: %d$/sec base        ï¿½", Config.START_CASH, Config.CASH_PER_SEC_BASE))
+	print(string.format("ï¿½  Base HP: %-3d | Meteor Damage: %-3d                ï¿½", Config.BASE_MAX_HP, Config.METEOR_DAMAGE))
 	print("+-----------------------------------------------------------+")
 
-	-- Mostrar preview de progresión
+	-- Mostrar preview de progresiï¿½n
 	Config.PrintProgressionCurve()
 end
 
