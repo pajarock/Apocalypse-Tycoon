@@ -63,9 +63,9 @@ export type SpawnConfig = {
 
 -- Default configuration (balanced para ~20 jugadores)
 local DEFAULT_CONFIG: SpawnConfig = {
-	SpiralStart = 50,
-	SpiralSpacing = 80,
-	SpiralRotation = math.pi * 0.8, -- ~144� por base (golden angle aproximado)
+	SpiralStart = 80,  -- Aumentado de 50 para mayor separación inicial
+	SpiralSpacing = 150,  -- Aumentado de 80 para más espacio entre bases
+	SpiralRotation = math.pi * 0.8, -- ~144° por base (golden angle aproximado)
 
 	BasePlateSize = Vector3.new(120, 4, 120),
 	BasePlateHeight = 5,
