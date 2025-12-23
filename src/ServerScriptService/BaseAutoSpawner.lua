@@ -33,24 +33,36 @@ end
 
 print("[BaseAutoSpawner] 🔄 Esperando a que Knit esté listo...")
 
--- Esperar a que Knit esté disponible y listo
-task.wait(5) -- Dar tiempo a KnitServer.lua para inicializar todos los servicios
-
 local Knit = require(ReplicatedStorage.Knit)
 
--- Obtener servicios necesarios
+-- Obtener servicios necesarios con reintentos
 local BaseSpawnerService
-local success, err = pcall(function()
-	BaseSpawnerService = Knit.GetService("BaseSpawnerService")
-end)
+local maxAttempts = 10
+local attempt = 0
 
-if not success or not BaseSpawnerService then
-	warn("[BaseAutoSpawner] ❌ Error: No se pudo obtener BaseSpawnerService")
-	warn("[BaseAutoSpawner] Error:", err)
+while not BaseSpawnerService and attempt < maxAttempts do
+	attempt += 1
+	local success, result = pcall(function()
+		return Knit.GetService("BaseSpawnerService")
+	end)
+
+	if success and result then
+		BaseSpawnerService = result
+		break
+	else
+		if Config.DEBUG_MODE then
+			print(("[BaseAutoSpawner] ⏳ Intento %d/%d - Esperando a BaseSpawnerService..."):format(attempt, maxAttempts))
+		end
+		task.wait(0.2) -- Esperar 200ms antes de reintentar
+	end
+end
+
+if not BaseSpawnerService then
+	warn("[BaseAutoSpawner] ❌ Error: No se pudo obtener BaseSpawnerService después de múltiples intentos")
 	return
 end
 
-print("[BaseAutoSpawner] ✅ BaseSpawnerService cargado correctamente")
+print("[BaseAutoSpawner] ✅ BaseSpawnerService cargado correctamente (intento " .. attempt .. ")")
 
 -------------------------------------------------------------------------
 -- FUNCIONES AUXILIARES
@@ -120,13 +132,10 @@ local function handlePlayerJoin(player: Player)
 		print(("[BaseAutoSpawner] 🎮 Procesando jugador: %s"):format(player.Name))
 	end
 
-	-- Esperar a que el character se cargue
+	-- Esperar a que el character se cargue (instantáneo si ya está cargado)
 	local character = player.Character or player.CharacterAdded:Wait()
 
-	-- Pequeño delay para asegurar que todos los sistemas estén listos
-	task.wait(0.5)
-
-	-- Spawnear base
+	-- Spawnear base (sin delays innecesarios)
 	local baseData = spawnBaseForPlayer(player)
 
 	if not baseData then
@@ -134,8 +143,7 @@ local function handlePlayerJoin(player: Player)
 		return
 	end
 
-	-- Teleportar jugador a su base
-	task.wait(0.5) -- Pequeño delay antes de teleportar
+	-- Teleportar jugador a su base inmediatamente
 	teleportPlayerToBase(player, baseData.Position)
 end
 
