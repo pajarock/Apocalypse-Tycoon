@@ -97,7 +97,7 @@ UpgradeDefinitions.GeneratorT2 = {
 	},
 
 	Category = "Production",
-	IsPlaceable = true,
+	IsPlaceable = false,  -- Solo accesible via upgrade desde T1
 } :: UpgradeDefinition
 
 -- GENERATOR TIER 3 - Avanzado (Producci�n alta)
@@ -117,7 +117,7 @@ UpgradeDefinitions.GeneratorT3 = {
 	},
 
 	Category = "Production",
-	IsPlaceable = true,
+	IsPlaceable = false,  -- Solo accesible via upgrade desde T2
 } :: UpgradeDefinition
 
 -- GENERATOR TIER 4 - Nuclear (Producción muy alta)
