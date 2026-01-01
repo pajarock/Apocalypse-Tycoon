@@ -421,15 +421,15 @@ function GeneratorVFXManager:RemoveEffects(model: Model)
 		particles:Destroy()
 	end
 
-	-- CRÍTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard
+	-- CRÍTICO: Solo remover billboards de efectos visuales, NO el StatsBillboard ni el NameTag
 	for _, child in mainPart:GetChildren() do
-		if child:IsA("BillboardGui") and child.Name ~= "StatsBillboard" then
+		if child:IsA("BillboardGui") and child.Name ~= "StatsBillboard" and child.Name ~= "NameTag" then
 			child:Destroy()
 		end
 	end
 
 	if DEBUG_MODE then
-		print("[GeneratorVFXManager] Removed visual effects (preserved StatsBillboard)")
+		print("[GeneratorVFXManager] Removed visual effects (preserved StatsBillboard and NameTag)")
 	end
 end
 
