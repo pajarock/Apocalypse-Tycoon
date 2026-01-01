@@ -78,11 +78,11 @@ local function createMenuUI(): ScreenGui
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
-	-- Panel principal (altura aumentada para acomodar upgrade button más grande)
+	-- Panel principal (altura aumentada para acomodar todos los botones + Sell button)
 	local menuPanel = Instance.new("Frame")
 	menuPanel.Name = "MenuPanel"
-	menuPanel.Size = UDim2.new(0, 300, 0, 280)
-	menuPanel.Position = UDim2.new(0.5, -150, 0.5, -140)
+	menuPanel.Size = UDim2.new(0, 300, 0, 320)
+	menuPanel.Position = UDim2.new(0.5, -150, 0.5, -160)
 	menuPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	menuPanel.BorderSizePixel = 2
 	menuPanel.BorderColor3 = Color3.fromRGB(100, 100, 100)
@@ -140,12 +140,22 @@ local function createMenuUI(): ScreenGui
 	-- Botón View Stats
 	local viewStatsButton = createButton("ViewStatsButton", "View Stats", "📊", 60)
 
-	-- Botón Upgrade (más alto para mostrar costo y beneficios)
-	local upgradeButton = createButton("UpgradeButton", "Upgrade Generator", "⬆️", 120, 80)
+	-- Botón Upgrade
+	local upgradeButton = createButton("UpgradeButton", "Upgrade Generator", "⬆️", 120, 60)
 	upgradeButton.TextSize = 15  -- Texto más pequeño para que quepa mejor
 
-	-- Botón Close (movido hacia abajo para dar espacio al upgradeButton)
-	local closeButton = createButton("CloseButton", "Close", "❌", 210)
+	-- Botón Sell (50% refund)
+	local sellButton = createButton("SellButton", "Sell (50% refund)", "💰", 190)
+	sellButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)  -- Rojo como en torretas
+	sellButton.MouseEnter:Connect(function()
+		sellButton.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
+	end)
+	sellButton.MouseLeave:Connect(function()
+		sellButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	end)
+
+	-- Botón Close
+	local closeButton = createButton("CloseButton", "Close", "❌", 250)
 	closeButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
 	closeButton.MouseEnter:Connect(function()
 		closeButton.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
@@ -506,6 +516,46 @@ function GeneratorInteractionController:RequestUpgrade()
 	end
 end
 
+--[[
+	Solicita vender el generador al servidor con 50% refund
+]]
+function GeneratorInteractionController:RequestSell()
+	if not currentObjectId then
+		warn("[GeneratorInteractionController] Cannot sell: No generator selected")
+		return
+	end
+
+	-- Guardar referencias ANTES de cerrar
+	local objectId = currentObjectId
+
+	-- Obtener BaseDataService (maneja la venta de objetos)
+	local BaseDataService = Knit.GetService("BaseDataService")
+
+	-- Llamar al método de venta (con 50% refund)
+	local success, result = pcall(function()
+		return BaseDataService:SellObject(objectId, 0.5)  -- 50% refund
+	end)
+
+	if not success then
+		-- Error en la llamada remota
+		warn("[GeneratorInteractionController] ❌ Sell request failed:", result)
+		showNotification("❌ Sell failed! Server error.", false)
+		return
+	end
+
+	-- result contiene el valor del refund o false
+	if result and result > 0 then
+		print("[GeneratorInteractionController] ✅ Sell successful! Refund: $" .. result)
+		showNotification(string.format("✅ Generator sold! Refunded: $%d", result), true)
+
+		-- Cerrar menú (el generador ya no existe)
+		self:CloseMenu()
+	else
+		warn("[GeneratorInteractionController] ❌ Sell failed (not owner or invalid object)")
+		showNotification("❌ Sell failed! You don't own this generator.", false)
+	end
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	INITIALIZATION
 ────────────────────────────────────────────────────────────────────────]]
@@ -541,6 +591,13 @@ function GeneratorInteractionController:KnitStart()
 						end
 					end
 				end
+			end)
+		end
+
+		local sellButton = menuPanel:FindFirstChild("SellButton") :: TextButton
+		if sellButton then
+			sellButton.Activated:Connect(function()
+				self:RequestSell()
 			end)
 		end
 

@@ -1671,8 +1671,13 @@ function ShopUIController:PopulateGrid()
 		end
 
 	elseif currentMainTab == "INCOME" then
-		-- Show generators
+		-- Show generators (ONLY T1 - upgrades done via generator menu)
 		for _, gen in ipairs(GENERATORS) do
+			-- FILTER: Only show Tier 1 generators (can be placed from shop)
+			if gen.tier ~= 1 then
+				continue
+			end
+
 			-- Build stats for generator
 			local stats = nil
 			if gen.income then

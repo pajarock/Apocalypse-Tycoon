@@ -341,13 +341,18 @@ function UpgradeService:UpgradeGenerator(objectId: string, userId: number): bool
 			-- Actualizar nombre del modelo
 			data.Model.Name = nextTierName
 
-			-- Actualizar billboard name tag
+			-- Actualizar billboard name tag (texto Y posición)
 			local billboard = mainPart:FindFirstChild("NameTag")
-			if billboard then
+			if billboard and billboard:IsA("BillboardGui") then
+				-- Actualizar texto
 				local label = billboard:FindFirstChild("TextLabel")
 				if label then
 					label.Text = nextDefinition.DisplayName
 				end
+
+				-- Actualizar posición basada en el nuevo tamaño del generador
+				-- Fórmula: definition.Size.Y / 2 + 2 (misma que en UpgradeDefinitions.luau:414)
+				billboard.StudsOffset = Vector3.new(0, nextDefinition.Size.Y / 2 + 2, 0)
 			end
 
 			-- FASE 4: Mostrar efectos visuales de upgrade

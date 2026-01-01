@@ -2,10 +2,10 @@
 --[[
 	BaseDataService - Sistema de Persistencia y DataStore
 
-	CARACTERÍSTICAS:
-	- Serialización/Deserialización de bases y objetos
-	- Integración con DataStoreService
-	- Auto-save periódico (cada N minutos)
+	CARACTERï¿½STICAS:
+	- Serializaciï¿½n/Deserializaciï¿½n de bases y objetos
+	- Integraciï¿½n con DataStoreService
+	- Auto-save periï¿½dico (cada N minutos)
 	- Schema versioning para migraciones
 	- Error handling robusto (retries, fallbacks)
 	- Backup temporal en memoria (anti data loss)
@@ -105,7 +105,7 @@ local BaseOwnershipService
 
 	FORMATO: {X = x, Y = y, Z = z}
 
-	Por qué: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
+	Por quï¿½: DataStore no soporta tipos de Roblox (Vector3, CFrame, etc).
 	Debemos convertir a tipos primitivos (number, string, table).
 
 	@param vec - Vector3 a serializar
@@ -136,7 +136,7 @@ end
 	4. Construir estructura BaseLayout
 	5. Agregar metadata (version, timestamp)
 
-	@param userId - ID del jugador/dueño
+	@param userId - ID del jugador/dueï¿½o
 	@return BaseLayout? - Layout serializado, o nil si no hay base
 ]]
 local function serializeBaseLayout(userId: number): BaseLayout?
@@ -177,33 +177,33 @@ end
 	Deserializa un layout y reconstruye la base.
 
 	PROCESO:
-	1. Validar schema version (migración si es necesario)
+	1. Validar schema version (migraciï¿½n si es necesario)
 	2. Verificar integridad de datos
-	3. Reconstruir base física (via BaseSpawnerService)
+	3. Reconstruir base fï¿½sica (via BaseSpawnerService)
 	4. Reconstruir objetos (via BaseOwnershipService)
 
-	NOTA: Esta función NO crea los objetos físicos automáticamente,
-	solo retorna los datos. El caller decide cómo instanciarlos.
+	NOTA: Esta funciï¿½n NO crea los objetos fï¿½sicos automï¿½ticamente,
+	solo retorna los datos. El caller decide cï¿½mo instanciarlos.
 
 	@param layout - Layout serializado
-	@return boolean, string? - true si es válido, error si no
+	@return boolean, string? - true si es vï¿½lido, error si no
 ]]
 local function validateLayout(layout: any): (boolean, string?)
-	-- Type checking básico
+	-- Type checking bï¿½sico
 	if type(layout) ~= "table" then
 		return false, "Layout no es una tabla"
 	end
 
 	if type(layout.Version) ~= "string" then
-		return false, "Version faltante o inválida"
+		return false, "Version faltante o invï¿½lida"
 	end
 
 	if type(layout.OwnerId) ~= "number" then
-		return false, "OwnerId faltante o inválido"
+		return false, "OwnerId faltante o invï¿½lido"
 	end
 
 	if type(layout.Objects) ~= "table" then
-		return false, "Objects faltante o inválido"
+		return false, "Objects faltante o invï¿½lido"
 	end
 
 	-- Schema version check
@@ -213,7 +213,7 @@ local function validateLayout(layout: any): (boolean, string?)
 			layout.Version,
 			SCHEMA_VERSION
 			))
-		-- Aquí podrías implementar migración de schemas
+		-- Aquï¿½ podrï¿½as implementar migraciï¿½n de schemas
 	end
 
 	return true
@@ -249,7 +249,7 @@ end
 
 	@param userId - ID del usuario
 	@param layout - Layout a guardar
-	@return SaveResult - Resultado de la operación
+	@return SaveResult - Resultado de la operaciï¿½n
 ]]
 local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 	if not baseDataStore then
@@ -273,7 +273,7 @@ local function saveToDataStore(userId: number, layout: BaseLayout): SaveResult
 		if success then
 			-- ? GUARDADO EXITOSO
 			lastSaveTimes[userId] = os.time()
-			inMemoryBackup[userId] = layout -- También guardar en backup
+			inMemoryBackup[userId] = layout -- Tambiï¿½n guardar en backup
 
 			print(string.format(
 				"[BaseDataService] ?? Saved base for userId=%d (Objects: %d, Attempt: %d)",
@@ -345,7 +345,7 @@ local function loadFromDataStore(userId: number): BaseLayout?
 					result.Objects and #result.Objects or 0
 					))
 
-				-- Guardar en backup también
+				-- Guardar en backup tambiï¿½n
 				inMemoryBackup[userId] = result
 				return result
 			else
@@ -385,7 +385,7 @@ function BaseDataService:SaveBase(userId: number): SaveResult
 	if not layout then
 		return {
 			Success = false,
-			ErrorMessage = "No se encontró base para serializar",
+			ErrorMessage = "No se encontrï¿½ base para serializar",
 		}
 	end
 
@@ -416,10 +416,10 @@ end
 	PROCESO:
 	1. Cargar layout desde DataStore
 	2. Validar datos
-	3. Crear objetos físicos (esto requiere acceso a templates/assets)
+	3. Crear objetos fï¿½sicos (esto requiere acceso a templates/assets)
 
-	NOTA: Por ahora solo retorna el layout. La restauración física
-	se implementará cuando tengamos los assets de los upgrades.
+	NOTA: Por ahora solo retorna el layout. La restauraciï¿½n fï¿½sica
+	se implementarï¿½ cuando tengamos los assets de los upgrades.
 ]]
 function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 	local layout = self:LoadBase(userId)
@@ -428,7 +428,7 @@ function BaseDataService:RestoreBase(userId: number): (boolean, string?)
 		return false, "No hay datos guardados para este usuario"
 	end
 
-	-- Aquí iría la lógica de instanciar los objetos físicos
+	-- Aquï¿½ irï¿½a la lï¿½gica de instanciar los objetos fï¿½sicos
 	-- Por ahora solo cargamos los datos
 
 	print(string.format(
@@ -475,7 +475,7 @@ function BaseDataService:SetAutoSave(enabled: boolean)
 end
 
 --[[------------------------------------------------------------------------
-	CLIENT API - Métodos Expuestos al Cliente
+	CLIENT API - MÃ©todos Expuestos al Cliente
 ------------------------------------------------------------------------]]
 
 --[[
@@ -483,6 +483,71 @@ end
 ]]
 function BaseDataService.Client:SaveMyBase(player: Player)
 	return self.Server:SaveBase(player.UserId)
+end
+
+--[[
+	Vende un objeto (generator, turret, etc.) y devuelve dinero al jugador.
+
+	@param player - Jugador que solicita la venta
+	@param objectId - ID del objeto a vender
+	@param refundPercent - Porcentaje del costo original a devolver (default 0.5 = 50%)
+	@return number|false - Cantidad de dinero devuelta o false si falla
+]]
+function BaseDataService.Client:SellObject(player: Player, objectId: string, refundPercent: number?)
+	refundPercent = refundPercent or 0.5  -- Default 50% refund
+
+	-- Obtener el objeto del BaseOwnershipService
+	local object = BaseOwnershipService:GetObjectById(objectId)
+	if not object then
+		warn("[BaseDataService] âŒ Object not found:", objectId)
+		return false
+	end
+
+	-- Validar ownership
+	if object.UserId ~= player.UserId then
+		warn("[BaseDataService] âŒ Player", player.UserId, "is not owner of object", objectId)
+		return false
+	end
+
+	-- Obtener el costo original del objeto
+	local UpgradeDefinitions = require(ServerScriptService.Services.UpgradeDefinitions)
+	local definition = UpgradeDefinitions.GetDefinition(object.ObjectType)
+	if not definition then
+		warn("[BaseDataService] âŒ Definition not found for:", object.ObjectType)
+		return false
+	end
+
+	-- Calcular refund
+	local refundAmount = math.floor(definition.Cost * refundPercent)
+
+	-- Dar dinero (refund)
+	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
+	EconomyModule.AdminGiveCash(player.UserId, refundAmount)
+
+	-- Actualizar Guardian despuÃ©s de refund
+	local BaseModule = require(ServerScriptService:WaitForChild("BaseModule"))
+	local refundState = EconomyModule.GetState(player.UserId)
+	if refundState then
+		BaseModule.UpdateGuardianTarget(player.UserId, refundState.Cash)
+	end
+
+	-- Destruir modelo
+	if object.Model and object.Model.Parent then
+		object.Model:Destroy()
+	end
+
+	-- Remover objeto de BaseOwnershipService
+	BaseOwnershipService:RemoveObject(objectId)
+
+	print(string.format(
+		"[BaseDataService] âœ… Object sold: %s (Type: %s, Refund: $%d, Owner: %d)",
+		objectId,
+		object.ObjectType,
+		refundAmount,
+		player.UserId
+	))
+
+	return refundAmount
 end
 
 --[[------------------------------------------------------------------------
