@@ -3,28 +3,18 @@
 	GeneratorInteractionController - Sistema de interacción con generadores
 
 	CARACTERÍSTICAS:
-	- Menú de interacción para generadores (idéntico al de torretas)
-	- Manejo de ProximityPrompt único (E key)
-	- Display de stats del generador
-	- Sistema de upgrade desde UI
-	- Sistema de venta con 50% refund
+	- Menú de interacción SÚPER DIVERTIDO estilo cartoon/infantil 🎨
+	- Colores vibrantes, animaciones bounce, efectos de brillo
+	- Diseño optimizado para audiencia infantil
+	- Sistema de upgrade y venta
 
-	ARQUITECTURA DE UI:
-	┌──────────────────────────────────────┐
-	│ PlayerGui                            │
-	│  └── GeneratorManagementUI          │
-	│      └── MainPanel (Frame)          │
-	│          ├── Header                 │
-	│          ├── CloseButton            │
-	│          ├── InfoContainer          │
-	│          │   ├── NameLabel          │
-	│          │   └── StatsLabel         │
-	│          └── ButtonsContainer       │
-	│              ├── UpgradeButton      │
-	│              └── SellButton         │
-	└──────────────────────────────────────┘
+	DISEÑO:
+	- Fondo: Gradiente morado→azul brillante con borde neón
+	- Header: Gradiente naranja→amarillo con sombra
+	- Botones: Colores vibrantes con efectos hover animados
+	- Iconos grandes y emojis divertidos
 
-	AUTHOR: Generator Interaction System v2 (diseño idéntico a TurretManagementUI)
+	AUTHOR: Generator Interaction System v3 (CARTOON EDITION!)
 	CLIENT-SIDE: UI logic + communication con server
 ]]
 
@@ -39,6 +29,38 @@ local Knit = require(ReplicatedStorage.Knit)
 ────────────────────────────────────────────────────────────────────────]]
 
 local DEBUG_MODE = true
+
+-- COLORES VIBRANTES PARA NIÑOS 🌈
+local COLORS = {
+	-- Fondo principal (gradiente morado a azul)
+	BackgroundTop = Color3.fromRGB(120, 60, 220),      -- Morado vibrante
+	BackgroundBottom = Color3.fromRGB(60, 120, 255),   -- Azul cielo
+
+	-- Header (gradiente naranja a amarillo)
+	HeaderTop = Color3.fromRGB(255, 160, 50),          -- Naranja
+	HeaderBottom = Color3.fromRGB(255, 220, 80),       -- Amarillo
+
+	-- Info container (rosa pastel a cyan)
+	InfoTop = Color3.fromRGB(255, 150, 200),           -- Rosa pastel
+	InfoBottom = Color3.fromRGB(150, 220, 255),        -- Cyan pastel
+
+	-- Botones
+	UpgradeGreen = Color3.fromRGB(100, 255, 100),      -- Verde neón
+	UpgradeGreenDark = Color3.fromRGB(50, 200, 50),    -- Verde oscuro
+	SellRed = Color3.fromRGB(255, 100, 150),           -- Rosa/rojo
+	SellRedDark = Color3.fromRGB(255, 50, 100),        -- Rojo oscuro
+	CloseRed = Color3.fromRGB(255, 80, 80),            -- Rojo brillante
+
+	-- Bordes neón
+	BorderNeon = Color3.fromRGB(100, 255, 255),        -- Cyan neón
+	BorderPurple = Color3.fromRGB(200, 100, 255),      -- Morado neón
+	BorderYellow = Color3.fromRGB(255, 255, 100),      -- Amarillo neón
+
+	-- Texto
+	TextWhite = Color3.new(1, 1, 1),
+	TextGold = Color3.fromRGB(255, 220, 100),
+	TextShadow = Color3.fromRGB(0, 0, 0),
+}
 
 --[[────────────────────────────────────────────────────────────────────────
 	CONTROLLER
@@ -60,85 +82,214 @@ local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Crea un botón estándar con el estilo del TurretManagementUI.
+	Crea un gradiente vertical
 ]]
-local function createButton(name: string, text: string, position: UDim2, color: Color3): TextButton
+local function createGradient(topColor: Color3, bottomColor: Color3): UIGradient
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, topColor),
+		ColorSequenceKeypoint.new(1, bottomColor),
+	})
+	gradient.Rotation = 90  -- Vertical
+	return gradient
+end
+
+--[[
+	Crea un borde neón brillante
+]]
+local function createNeonStroke(color: Color3, thickness: number): UIStroke
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = thickness or 4
+	stroke.Transparency = 0
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	return stroke
+end
+
+--[[
+	Crea una sombra para texto
+]]
+local function createTextShadow(textLabel: TextLabel)
+	local shadow = Instance.new("UIStroke")
+	shadow.Color = COLORS.TextShadow
+	shadow.Thickness = 3
+	shadow.Transparency = 0.5
+	shadow.Parent = textLabel
+end
+
+--[[
+	Crea un botón estilo cartoon con gradiente y efectos.
+]]
+local function createCartoonButton(name: string, text: string, emoji: string, position: UDim2, topColor: Color3, bottomColor: Color3, neonColor: Color3): TextButton
 	local button = Instance.new("TextButton")
 	button.Name = name
-	button.Size = UDim2.new(1, 0, 0, 50)
+	button.Size = UDim2.new(1, 0, 0, 60)  -- Más alto para ser más llamativo
 	button.Position = position
-	button.BackgroundColor3 = color
+	button.BackgroundColor3 = topColor
 	button.BorderSizePixel = 0
-	button.Text = text
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.TextSize = 18
-	button.Font = Enum.Font.GothamBold
 	button.AutoButtonColor = false
+	button.Font = Enum.Font.FredokaOne  -- Fuente divertida
+	button.TextSize = 22
+	button.TextColor3 = COLORS.TextWhite
+	button.TextWrapped = true
 
+	-- Texto con emoji GRANDE
+	button.Text = string.format("%s  %s", emoji, text)
+
+	-- Corner redondeado
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 16)  -- Más redondeado
 	corner.Parent = button
 
-	-- Hover effects
+	-- Gradiente
+	local gradient = createGradient(topColor, bottomColor)
+	gradient.Parent = button
+
+	-- Borde neón
+	local stroke = createNeonStroke(neonColor, 5)
+	stroke.Parent = button
+
+	-- Sombra en el texto
+	createTextShadow(button)
+
+	-- EFECTOS HOVER ANIMADOS 🎨
+	local originalSize = button.Size
+	local hoverTween: Tween? = nil
+
 	button.MouseEnter:Connect(function()
-		local lightenedColor = Color3.new(
-			math.min(color.R + 0.1, 1),
-			math.min(color.G + 0.1, 1),
-			math.min(color.B + 0.1, 1)
+		-- Cancelar tween anterior si existe
+		if hoverTween then
+			hoverTween:Cancel()
+		end
+
+		-- Crecer con animación Elastic
+		hoverTween = TweenService:Create(
+			button,
+			TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+			{
+				Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 70),
+				BackgroundColor3 = Color3.new(
+					math.min(topColor.R + 0.15, 1),
+					math.min(topColor.G + 0.15, 1),
+					math.min(topColor.B + 0.15, 1)
+				)
+			}
 		)
-		button.BackgroundColor3 = lightenedColor
+		hoverTween:Play()
+
+		-- Animar el borde para que brille más
+		TweenService:Create(
+			stroke,
+			TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Thickness = 7 }
+		):Play()
 	end)
 
 	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = color
+		-- Volver a tamaño original
+		if hoverTween then
+			hoverTween:Cancel()
+		end
+
+		hoverTween = TweenService:Create(
+			button,
+			TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
+			{
+				Size = originalSize,
+				BackgroundColor3 = topColor
+			}
+		)
+		hoverTween:Play()
+
+		-- Reducir grosor del borde
+		TweenService:Create(
+			stroke,
+			TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Thickness = 5 }
+		):Play()
+	end)
+
+	-- Efecto de "click" con animación
+	button.MouseButton1Down:Connect(function()
+		TweenService:Create(
+			button,
+			TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 55) }
+		):Play()
+	end)
+
+	button.MouseButton1Up:Connect(function()
+		TweenService:Create(
+			button,
+			TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
+			{ Size = originalSize }
+		):Play()
 	end)
 
 	return button
 end
 
 --[[
-	Muestra una notificación temporal en pantalla.
+	Muestra una notificación SÚPER DIVERTIDA en pantalla.
 ]]
 local function showNotification(message: string, isSuccess: boolean)
 	local notification = Instance.new("Frame")
 	notification.Name = "Notification"
-	notification.Size = UDim2.new(0, 400, 0, 60)
-	notification.Position = UDim2.new(0.5, -200, 0.1, 0)
-	notification.BackgroundColor3 = isSuccess and Color3.fromRGB(30, 100, 30) or Color3.fromRGB(100, 30, 30)
-	notification.BorderSizePixel = 2
-	notification.BorderColor3 = isSuccess and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+	notification.Size = UDim2.new(0, 450, 0, 80)
+	notification.Position = UDim2.new(0.5, -225, 0.1, 0)
+	notification.BackgroundColor3 = isSuccess and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+	notification.BorderSizePixel = 0
 	notification.Parent = playerGui
 
+	-- Corner redondeado
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
+	corner.CornerRadius = UDim.new(0, 20)
 	corner.Parent = notification
 
+	-- Borde neón
+	local stroke = createNeonStroke(isSuccess and COLORS.BorderYellow or COLORS.BorderPurple, 6)
+	stroke.Parent = notification
+
+	-- Gradiente
+	local gradient = createGradient(
+		isSuccess and Color3.fromRGB(150, 255, 150) or Color3.fromRGB(255, 150, 150),
+		isSuccess and Color3.fromRGB(100, 255, 200) or Color3.fromRGB(255, 100, 150)
+	)
+	gradient.Parent = notification
+
+	-- Texto grande y bold
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -20, 1, 0)
-	label.Position = UDim2.new(0, 10, 0, 0)
+	label.Size = UDim2.new(1, -30, 1, 0)
+	label.Position = UDim2.new(0, 15, 0, 0)
 	label.BackgroundTransparency = 1
 	label.Text = message
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextSize = 18
-	label.Font = Enum.Font.GothamBold
+	label.TextColor3 = COLORS.TextWhite
+	label.TextSize = 24
+	label.Font = Enum.Font.FredokaOne
 	label.TextWrapped = true
 	label.Parent = notification
 
-	-- Animación de entrada
-	notification.Position = UDim2.new(0.5, -200, -0.1, 0)
+	-- Sombra en texto
+	createTextShadow(label)
+
+	-- Animación de entrada BOUNCE
+	notification.Position = UDim2.new(0.5, -225, -0.15, 0)
 	local tweenIn = TweenService:Create(
 		notification,
-		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Position = UDim2.new(0.5, -200, 0.1, 0) }
+		TweenInfo.new(0.6, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
+		{ Position = UDim2.new(0.5, -225, 0.1, 0) }
 	)
 	tweenIn:Play()
 
-	-- Auto-cerrar después de 2.5 segundos
-	task.delay(2.5, function()
+	-- Auto-cerrar después de 3 segundos
+	task.delay(3, function()
 		local tweenOut = TweenService:Create(
 			notification,
-			TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-			{ Position = UDim2.new(0.5, -200, -0.1, 0) }
+			TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+			{
+				Position = UDim2.new(0.5, -225, -0.15, 0),
+				Size = UDim2.new(0, 0, 0, 0)
+			}
 		)
 		tweenOut:Play()
 		tweenOut.Completed:Connect(function()
@@ -148,12 +299,11 @@ local function showNotification(message: string, isSuccess: boolean)
 end
 
 --[[────────────────────────────────────────────────────────────────────────
-	UI CREATION (IDÉNTICO A TurretManagementUI)
+	UI CREATION - DISEÑO CARTOON INFANTIL 🎨
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Crea el UI principal (se ejecuta una sola vez).
-	DISEÑO IDÉNTICO a TurretManagementUI.lua
+	Crea el UI principal con diseño SÚPER DIVERTIDO para niños.
 ]]
 local function createUI()
 	if mainFrame then
@@ -167,122 +317,234 @@ local function createUI()
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	screenGui.Parent = playerGui
 
-	-- Main Frame (Panel) - 400x500px, RGB(30, 30, 35)
+	-- Main Frame (Panel) - 420x540px (un poco más grande)
 	mainFrame = Instance.new("Frame")
 	mainFrame.Name = "MainPanel"
-	mainFrame.Size = UDim2.new(0, 400, 0, 500)
-	mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+	mainFrame.Size = UDim2.new(0, 420, 0, 540)
+	mainFrame.Position = UDim2.new(0.5, -210, 0.5, -270)
+	mainFrame.BackgroundColor3 = COLORS.BackgroundTop
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Visible = false
 	mainFrame.Parent = screenGui
 
-	-- UICorner para bordes redondeados
+	-- Gradiente de fondo morado→azul
+	local bgGradient = createGradient(COLORS.BackgroundTop, COLORS.BackgroundBottom)
+	bgGradient.Parent = mainFrame
+
+	-- Corner MUY redondeado
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
+	corner.CornerRadius = UDim.new(0, 20)
 	corner.Parent = mainFrame
 
-	-- Header - 50px height, RGB(40, 40, 45)
-	local header = Instance.new("TextLabel")
+	-- Borde neón CYAN
+	local mainStroke = createNeonStroke(COLORS.BorderNeon, 6)
+	mainStroke.Parent = mainFrame
+
+	-- Header - Gradiente naranja→amarillo
+	local header = Instance.new("Frame")
 	header.Name = "Header"
-	header.Size = UDim2.new(1, 0, 0, 50)
+	header.Size = UDim2.new(1, 0, 0, 60)
 	header.Position = UDim2.new(0, 0, 0, 0)
-	header.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	header.BackgroundColor3 = COLORS.HeaderTop
 	header.BorderSizePixel = 0
-	header.Text = "Generator Management"
-	header.TextColor3 = Color3.new(1, 1, 1)
-	header.TextSize = 24
-	header.Font = Enum.Font.GothamBold
 	header.Parent = mainFrame
 
+	local headerGradient = createGradient(COLORS.HeaderTop, COLORS.HeaderBottom)
+	headerGradient.Parent = header
+
 	local headerCorner = Instance.new("UICorner")
-	headerCorner.CornerRadius = UDim.new(0, 12)
+	headerCorner.CornerRadius = UDim.new(0, 20)
 	headerCorner.Parent = header
 
-	-- Close Button - 40x40px, RGB(200, 50, 50)
+	-- Borde del header
+	local headerStroke = createNeonStroke(COLORS.BorderYellow, 4)
+	headerStroke.Parent = header
+
+	-- Título con emoji grande
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Size = UDim2.new(1, -60, 1, 0)
+	title.Position = UDim2.new(0, 10, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "⚡ Generator Control ⚡"
+	title.TextColor3 = COLORS.TextWhite
+	title.TextSize = 28
+	title.Font = Enum.Font.FredokaOne
+	title.TextXAlignment = Enum.TextXAlignment.Center
+	title.Parent = header
+
+	-- Sombra en el título
+	createTextShadow(title)
+
+	-- Close Button - Botón X divertido
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 40, 0, 40)
-	closeButton.Position = UDim2.new(1, -45, 0, 5)
-	closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	closeButton.Size = UDim2.new(0, 50, 0, 50)
+	closeButton.Position = UDim2.new(1, -55, 0, 5)
+	closeButton.BackgroundColor3 = COLORS.CloseRed
 	closeButton.BorderSizePixel = 0
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = 20
-	closeButton.Font = Enum.Font.GothamBold
+	closeButton.Text = "✖"
+	closeButton.TextColor3 = COLORS.TextWhite
+	closeButton.TextSize = 28
+	closeButton.Font = Enum.Font.FredokaOne
 	closeButton.Parent = mainFrame
 
 	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
+	closeCorner.CornerRadius = UDim.new(1, 0)  -- Circular
 	closeCorner.Parent = closeButton
+
+	local closeStroke = createNeonStroke(COLORS.BorderPurple, 4)
+	closeStroke.Parent = closeButton
+
+	-- Animación del botón close
+	closeButton.MouseEnter:Connect(function()
+		TweenService:Create(
+			closeButton,
+			TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+			{ Size = UDim2.new(0, 55, 0, 55), Rotation = 90 }
+		):Play()
+	end)
+
+	closeButton.MouseLeave:Connect(function()
+		TweenService:Create(
+			closeButton,
+			TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
+			{ Size = UDim2.new(0, 50, 0, 50), Rotation = 0 }
+		):Play()
+	end)
 
 	closeButton.MouseButton1Click:Connect(function()
 		GeneratorInteractionController:CloseMenu()
 	end)
 
-	-- Info Container - 200px height, RGB(40, 40, 45)
+	-- Info Container - Gradiente rosa→cyan
 	local infoContainer = Instance.new("Frame")
 	infoContainer.Name = "InfoContainer"
-	infoContainer.Size = UDim2.new(1, -20, 0, 200)
-	infoContainer.Position = UDim2.new(0, 10, 0, 60)
-	infoContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	infoContainer.Size = UDim2.new(1, -30, 0, 220)
+	infoContainer.Position = UDim2.new(0, 15, 0, 75)
+	infoContainer.BackgroundColor3 = COLORS.InfoTop
 	infoContainer.BorderSizePixel = 0
 	infoContainer.Parent = mainFrame
 
+	local infoGradient = createGradient(COLORS.InfoTop, COLORS.InfoBottom)
+	infoGradient.Parent = infoContainer
+
 	local infoCorner = Instance.new("UICorner")
-	infoCorner.CornerRadius = UDim.new(0, 8)
+	infoCorner.CornerRadius = UDim.new(0, 16)
 	infoCorner.Parent = infoContainer
 
-	-- Generator Name Label - RGB(255, 200, 100), 20px, GothamBold
+	local infoStroke = createNeonStroke(COLORS.BorderPurple, 4)
+	infoStroke.Parent = infoContainer
+
+	-- Icono grande del generador
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Name = "IconLabel"
+	iconLabel.Size = UDim2.new(0, 60, 0, 60)
+	iconLabel.Position = UDim2.new(0, 10, 0, 10)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = "⚙️"
+	iconLabel.TextSize = 48
+	iconLabel.Parent = infoContainer
+
+	-- Animación del icono (girar suavemente)
+	task.spawn(function()
+		while true do
+			TweenService:Create(
+				iconLabel,
+				TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut),
+				{ Rotation = 360 }
+			):Play()
+			task.wait(2)
+			iconLabel.Rotation = 0
+		end
+	end)
+
+	-- Generator Name Label - Dorado brillante
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "NameLabel"
-	nameLabel.Size = UDim2.new(1, -10, 0, 30)
-	nameLabel.Position = UDim2.new(0, 5, 0, 5)
+	nameLabel.Size = UDim2.new(1, -90, 0, 35)
+	nameLabel.Position = UDim2.new(0, 80, 0, 10)
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Text = "Volcánico T1"
-	nameLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
-	nameLabel.TextSize = 20
-	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Text = "🔥 Volcánico T1"
+	nameLabel.TextColor3 = COLORS.TextGold
+	nameLabel.TextSize = 24
+	nameLabel.Font = Enum.Font.FredokaOne
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = infoContainer
 
-	-- Stats Label - White, 16px, Gotham
+	createTextShadow(nameLabel)
+
+	-- Stats Label - Texto grande y claro
 	local statsLabel = Instance.new("TextLabel")
 	statsLabel.Name = "StatsLabel"
-	statsLabel.Size = UDim2.new(1, -10, 0, 160)
-	statsLabel.Position = UDim2.new(0, 5, 0, 40)
+	statsLabel.Size = UDim2.new(1, -20, 0, 160)
+	statsLabel.Position = UDim2.new(0, 10, 0, 55)
 	statsLabel.BackgroundTransparency = 1
 	statsLabel.Text = "Loading stats..."
-	statsLabel.TextColor3 = Color3.new(1, 1, 1)
-	statsLabel.TextSize = 16
-	statsLabel.Font = Enum.Font.Gotham
+	statsLabel.TextColor3 = COLORS.TextWhite
+	statsLabel.TextSize = 20
+	statsLabel.Font = Enum.Font.GothamBold
 	statsLabel.TextXAlignment = Enum.TextXAlignment.Left
 	statsLabel.TextYAlignment = Enum.TextYAlignment.Top
 	statsLabel.Parent = infoContainer
 
-	-- Buttons Container - at Y:270, 200px height
+	createTextShadow(statsLabel)
+
+	-- Buttons Container
 	local buttonsContainer = Instance.new("Frame")
 	buttonsContainer.Name = "ButtonsContainer"
-	buttonsContainer.Size = UDim2.new(1, -20, 0, 200)
-	buttonsContainer.Position = UDim2.new(0, 10, 0, 270)
+	buttonsContainer.Size = UDim2.new(1, -30, 0, 210)
+	buttonsContainer.Position = UDim2.new(0, 15, 0, 310)
 	buttonsContainer.BackgroundTransparency = 1
 	buttonsContainer.Parent = mainFrame
 
-	-- Upgrade Button - RGB(50, 150, 50)
-	local upgradeButton = createButton("UpgradeButton", "Upgrade ($0)", UDim2.new(0, 0, 0, 0), Color3.fromRGB(50, 150, 50))
+	-- Upgrade Button - Verde neón brillante
+	local upgradeButton = createCartoonButton(
+		"UpgradeButton",
+		"UPGRADE!",
+		"⬆️",
+		UDim2.new(0, 0, 0, 0),
+		COLORS.UpgradeGreen,
+		COLORS.UpgradeGreenDark,
+		COLORS.BorderYellow
+	)
 	upgradeButton.Parent = buttonsContainer
 	upgradeButton.MouseButton1Click:Connect(function()
 		GeneratorInteractionController:OnUpgradeClicked()
 	end)
 
-	-- Sell Button - RGB(200, 50, 50) at Y:60
-	local sellButton = createButton("SellButton", "Sell (50% refund)", UDim2.new(0, 0, 0, 60), Color3.fromRGB(200, 50, 50))
+	-- Sell Button - Rosa/rojo vibrante
+	local sellButton = createCartoonButton(
+		"SellButton",
+		"SELL (50% back!)",
+		"💰",
+		UDim2.new(0, 0, 0, 75),
+		COLORS.SellRed,
+		COLORS.SellRedDark,
+		COLORS.BorderPurple
+	)
 	sellButton.Parent = buttonsContainer
 	sellButton.MouseButton1Click:Connect(function()
 		GeneratorInteractionController:OnSellClicked()
 	end)
 
-	print("[GeneratorInteractionController] ✅ UI Created (diseño idéntico a TurretManagementUI)")
+	-- Fun Fact Button - Botón extra para diversión
+	local funButton = createCartoonButton(
+		"FunButton",
+		"VIEW STATS",
+		"📊",
+		UDim2.new(0, 0, 0, 150),
+		Color3.fromRGB(100, 150, 255),
+		Color3.fromRGB(50, 100, 255),
+		COLORS.BorderNeon
+	)
+	funButton.Parent = buttonsContainer
+	funButton.MouseButton1Click:Connect(function()
+		-- Mostrar stats extra
+		showNotification("💡 This generator is producing money while you play! Keep upgrading!", true)
+	end)
+
+	print("[GeneratorInteractionController] 🎨✨ CARTOON UI Created!")
 end
 
 --[[────────────────────────────────────────────────────────────────────────
@@ -302,13 +564,17 @@ local function updateUI(generatorInfo: any)
 		return
 	end
 
-	-- Actualizar nombre
+	-- Actualizar nombre con emoji
 	local nameLabel = infoContainer:FindFirstChild("NameLabel") :: TextLabel
 	if nameLabel and generatorInfo.Name then
-		nameLabel.Text = generatorInfo.Name
+		-- Emojis según tier
+		local tierEmojis = {"🔥", "⚡", "💎", "☢️", "🌟"}
+		local tier = generatorInfo.Stats.Tier or 1
+		local emoji = tierEmojis[tier] or "⚙️"
+		nameLabel.Text = string.format("%s %s", emoji, generatorInfo.Name)
 	end
 
-	-- Actualizar stats
+	-- Actualizar stats con formato divertido
 	local statsLabel = infoContainer:FindFirstChild("StatsLabel") :: TextLabel
 	if statsLabel then
 		local stats = generatorInfo.Stats or {}
@@ -316,7 +582,7 @@ local function updateUI(generatorInfo: any)
 		local uptimeSeconds = (stats.Uptime or 0) % 60
 
 		local statsText = string.format(
-			"Tier: %d\nIncome: $%d/s\nTotal Produced: $%.0f\nUptime: %dm %ds",
+			"🎯 Tier %d\n💰 Making: $%d per second!\n📈 Total Made: $%.0f\n⏰ Running: %dm %ds",
 			stats.Tier or 1,
 			stats.IncomeRate or 0,
 			stats.TotalProduced or 0,
@@ -334,15 +600,14 @@ local function updateUI(generatorInfo: any)
 		if upgradeButton then
 			if generatorInfo.CanUpgrade then
 				local upgradeInfo = generatorInfo.UpgradeInfo or {}
-				local costText = string.format("$%d", upgradeInfo.Cost or 0)
-				local nextIncomeText = string.format("$%d/s", upgradeInfo.NextIncome or 0)
-				upgradeButton.Text = string.format("Upgrade (Cost: %s → %s)", costText, nextIncomeText)
-				upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-				upgradeButton.TextColor3 = Color3.new(1, 1, 1)
+				upgradeButton.Text = string.format("⬆️  UPGRADE!\n💵 Cost: $%d → $%d/s",
+					upgradeInfo.Cost or 0,
+					upgradeInfo.NextIncome or 0
+				)
+				upgradeButton.BackgroundColor3 = COLORS.UpgradeGreen
 			else
-				upgradeButton.Text = "MAX TIER"
-				upgradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-				upgradeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+				upgradeButton.Text = "🏆  MAX TIER!\nYou're awesome!"
+				upgradeButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)  -- Dorado
 			end
 		end
 	end
@@ -353,7 +618,7 @@ end
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Abre el menú de interacción del generador.
+	Abre el menú con animación BOUNCE divertida.
 ]]
 function GeneratorInteractionController:OpenMenu(generator: Model, objectId: string)
 	if not mainFrame then
@@ -428,46 +693,50 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 	-- Actualizar UI
 	updateUI(generatorInfo)
 
-	-- Mostrar panel con animación (idéntico a TurretManagementUI)
+	-- Mostrar panel con animación BOUNCE (más divertida que Back)
 	mainFrame.Visible = true
 	mainFrame.Size = UDim2.new(0, 0, 0, 0)
 	mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	mainFrame.Rotation = -15  -- Girado al inicio
 
-	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 400, 0, 500),
-		Position = UDim2.new(0.5, -200, 0.5, -250)
+	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 420, 0, 540),
+		Position = UDim2.new(0.5, -210, 0.5, -270),
+		Rotation = 0
 	})
 	tween:Play()
 
 	if DEBUG_MODE then
-		print("[GeneratorInteractionController] ✅ Menu opened for:", objectId)
+		print("[GeneratorInteractionController] 🎨 Cartoon menu opened!")
 	end
 end
 
 --[[
-	Cierra el menú de interacción.
+	Cierra el menú con animación divertida.
 ]]
 function GeneratorInteractionController:CloseMenu()
 	if not mainFrame or not menuOpen then
 		return
 	end
 
-	-- Animación de cierre (idéntico a TurretManagementUI)
-	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+	-- Animación de cierre con rotación
+	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
 		Size = UDim2.new(0, 0, 0, 0),
-		Position = UDim2.new(0.5, 0, 0.5, 0)
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Rotation = 15
 	})
 	tween:Play()
 
 	tween.Completed:Connect(function()
 		mainFrame.Visible = false
+		mainFrame.Rotation = 0
 		currentObjectId = nil
 		currentGenerator = nil
 		menuOpen = false
 	end)
 
 	if DEBUG_MODE then
-		print("[GeneratorInteractionController] ✅ Menu closed")
+		print("[GeneratorInteractionController] 👋 Menu closed!")
 	end
 end
 
@@ -475,59 +744,48 @@ end
 	BUTTON HANDLERS
 ────────────────────────────────────────────────────────────────────────]]
 
---[[
-	Maneja clic en botón de Upgrade.
-]]
 function GeneratorInteractionController:OnUpgradeClicked()
 	if not currentObjectId then
 		return
 	end
 
-	-- Guardar referencias ANTES de cerrar
 	local generator = currentGenerator
 	local objectId = currentObjectId
 
 	print("[GeneratorInteractionController] 🔼 Requesting upgrade for:", objectId)
 
-	-- Obtener UpgradeService
 	local UpgradeService = Knit.GetService("UpgradeService")
 
-	-- Llamar al método de upgrade
 	local success, result = pcall(function()
 		return UpgradeService:UpgradeGenerator(objectId)
 	end)
 
 	if not success then
 		warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
-		showNotification("❌ Upgrade failed! Server error.", false)
+		showNotification("❌ Oops! Upgrade failed! Try again!", false)
 		return
 	end
 
 	if result then
 		print("[GeneratorInteractionController] ✅ Upgrade successful!")
-		showNotification("✅ Generator upgraded successfully!", true)
+		showNotification("🎉 AWESOME! Generator upgraded!", true)
 
-		-- Cerrar menú
 		self:CloseMenu()
 
-		-- Re-abrir menú automáticamente después de un pequeño delay
 		task.wait(0.15)
 
 		if generator and generator.Parent then
 			self:OpenMenu(generator, objectId)
 			if DEBUG_MODE then
-				print("[GeneratorInteractionController] 🔄 Menu re-opened with updated values")
+				print("[GeneratorInteractionController] 🔄 Menu re-opened!")
 			end
 		end
 	else
-		warn("[GeneratorInteractionController] ❌ Upgrade failed (insufficient funds or max tier)")
-		showNotification("❌ Upgrade failed! Not enough money or max tier reached.", false)
+		warn("[GeneratorInteractionController] ❌ Upgrade failed")
+		showNotification("❌ Not enough money or max tier!", false)
 	end
 end
 
---[[
-	Maneja clic en botón de Sell.
-]]
 function GeneratorInteractionController:OnSellClicked()
 	if not currentObjectId then
 		return
@@ -537,29 +795,26 @@ function GeneratorInteractionController:OnSellClicked()
 
 	print("[GeneratorInteractionController] 💰 Requesting sell for:", objectId)
 
-	-- Obtener BaseDataService
 	local BaseDataService = Knit.GetService("BaseDataService")
 
-	-- Llamar al método de venta (50% refund)
 	local success, result = pcall(function()
 		return BaseDataService:SellObject(objectId, 0.5)
 	end)
 
 	if not success then
 		warn("[GeneratorInteractionController] ❌ Sell request failed:", result)
-		showNotification("❌ Sell failed! Server error.", false)
+		showNotification("❌ Sell failed! Server error!", false)
 		return
 	end
 
 	if result and result > 0 then
 		print("[GeneratorInteractionController] ✅ Sell successful! Refund: $" .. result)
-		showNotification(string.format("✅ Generator sold! Refunded: $%d", result), true)
+		showNotification(string.format("💰 SOLD! Got back $%d!", result), true)
 
-		-- Cerrar menú (el generador ya no existe)
 		self:CloseMenu()
 	else
-		warn("[GeneratorInteractionController] ❌ Sell failed (not owner or invalid object)")
-		showNotification("❌ Sell failed! You don't own this generator.", false)
+		warn("[GeneratorInteractionController] ❌ Sell failed")
+		showNotification("❌ Can't sell! Not your generator!", false)
 	end
 end
 
@@ -568,10 +823,8 @@ end
 ────────────────────────────────────────────────────────────────────────]]
 
 function GeneratorInteractionController:KnitStart()
-	-- Crear UI
 	createUI()
 
-	-- Manejar tecla ESC para cerrar
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then
 			return
@@ -584,7 +837,6 @@ function GeneratorInteractionController:KnitStart()
 		end
 	end)
 
-	-- Escuchar ProximityPrompt.Triggered en todos los generadores
 	workspace.DescendantAdded:Connect(function(descendant)
 		if descendant:IsA("ProximityPrompt") and descendant.Name == "InteractPrompt" then
 			descendant.Triggered:Connect(function(player)
@@ -592,12 +844,10 @@ function GeneratorInteractionController:KnitStart()
 					return
 				end
 
-				-- Obtener el generador (parent del MainPart que contiene el prompt)
 				local mainPart = descendant.Parent
 				if mainPart and mainPart:IsA("BasePart") then
 					local generator = mainPart.Parent
 					if generator and generator:IsA("Model") then
-						-- Obtener objectId
 						local objectIdValue = mainPart:FindFirstChild("ObjectId")
 						if objectIdValue and objectIdValue:IsA("StringValue") then
 							self:OpenMenu(generator, objectIdValue.Value)
@@ -608,9 +858,7 @@ function GeneratorInteractionController:KnitStart()
 		end
 	end)
 
-	if DEBUG_MODE then
-		print("[GeneratorInteractionController] ✅ Initialized (diseño idéntico a TurretManagementUI)")
-	end
+	print("[GeneratorInteractionController] 🎨✨ CARTOON MODE ACTIVATED!")
 end
 
 function GeneratorInteractionController:KnitInit()
