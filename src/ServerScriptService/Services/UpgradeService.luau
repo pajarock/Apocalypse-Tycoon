@@ -1162,6 +1162,22 @@ end
 ------------------------------------------------------------------------]]
 
 function UpgradeService:KnitInit()
+	-- Crear RemoteEvents si no existen
+	local Remotes = ReplicatedStorage:FindFirstChild("Remotes")
+	if not Remotes then
+		Remotes = Instance.new("Folder")
+		Remotes.Name = "Remotes"
+		Remotes.Parent = ReplicatedStorage
+	end
+
+	-- RemoteEvent para vender generadores
+	if not Remotes:FindFirstChild("SellGenerator") then
+		local sellRemote = Instance.new("RemoteEvent")
+		sellRemote.Name = "SellGenerator"
+		sellRemote.Parent = Remotes
+		print("[UpgradeService] ✅ RemoteEvent 'SellGenerator' created")
+	end
+
 	print("[UpgradeService] ?? Initialized")
 end
 
@@ -1190,6 +1206,15 @@ function UpgradeService:KnitStart()
 		warn("[UpgradeService] ⚠️ TurretService no encontrado - torretas no funcionarán")
 	end
 
+	-- Conectar RemoteEvents
+	local Remotes = ReplicatedStorage.Remotes
+	if Remotes:FindFirstChild("SellGenerator") then
+		Remotes.SellGenerator.OnServerEvent:Connect(function(player, objectId)
+			self:HandleSellGenerator(player, objectId)
+		end)
+		print("[UpgradeService] ✅ RemoteEvent 'SellGenerator' connected")
+	end
+
 	-- Iniciar update loops
 	-- Generators: Update cada segundo
 	task.spawn(function()
@@ -1208,6 +1233,66 @@ function UpgradeService:KnitStart()
 	print(string.format("[UpgradeService] Generators: %d | Turrets: %d | Repair Stations: %d",
 		0, 0, 0  -- Start empty
 		))
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	SELL SYSTEM - HandleSellGenerator
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Maneja venta de generador.
+
+	REFUND: 50% del costo total (suma de T1 + upgrades)
+
+	@param player - Jugador que solicita la venta
+	@param objectId - ID del generador
+]]
+function UpgradeService:HandleSellGenerator(player: Player, objectId: string)
+	local generatorData = activeGenerators[objectId]
+	if not generatorData then
+		warn("[UpgradeService] ❌ Generator not found:", objectId)
+		return
+	end
+
+	-- Validar ownership
+	if generatorData.UserId ~= player.UserId then
+		warn("[UpgradeService] ❌ Player", player.UserId, "is not owner of generator", objectId)
+		return
+	end
+
+	-- Calcular refund (50% del costo original)
+	local refundAmount = math.floor(generatorData.Definition.Cost * 0.5)
+
+	-- Dar dinero (refund)
+	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
+	EconomyModule.AdminGiveCash(player.UserId, refundAmount)
+
+	-- 🛡️ Actualizar Guardian después de refund
+	local BaseModule = require(ServerScriptService:WaitForChild("BaseModule"))
+	local refundState = EconomyModule.GetState(player.UserId)
+	if refundState then
+		BaseModule.UpdateGuardianTarget(player.UserId, refundState.Cash)
+	end
+
+	-- Remover del BaseOwnershipService
+	if BaseOwnershipService then
+		BaseOwnershipService:RemoveObject(objectId)
+	end
+
+	-- Destruir modelo
+	if generatorData.Model and generatorData.Model.Parent then
+		generatorData.Model:Destroy()
+	end
+
+	-- Desregistrar del sistema de generadores
+	activeGenerators[objectId] = nil
+
+	print(string.format(
+		"[UpgradeService] ✅ Generator sold: %s (Refund: $%d, Owner: %d)",
+		objectId,
+		refundAmount,
+		player.UserId
+	))
 end
 
 return UpgradeService

@@ -24,6 +24,10 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local Knit = require(ReplicatedStorage.Knit)
 
+-- RemoteEvents
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local SellGeneratorRemote = Remotes:WaitForChild("SellGenerator")
+
 --[[────────────────────────────────────────────────────────────────────────
 	TYPES & CONSTANTS
 ────────────────────────────────────────────────────────────────────────]]
@@ -793,29 +797,16 @@ function GeneratorInteractionController:OnSellClicked()
 
 	local objectId = currentObjectId
 
-	print("[GeneratorInteractionController] 💰 Requesting sell for:", objectId)
+	print("[GeneratorInteractionController] 💰 Selling generator:", objectId)
 
-	local BaseDataService = Knit.GetService("BaseDataService")
+	-- Enviar solicitud al servidor via RemoteEvent
+	SellGeneratorRemote:FireServer(objectId)
 
-	local success, result = pcall(function()
-		return BaseDataService:SellObject(objectId, 0.5)
-	end)
+	-- Mostrar notificación y cerrar menú
+	showNotification("💰 Generator sold! Money refunded!", true)
 
-	if not success then
-		warn("[GeneratorInteractionController] ❌ Sell request failed:", result)
-		showNotification("❌ Sell failed! Server error!", false)
-		return
-	end
-
-	if result and result > 0 then
-		print("[GeneratorInteractionController] ✅ Sell successful! Refund: $" .. result)
-		showNotification(string.format("💰 SOLD! Got back $%d!", result), true)
-
-		self:CloseMenu()
-	else
-		warn("[GeneratorInteractionController] ❌ Sell failed")
-		showNotification("❌ Can't sell! Not your generator!", false)
-	end
+	-- Cerrar menú (el generador ya no existe)
+	self:CloseMenu()
 end
 
 --[[────────────────────────────────────────────────────────────────────────
