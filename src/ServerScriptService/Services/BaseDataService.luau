@@ -503,8 +503,8 @@ function BaseDataService.Client:SellObject(player: Player, objectId: string, ref
 		return false
 	end
 
-	-- Validar ownership
-	if object.UserId ~= player.UserId then
+	-- Validar ownership (BaseOwnershipService usa OwnerId, no UserId)
+	if object.OwnerId ~= player.UserId then
 		warn("[BaseDataService] ❌ Player", player.UserId, "is not owner of object", objectId)
 		return false
 	end
