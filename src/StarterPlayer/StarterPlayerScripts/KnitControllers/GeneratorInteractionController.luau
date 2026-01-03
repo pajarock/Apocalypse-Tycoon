@@ -3,34 +3,34 @@
 	GeneratorInteractionController - Sistema de interacción con generadores
 
 	CARACTERÍSTICAS:
-	- Menú de interacción para generadores (View Stats / Upgrade)
+	- Menú de interacción para generadores (idéntico al de torretas)
 	- Manejo de ProximityPrompt único (E key)
 	- Display de stats del generador
 	- Sistema de upgrade desde UI
+	- Sistema de venta con 50% refund
 
 	ARQUITECTURA DE UI:
 	┌──────────────────────────────────────┐
 	│ PlayerGui                            │
-	│  └── GeneratorMenuUI (ScreenGui)    │
-	│      └── MenuPanel (Frame)          │
-	│          ├── Title (TextLabel)      │
-	│          ├── ViewStatsButton        │
-	│          ├── UpgradeButton          │
-	│          └── CloseButton            │
+	│  └── GeneratorManagementUI          │
+	│      └── MainPanel (Frame)          │
+	│          ├── Header                 │
+	│          ├── CloseButton            │
+	│          ├── InfoContainer          │
+	│          │   ├── NameLabel          │
+	│          │   └── StatsLabel         │
+	│          └── ButtonsContainer       │
+	│              ├── UpgradeButton      │
+	│              └── SellButton         │
 	└──────────────────────────────────────┘
 
-	FLUJO DE INTERACCIÓN:
-	1. Usuario presiona E cerca del generador → Abrir menú
-	2. Usuario clickea "View Stats" → Mostrar stats panel
-	3. Usuario clickea "Upgrade" → Llamar UpgradeService
-	4. Usuario clickea "Close" o ESC → Cerrar menú
-
-	AUTHOR: Generator Interaction System v1
+	AUTHOR: Generator Interaction System v2 (diseño idéntico a TurretManagementUI)
 	CLIENT-SIDE: UI logic + communication con server
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local Knit = require(ReplicatedStorage.Knit)
 
@@ -52,203 +52,54 @@ local GeneratorInteractionController = Knit.CreateController({
 local menuOpen = false
 local currentGenerator: Model? = nil
 local currentObjectId: string? = nil
-local menuUI: ScreenGui? = nil
-local statsPanel: Frame? = nil
+local mainFrame: Frame? = nil
+local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 --[[────────────────────────────────────────────────────────────────────────
-	UI CREATION
+	UI HELPER FUNCTIONS
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Crea la UI del menú de interacción si no existe.
+	Crea un botón estándar con el estilo del TurretManagementUI.
 ]]
-local function createMenuUI(): ScreenGui
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local function createButton(name: string, text: string, position: UDim2, color: Color3): TextButton
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Size = UDim2.new(1, 0, 0, 50)
+	button.Position = position
+	button.BackgroundColor3 = color
+	button.BorderSizePixel = 0
+	button.Text = text
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.TextSize = 18
+	button.Font = Enum.Font.GothamBold
+	button.AutoButtonColor = false
 
-	-- Verificar si ya existe
-	local existing = playerGui:FindFirstChild("GeneratorMenuUI")
-	if existing then
-		return existing :: ScreenGui
-	end
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = button
 
-	-- Crear ScreenGui
-	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "GeneratorMenuUI"
-	screenGui.ResetOnSpawn = false
-	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	screenGui.Parent = playerGui
-
-	-- Panel principal (altura aumentada para acomodar todos los botones + Sell button)
-	local menuPanel = Instance.new("Frame")
-	menuPanel.Name = "MenuPanel"
-	menuPanel.Size = UDim2.new(0, 300, 0, 320)
-	menuPanel.Position = UDim2.new(0.5, -150, 0.5, -160)
-	menuPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	menuPanel.BorderSizePixel = 2
-	menuPanel.BorderColor3 = Color3.fromRGB(100, 100, 100)
-	menuPanel.Visible = false
-	menuPanel.Parent = screenGui
-
-	local uiCorner = Instance.new("UICorner")
-	uiCorner.CornerRadius = UDim.new(0, 12)
-	uiCorner.Parent = menuPanel
-
-	-- Título
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, -20, 0, 40)
-	title.Position = UDim2.new(0, 10, 0, 10)
-	title.BackgroundTransparency = 1
-	title.Text = "⚙️ Generator Menu"
-	title.TextColor3 = Color3.new(1, 1, 1)
-	title.TextSize = 24
-	title.Font = Enum.Font.GothamBold
-	title.TextXAlignment = Enum.TextXAlignment.Center
-	title.Parent = menuPanel
-
-	-- Función helper para crear botones
-	local function createButton(name: string, text: string, icon: string, yOffset: number, height: number?): TextButton
-		local buttonHeight = height or 50
-		local button = Instance.new("TextButton")
-		button.Name = name
-		button.Size = UDim2.new(1, -40, 0, buttonHeight)
-		button.Position = UDim2.new(0, 20, 0, yOffset)
-		button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		button.BorderSizePixel = 0
-		button.Text = icon .. " " .. text
-		button.TextColor3 = Color3.new(1, 1, 1)
-		button.TextSize = 18
-		button.Font = Enum.Font.Gotham
-		button.TextWrapped = true
-		button.Parent = menuPanel
-
-		local buttonCorner = Instance.new("UICorner")
-		buttonCorner.CornerRadius = UDim.new(0, 8)
-		buttonCorner.Parent = button
-
-		-- Hover effect
-		button.MouseEnter:Connect(function()
-			button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-		end)
-		button.MouseLeave:Connect(function()
-			button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		end)
-
-		return button
-	end
-
-	-- Botón View Stats
-	local viewStatsButton = createButton("ViewStatsButton", "View Stats", "📊", 60)
-
-	-- Botón Upgrade
-	local upgradeButton = createButton("UpgradeButton", "Upgrade Generator", "⬆️", 120, 60)
-	upgradeButton.TextSize = 15  -- Texto más pequeño para que quepa mejor
-
-	-- Botón Sell (50% refund)
-	local sellButton = createButton("SellButton", "Sell (50% refund)", "💰", 190)
-	sellButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)  -- Rojo como en torretas
-	sellButton.MouseEnter:Connect(function()
-		sellButton.BackgroundColor3 = Color3.fromRGB(220, 70, 70)
-	end)
-	sellButton.MouseLeave:Connect(function()
-		sellButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	-- Hover effects
+	button.MouseEnter:Connect(function()
+		local lightenedColor = Color3.new(
+			math.min(color.R + 0.1, 1),
+			math.min(color.G + 0.1, 1),
+			math.min(color.B + 0.1, 1)
+		)
+		button.BackgroundColor3 = lightenedColor
 	end)
 
-	-- Botón Close
-	local closeButton = createButton("CloseButton", "Close", "❌", 250)
-	closeButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
-	closeButton.MouseEnter:Connect(function()
-		closeButton.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
-	end)
-	closeButton.MouseLeave:Connect(function()
-		closeButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+	button.MouseLeave:Connect(function()
+		button.BackgroundColor3 = color
 	end)
 
-	if DEBUG_MODE then
-		print("[GeneratorInteractionController] Menu UI created")
-	end
-
-	return screenGui
+	return button
 end
 
 --[[
-	Crea el panel de stats (similar al StatsBillboard pero en ScreenGui)
-]]
-local function createStatsPanel(): Frame
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-	-- Buscar o crear ScreenGui para stats
-	local statsGui = playerGui:FindFirstChild("GeneratorStatsUI")
-	if not statsGui then
-		statsGui = Instance.new("ScreenGui")
-		statsGui.Name = "GeneratorStatsUI"
-		statsGui.ResetOnSpawn = false
-		statsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		statsGui.Parent = playerGui
-	end
-
-	-- Panel de stats
-	local panel = Instance.new("Frame")
-	panel.Name = "StatsPanel"
-	panel.Size = UDim2.new(0, 400, 0, 300)
-	panel.Position = UDim2.new(0.5, -200, 0.5, -150)
-	panel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	panel.BackgroundTransparency = 0.1
-	panel.BorderSizePixel = 2
-	panel.BorderColor3 = Color3.fromRGB(100, 200, 100)
-	panel.Visible = false
-	panel.Parent = statsGui
-
-	local panelCorner = Instance.new("UICorner")
-	panelCorner.CornerRadius = UDim.new(0, 10)
-	panelCorner.Parent = panel
-
-	-- Texto de stats
-	local statsText = Instance.new("TextLabel")
-	statsText.Name = "StatsText"
-	statsText.Size = UDim2.new(1, -40, 1, -80)
-	statsText.Position = UDim2.new(0, 20, 0, 20)
-	statsText.BackgroundTransparency = 1
-	statsText.TextColor3 = Color3.new(1, 1, 1)
-	statsText.TextSize = 20
-	statsText.Font = Enum.Font.Code
-	statsText.TextXAlignment = Enum.TextXAlignment.Left
-	statsText.TextYAlignment = Enum.TextYAlignment.Top
-	statsText.Text = "Loading stats..."
-	statsText.Parent = panel
-
-	-- Botón Close
-	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseStatsButton"
-	closeButton.Size = UDim2.new(0, 150, 0, 40)
-	closeButton.Position = UDim2.new(0.5, -75, 1, -50)
-	closeButton.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
-	closeButton.BorderSizePixel = 0
-	closeButton.Text = "❌ Close"
-	closeButton.TextColor3 = Color3.new(1, 1, 1)
-	closeButton.TextSize = 18
-	closeButton.Font = Enum.Font.Gotham
-	closeButton.Parent = panel
-
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 8)
-	closeCorner.Parent = closeButton
-
-	return panel
-end
-
---[[
-	Muestra una notificación temporal en pantalla
-
-	@param message - Mensaje a mostrar
-	@param isSuccess - true para mensaje de éxito (verde), false para error (rojo)
+	Muestra una notificación temporal en pantalla.
 ]]
 local function showNotification(message: string, isSuccess: boolean)
-	local Players = game:GetService("Players")
-	local player = Players.LocalPlayer
-	local playerGui = player:WaitForChild("PlayerGui")
-
-	-- Crear notificación
 	local notification = Instance.new("Frame")
 	notification.Name = "Notification"
 	notification.Size = UDim2.new(0, 400, 0, 60)
@@ -275,7 +126,6 @@ local function showNotification(message: string, isSuccess: boolean)
 
 	-- Animación de entrada
 	notification.Position = UDim2.new(0.5, -200, -0.1, 0)
-	local TweenService = game:GetService("TweenService")
 	local tweenIn = TweenService:Create(
 		notification,
 		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
@@ -298,13 +148,218 @@ local function showNotification(message: string, isSuccess: boolean)
 end
 
 --[[────────────────────────────────────────────────────────────────────────
+	UI CREATION (IDÉNTICO A TurretManagementUI)
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Crea el UI principal (se ejecuta una sola vez).
+	DISEÑO IDÉNTICO a TurretManagementUI.lua
+]]
+local function createUI()
+	if mainFrame then
+		return -- Ya existe
+	end
+
+	-- ScreenGui
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "GeneratorManagementUI"
+	screenGui.ResetOnSpawn = false
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.Parent = playerGui
+
+	-- Main Frame (Panel) - 400x500px, RGB(30, 30, 35)
+	mainFrame = Instance.new("Frame")
+	mainFrame.Name = "MainPanel"
+	mainFrame.Size = UDim2.new(0, 400, 0, 500)
+	mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Visible = false
+	mainFrame.Parent = screenGui
+
+	-- UICorner para bordes redondeados
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = mainFrame
+
+	-- Header - 50px height, RGB(40, 40, 45)
+	local header = Instance.new("TextLabel")
+	header.Name = "Header"
+	header.Size = UDim2.new(1, 0, 0, 50)
+	header.Position = UDim2.new(0, 0, 0, 0)
+	header.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	header.BorderSizePixel = 0
+	header.Text = "Generator Management"
+	header.TextColor3 = Color3.new(1, 1, 1)
+	header.TextSize = 24
+	header.Font = Enum.Font.GothamBold
+	header.Parent = mainFrame
+
+	local headerCorner = Instance.new("UICorner")
+	headerCorner.CornerRadius = UDim.new(0, 12)
+	headerCorner.Parent = header
+
+	-- Close Button - 40x40px, RGB(200, 50, 50)
+	local closeButton = Instance.new("TextButton")
+	closeButton.Name = "CloseButton"
+	closeButton.Size = UDim2.new(0, 40, 0, 40)
+	closeButton.Position = UDim2.new(1, -45, 0, 5)
+	closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	closeButton.BorderSizePixel = 0
+	closeButton.Text = "X"
+	closeButton.TextColor3 = Color3.new(1, 1, 1)
+	closeButton.TextSize = 20
+	closeButton.Font = Enum.Font.GothamBold
+	closeButton.Parent = mainFrame
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 8)
+	closeCorner.Parent = closeButton
+
+	closeButton.MouseButton1Click:Connect(function()
+		GeneratorInteractionController:CloseMenu()
+	end)
+
+	-- Info Container - 200px height, RGB(40, 40, 45)
+	local infoContainer = Instance.new("Frame")
+	infoContainer.Name = "InfoContainer"
+	infoContainer.Size = UDim2.new(1, -20, 0, 200)
+	infoContainer.Position = UDim2.new(0, 10, 0, 60)
+	infoContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+	infoContainer.BorderSizePixel = 0
+	infoContainer.Parent = mainFrame
+
+	local infoCorner = Instance.new("UICorner")
+	infoCorner.CornerRadius = UDim.new(0, 8)
+	infoCorner.Parent = infoContainer
+
+	-- Generator Name Label - RGB(255, 200, 100), 20px, GothamBold
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Name = "NameLabel"
+	nameLabel.Size = UDim2.new(1, -10, 0, 30)
+	nameLabel.Position = UDim2.new(0, 5, 0, 5)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = "Volcánico T1"
+	nameLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+	nameLabel.TextSize = 20
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.Parent = infoContainer
+
+	-- Stats Label - White, 16px, Gotham
+	local statsLabel = Instance.new("TextLabel")
+	statsLabel.Name = "StatsLabel"
+	statsLabel.Size = UDim2.new(1, -10, 0, 160)
+	statsLabel.Position = UDim2.new(0, 5, 0, 40)
+	statsLabel.BackgroundTransparency = 1
+	statsLabel.Text = "Loading stats..."
+	statsLabel.TextColor3 = Color3.new(1, 1, 1)
+	statsLabel.TextSize = 16
+	statsLabel.Font = Enum.Font.Gotham
+	statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+	statsLabel.Parent = infoContainer
+
+	-- Buttons Container - at Y:270, 200px height
+	local buttonsContainer = Instance.new("Frame")
+	buttonsContainer.Name = "ButtonsContainer"
+	buttonsContainer.Size = UDim2.new(1, -20, 0, 200)
+	buttonsContainer.Position = UDim2.new(0, 10, 0, 270)
+	buttonsContainer.BackgroundTransparency = 1
+	buttonsContainer.Parent = mainFrame
+
+	-- Upgrade Button - RGB(50, 150, 50)
+	local upgradeButton = createButton("UpgradeButton", "Upgrade ($0)", UDim2.new(0, 0, 0, 0), Color3.fromRGB(50, 150, 50))
+	upgradeButton.Parent = buttonsContainer
+	upgradeButton.MouseButton1Click:Connect(function()
+		GeneratorInteractionController:OnUpgradeClicked()
+	end)
+
+	-- Sell Button - RGB(200, 50, 50) at Y:60
+	local sellButton = createButton("SellButton", "Sell (50% refund)", UDim2.new(0, 0, 0, 60), Color3.fromRGB(200, 50, 50))
+	sellButton.Parent = buttonsContainer
+	sellButton.MouseButton1Click:Connect(function()
+		GeneratorInteractionController:OnSellClicked()
+	end)
+
+	print("[GeneratorInteractionController] ✅ UI Created (diseño idéntico a TurretManagementUI)")
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	UI LOGIC
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Actualiza la UI con los datos del generador.
+]]
+local function updateUI(generatorInfo: any)
+	if not mainFrame then
+		return
+	end
+
+	local infoContainer = mainFrame:FindFirstChild("InfoContainer") :: Frame
+	if not infoContainer then
+		return
+	end
+
+	-- Actualizar nombre
+	local nameLabel = infoContainer:FindFirstChild("NameLabel") :: TextLabel
+	if nameLabel and generatorInfo.Name then
+		nameLabel.Text = generatorInfo.Name
+	end
+
+	-- Actualizar stats
+	local statsLabel = infoContainer:FindFirstChild("StatsLabel") :: TextLabel
+	if statsLabel then
+		local stats = generatorInfo.Stats or {}
+		local uptimeMinutes = math.floor((stats.Uptime or 0) / 60)
+		local uptimeSeconds = (stats.Uptime or 0) % 60
+
+		local statsText = string.format(
+			"Tier: %d\nIncome: $%d/s\nTotal Produced: $%.0f\nUptime: %dm %ds",
+			stats.Tier or 1,
+			stats.IncomeRate or 0,
+			stats.TotalProduced or 0,
+			uptimeMinutes,
+			uptimeSeconds
+		)
+
+		statsLabel.Text = statsText
+	end
+
+	-- Actualizar botón de upgrade
+	local buttonsContainer = mainFrame:FindFirstChild("ButtonsContainer") :: Frame
+	if buttonsContainer then
+		local upgradeButton = buttonsContainer:FindFirstChild("UpgradeButton") :: TextButton
+		if upgradeButton then
+			if generatorInfo.CanUpgrade then
+				local upgradeInfo = generatorInfo.UpgradeInfo or {}
+				local costText = string.format("$%d", upgradeInfo.Cost or 0)
+				local nextIncomeText = string.format("$%d/s", upgradeInfo.NextIncome or 0)
+				upgradeButton.Text = string.format("Upgrade (Cost: %s → %s)", costText, nextIncomeText)
+				upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+				upgradeButton.TextColor3 = Color3.new(1, 1, 1)
+			else
+				upgradeButton.Text = "MAX TIER"
+				upgradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+				upgradeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+			end
+		end
+	end
+end
+
+--[[────────────────────────────────────────────────────────────────────────
 	MENU LOGIC
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Abre el menú de interacción del generador
+	Abre el menú de interacción del generador.
 ]]
 function GeneratorInteractionController:OpenMenu(generator: Model, objectId: string)
+	if not mainFrame then
+		createUI()
+	end
+
 	if menuOpen then
 		return
 	end
@@ -313,185 +368,141 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 	currentObjectId = objectId
 	menuOpen = true
 
-	local menuPanel = menuUI:FindFirstChild("MenuPanel") :: Frame
-	if menuPanel then
-		menuPanel.Visible = true
-
-		-- Actualizar botón de upgrade según tier y obtener info del servidor
-		local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
-		if upgradeButton then
-			-- IMPORTANTE: Obtener UpgradeService antes de usarlo
-			local UpgradeService = Knit.GetService("UpgradeService")
-
-			-- Obtener información del upgrade desde el servidor
-			print("[DEBUG] Calling GetUpgradeInfo for objectId:", objectId)
-			local success, upgradeInfo = pcall(function()
-				return UpgradeService:GetUpgradeInfo(objectId)
-			end)
-
-			print("[DEBUG] GetUpgradeInfo success:", success)
-			print("[DEBUG] upgradeInfo:", upgradeInfo)
-
-			if success and upgradeInfo then
-				print("[DEBUG] upgradeInfo.CanUpgrade:", upgradeInfo.CanUpgrade)
-				if not upgradeInfo.CanUpgrade then
-					-- Max tier alcanzado
-					upgradeButton.Text = "🏆 MAX TIER REACHED"
-					upgradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-					upgradeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
-				else
-					-- Mostrar costo y beneficio del upgrade
-					local costText = string.format("$%d", upgradeInfo.UpgradeCost)
-					local benefitText = string.format("$%d/s → $%d/s", upgradeInfo.CurrentIncome, upgradeInfo.NextIncome)
-					local buttonText = string.format("⬆️ Upgrade to Tier %d\n💰 Cost: %s\n📈 Income: %s",
-						upgradeInfo.NextTier, costText, benefitText)
-					print("[DEBUG] Setting button text to:", buttonText)
-					upgradeButton.Text = buttonText
-					upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-					upgradeButton.TextColor3 = Color3.new(1, 1, 1)
-				end
-			else
-				-- Fallback si no se puede obtener info del servidor
-				print("[DEBUG] Falling back to default text. Error:", upgradeInfo)
-				upgradeButton.Text = "⬆️ Upgrade Generator"
-				upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-				upgradeButton.TextColor3 = Color3.new(1, 1, 1)
-			end
-		end
-	end
-
-	if DEBUG_MODE then
-		print("[GeneratorInteractionController] Menu opened for generator:", objectId)
-	end
-end
-
---[[
-	Cierra el menú de interacción
-]]
-function GeneratorInteractionController:CloseMenu()
-	if not menuOpen then
-		return
-	end
-
-	menuOpen = false
-	currentGenerator = nil
-	currentObjectId = nil
-
-	local menuPanel = menuUI:FindFirstChild("MenuPanel") :: Frame
-	if menuPanel then
-		menuPanel.Visible = false
-	end
-
-	-- Cerrar stats panel si está abierto
-	if statsPanel and statsPanel.Visible then
-		statsPanel.Visible = false
-	end
-
-	if DEBUG_MODE then
-		print("[GeneratorInteractionController] Menu closed")
-	end
-end
-
---[[
-	Muestra el panel de stats del generador
-]]
-function GeneratorInteractionController:ShowStats()
-	if not currentGenerator or not statsPanel then
-		return
-	end
-
-	-- IMPORTANTE: Guardar referencias ANTES de cerrar el menú
-	-- (CloseMenu() setea currentGenerator = nil)
-	local generator = currentGenerator
-	local objectId = currentObjectId
-
-	-- Cerrar el menú principal
-	self:CloseMenu()
-
-	-- Mostrar stats panel
-	statsPanel.Visible = true
-
-	-- Obtener datos del generador (usar referencia local, no currentGenerator)
+	-- Obtener datos del generador
 	local mainPart = generator:FindFirstChild("MainPart")
 	if not mainPart then
-		warn("[GeneratorInteractionController] MainPart not found in generator")
+		warn("[GeneratorInteractionController] MainPart not found")
 		return
 	end
 
+	-- Construir info del generador
 	local tierValue = mainPart:FindFirstChild("Tier")
 	local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec")
 	local totalProducedValue = mainPart:FindFirstChild("TotalProduced")
 	local spawnTimeValue = mainPart:FindFirstChild("SpawnTime")
+	local nameTag = mainPart:FindFirstChild("NameTag")
 
 	local tier = tierValue and tierValue.Value or 1
 	local moneyPerSec = moneyPerSecValue and moneyPerSecValue.Value or 0
 	local totalProduced = totalProducedValue and totalProducedValue.Value or 0
 	local spawnTime = spawnTimeValue and spawnTimeValue.Value or os.time()
-
-	-- Calcular uptime
 	local uptime = os.time() - spawnTime
-	local uptimeMinutes = math.floor(uptime / 60)
-	local uptimeSeconds = uptime % 60
 
-	-- Nombre del tier
-	local tierNames = {
-		[1] = "Tier 1 Generator",
-		[2] = "Tier 2 Generator",
-		[3] = "Tier 3 Generator",
-		[4] = "Tier 4 Nuclear",
-		[5] = "Tier 5 Quantum (MAX)",
-	}
-	local tierName = tierNames[tier] or "Unknown Generator"
-
-	-- Actualizar texto
-	local statsText = statsPanel:FindFirstChild("StatsText") :: TextLabel
-	if statsText then
-		statsText.Text = string.format([[
-⚙️ %s
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 Income Rate: $%d/second
-💵 Total Produced: $%.0f
-⏱️ Uptime: %dm %ds
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ObjectID: %s
-]], tierName, moneyPerSec, totalProduced, uptimeMinutes, uptimeSeconds, objectId or "Unknown")
+	local generatorName = "Unknown Generator"
+	if nameTag and nameTag:IsA("BillboardGui") then
+		local label = nameTag:FindFirstChild("TextLabel")
+		if label and label:IsA("TextLabel") then
+			generatorName = label.Text
+		end
 	end
 
+	-- Obtener upgrade info del servidor
+	local UpgradeService = Knit.GetService("UpgradeService")
+	local upgradeInfo = nil
+	local canUpgrade = false
+
+	local success, result = pcall(function()
+		return UpgradeService:GetUpgradeInfo(objectId)
+	end)
+
+	if success and result then
+		upgradeInfo = {
+			Cost = result.UpgradeCost,
+			NextIncome = result.NextIncome,
+		}
+		canUpgrade = result.CanUpgrade
+	end
+
+	local generatorInfo = {
+		Name = generatorName,
+		Stats = {
+			Tier = tier,
+			IncomeRate = moneyPerSec,
+			TotalProduced = totalProduced,
+			Uptime = uptime,
+		},
+		CanUpgrade = canUpgrade,
+		UpgradeInfo = upgradeInfo,
+	}
+
+	-- Actualizar UI
+	updateUI(generatorInfo)
+
+	-- Mostrar panel con animación (idéntico a TurretManagementUI)
+	mainFrame.Visible = true
+	mainFrame.Size = UDim2.new(0, 0, 0, 0)
+	mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 400, 0, 500),
+		Position = UDim2.new(0.5, -200, 0.5, -250)
+	})
+	tween:Play()
+
 	if DEBUG_MODE then
-		print("[GeneratorInteractionController] Stats displayed")
+		print("[GeneratorInteractionController] ✅ Menu opened for:", objectId)
 	end
 end
 
 --[[
-	Solicita upgrade del generador al servidor via Knit RemoteFunction
+	Cierra el menú de interacción.
 ]]
-function GeneratorInteractionController:RequestUpgrade()
-	if not currentObjectId then
-		warn("[GeneratorInteractionController] Cannot upgrade: No generator selected")
+function GeneratorInteractionController:CloseMenu()
+	if not mainFrame or not menuOpen then
 		return
 	end
 
-	-- Guardar referencias ANTES de cerrar (para re-abrir después del upgrade)
+	-- Animación de cierre (idéntico a TurretManagementUI)
+	local tween = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Size = UDim2.new(0, 0, 0, 0),
+		Position = UDim2.new(0.5, 0, 0.5, 0)
+	})
+	tween:Play()
+
+	tween.Completed:Connect(function()
+		mainFrame.Visible = false
+		currentObjectId = nil
+		currentGenerator = nil
+		menuOpen = false
+	end)
+
+	if DEBUG_MODE then
+		print("[GeneratorInteractionController] ✅ Menu closed")
+	end
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	BUTTON HANDLERS
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Maneja clic en botón de Upgrade.
+]]
+function GeneratorInteractionController:OnUpgradeClicked()
+	if not currentObjectId then
+		return
+	end
+
+	-- Guardar referencias ANTES de cerrar
 	local generator = currentGenerator
 	local objectId = currentObjectId
 
-	-- Obtener UpgradeService del servidor (Knit lo maneja automáticamente)
+	print("[GeneratorInteractionController] 🔼 Requesting upgrade for:", objectId)
+
+	-- Obtener UpgradeService
 	local UpgradeService = Knit.GetService("UpgradeService")
 
-	-- Llamar al método Client del servidor (Knit usa RemoteFunctions síncronamente)
-	-- IMPORTANTE: En Knit, Service.Client methods son síncronos, no Promises
+	-- Llamar al método de upgrade
 	local success, result = pcall(function()
 		return UpgradeService:UpgradeGenerator(objectId)
 	end)
 
 	if not success then
-		-- Error en la llamada remota
 		warn("[GeneratorInteractionController] ❌ Upgrade request failed:", result)
 		showNotification("❌ Upgrade failed! Server error.", false)
 		return
 	end
 
-	-- result contiene el valor booleano retornado por el servidor
 	if result then
 		print("[GeneratorInteractionController] ✅ Upgrade successful!")
 		showNotification("✅ Generator upgraded successfully!", true)
@@ -500,10 +511,8 @@ function GeneratorInteractionController:RequestUpgrade()
 		self:CloseMenu()
 
 		-- Re-abrir menú automáticamente después de un pequeño delay
-		-- (para que el servidor tenga tiempo de actualizar el modelo)
 		task.wait(0.15)
 
-		-- Verificar que el generator sigue existiendo antes de re-abrir
 		if generator and generator.Parent then
 			self:OpenMenu(generator, objectId)
 			if DEBUG_MODE then
@@ -517,33 +526,31 @@ function GeneratorInteractionController:RequestUpgrade()
 end
 
 --[[
-	Solicita vender el generador al servidor con 50% refund
+	Maneja clic en botón de Sell.
 ]]
-function GeneratorInteractionController:RequestSell()
+function GeneratorInteractionController:OnSellClicked()
 	if not currentObjectId then
-		warn("[GeneratorInteractionController] Cannot sell: No generator selected")
 		return
 	end
 
-	-- Guardar referencias ANTES de cerrar
 	local objectId = currentObjectId
 
-	-- Obtener BaseDataService (maneja la venta de objetos)
+	print("[GeneratorInteractionController] 💰 Requesting sell for:", objectId)
+
+	-- Obtener BaseDataService
 	local BaseDataService = Knit.GetService("BaseDataService")
 
-	-- Llamar al método de venta (con 50% refund)
+	-- Llamar al método de venta (50% refund)
 	local success, result = pcall(function()
-		return BaseDataService:SellObject(objectId, 0.5)  -- 50% refund
+		return BaseDataService:SellObject(objectId, 0.5)
 	end)
 
 	if not success then
-		-- Error en la llamada remota
 		warn("[GeneratorInteractionController] ❌ Sell request failed:", result)
 		showNotification("❌ Sell failed! Server error.", false)
 		return
 	end
 
-	-- result contiene el valor del refund o false
 	if result and result > 0 then
 		print("[GeneratorInteractionController] ✅ Sell successful! Refund: $" .. result)
 		showNotification(string.format("✅ Generator sold! Refunded: $%d", result), true)
@@ -562,62 +569,7 @@ end
 
 function GeneratorInteractionController:KnitStart()
 	-- Crear UI
-	menuUI = createMenuUI()
-	statsPanel = createStatsPanel()
-
-	-- Conectar botones del menú
-	local menuPanel = menuUI:FindFirstChild("MenuPanel") :: Frame
-	if menuPanel then
-		local viewStatsButton = menuPanel:FindFirstChild("ViewStatsButton") :: TextButton
-		if viewStatsButton then
-			viewStatsButton.Activated:Connect(function()
-				self:ShowStats()
-			end)
-		end
-
-		local upgradeButton = menuPanel:FindFirstChild("UpgradeButton") :: TextButton
-		if upgradeButton then
-			upgradeButton.Activated:Connect(function()
-				-- Verificar si puede upgradear
-				if currentGenerator then
-					local mainPart = currentGenerator:FindFirstChild("MainPart")
-					if mainPart then
-						local tierValue = mainPart:FindFirstChild("Tier")
-						local currentTier = tierValue and tierValue.Value or 1
-						if currentTier < 3 then
-							self:RequestUpgrade()
-						else
-							print("[GeneratorInteractionController] Cannot upgrade: Max tier reached")
-						end
-					end
-				end
-			end)
-		end
-
-		local sellButton = menuPanel:FindFirstChild("SellButton") :: TextButton
-		if sellButton then
-			sellButton.Activated:Connect(function()
-				self:RequestSell()
-			end)
-		end
-
-		local closeButton = menuPanel:FindFirstChild("CloseButton") :: TextButton
-		if closeButton then
-			closeButton.Activated:Connect(function()
-				self:CloseMenu()
-			end)
-		end
-	end
-
-	-- Conectar botón de close del stats panel
-	if statsPanel then
-		local closeStatsButton = statsPanel:FindFirstChild("CloseStatsButton") :: TextButton
-		if closeStatsButton then
-			closeStatsButton.Activated:Connect(function()
-				statsPanel.Visible = false
-			end)
-		end
-	end
+	createUI()
 
 	-- Manejar tecla ESC para cerrar
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -628,14 +580,11 @@ function GeneratorInteractionController:KnitStart()
 		if input.KeyCode == Enum.KeyCode.Escape then
 			if menuOpen then
 				self:CloseMenu()
-			elseif statsPanel and statsPanel.Visible then
-				statsPanel.Visible = false
 			end
 		end
 	end)
 
 	-- Escuchar ProximityPrompt.Triggered en todos los generadores
-	-- (Esto se conectará cuando el servidor cree los generadores)
 	workspace.DescendantAdded:Connect(function(descendant)
 		if descendant:IsA("ProximityPrompt") and descendant.Name == "InteractPrompt" then
 			descendant.Triggered:Connect(function(player)
@@ -660,7 +609,7 @@ function GeneratorInteractionController:KnitStart()
 	end)
 
 	if DEBUG_MODE then
-		print("[GeneratorInteractionController] Initialized successfully")
+		print("[GeneratorInteractionController] ✅ Initialized (diseño idéntico a TurretManagementUI)")
 	end
 end
 
