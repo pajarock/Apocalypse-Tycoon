@@ -1671,8 +1671,13 @@ function ShopUIController:PopulateGrid()
 		end
 
 	elseif currentMainTab == "INCOME" then
-		-- Show generators
+		-- Show generators (ONLY T1 - upgrades done via generator menu)
 		for _, gen in ipairs(GENERATORS) do
+			-- FILTER: Only show Tier 1 generators (can be placed from shop)
+			if gen.tier ~= 1 then
+				continue
+			end
+
 			-- Build stats for generator
 			local stats = nil
 			if gen.income then
@@ -2034,10 +2039,16 @@ function ShopUIController:KnitStart()
 	-- Parent to PlayerGui
 	screenGui.Parent = player:WaitForChild("PlayerGui")
 
-	-- Start visible
-	self:SetVisible(true)
+	-- Start CLOSED (player opens manually with Q)
+	self:SetVisible(false)
 
-	print("[ShopUIController] 🔥 Ready (Press Q to toggle)")
+	print("[ShopUIController] 🔥 Ready (Press Q to open shop)")
+
+	-- Show tutorial hint for 5 seconds
+	task.delay(2, function()
+		-- TODO: Crear notificación visual mejor (UI hint en pantalla)
+		print("💡 [HINT] Press Q to open the shop!")
+	end)
 end
 
 return ShopUIController
