@@ -30,35 +30,35 @@ local Knit = require(ReplicatedStorage.Knit)
 
 local DEBUG_MODE = true
 
--- COLORES VIBRANTES PARA NIÑOS 🌈
+-- COLORES RADIOACTIVOS NEÓN ☢️💚💜
 local COLORS = {
-	-- Fondo principal (gradiente morado a azul)
-	BackgroundTop = Color3.fromRGB(120, 60, 220),      -- Morado vibrante
-	BackgroundBottom = Color3.fromRGB(60, 120, 255),   -- Azul cielo
+	-- Fondo principal (gradiente morado oscuro a verde radioactivo)
+	BackgroundTop = Color3.fromRGB(80, 20, 140),       -- Morado oscuro profundo
+	BackgroundBottom = Color3.fromRGB(20, 180, 80),    -- Verde radioactivo
 
-	-- Header (gradiente naranja a amarillo)
-	HeaderTop = Color3.fromRGB(255, 160, 50),          -- Naranja
-	HeaderBottom = Color3.fromRGB(255, 220, 80),       -- Amarillo
+	-- Header (gradiente morado brillante a magenta)
+	HeaderTop = Color3.fromRGB(150, 50, 255),          -- Morado neón
+	HeaderBottom = Color3.fromRGB(255, 50, 200),       -- Magenta brillante
 
-	-- Info container (rosa pastel a cyan)
-	InfoTop = Color3.fromRGB(255, 150, 200),           -- Rosa pastel
-	InfoBottom = Color3.fromRGB(150, 220, 255),        -- Cyan pastel
+	-- Info container (verde oscuro a verde neón)
+	InfoTop = Color3.fromRGB(40, 150, 60),             -- Verde oscuro
+	InfoBottom = Color3.fromRGB(100, 255, 150),        -- Verde neón claro
 
 	-- Botones
-	UpgradeGreen = Color3.fromRGB(100, 255, 100),      -- Verde neón
-	UpgradeGreenDark = Color3.fromRGB(50, 200, 50),    -- Verde oscuro
-	SellRed = Color3.fromRGB(255, 100, 150),           -- Rosa/rojo
-	SellRedDark = Color3.fromRGB(255, 50, 100),        -- Rojo oscuro
-	CloseRed = Color3.fromRGB(255, 80, 80),            -- Rojo brillante
+	UpgradeGreen = Color3.fromRGB(50, 255, 50),        -- Verde radioactivo BRILLANTE
+	UpgradeGreenDark = Color3.fromRGB(20, 200, 20),    -- Verde radioactivo oscuro
+	SellRed = Color3.fromRGB(255, 50, 255),            -- Magenta/fucsia
+	SellRedDark = Color3.fromRGB(200, 20, 200),        -- Morado fucsia
+	CloseRed = Color3.fromRGB(255, 0, 100),            -- Rosa neón intenso
 
 	-- Bordes neón
-	BorderNeon = Color3.fromRGB(100, 255, 255),        -- Cyan neón
-	BorderPurple = Color3.fromRGB(200, 100, 255),      -- Morado neón
-	BorderYellow = Color3.fromRGB(255, 255, 100),      -- Amarillo neón
+	BorderNeon = Color3.fromRGB(0, 255, 150),          -- Verde neón brillante
+	BorderPurple = Color3.fromRGB(200, 0, 255),        -- Morado neón INTENSO
+	BorderYellow = Color3.fromRGB(200, 255, 0),        -- Amarillo-verde neón
 
 	-- Texto
 	TextWhite = Color3.new(1, 1, 1),
-	TextGold = Color3.fromRGB(255, 220, 100),
+	TextGold = Color3.fromRGB(100, 255, 100),          -- Verde neón (en lugar de dorado)
 	TextShadow = Color3.fromRGB(0, 0, 0),
 }
 
