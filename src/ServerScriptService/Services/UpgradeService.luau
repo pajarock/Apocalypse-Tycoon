@@ -1277,7 +1277,7 @@ function UpgradeService:HandleSellGenerator(player: Player, objectId: string)
 
 	-- Remover del BaseOwnershipService
 	if BaseOwnershipService then
-		BaseOwnershipService:RemoveObject(objectId)
+		BaseOwnershipService:RemoveObject(player.UserId, objectId)
 	end
 
 	-- Destruir modelo
