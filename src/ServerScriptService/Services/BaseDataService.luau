@@ -497,7 +497,7 @@ function BaseDataService.Client:SellObject(player: Player, objectId: string, ref
 	refundPercent = refundPercent or 0.5  -- Default 50% refund
 
 	-- Obtener el objeto del BaseOwnershipService
-	local object = BaseOwnershipService:GetObjectById(objectId)
+	local object = BaseOwnershipService:GetObjectData(objectId)
 	if not object then
 		warn("[BaseDataService] ❌ Object not found:", objectId)
 		return false
