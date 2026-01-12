@@ -1394,16 +1394,21 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 
 	-- Costo de activación
 	local activationCost = 50
-	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
-	local playerState = EconomyModule.GetState(player.UserId)
 
-	if not playerState or playerState.Cash < activationCost then
+	-- Verificar si hay suficiente dinero
+	if not PlayerDataService then
+		warn("[UpgradeService] ❌ PlayerDataService not available")
+		return
+	end
+
+	local currentMoney = PlayerDataService:GetMoney(generatorData.UserId)
+	if currentMoney < activationCost then
 		warn("[UpgradeService] ❌ Not enough money for Overclock:", player.UserId)
 		return
 	end
 
 	-- Cobrar dinero
-	EconomyModule.AdminRemoveCash(player.UserId, activationCost)
+	PlayerDataService:RemoveMoney(generatorData.UserId, activationCost)
 
 	-- Activar Overclock
 	generatorData.OverclockActive = true
