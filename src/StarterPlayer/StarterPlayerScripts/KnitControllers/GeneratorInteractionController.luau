@@ -83,6 +83,7 @@ local currentGenerator: Model? = nil
 local currentObjectId: string? = nil
 local mainFrame: Frame? = nil
 local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local updateLoop: RBXScriptConnection? = nil
 
 --[[────────────────────────────────────────────────────────────────────────
 	UI HELPER FUNCTIONS
@@ -650,10 +651,28 @@ local function updateUI(generatorInfo: any)
 		local uptimeMinutes = math.floor((stats.Uptime or 0) / 60)
 		local uptimeSeconds = (stats.Uptime or 0) % 60
 
+		-- Verificar si Overclock está activo
+		local overclockData = generatorInfo.Overclock or {}
+		local isOverclocked = overclockData.IsActive or false
+		local baseIncome = stats.IncomeRate or 0
+		local currentIncome = baseIncome
+
+		if isOverclocked then
+			currentIncome = baseIncome * 3  -- +200% boost = 3x multiplier
+		end
+
+		-- Formato de stats con boost visual
+		local incomeText = ""
+		if isOverclocked then
+			incomeText = string.format("💰 Making: $%d/s → $%d/s ⚡BOOSTED⚡", baseIncome, currentIncome)
+		else
+			incomeText = string.format("💰 Making: $%d per second!", baseIncome)
+		end
+
 		local statsText = string.format(
-			"🎯 Tier %d\n💰 Making: $%d per second!\n📈 Total Made: $%.0f\n⏰ Running: %dm %ds",
+			"🎯 Tier %d\n%s\n📈 Total Made: $%.0f\n⏰ Running: %dm %ds",
 			stats.Tier or 1,
-			stats.IncomeRate or 0,
+			incomeText,
 			stats.TotalProduced or 0,
 			uptimeMinutes,
 			uptimeSeconds
@@ -714,6 +733,10 @@ local function updateUI(generatorInfo: any)
 			local isActive = overclockData.IsActive or false
 			local cooldownRemaining = overclockData.CooldownRemaining or 0
 
+			-- Calcular costo basado en tier
+			local tier = generatorInfo.Stats.Tier or 1
+			local overclockCost = 50 * tier
+
 			if isActive then
 				overclockButton.Text = "⚡ OVERCLOCKED!\n🔥 ACTIVE!"
 				overclockButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)  -- Naranja intenso
@@ -721,7 +744,7 @@ local function updateUI(generatorInfo: any)
 				overclockButton.Text = string.format("⏰ COOLDOWN\n%ds remaining", math.ceil(cooldownRemaining))
 				overclockButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)  -- Gris
 			else
-				overclockButton.Text = "⚡ OVERCLOCK! (+200%)\n💵 Cost: $50"
+				overclockButton.Text = string.format("⚡ OVERCLOCK! (+200%%)\n💵 Cost: $%d", overclockCost)
 				overclockButton.BackgroundColor3 = COLORS.OverclockYellow
 			end
 		end
@@ -733,29 +756,19 @@ end
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
-	Abre el menú con animación BOUNCE divertida.
+	Obtiene los datos frescos del generador actual para actualizar el UI.
 ]]
-function GeneratorInteractionController:OpenMenu(generator: Model, objectId: string)
-	if not mainFrame then
-		createUI()
+local function getGeneratorInfo(): any?
+	if not currentGenerator or not currentObjectId then
+		return nil
 	end
 
-	if menuOpen then
-		return
-	end
-
-	currentGenerator = generator
-	currentObjectId = objectId
-	menuOpen = true
-
-	-- Obtener datos del generador
-	local mainPart = generator:FindFirstChild("MainPart")
+	local mainPart = currentGenerator:FindFirstChild("MainPart")
 	if not mainPart then
-		warn("[GeneratorInteractionController] MainPart not found")
-		return
+		return nil
 	end
 
-	-- Construir info del generador
+	-- Obtener valores básicos
 	local tierValue = mainPart:FindFirstChild("Tier")
 	local moneyPerSecValue = mainPart:FindFirstChild("MoneyPerSec")
 	local totalProducedValue = mainPart:FindFirstChild("TotalProduced")
@@ -782,7 +795,7 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 	local canUpgrade = false
 
 	local success, result = pcall(function()
-		return UpgradeService:GetUpgradeInfo(objectId)
+		return UpgradeService:GetUpgradeInfo(currentObjectId)
 	end)
 
 	if success and result then
@@ -802,7 +815,7 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 	local currentTime = tick()
 	local cooldownRemaining = math.max(0, overclockCooldownEndTime - currentTime)
 
-	local generatorInfo = {
+	return {
 		Name = generatorName,
 		Stats = {
 			Tier = tier,
@@ -818,9 +831,69 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 			Stability = stability,
 		},
 	}
+end
 
-	-- Actualizar UI
+--[[
+	Loop de actualización en tiempo real del menú (cada 0.5s).
+]]
+local function startMenuUpdateLoop()
+	-- Detener loop anterior si existe
+	if updateLoop then
+		updateLoop:Disconnect()
+		updateLoop = nil
+	end
+
+	-- Crear nuevo loop
+	local lastUpdate = tick()
+	updateLoop = game:GetService("RunService").Heartbeat:Connect(function()
+		if not menuOpen or not mainFrame or not mainFrame.Visible then
+			return
+		end
+
+		-- Actualizar cada 0.5 segundos
+		local now = tick()
+		if now - lastUpdate >= 0.5 then
+			lastUpdate = now
+
+			local generatorInfo = getGeneratorInfo()
+			if generatorInfo then
+				updateUI(generatorInfo)
+			end
+		end
+	end)
+end
+
+--[[
+	Abre el menú con animación BOUNCE divertida.
+]]
+function GeneratorInteractionController:OpenMenu(generator: Model, objectId: string)
+	if not mainFrame then
+		createUI()
+	end
+
+	if menuOpen then
+		return
+	end
+
+	currentGenerator = generator
+	currentObjectId = objectId
+	menuOpen = true
+
+	-- Obtener datos del generador (usando función auxiliar)
+	local generatorInfo = getGeneratorInfo()
+	if not generatorInfo then
+		warn("[GeneratorInteractionController] Failed to get generator info")
+		menuOpen = false
+		currentGenerator = nil
+		currentObjectId = nil
+		return
+	end
+
+	-- Actualizar UI inicial
 	updateUI(generatorInfo)
+
+	-- Iniciar loop de actualización en tiempo real
+	startMenuUpdateLoop()
 
 	-- Mostrar panel con animación BOUNCE (más divertida que Back)
 	mainFrame.Visible = true
@@ -846,6 +919,12 @@ end
 function GeneratorInteractionController:CloseMenu()
 	if not mainFrame or not menuOpen then
 		return
+	end
+
+	-- Detener loop de actualización
+	if updateLoop then
+		updateLoop:Disconnect()
+		updateLoop = nil
 	end
 
 	-- Animación de cierre con rotación
@@ -959,6 +1038,14 @@ end
 
 function GeneratorInteractionController:KnitStart()
 	createUI()
+
+	-- Conectar RemoteEvent de Overheat para notificar al jugador
+	local OverclockOverheatRemote = Remotes:WaitForChild("OverclockOverheat")
+	OverclockOverheatRemote.OnClientEvent:Connect(function(objectId)
+		-- Mostrar notificación DRAMÁTICA de overheat
+		showNotification("🔥 GENERATOR OVERHEATED! System shutting down...", false)
+		print("[GeneratorInteractionController] 🔥 Overheat notified for:", objectId)
+	end)
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if gameProcessed then

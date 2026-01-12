@@ -1225,6 +1225,14 @@ function UpgradeService:KnitInit()
 		print("[UpgradeService] ✅ RemoteEvent 'ActivateOverclock' created")
 	end
 
+	-- RemoteEvent para notificar overheat al cliente
+	if not Remotes:FindFirstChild("OverclockOverheat") then
+		local overheatRemote = Instance.new("RemoteEvent")
+		overheatRemote.Name = "OverclockOverheat"
+		overheatRemote.Parent = Remotes
+		print("[UpgradeService] ✅ RemoteEvent 'OverclockOverheat' created")
+	end
+
 	print("[UpgradeService] ?? Initialized")
 end
 
@@ -1392,8 +1400,9 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 		return
 	end
 
-	-- Costo de activación
-	local activationCost = 50
+	-- Costo de activación (escala con tier del generador)
+	local tier = generatorData.Tier or 1
+	local activationCost = 50 * tier  -- $50, $100, $150, $200, $250
 
 	-- Verificar si hay suficiente dinero
 	if not PlayerDataService then
@@ -1402,7 +1411,7 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 	end
 
 	if not PlayerDataService:HasEnoughMoney(generatorData.UserId, activationCost) then
-		warn("[UpgradeService] ❌ Not enough money for Overclock:", player.UserId)
+		warn("[UpgradeService] ❌ Not enough money for Overclock:", player.UserId, "Cost:", activationCost)
 		return
 	end
 
@@ -1441,6 +1450,12 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 
 				-- Sincronizar estado a cliente
 				syncOverclockAttributes(objectId)
+
+				-- Notificar al cliente via RemoteEvent
+				local overheatRemote = Remotes:FindFirstChild("OverclockOverheat")
+				if overheatRemote then
+					overheatRemote:FireClient(player, objectId)
+				end
 
 				warn(string.format("[UpgradeService] 🔥 Generator OVERHEATED: %s", objectId))
 			end
