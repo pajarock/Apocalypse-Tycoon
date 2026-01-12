@@ -576,6 +576,18 @@ local function updateGenerators()
 	for objectId, data in pairs(activeGenerators) do
 		local timePassed = currentTime - data.LastProduction
 		if timePassed >= 1 then
+			-- REGENERACIÓN DE ESTABILIDAD: +2% cada 10 segundos (solo si no está en overclock)
+			if not data.OverclockActive and data.Stability < 100 then
+				-- Regenerar basado en tiempo pasado: 0.2% por segundo = 2% cada 10s
+				local stabilityToRegen = timePassed * 0.2
+				data.Stability = math.min(100, data.Stability + stabilityToRegen)
+
+				-- Sincronizar al cliente si cambió significativamente (cada ~5%)
+				if stabilityToRegen >= 1 then
+					syncOverclockAttributes(objectId)
+				end
+			end
+
 			-- Producir dinero
 			local moneyToGive = (data.Definition.Stats.MoneyPerSecond or 0) * timePassed
 
@@ -1364,10 +1376,15 @@ end
 --[[
 	Activa Overclock en un generador.
 
-	BOOST: +200% income por 10 segundos
-	COST: $50
-	COOLDOWN: 30 segundos
-	RISK: 10% chance de overheat (apaga el generador por 5s)
+	BOOST: +200% income por 10 segundos (3x multiplier)
+	COST: $500 por tier (T1=$500, T2=$1000, T3=$1500, T4=$2000, T5=$2500)
+	COOLDOWN: 30s normal, 45s si overheat
+	RISK: 5% base + hasta 70% adicional según estabilidad baja
+		- A 100% estabilidad: 5% chance de overheat
+		- A 50% estabilidad: 40% chance de overheat
+		- A 0% estabilidad: 75% chance de overheat
+	STABILITY: -20% por uso, regenera +2% cada 10s (solo cuando no está en overclock)
+	OVERHEAT: Apaga el generador a los 5s, cooldown de 45s
 
 	@param player - Jugador que solicita la activación
 	@param objectId - ID del generador
@@ -1402,7 +1419,7 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 
 	-- Costo de activación (escala con tier del generador)
 	local tier = generatorData.Tier or 1
-	local activationCost = 50 * tier  -- $50, $100, $150, $200, $250
+	local activationCost = 500 * tier  -- $500, $1000, $1500, $2000, $2500
 
 	-- Verificar si hay suficiente dinero
 	if not PlayerDataService then
@@ -1422,22 +1439,26 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 	generatorData.OverclockActive = true
 	generatorData.OverclockEndTime = currentTime + 10  -- 10 segundos de duración
 
-	-- Reducir estabilidad
-	generatorData.Stability = math.max(0, generatorData.Stability - 15)
+	-- Reducir estabilidad (más agresivo)
+	generatorData.Stability = math.max(0, generatorData.Stability - 20)
 
 	-- Sincronizar estado a cliente
 	syncOverclockAttributes(objectId)
 
-	-- Calcular riesgo de overheat (10% base + más si la estabilidad es baja)
-	local overheatChance = 0.10 + (1 - generatorData.Stability / 100) * 0.20  -- 10% + hasta 20% extra
+	-- Calcular riesgo de overheat (5% base + hasta 70% adicional si estabilidad baja)
+	-- A 100% estabilidad: 5% chance
+	-- A 50% estabilidad: 40% chance
+	-- A 0% estabilidad: 75% chance
+	local overheatChance = 0.05 + (1 - generatorData.Stability / 100) * 0.70
 	local willOverheat = math.random() < overheatChance
 
 	print(string.format(
-		"[UpgradeService] ⚡ Overclock activated: %s (Owner: %d, Duration: 10s, Stability: %d%%, Overheat: %s)",
+		"[UpgradeService] ⚡ Overclock activated: %s (Owner: %d, Duration: 10s, Stability: %d%%, Overheat chance: %.1f%%, Result: %s)",
 		objectId,
 		player.UserId,
 		generatorData.Stability,
-		willOverheat and "YES" or "NO"
+		overheatChance * 100,
+		willOverheat and "OVERHEATED 🔥" or "OK ✅"
 	))
 
 	-- Si overheat, programar apagado

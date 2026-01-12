@@ -735,7 +735,7 @@ local function updateUI(generatorInfo: any)
 
 			-- Calcular costo basado en tier
 			local tier = generatorInfo.Stats.Tier or 1
-			local overclockCost = 50 * tier
+			local overclockCost = 500 * tier  -- $500, $1000, $1500, $2000, $2500
 
 			if isActive then
 				overclockButton.Text = "⚡ OVERCLOCKED!\n🔥 ACTIVE!"
