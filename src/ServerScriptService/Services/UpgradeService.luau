@@ -75,6 +75,30 @@ local function getTierName(tier: number): string
 	end
 end
 
+--[[
+	Sincroniza el estado de Overclock del generador a los attributes del MainPart
+	para que el cliente pueda leerlos.
+
+	@param objectId - ID del generador
+]]
+local function syncOverclockAttributes(objectId: string)
+	local generatorData = activeGenerators[objectId]
+	if not generatorData or not generatorData.Model then
+		return
+	end
+
+	local mainPart = generatorData.Model:FindFirstChild("MainPart")
+	if not mainPart then
+		return
+	end
+
+	-- Sincronizar attributes
+	mainPart:SetAttribute("OverclockActive", generatorData.OverclockActive)
+	mainPart:SetAttribute("OverclockEndTime", generatorData.OverclockEndTime)
+	mainPart:SetAttribute("OverclockCooldownEndTime", generatorData.OverclockCooldownEndTime)
+	mainPart:SetAttribute("Stability", generatorData.Stability)
+end
+
 --[[────────────────────────────────────────────────────────────────────────
 	GENERATOR SYSTEM - Passive Money Production
 ------------------------------------------------------------------------]]
@@ -1326,35 +1350,7 @@ function UpgradeService:HandleSellGenerator(player: Player, objectId: string)
 end
 
 --[[────────────────────────────────────────────────────────────────────────
-	OVERCLOCK SYSTEM - Helper Functions
-────────────────────────────────────────────────────────────────────────]]
-
---[[
-	Sincroniza el estado de Overclock del generador a los attributes del MainPart
-	para que el cliente pueda leerlos.
-
-	@param objectId - ID del generador
-]]
-local function syncOverclockAttributes(objectId: string)
-	local generatorData = activeGenerators[objectId]
-	if not generatorData or not generatorData.Model then
-		return
-	end
-
-	local mainPart = generatorData.Model:FindFirstChild("MainPart")
-	if not mainPart then
-		return
-	end
-
-	-- Sincronizar attributes
-	mainPart:SetAttribute("OverclockActive", generatorData.OverclockActive)
-	mainPart:SetAttribute("OverclockEndTime", generatorData.OverclockEndTime)
-	mainPart:SetAttribute("OverclockCooldownEndTime", generatorData.OverclockCooldownEndTime)
-	mainPart:SetAttribute("Stability", generatorData.Stability)
-end
-
---[[────────────────────────────────────────────────────────────────────────
-	OVERCLOCK SYSTEM - HandleActivateOverclock
+	OVERCLOCK SYSTEM
 ────────────────────────────────────────────────────────────────────────]]
 
 --[[
