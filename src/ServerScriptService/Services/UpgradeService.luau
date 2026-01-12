@@ -1401,14 +1401,13 @@ function UpgradeService:HandleActivateOverclock(player: Player, objectId: string
 		return
 	end
 
-	local currentMoney = PlayerDataService:GetMoney(generatorData.UserId)
-	if currentMoney < activationCost then
+	if not PlayerDataService:HasEnoughMoney(generatorData.UserId, activationCost) then
 		warn("[UpgradeService] ❌ Not enough money for Overclock:", player.UserId)
 		return
 	end
 
 	-- Cobrar dinero
-	PlayerDataService:RemoveMoney(generatorData.UserId, activationCost)
+	PlayerDataService:DeductMoney(generatorData.UserId, activationCost)
 
 	-- Activar Overclock
 	generatorData.OverclockActive = true
