@@ -27,6 +27,7 @@ local Knit = require(ReplicatedStorage.Knit)
 -- RemoteEvents
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local SellGeneratorRemote = Remotes:WaitForChild("SellGenerator")
+local ActivateOverclockRemote = Remotes:WaitForChild("ActivateOverclock")
 
 --[[────────────────────────────────────────────────────────────────────────
 	TYPES & CONSTANTS
@@ -51,6 +52,8 @@ local COLORS = {
 	-- Botones
 	UpgradeGreen = Color3.fromRGB(50, 255, 50),        -- Verde radioactivo BRILLANTE
 	UpgradeGreenDark = Color3.fromRGB(20, 200, 20),    -- Verde radioactivo oscuro
+	OverclockYellow = Color3.fromRGB(255, 255, 50),    -- Amarillo eléctrico
+	OverclockOrange = Color3.fromRGB(255, 150, 0),     -- Naranja eléctrico
 	SellRed = Color3.fromRGB(255, 50, 255),            -- Magenta/fucsia
 	SellRedDark = Color3.fromRGB(200, 20, 200),        -- Morado fucsia
 	CloseRed = Color3.fromRGB(255, 0, 100),            -- Rosa neón intenso
@@ -481,7 +484,7 @@ local function createUI()
 	-- Stats Label - Texto grande y claro
 	local statsLabel = Instance.new("TextLabel")
 	statsLabel.Name = "StatsLabel"
-	statsLabel.Size = UDim2.new(1, -20, 0, 160)
+	statsLabel.Size = UDim2.new(1, -20, 0, 120)
 	statsLabel.Position = UDim2.new(0, 10, 0, 55)
 	statsLabel.BackgroundTransparency = 1
 	statsLabel.Text = "Loading stats..."
@@ -494,10 +497,57 @@ local function createUI()
 
 	createTextShadow(statsLabel)
 
+	-- Stability Bar Container (para Overclock system)
+	local stabilityContainer = Instance.new("Frame")
+	stabilityContainer.Name = "StabilityContainer"
+	stabilityContainer.Size = UDim2.new(1, -20, 0, 30)
+	stabilityContainer.Position = UDim2.new(0, 10, 0, 180)
+	stabilityContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	stabilityContainer.BorderSizePixel = 0
+	stabilityContainer.Parent = infoContainer
+
+	local stabilityCorner = Instance.new("UICorner")
+	stabilityCorner.CornerRadius = UDim.new(0, 8)
+	stabilityCorner.Parent = stabilityContainer
+
+	local stabilityStroke = createNeonStroke(COLORS.BorderYellow, 2)
+	stabilityStroke.Parent = stabilityContainer
+
+	-- Barra de estabilidad (fill bar)
+	local stabilityBar = Instance.new("Frame")
+	stabilityBar.Name = "StabilityBar"
+	stabilityBar.Size = UDim2.new(1, 0, 1, 0)  -- Se ajustará dinámicamente
+	stabilityBar.Position = UDim2.new(0, 0, 0, 0)
+	stabilityBar.BackgroundColor3 = COLORS.OverclockYellow
+	stabilityBar.BorderSizePixel = 0
+	stabilityBar.Parent = stabilityContainer
+
+	local barCorner = Instance.new("UICorner")
+	barCorner.CornerRadius = UDim.new(0, 8)
+	barCorner.Parent = stabilityBar
+
+	local barGradient = createGradient(COLORS.OverclockYellow, COLORS.OverclockOrange)
+	barGradient.Parent = stabilityBar
+
+	-- Label de estabilidad
+	local stabilityLabel = Instance.new("TextLabel")
+	stabilityLabel.Name = "StabilityLabel"
+	stabilityLabel.Size = UDim2.new(1, 0, 1, 0)
+	stabilityLabel.Position = UDim2.new(0, 0, 0, 0)
+	stabilityLabel.BackgroundTransparency = 1
+	stabilityLabel.Text = "⚡ Stability: 100%"
+	stabilityLabel.TextColor3 = COLORS.TextWhite
+	stabilityLabel.TextSize = 16
+	stabilityLabel.Font = Enum.Font.GothamBold
+	stabilityLabel.ZIndex = 2
+	stabilityLabel.Parent = stabilityContainer
+
+	createTextShadow(stabilityLabel)
+
 	-- Buttons Container
 	local buttonsContainer = Instance.new("Frame")
 	buttonsContainer.Name = "ButtonsContainer"
-	buttonsContainer.Size = UDim2.new(1, -30, 0, 210)
+	buttonsContainer.Size = UDim2.new(1, -30, 0, 280)
 	buttonsContainer.Position = UDim2.new(0, 15, 0, 310)
 	buttonsContainer.BackgroundTransparency = 1
 	buttonsContainer.Parent = mainFrame
@@ -517,12 +567,27 @@ local function createUI()
 		GeneratorInteractionController:OnUpgradeClicked()
 	end)
 
+	-- Overclock Button - Amarillo eléctrico SÚPER LLAMATIVO
+	local overclockButton = createCartoonButton(
+		"OverclockButton",
+		"⚡ OVERCLOCK! (+200%)",
+		"⚡",
+		UDim2.new(0, 0, 0, 75),
+		COLORS.OverclockYellow,
+		COLORS.OverclockOrange,
+		COLORS.BorderYellow
+	)
+	overclockButton.Parent = buttonsContainer
+	overclockButton.MouseButton1Click:Connect(function()
+		GeneratorInteractionController:OnOverclockClicked()
+	end)
+
 	-- Sell Button - Rosa/rojo vibrante
 	local sellButton = createCartoonButton(
 		"SellButton",
 		"SELL (50% back!)",
 		"💰",
-		UDim2.new(0, 0, 0, 75),
+		UDim2.new(0, 0, 0, 150),
 		COLORS.SellRed,
 		COLORS.SellRedDark,
 		COLORS.BorderPurple
@@ -537,7 +602,7 @@ local function createUI()
 		"FunButton",
 		"VIEW STATS",
 		"📊",
-		UDim2.new(0, 0, 0, 150),
+		UDim2.new(0, 0, 0, 225),
 		Color3.fromRGB(100, 150, 255),
 		Color3.fromRGB(50, 100, 255),
 		COLORS.BorderNeon
@@ -597,6 +662,33 @@ local function updateUI(generatorInfo: any)
 		statsLabel.Text = statsText
 	end
 
+	-- Actualizar barra de estabilidad
+	local stabilityContainer = infoContainer:FindFirstChild("StabilityContainer") :: Frame
+	if stabilityContainer then
+		local stabilityBar = stabilityContainer:FindFirstChild("StabilityBar") :: Frame
+		local stabilityLabel = stabilityContainer:FindFirstChild("StabilityLabel") :: TextLabel
+
+		local stability = generatorInfo.Overclock and generatorInfo.Overclock.Stability or 100
+
+		if stabilityBar then
+			local stabilityScale = math.max(0, math.min(1, stability / 100))
+			stabilityBar.Size = UDim2.new(stabilityScale, 0, 1, 0)
+
+			-- Cambiar color según estabilidad
+			if stability > 70 then
+				stabilityBar.BackgroundColor3 = COLORS.OverclockYellow
+			elseif stability > 30 then
+				stabilityBar.BackgroundColor3 = COLORS.OverclockOrange
+			else
+				stabilityBar.BackgroundColor3 = Color3.fromRGB(255, 50, 50)  -- Rojo si muy baja
+			end
+		end
+
+		if stabilityLabel then
+			stabilityLabel.Text = string.format("⚡ Stability: %d%%", stability)
+		end
+	end
+
 	-- Actualizar botón de upgrade
 	local buttonsContainer = mainFrame:FindFirstChild("ButtonsContainer") :: Frame
 	if buttonsContainer then
@@ -612,6 +704,25 @@ local function updateUI(generatorInfo: any)
 			else
 				upgradeButton.Text = "🏆  MAX TIER!\nYou're awesome!"
 				upgradeButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)  -- Dorado
+			end
+		end
+
+		-- Actualizar botón de Overclock
+		local overclockButton = buttonsContainer:FindFirstChild("OverclockButton") :: TextButton
+		if overclockButton then
+			local overclockData = generatorInfo.Overclock or {}
+			local isActive = overclockData.IsActive or false
+			local cooldownRemaining = overclockData.CooldownRemaining or 0
+
+			if isActive then
+				overclockButton.Text = "⚡ OVERCLOCKED!\n🔥 ACTIVE!"
+				overclockButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)  -- Naranja intenso
+			elseif cooldownRemaining > 0 then
+				overclockButton.Text = string.format("⏰ COOLDOWN\n%ds remaining", math.ceil(cooldownRemaining))
+				overclockButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)  -- Gris
+			else
+				overclockButton.Text = "⚡ OVERCLOCK! (+200%)\n💵 Cost: $50"
+				overclockButton.BackgroundColor3 = COLORS.OverclockYellow
 			end
 		end
 	end
@@ -682,6 +793,15 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 		canUpgrade = result.CanUpgrade
 	end
 
+	-- Obtener datos de Overclock del servidor (desde los attributes del MainPart)
+	local overclockActive = mainPart:GetAttribute("OverclockActive") or false
+	local overclockEndTime = mainPart:GetAttribute("OverclockEndTime") or 0
+	local overclockCooldownEndTime = mainPart:GetAttribute("OverclockCooldownEndTime") or 0
+	local stability = mainPart:GetAttribute("Stability") or 100
+
+	local currentTime = tick()
+	local cooldownRemaining = math.max(0, overclockCooldownEndTime - currentTime)
+
 	local generatorInfo = {
 		Name = generatorName,
 		Stats = {
@@ -692,6 +812,11 @@ function GeneratorInteractionController:OpenMenu(generator: Model, objectId: str
 		},
 		CanUpgrade = canUpgrade,
 		UpgradeInfo = upgradeInfo,
+		Overclock = {
+			IsActive = overclockActive,
+			CooldownRemaining = cooldownRemaining,
+			Stability = stability,
+		},
 	}
 
 	-- Actualizar UI
@@ -807,6 +932,25 @@ function GeneratorInteractionController:OnSellClicked()
 
 	-- Cerrar menú (el generador ya no existe)
 	self:CloseMenu()
+end
+
+function GeneratorInteractionController:OnOverclockClicked()
+	if not currentObjectId then
+		return
+	end
+
+	local objectId = currentObjectId
+
+	print("[GeneratorInteractionController] ⚡ Activating Overclock for:", objectId)
+
+	-- Enviar solicitud al servidor via RemoteEvent
+	ActivateOverclockRemote:FireServer(objectId)
+
+	-- Mostrar notificación ÉPICA
+	showNotification("⚡ OVERCLOCK ACTIVATED! +200% BOOST!", true)
+
+	-- Mantener el menú abierto para ver el cambio en tiempo real
+	-- (el servidor actualizará los valores de stability)
 end
 
 --[[────────────────────────────────────────────────────────────────────────

@@ -117,6 +117,12 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 		Tier = tier, -- Guardar tier para uso posterior
 		TotalProduced = 0, -- FASE 2: Tracking de dinero total producido
 		SpawnTime = os.time(), -- FASE 2: Tiempo de spawn para calcular uptime
+
+		-- OVERCLOCK SYSTEM
+		OverclockActive = false,
+		OverclockEndTime = 0,
+		OverclockCooldownEndTime = 0,
+		Stability = 100, -- 0-100, reduces with overclock use
 	}
 
 	-- FASE 3: Almacenar stats en el modelo para acceso din�mico desde ProximityPrompt
@@ -159,6 +165,9 @@ function UpgradeService:RegisterGenerator(objectId: string, userId: number, mode
 	-- FASE 2: Crear ProximityPrompt con stats
 	-- PHASE 4: Pasar objectId para que se pueda usar en upgrades
 	GeneratorVFXManager:CreateStatsPrompt(model, userId, tier, objectId)
+
+	-- Sincronizar estado inicial de Overclock a attributes
+	syncOverclockAttributes(objectId)
 
 	print(string.format(
 		"[UpgradeService] ?? Generator registered: %s (Owner: %d, Rate: $%d/s, Tier: %d)",
@@ -545,6 +554,11 @@ local function updateGenerators()
 		if timePassed >= 1 then
 			-- Producir dinero
 			local moneyToGive = (data.Definition.Stats.MoneyPerSecond or 0) * timePassed
+
+			-- OVERCLOCK BOOST: +200% (3x multiplier)
+			if data.OverclockActive then
+				moneyToGive = moneyToGive * 3
+			end
 
 			-- Dar dinero al jugador (si PlayerDataService existe)
 			if PlayerDataService then
@@ -1179,6 +1193,14 @@ function UpgradeService:KnitInit()
 		print("[UpgradeService] ✅ RemoteEvent 'SellGenerator' created")
 	end
 
+	-- RemoteEvent para activar Overclock
+	if not Remotes:FindFirstChild("ActivateOverclock") then
+		local overclockRemote = Instance.new("RemoteEvent")
+		overclockRemote.Name = "ActivateOverclock"
+		overclockRemote.Parent = Remotes
+		print("[UpgradeService] ✅ RemoteEvent 'ActivateOverclock' created")
+	end
+
 	print("[UpgradeService] ?? Initialized")
 end
 
@@ -1214,6 +1236,13 @@ function UpgradeService:KnitStart()
 			self:HandleSellGenerator(player, objectId)
 		end)
 		print("[UpgradeService] ✅ RemoteEvent 'SellGenerator' connected")
+	end
+
+	if Remotes:FindFirstChild("ActivateOverclock") then
+		Remotes.ActivateOverclock.OnServerEvent:Connect(function(player, objectId)
+			self:HandleActivateOverclock(player, objectId)
+		end)
+		print("[UpgradeService] ✅ RemoteEvent 'ActivateOverclock' connected")
 	end
 
 	-- Iniciar update loops
@@ -1294,6 +1323,140 @@ function UpgradeService:HandleSellGenerator(player: Player, objectId: string)
 		refundAmount,
 		player.UserId
 	))
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	OVERCLOCK SYSTEM - Helper Functions
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Sincroniza el estado de Overclock del generador a los attributes del MainPart
+	para que el cliente pueda leerlos.
+
+	@param objectId - ID del generador
+]]
+local function syncOverclockAttributes(objectId: string)
+	local generatorData = activeGenerators[objectId]
+	if not generatorData or not generatorData.Model then
+		return
+	end
+
+	local mainPart = generatorData.Model:FindFirstChild("MainPart")
+	if not mainPart then
+		return
+	end
+
+	-- Sincronizar attributes
+	mainPart:SetAttribute("OverclockActive", generatorData.OverclockActive)
+	mainPart:SetAttribute("OverclockEndTime", generatorData.OverclockEndTime)
+	mainPart:SetAttribute("OverclockCooldownEndTime", generatorData.OverclockCooldownEndTime)
+	mainPart:SetAttribute("Stability", generatorData.Stability)
+end
+
+--[[────────────────────────────────────────────────────────────────────────
+	OVERCLOCK SYSTEM - HandleActivateOverclock
+────────────────────────────────────────────────────────────────────────]]
+
+--[[
+	Activa Overclock en un generador.
+
+	BOOST: +200% income por 10 segundos
+	COST: $50
+	COOLDOWN: 30 segundos
+	RISK: 10% chance de overheat (apaga el generador por 5s)
+
+	@param player - Jugador que solicita la activación
+	@param objectId - ID del generador
+]]
+function UpgradeService:HandleActivateOverclock(player: Player, objectId: string)
+	local generatorData = activeGenerators[objectId]
+	if not generatorData then
+		warn("[UpgradeService] ❌ Generator not found:", objectId)
+		return
+	end
+
+	-- Validar ownership
+	if generatorData.UserId ~= player.UserId then
+		warn("[UpgradeService] ❌ Player", player.UserId, "is not owner of generator", objectId)
+		return
+	end
+
+	local currentTime = tick()
+
+	-- Verificar si ya está activo
+	if generatorData.OverclockActive then
+		warn("[UpgradeService] ⚠️ Overclock already active for:", objectId)
+		return
+	end
+
+	-- Verificar cooldown
+	if currentTime < generatorData.OverclockCooldownEndTime then
+		local remaining = math.ceil(generatorData.OverclockCooldownEndTime - currentTime)
+		warn(string.format("[UpgradeService] ⚠️ Overclock on cooldown: %ds remaining", remaining))
+		return
+	end
+
+	-- Costo de activación
+	local activationCost = 50
+	local EconomyModule = require(ServerScriptService:WaitForChild("EconomyModule"))
+	local playerState = EconomyModule.GetState(player.UserId)
+
+	if not playerState or playerState.Cash < activationCost then
+		warn("[UpgradeService] ❌ Not enough money for Overclock:", player.UserId)
+		return
+	end
+
+	-- Cobrar dinero
+	EconomyModule.AdminRemoveCash(player.UserId, activationCost)
+
+	-- Activar Overclock
+	generatorData.OverclockActive = true
+	generatorData.OverclockEndTime = currentTime + 10  -- 10 segundos de duración
+
+	-- Reducir estabilidad
+	generatorData.Stability = math.max(0, generatorData.Stability - 15)
+
+	-- Sincronizar estado a cliente
+	syncOverclockAttributes(objectId)
+
+	-- Calcular riesgo de overheat (10% base + más si la estabilidad es baja)
+	local overheatChance = 0.10 + (1 - generatorData.Stability / 100) * 0.20  -- 10% + hasta 20% extra
+	local willOverheat = math.random() < overheatChance
+
+	print(string.format(
+		"[UpgradeService] ⚡ Overclock activated: %s (Owner: %d, Duration: 10s, Stability: %d%%, Overheat: %s)",
+		objectId,
+		player.UserId,
+		generatorData.Stability,
+		willOverheat and "YES" or "NO"
+	))
+
+	-- Si overheat, programar apagado
+	if willOverheat then
+		task.delay(5, function()  -- Overheat a mitad del boost
+			if activeGenerators[objectId] then
+				generatorData.OverclockActive = false
+				generatorData.OverclockEndTime = 0
+				generatorData.OverclockCooldownEndTime = tick() + 45  -- Cooldown más largo si overheat
+
+				-- Sincronizar estado a cliente
+				syncOverclockAttributes(objectId)
+
+				warn(string.format("[UpgradeService] 🔥 Generator OVERHEATED: %s", objectId))
+			end
+		end)
+	else
+		-- Cooldown normal después del boost
+		task.delay(10, function()
+			if activeGenerators[objectId] then
+				generatorData.OverclockActive = false
+				generatorData.OverclockCooldownEndTime = currentTime + 30  -- 30s cooldown
+
+				-- Sincronizar estado a cliente
+				syncOverclockAttributes(objectId)
+			end
+		end)
+	end
 end
 
 return UpgradeService
